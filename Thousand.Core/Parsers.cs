@@ -20,8 +20,8 @@ namespace Thousand
         public static TokenListParser<Kind, AST.Node?> Declaration { get; } =
             Node.AsNullable().OptionalOrDefault();
 
-        public static TokenListParser<Kind, AST.Diagram> Diagram { get; } =
+        public static TokenListParser<Kind, AST.Document> Document { get; } =
             Declaration.ManyDelimitedBy(NewLine)
-                .Select(ns => new AST.Diagram(ns.WhereNotNull().ToArray()));
+                .Select(ns => new AST.Document(ns.WhereNotNull().ToArray()));
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Thousand
 {
-    public static class TextParsers
+    internal static class TextParsers
     {
         public static TextParser<string> String { get; } =
             from open in Character.EqualTo('"')

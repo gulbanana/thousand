@@ -63,36 +63,36 @@ bar""");
         }
 
         [Fact]
-        public void ValidDiagram_SingleNode()
+        public void ValidDocument_SingleNode()
         {
             var tokens = tokenizer.Tokenize(@"node ""foo""");
-            var result = Parsers.Diagram(tokens);
+            var result = Parsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo") );
         }
 
         [Fact]
-        public void ValidDiagram_MultiNode()
+        public void ValidDocument_MultiNode()
         {
             var tokens = tokenizer.Tokenize(@"node ""foo""
 node ""bar""
 node ""baz""");
 
-            var result = Parsers.Diagram(tokens);
+            var result = Parsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo"), new AST.Node("bar"), new AST.Node("baz"));
         }
 
         [Fact]
-        public void ValidDiagram_EmptyLines()
+        public void ValidDocument_EmptyLines()
         {
             var tokens = tokenizer.Tokenize(@"node ""foo""
 
 node ""bar""");
 
-            var result = Parsers.Diagram(tokens);
+            var result = Parsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo"), new AST.Node("bar"));
