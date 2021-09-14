@@ -40,5 +40,20 @@ namespace Thousand.Tests
 
             AssertEx.Sequence(output.Select(t => t.Kind), Token.Keyword, Token.NewLine, Token.Keyword);
         }
+
+        [Fact]
+        public void MultilineString()
+        {
+            var input = @" 
+""foo
+bar"" ""baz""
+";
+
+            var output = sut.Tokenize(input);
+
+            AssertEx.Sequence(output.Select(t => t.Kind), Token.NewLine, Token.String, Token.String, Token.NewLine);
+            Assert.Equal(@"""foo
+bar""", output.ElementAt(1).ToStringValue());
+        }
     }
 }

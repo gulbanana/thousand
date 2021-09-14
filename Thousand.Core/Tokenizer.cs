@@ -35,8 +35,8 @@ namespace Thousand
             return new TokenizerBuilder<Token>()
                 .Ignore(parseInLineWhiteSpace)
                 .Match(parseNewLine, Token.NewLine)
-                .Match(Identifier.CStyle, Token.Keyword)
                 .Match(parseStringToken, Token.String)
+                .Match(Identifier.CStyle, Token.Keyword)
                 .Build();
         }
     }
