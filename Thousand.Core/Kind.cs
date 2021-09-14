@@ -1,6 +1,6 @@
 ﻿namespace Thousand
 {
-    public enum Token
+    public enum Kind
     {
         NewLine,
         Keyword,

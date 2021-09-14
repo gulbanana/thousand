@@ -7,7 +7,7 @@ namespace Thousand
 {
     public static class Tokenizer
     {
-        public static Tokenizer<Token> Build()
+        public static Tokenizer<Kind> Build()
         {
             TextParser<Unit> parseNewLine = Character.EqualTo('\r').Optional().IgnoreThen(Character.EqualTo('\n').Value(Unit.Value));
 
@@ -32,11 +32,11 @@ namespace Thousand
                 from close in Character.EqualTo('"')
                 select Unit.Value;
 
-            return new TokenizerBuilder<Token>()
+            return new TokenizerBuilder<Kind>()
                 .Ignore(parseInLineWhiteSpace)
-                .Match(parseNewLine, Token.NewLine)
-                .Match(parseStringToken, Token.String)
-                .Match(Identifier.CStyle, Token.Keyword)
+                .Match(parseNewLine, Kind.NewLine)
+                .Match(parseStringToken, Kind.String)
+                .Match(Identifier.CStyle, Kind.Keyword)
                 .Build();
         }
     }

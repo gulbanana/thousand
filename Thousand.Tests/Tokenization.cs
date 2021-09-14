@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -7,7 +5,7 @@ namespace Thousand.Tests
 {
     public class Tokenization
     {
-        private readonly Superpower.Tokenizer<Token> sut;
+        private readonly Superpower.Tokenizer<Kind> sut;
 
         public Tokenization()
         {
@@ -21,7 +19,7 @@ namespace Thousand.Tests
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), Token.Keyword, Token.String);
+            AssertEx.Sequence(output.Select(t => t.Kind), Kind.Keyword, Kind.String);
             AssertEx.Sequence(output.Select(t => t.ToStringValue()), "node", @"""Foo""");
         }
 
@@ -38,7 +36,7 @@ namespace Thousand.Tests
         {
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), Token.Keyword, Token.NewLine, Token.Keyword);
+            AssertEx.Sequence(output.Select(t => t.Kind), Kind.Keyword, Kind.NewLine, Kind.Keyword);
         }
 
         [Fact]
@@ -51,7 +49,7 @@ bar"" ""baz""
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), Token.NewLine, Token.String, Token.String, Token.NewLine);
+            AssertEx.Sequence(output.Select(t => t.Kind), Kind.NewLine, Kind.String, Kind.String, Kind.NewLine);
             Assert.Equal(@"""foo
 bar""", output.ElementAt(1).ToStringValue());
         }
