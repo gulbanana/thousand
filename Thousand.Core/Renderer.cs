@@ -11,24 +11,36 @@ namespace Thousand
             using var surface = SKSurface.Create(info);            
             var canvas = surface.Canvas;
 
-            var textBrush = new SKPaint { Color = SKColors.Red, TextAlign = SKTextAlign.Center, TextSize = 20 };
-            var blueFill = new SKPaint { Color = SKColors.Blue };
-            
+            var textBrush = new SKPaint { Color = SKColors.Black, TextAlign = SKTextAlign.Center, TextSize = 20 };
+            var blackStroke = new SKPaint { Color = SKColors.Black, IsStroke = true };
+
             canvas.Clear(SKColors.White);
             foreach (var label in diagram.Labels)
             {
-                var textBounds = new SKRect();
-                textBrush.MeasureText("M", ref textBounds);
-
-                canvas.DrawRect(new SKRect(label.X - 50, 40, label.X + 50, 60), blueFill);
+                var mBounds = new SKRect();
+                textBrush.MeasureText("M", ref mBounds);
 
                 var lines = label.Content.Split(Environment.NewLine);
-                var offset = textBounds.Height / 2 - (lines.Length - 1) * (textBrush.TextSize / 2);
+
+                var maxContentBounds = new SKRect();
                 foreach (var line in lines)
                 {
-                    canvas.DrawText(line, new SKPoint(label.X, label.Y + offset), textBrush);
-                    offset += textBrush.TextSize;
-                }                
+                    var contentBounds = new SKRect();
+                    textBrush.MeasureText(line, ref contentBounds);
+                    maxContentBounds.Union(contentBounds);
+                }
+
+                var yOffset = mBounds.Height / 2 - (lines.Length - 1) * (textBrush.TextSize / 2);
+                maxContentBounds.Offset(label.X - maxContentBounds.Width / 2, label.Y + yOffset);
+
+                foreach (var line in lines)
+                {
+                    canvas.DrawText(line, new SKPoint(label.X, label.Y + yOffset), textBrush);
+                    yOffset += textBrush.TextSize;
+                }
+
+                var paddedBounds = new SKRect(maxContentBounds.Left - 2, maxContentBounds.Top - 2, maxContentBounds.Right + 2, maxContentBounds.Bottom + (lines.Length - 1) * textBrush.TextSize + 2);
+                canvas.DrawRect(paddedBounds, blackStroke);
             }
 
             return surface.Snapshot();
