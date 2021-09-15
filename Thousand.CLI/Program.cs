@@ -16,6 +16,8 @@ Entity""
     node ""Three
 Lined
 Entity""
+
+    node ""हिन्दी के साधन""
 ";
 
         static void Main()

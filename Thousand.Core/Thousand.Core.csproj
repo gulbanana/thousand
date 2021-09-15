@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Thousand</RootNamespace>
@@ -8,5 +8,6 @@
     <PackageReference Include="Superpower" Version="3.0.0" />
     <PackageReference Include="SkiaSharp" Version="2.80.3" />
     <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.80.3" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.4.145" />
   </ItemGroup>
 </Project>

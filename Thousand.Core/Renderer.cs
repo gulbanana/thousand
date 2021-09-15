@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 using System;
+using Topten.RichTextKit;
 
 namespace Thousand
 {
@@ -9,6 +10,8 @@ namespace Thousand
         public static SKImage Render(Layout.Diagram diagram)
         {
             using var blackStroke = new SKPaint { Color = SKColors.Black, IsStroke = true };
+            using var blueFill = new SKPaint { Color = SKColors.LightBlue, IsStroke = false };
+            using var redFill = new SKPaint { Color = SKColors.PaleVioletRed, IsStroke = false };
             using var textBrush = new SKPaint { Color = SKColors.Black, TextAlign = SKTextAlign.Center, TextSize = 20, Typeface = SKTypeface.Default };
             using var textShaper = new SKShaper(SKTypeface.Default);
 
@@ -18,33 +21,30 @@ namespace Thousand
             var canvas = surface.Canvas;
             canvas.Clear(SKColors.White);
 
+            var red = false;
             foreach (var label in diagram.Labels)
             {
-                var mBounds = new SKRect();
-                textBrush.MeasureText("M", ref mBounds);
+                // set and measure text
+                var block = new RichString()
+                    .FontFamily(SKTypeface.Default.FamilyName)
+                    .FontSize(20)
+                    .Alignment(TextAlignment.Center)
+                    .Add(label.Content);
 
-                var lines = label.Content.Split(Environment.NewLine);
+                var center = new SKPoint(label.X, label.Y);
+                var origin = center - new SKPoint(block.MeasuredWidth / 2, block.MeasuredHeight / 2);
 
-                var maxContentBounds = new SKRect();
-                foreach (var line in lines)
-                {
-                    var contentBounds = new SKRect();
-                    textBrush.MeasureText(line, ref contentBounds);
-                    maxContentBounds.Union(contentBounds);
-                }
+                // block debug
+                var fullBlock = new SKRect(label.X - Composer.W / 2, 0, label.X + Composer.W / 2, Composer.W);
+                canvas.DrawRect(fullBlock, red ? redFill : blueFill);
+                red = !red;
 
-                var yOffset = mBounds.Height / 2 - (lines.Length - 1) * (textBrush.TextSize / 2);
-                maxContentBounds.Offset(label.X - maxContentBounds.Width / 2, label.Y + yOffset);
+                // node box
+                var paddedBox = new SKRect(origin.X - 2, origin.Y - 2, origin.X + block.MeasuredWidth + 2, origin.Y + block.MeasuredHeight + 2);
+                canvas.DrawRect(paddedBox, blackStroke);
 
-                foreach (var line in lines)
-                {
-                    canvas.DrawShapedText(line, new SKPoint(label.X - maxContentBounds.Width / 2, label.Y + yOffset), textBrush);
-                    canvas.DrawText(line, new SKPoint(label.X, label.Y + yOffset), textBrush);
-                    yOffset += textBrush.TextSize;
-                }
-                
-                var paddedBounds = new SKRect(maxContentBounds.Left - 2, maxContentBounds.Top - 2, maxContentBounds.Right + 2, maxContentBounds.Bottom + (lines.Length - 1) * textBrush.TextSize + 2);
-                canvas.DrawRect(paddedBounds, blackStroke);
+                // node label
+                block.Paint(canvas, origin);
             }
 
             return surface.Snapshot();
