@@ -22,6 +22,7 @@ namespace Thousand
 
         public static TokenListParser<Kind, AST.Document> Document { get; } =
             Declaration.ManyDelimitedBy(NewLine)
-                .Select(ns => new AST.Document(ns.WhereNotNull().ToArray()));
+                .Select(ns => new AST.Document(ns.WhereNotNull().ToArray()))
+                .AtEnd();
     }
 }
