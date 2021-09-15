@@ -8,9 +8,9 @@ namespace Thousand.CLI
     {
         private static readonly string graph = @"
     node ""Entity One""
-    node ""Entity Two""
+    node ""Entity 😊""
 
-    node ""Two-Lined
+    node ""‮‮Right-To-Left
 Entity""
 
     node ""Three
