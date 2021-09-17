@@ -1,5 +1,6 @@
 ﻿using Superpower;
 using Superpower.Parsers;
+using System;
 using System.Linq;
 
 namespace Thousand
@@ -24,5 +25,16 @@ namespace Thousand
                 .Many()
             from close in Character.EqualTo('"')
             select new string(chars);
+
+        public static TextParser<T> Enum<T>() where T : struct, Enum
+        {
+            var values = System.Enum.GetValues<T>();
+            var parser = Span.EqualToIgnoreCase(values.First().ToString()!).Value(values.First());
+            foreach (var v in values.Skip(1))
+            {
+                parser = parser.Or(Span.EqualToIgnoreCase(v.ToString()!).Value(v));
+            }
+            return parser;
+        }
     }
 }

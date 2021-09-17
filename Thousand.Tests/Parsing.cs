@@ -16,51 +16,51 @@ namespace Thousand.Tests
         [Fact]
         public void ValidAttributeList_Single()
         {
-            var tokens = tokenizer.Tokenize(@"[a=b]");
-            var result = Parsers.AttributeList(tokens);
+            var tokens = tokenizer.Tokenize(@"[shape=square]");
+            var result = Parser.AttributeList(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value, new AST.Attribute("a", "b"));
+            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square));
         }
 
         [Fact]
         public void ValidAttributeList_Multiple()
         {
-            var tokens = tokenizer.Tokenize(@"[a=b,c=d,e=f]");
-            var result = Parsers.AttributeList(tokens);
+            var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval,shape=rounded]");
+            var result = Parser.AttributeList(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value, new AST.Attribute("a", "b"), new AST.Attribute("c", "d"), new AST.Attribute("e", "f"));
+            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Oval), new AST.NodeShapeAttribute(ShapeKind.Rounded));
         }
 
         [Fact]
         public void ValidAttributeList_Whitespace()
         {
-            var tokens = tokenizer.Tokenize(@"[ a=b,c = d, e=f]");
-            var result = Parsers.AttributeList(tokens);
+            var tokens = tokenizer.Tokenize(@"[ shape=square,shape = square, shape=square]");
+            var result = Parser.AttributeList(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value, new AST.Attribute("a", "b"), new AST.Attribute("c", "d"), new AST.Attribute("e", "f"));
+            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square));
         }
 
         [Fact]
         public void ValidNode()
         {
             var tokens = tokenizer.Tokenize(@"node ""foo""");
-            var result = Parsers.Node(tokens);
+            var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("foo", Array.Empty<AST.Attribute>()), result.Value);
+            Assert.Equal(new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), result.Value);
         }
 
         [Fact]
         public void ValidNode_WhiteSpace()
         {
             var tokens = tokenizer.Tokenize(@"   node     ""foo""    ");
-            var result = Parsers.Node(tokens);
+            var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("foo", Array.Empty<AST.Attribute>()), result.Value);
+            Assert.Equal(new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), result.Value);
         }
 
         [Fact]
@@ -68,17 +68,17 @@ namespace Thousand.Tests
         {
             var tokens = tokenizer.Tokenize(@"node ""foo
 bar""");
-            var result = Parsers.Node(tokens);
+            var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("foo"+Environment.NewLine+"bar", Array.Empty<AST.Attribute>()), result.Value);
+            Assert.Equal(new AST.Node("foo"+Environment.NewLine+"bar", Array.Empty<AST.NodeAttribute>()), result.Value);
         }
 
         [Fact]
         public void InvalidNode_WrongKeyword()
         {
             var tokens = tokenizer.Tokenize(@"nod ""foo""");
-            var result = Parsers.Node(tokens);
+            var result = Parser.Node(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -87,7 +87,7 @@ bar""");
         public void InvalidNode_NoLabel()
         {
             var tokens = tokenizer.Tokenize(@"node");
-            var result = Parsers.Node(tokens);
+            var result = Parser.Node(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -96,10 +96,10 @@ bar""");
         public void ValidDocument_SingleNode()
         {
             var tokens = tokenizer.Tokenize(@"node ""foo""");
-            var result = Parsers.Document(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.Attribute>()) );
+            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()) );
         }
 
         [Fact]
@@ -109,10 +109,10 @@ bar""");
 node ""bar""
 node ""baz""");
 
-            var result = Parsers.Document(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.Attribute>()), new AST.Node("bar", Array.Empty<AST.Attribute>()), new AST.Node("baz", Array.Empty<AST.Attribute>()));
+            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), new AST.Node("bar", Array.Empty<AST.NodeAttribute>()), new AST.Node("baz", Array.Empty<AST.NodeAttribute>()));
         }
 
         [Fact]
@@ -122,10 +122,10 @@ node ""baz""");
 
 node ""bar""");
 
-            var result = Parsers.Document(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.Attribute>()), new AST.Node("bar", Array.Empty<AST.Attribute>()));
+            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), new AST.Node("bar", Array.Empty<AST.NodeAttribute>()));
         }
     }
 }

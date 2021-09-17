@@ -8,7 +8,7 @@ namespace Thousand.Tests
         [Fact]
         public void CreateFromDiagram()
         {
-            var diagram = new AST.Document(new AST.Node[] { new("foo", Array.Empty<AST.Attribute>()), new("bar", Array.Empty<AST.Attribute>()) });
+            var diagram = new AST.Document(new AST.Node[] { new("foo", Array.Empty<AST.NodeAttribute>()), new("bar", Array.Empty<AST.NodeAttribute>()) });
             var layout = Composer.Compose(diagram);
 
             Assert.Equal(300, layout.Width);

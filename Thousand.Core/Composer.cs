@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Thousand
 {
@@ -16,18 +14,27 @@ namespace Thousand
             var nextX = W/2;
             foreach (var node in document.Nodes)
             {
-                var attrs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var label = node.Label;
+                var shape = ShapeKind.Square;
+
                 foreach (var attr in node.Attributes)
                 {
-                    attrs[attr.Key] = attr.Value;
+                    switch (attr)
+                    {
+                        case AST.NodeLabelAttribute nla:
+                            label = nla.Content;
+                            break;
+
+                        case AST.NodeShapeAttribute nsa:
+                            shape = nsa.Kind;
+                            break;
+                    }
                 }
 
-                var shape = attrs.ContainsKey("shape") ? Enum.Parse<ShapeKind>(attrs["shape"], true) : ShapeKind.Square;
+                var layoutLabel = new Layout.Label(nextX, W / 2, label);
 
-                var label = new Layout.Label(nextX, W / 2, node.Label);
-
-                labels.Add(label);
-                shapes.Add(new(nextX, W / 2, shape, label));
+                labels.Add(layoutLabel);
+                shapes.Add(new(nextX, W / 2, shape, layoutLabel));
 
                 nextX += W;
             }

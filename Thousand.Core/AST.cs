@@ -1,6 +1,9 @@
 ﻿namespace Thousand.AST
 {
-    public record Attribute(string Key, string Value);
-    public record Node(string Label, Attribute[] Attributes);
+    public record Node(string Label, NodeAttribute[] Attributes);
     public record Document(Node[] Nodes);
+
+    public abstract record NodeAttribute;
+    public record NodeLabelAttribute(string Content) : NodeAttribute;
+    public record NodeShapeAttribute(ShapeKind Kind) : NodeAttribute;
 }
