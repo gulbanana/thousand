@@ -1,7 +1,9 @@
 ﻿using Superpower;
 using Superpower.Parsers;
 using System;
+using System.Globalization;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand
 {
@@ -26,15 +28,11 @@ namespace Thousand
             from close in Character.EqualTo('"')
             select new string(chars);
 
-        public static TextParser<T> Enum<T>() where T : struct, Enum
-        {
-            var values = System.Enum.GetValues<T>();
-            var parser = Span.EqualToIgnoreCase(values.First().ToString()!).Value(values.First());
-            foreach (var v in values.Skip(1))
-            {
-                parser = parser.Or(Span.EqualToIgnoreCase(v.ToString()!).Value(v));
-            }
-            return parser;
-        }
+        public static TextParser<Colour> Colour { get; } =
+            from hash in Character.EqualTo('#')
+            from r in Character.HexDigit.Repeat(2)
+            from g in Character.HexDigit.Repeat(2)
+            from b in Character.HexDigit.Repeat(2)
+            select new Colour(byte.Parse(r, NumberStyles.HexNumber), byte.Parse(g, NumberStyles.HexNumber), byte.Parse(b, NumberStyles.HexNumber));
     }
 }

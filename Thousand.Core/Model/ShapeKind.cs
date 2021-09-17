@@ -1,4 +1,4 @@
-﻿namespace Thousand
+﻿namespace Thousand.Model
 {
     public enum ShapeKind
     {

@@ -3,6 +3,8 @@
     public enum NodeAttributeKind
     {
         Label,
-        Shape
+        Shape,
+        Stroke,
+        Fill
     }
 }

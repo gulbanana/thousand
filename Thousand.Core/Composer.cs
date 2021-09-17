@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand
 {
@@ -26,6 +27,8 @@ namespace Thousand
 
                 var label = node.Label;
                 var shape = ShapeKind.Square;
+                var stroke = new Colour(0, 0, 0);
+                var fill = new Colour(255, 255, 255);
 
                 foreach (var attr in node.Attributes)
                 {
@@ -38,13 +41,21 @@ namespace Thousand
                         case AST.NodeShapeAttribute nsa:
                             shape = nsa.Kind;
                             break;
+
+                        case AST.NodeStrokeAttribute nsc:
+                            stroke = nsc.Colour;
+                            break;
+
+                        case AST.NodeFillAttribute nfc:
+                            fill = nfc.Colour;
+                            break;
                     }
                 }
 
                 var layoutLabel = new Layout.Label(point.x, point.y, label);
 
                 labels.Add(layoutLabel);
-                shapes.Add(new(point.x, point.y, shape, layoutLabel));
+                shapes.Add(new(point.x, point.y, shape, layoutLabel, stroke, fill));
 
                 nextX += W;
             }
@@ -57,7 +68,19 @@ namespace Thousand
                 var from = indexedNodes.IndexOf(nFrom);               
                 var to = indexedNodes.IndexOf(nTo);
 
-                lines.Add(new(indexedPoints[from].x, indexedPoints[from].y, indexedPoints[to].x, indexedPoints[to].y));
+                var colour = new Colour(0, 0, 0);
+
+                foreach (var attr in edge.Attributes)
+                {
+                    switch (attr)
+                    {
+                        case AST.EdgeStrokeAttribute esa:
+                            colour = esa.Colour;
+                            break;
+                    }
+                }
+
+                lines.Add(new(indexedPoints[from].x, indexedPoints[from].y, indexedPoints[to].x, indexedPoints[to].y, colour));
             }
 
             return new(labels.Count * W, W, shapes, labels, lines);

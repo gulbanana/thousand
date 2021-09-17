@@ -1,5 +1,6 @@
 ﻿using SkiaSharp;
 using System;
+using Thousand.Model;
 using Topten.RichTextKit;
 
 namespace Thousand
@@ -34,19 +35,10 @@ namespace Thousand
             var canvas = surface.Canvas;
             canvas.Clear(SKColors.White);
 
-            // XXX block debug
-            var red = false;
-            foreach (var shape in diagram.Shapes)
-            {
-                var fullBlock = new SKRect(shape.X - Composer.W / 2, 0, shape.X + Composer.W / 2, Composer.W);
-                canvas.DrawRect(fullBlock, red ? redFill : blueFill);
-                red = !red;
-            }
-            // XXX block debug
-
             foreach (var line in diagram.Lines)
             {
-                canvas.DrawLine(new SKPoint(line.X1, line.Y1), new SKPoint(line.X2, line.Y2), blackStroke);
+                var linePaint = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
+                canvas.DrawLine(new SKPoint(line.X1, line.Y1), new SKPoint(line.X2, line.Y2), linePaint);
             }
 
             foreach (var shape in diagram.Shapes)
@@ -74,24 +66,27 @@ namespace Thousand
             var origin = center - new SKPoint(block.MeasuredWidth / 2, block.MeasuredHeight / 2);
 
             var box = new SKRect(origin.X, origin.Y, origin.X + block.MeasuredWidth, origin.Y + block.MeasuredHeight);
+            var stroke = new SKPaint { Color = shape.Stroke.SK(), IsAntialias = true, IsStroke = true };
+            var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
+
             switch (shape.Kind)
             {
                 case ShapeKind.Square:
                     var paddedBox = Pad(box, 4);
-                    canvas.DrawRect(paddedBox, whiteFill);
-                    canvas.DrawRect(paddedBox, blackStroke);
+                    canvas.DrawRect(paddedBox, fill);
+                    canvas.DrawRect(paddedBox, stroke);
                     break;
 
                 case ShapeKind.Oval:
                     var paddedOval = Pad(box, 10);
-                    canvas.DrawOval(paddedOval, whiteFill);
-                    canvas.DrawOval(paddedOval, blackStroke);
+                    canvas.DrawOval(paddedOval, fill);
+                    canvas.DrawOval(paddedOval, stroke);
                     break;
 
                 case ShapeKind.Rounded:
                     var paddedRect = new SKRoundRect(Pad(box, 4), 4);
-                    canvas.DrawRoundRect(paddedRect, whiteFill);
-                    canvas.DrawRoundRect(paddedRect, blackStroke);
+                    canvas.DrawRoundRect(paddedRect, fill);
+                    canvas.DrawRoundRect(paddedRect, stroke);
                     break;
             }            
         }

@@ -34,13 +34,14 @@ namespace Thousand
 
             return new TokenizerBuilder<TokenKind>()
                 .Ignore(parseInLineWhiteSpace)
-                .Match(parseNewLine, TokenKind.NewLine)
-                .Match(parseStringToken, TokenKind.String)
-                .Match(Identifier.CStyle, TokenKind.Keyword)
                 .Match(Character.EqualTo('['), TokenKind.LeftBracket)
                 .Match(Character.EqualTo(']'), TokenKind.RightBracket)
                 .Match(Character.EqualTo('='), TokenKind.EqualsSign)
                 .Match(Character.EqualTo(','), TokenKind.Comma)
+                .Match(parseNewLine, TokenKind.NewLine)
+                .Match(Identifier.CStyle, TokenKind.Keyword)
+                .Match(parseStringToken, TokenKind.String)
+                .Match(Character.EqualTo('#').IgnoreThen(Character.HexDigit.Repeat(6)), TokenKind.Colour)
                 .Build();
         }
     }

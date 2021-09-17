@@ -4,12 +4,6 @@ namespace Thousand
 {
     public enum TokenKind
     {
-        NewLine,
-
-        Keyword,
-
-        String,
-
         [Token(Example = "[")]
         LeftBracket,
 
@@ -21,5 +15,13 @@ namespace Thousand
 
         [Token(Example = ",")]
         Comma,
+
+        NewLine,
+
+        Keyword,
+
+        String,
+
+        Colour,
     }
 }

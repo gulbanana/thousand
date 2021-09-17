@@ -13,14 +13,26 @@ namespace Thousand.Tests
         }
 
         [Fact]
-        public void BasicElements()
+        public void Keywords()
         {
-            var input = @"node ""Foo""";
+            var input = @"node edge foo bar";
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.String);
-            AssertEx.Sequence(output.Select(t => t.ToStringValue()), "node", @"""Foo""");
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.Keyword, TokenKind.Keyword, TokenKind.Keyword);
+            AssertEx.Sequence(output.Select(t => t.ToStringValue()), "node", "edge", "foo", "bar");
+        }
+
+        [Theory]
+        [InlineData("#000000")]
+        [InlineData("#123456")]
+        [InlineData("#ffffff")]
+        public void Colour(string input)
+        {
+            var output = sut.Tokenize(input);
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Colour);
+            AssertEx.Sequence(output.Select(t => t.ToStringValue()), input);
         }
 
         [Theory]

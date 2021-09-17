@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Thousand.Model;
 using Xunit;
 
 namespace Thousand.Tests
@@ -95,6 +96,18 @@ bar""");
             Assert.Equal("foo", result.Value.From);
             Assert.Equal("bar", result.Value.To);
             Assert.Empty(result.Value.Attributes);
+        }
+
+        [Fact]
+        public void ValidEdge_Attributed()
+        {
+            var tokens = tokenizer.Tokenize(@"edge ""foo"" ""bar"" [stroke=#000000]");
+            var result = Parser.Edge(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.From);
+            Assert.Equal("bar", result.Value.To);
+            AssertEx.Sequence(result.Value.Attributes, new AST.EdgeStrokeAttribute(new Colour(0, 0, 0)));
         }
 
         [Fact]
