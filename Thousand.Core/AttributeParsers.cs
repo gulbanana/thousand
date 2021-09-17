@@ -24,5 +24,8 @@ namespace Thousand
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } = 
             NodeLabelAttribute
                 .Or(NodeShapeAttribute);
+
+        public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeAttribute { get; } =
+            Token.EqualTo(TokenKind.Keyword).Value(default(AST.EdgeAttribute)!);
     }
 }

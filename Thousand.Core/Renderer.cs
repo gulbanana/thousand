@@ -44,6 +44,11 @@ namespace Thousand
             }
             // XXX block debug
 
+            foreach (var line in diagram.Lines)
+            {
+                canvas.DrawLine(new SKPoint(line.X1, line.Y1), new SKPoint(line.X2, line.Y2), blackStroke);
+            }
+
             foreach (var shape in diagram.Shapes)
             {
                 PaintShape(canvas, shape);

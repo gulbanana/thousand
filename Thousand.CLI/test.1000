@@ -1,3 +1,4 @@
 ﻿node "Rounded Thing" [Shape=Rounded] 
 node "Square\nThing"
 node "Some Thing" [label="Oval Thing",shape=oval]
+edge "Square\nThing" "Some Thing"

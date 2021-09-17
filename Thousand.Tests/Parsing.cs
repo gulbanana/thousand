@@ -17,7 +17,7 @@ namespace Thousand.Tests
         public void ValidAttributeList_Single()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square]");
-            var result = Parser.AttributeList(tokens);
+            var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -27,7 +27,7 @@ namespace Thousand.Tests
         public void ValidAttributeList_Multiple()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval,shape=rounded]");
-            var result = Parser.AttributeList(tokens);
+            var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Oval), new AST.NodeShapeAttribute(ShapeKind.Rounded));
@@ -37,7 +37,7 @@ namespace Thousand.Tests
         public void ValidAttributeList_Whitespace()
         {
             var tokens = tokenizer.Tokenize(@"[ shape=square,shape = square, shape=square]");
-            var result = Parser.AttributeList(tokens);
+            var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -86,6 +86,18 @@ bar""");
         }
 
         [Fact]
+        public void ValidEdge()
+        {
+            var tokens = tokenizer.Tokenize(@"edge ""foo"" ""bar""");
+            var result = Parser.Edge(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.From);
+            Assert.Equal("bar", result.Value.To);
+            Assert.Empty(result.Value.Attributes);
+        }
+
+        [Fact]
         public void InvalidNode_WrongKeyword()
         {
             var tokens = tokenizer.Tokenize(@"nod ""foo""");
@@ -110,7 +122,7 @@ bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()) );
+            AssertEx.Sequence(result.Value.Declarations, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()) );
         }
 
         [Fact]
@@ -123,7 +135,10 @@ node ""baz""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), new AST.Node("bar", Array.Empty<AST.NodeAttribute>()), new AST.Node("baz", Array.Empty<AST.NodeAttribute>()));
+            AssertEx.Sequence(result.Value.Declarations, 
+                new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), 
+                new AST.Node("bar", Array.Empty<AST.NodeAttribute>()), 
+                new AST.Node("baz", Array.Empty<AST.NodeAttribute>()));
         }
 
         [Fact]
@@ -136,7 +151,24 @@ node ""bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.NodeAttribute>()), new AST.Node("bar", Array.Empty<AST.NodeAttribute>()));
+            AssertEx.Sequence(result.Value.Declarations, new AST.Node("foo", 
+                Array.Empty<AST.NodeAttribute>()), 
+                new AST.Node("bar", Array.Empty<AST.NodeAttribute>()));
+        }
+
+        [Fact]
+        public void ValidDocument_NodesAndEdge()
+        {
+            var tokens = tokenizer.Tokenize(@"node ""foo""
+node ""bar""
+edge ""foo"" ""bar""");
+            var result = Parser.Document(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.Declarations, 
+                new AST.Node("foo", Array.Empty<AST.NodeAttribute>()),
+                new AST.Node("bar", Array.Empty<AST.NodeAttribute>()),
+                new AST.Edge("foo", "bar", Array.Empty<AST.EdgeAttribute>()));
         }
     }
 }
