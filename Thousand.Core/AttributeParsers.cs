@@ -1,4 +1,5 @@
 ﻿using Superpower;
+using Superpower.Model;
 using Superpower.Parsers;
 using System.Linq;
 
@@ -6,29 +7,22 @@ namespace Thousand
 {
     public static class AttributeParsers
     {
-        public static TokenListParser<TokenKind, Superpower.Model.Token<TokenKind>> Key<TK>(TK kind, TokenKind token) where TK : struct =>
+        private static TokenListParser<TokenKind, Token<TokenKind>> Key<TK>(TK kind) where TK : struct =>
             Token.EqualToValueIgnoreCase(TokenKind.Keyword, kind.ToString()!)
-                 .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign)
-                                  .IgnoreThen(Token.EqualTo(token)));
+                 .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
-            Key(NodeAttributeKind.Label, TokenKind.String)
-                .Apply(TextParsers.String.Select(s => new AST.NodeLabelAttribute(s)))
-                .Select(n => (AST.NodeAttribute)n);
+            from key in Key(NodeAttributeKind.Label)
+            from value in Token.EqualTo(TokenKind.String).Apply(TextParsers.String)
+            select new AST.NodeLabelAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } = 
-            Key(NodeAttributeKind.Shape, TokenKind.Keyword)
-                .Apply(TextParsers.Enum<ShapeKind>().Select(k => new AST.NodeShapeAttribute(k)))
-                .Select(n => (AST.NodeAttribute)n);
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
+            from key in Key(NodeAttributeKind.Shape)
+            from shape in Enums.Value<ShapeKind>()
+            select new AST.NodeShapeAttribute(shape) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } = 
             NodeLabelAttribute
                 .Or(NodeShapeAttribute);
-
-        public static TokenListParser<TokenKind, AST.NodeAttribute[]> AttributeList { get; } =
-            from begin in Token.EqualTo(TokenKind.LeftBracket)
-            from values in NodeAttribute.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
-            from end in Token.EqualTo(TokenKind.RightBracket)
-            select values;
     }
 }

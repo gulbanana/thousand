@@ -13,7 +13,7 @@ namespace Thousand
             }
         }
 
-        public static TokenListParser<K, U> Cast<K, T, U>(this TokenListParser<K, T> pT) where U : T where T : notnull
+        public static TokenListParser<TokenKind, U> Cast<T, U>(this TokenListParser<TokenKind, T> pT) where T : U
         {
             return pT.Select(x => (U)x);
         }

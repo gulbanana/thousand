@@ -75,6 +75,17 @@ bar""");
         }
 
         [Fact]
+        public void ValidNode_Attributed()
+        {
+            var tokens = tokenizer.Tokenize(@"node ""foo"" [label=""bar""]");
+            var result = Parser.Node(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Label);
+            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
+        }
+
+        [Fact]
         public void InvalidNode_WrongKeyword()
         {
             var tokens = tokenizer.Tokenize(@"nod ""foo""");
