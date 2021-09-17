@@ -1,0 +1,3 @@
+﻿node [Shape=Rounded] "Rounded Thing"
+node "Square\nThing"
+node [shape=square,shape=oval] "Oval Thing"

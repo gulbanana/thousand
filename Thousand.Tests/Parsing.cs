@@ -6,11 +6,41 @@ namespace Thousand.Tests
 {
     public class Parsing
     {
-        private readonly Superpower.Tokenizer<Kind> tokenizer;
+        private readonly Superpower.Tokenizer<TokenKind> tokenizer;
 
         public Parsing()
         {
             tokenizer = Tokenizer.Build();            
+        }
+
+        [Fact]
+        public void ValidAttributeList_Single()
+        {
+            var tokens = tokenizer.Tokenize(@"[a=b]");
+            var result = Parsers.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value, new AST.Attribute("a", "b"));
+        }
+
+        [Fact]
+        public void ValidAttributeList_Multiple()
+        {
+            var tokens = tokenizer.Tokenize(@"[a=b,c=d,e=f]");
+            var result = Parsers.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value, new AST.Attribute("a", "b"), new AST.Attribute("c", "d"), new AST.Attribute("e", "f"));
+        }
+
+        [Fact]
+        public void ValidAttributeList_Whitespace()
+        {
+            var tokens = tokenizer.Tokenize(@"[ a=b,c = d, e=f]");
+            var result = Parsers.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value, new AST.Attribute("a", "b"), new AST.Attribute("c", "d"), new AST.Attribute("e", "f"));
         }
 
         [Fact]
@@ -20,7 +50,7 @@ namespace Thousand.Tests
             var result = Parsers.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("foo"), result.Value);
+            Assert.Equal(new AST.Node("foo", Array.Empty<AST.Attribute>()), result.Value);
         }
 
         [Fact]
@@ -30,7 +60,7 @@ namespace Thousand.Tests
             var result = Parsers.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("foo"), result.Value);
+            Assert.Equal(new AST.Node("foo", Array.Empty<AST.Attribute>()), result.Value);
         }
 
         [Fact]
@@ -41,7 +71,7 @@ bar""");
             var result = Parsers.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("foo"+Environment.NewLine+"bar"), result.Value);
+            Assert.Equal(new AST.Node("foo"+Environment.NewLine+"bar", Array.Empty<AST.Attribute>()), result.Value);
         }
 
         [Fact]
@@ -69,7 +99,7 @@ bar""");
             var result = Parsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo") );
+            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.Attribute>()) );
         }
 
         [Fact]
@@ -82,7 +112,7 @@ node ""baz""");
             var result = Parsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo"), new AST.Node("bar"), new AST.Node("baz"));
+            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.Attribute>()), new AST.Node("bar", Array.Empty<AST.Attribute>()), new AST.Node("baz", Array.Empty<AST.Attribute>()));
         }
 
         [Fact]
@@ -95,7 +125,7 @@ node ""bar""");
             var result = Parsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo"), new AST.Node("bar"));
+            AssertEx.Sequence(result.Value.Nodes, new AST.Node("foo", Array.Empty<AST.Attribute>()), new AST.Node("bar", Array.Empty<AST.Attribute>()));
         }
     }
 }

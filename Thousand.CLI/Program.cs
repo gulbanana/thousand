@@ -7,22 +7,10 @@ namespace Thousand.CLI
 {
     class Program
     {
-        private static readonly string graph = @"
-    node ""Entity One""
-    node ""Entity 😊""
-
-    node ""‮‮Right-To-Left
-Entity""
-
-    node ""Three
-Lined
-Entity""
-
-    node ""हिन्दी के साधन""
-";
-
         static void Main()
         {
+            var graph = File.ReadAllText("test.1000");
+
             if (!TryParse(graph, out var document, out var error))
             {
                 Console.WriteLine(error);

@@ -3,6 +3,14 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="test.1000" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="test.1000">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />

@@ -5,7 +5,7 @@ namespace Thousand.Tests
 {
     public class Tokenization
     {
-        private readonly Superpower.Tokenizer<Kind> sut;
+        private readonly Superpower.Tokenizer<TokenKind> sut;
 
         public Tokenization()
         {
@@ -19,7 +19,7 @@ namespace Thousand.Tests
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), Kind.Keyword, Kind.String);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.String);
             AssertEx.Sequence(output.Select(t => t.ToStringValue()), "node", @"""Foo""");
         }
 
@@ -36,7 +36,7 @@ namespace Thousand.Tests
         {
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), Kind.Keyword, Kind.NewLine, Kind.Keyword);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.NewLine, TokenKind.Keyword);
         }
 
         [Fact]
@@ -49,7 +49,7 @@ bar"" ""baz""
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), Kind.NewLine, Kind.String, Kind.String, Kind.NewLine);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.NewLine, TokenKind.String, TokenKind.String, TokenKind.NewLine);
             Assert.Equal(@"""foo
 bar""", output.ElementAt(1).ToStringValue());
         }

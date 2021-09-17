@@ -4,7 +4,7 @@ namespace Thousand
 {
     public static class Parser
     {
-        public static TokenListParser<Kind, AST.Document> Build()
+        public static TokenListParser<TokenKind, AST.Document> Build()
         {
             return Parsers.Document;
         }
