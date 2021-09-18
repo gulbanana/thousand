@@ -5,12 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
+    <Content Include="demo.1000" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Pages\Index - Copy.razor.css">
-      <DependentUpon>Index.razor.css</DependentUpon>
-    </None>
+    <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
   </ItemGroup>
 </Project>
