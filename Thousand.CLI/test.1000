@@ -1,8 +1,8 @@
-﻿node "top left" [shape=oval]
-node "top centre" [shape=oval]
-node "top right" [shape=oval]
-node "bottom left" [shape=rounded,row=2,column=1]
-node "bottom right" [shape=rounded,column=3]
+﻿node "top left" [fill=#ccc,shape=oval]
+node "top centre" [fill=#ccc] 
+node "top right" [fill=#ccc,shape=oval]
+node "bottom left" [fill=#ccc,shape=rounded,row=2,column=1]
+node "bottom right" [fill=#ccc,shape=rounded,column=3]
 
 edge "top left" "top centre"
 edge "top right" "top centre"

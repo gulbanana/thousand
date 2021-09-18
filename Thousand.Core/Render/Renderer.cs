@@ -14,8 +14,8 @@ namespace Thousand.Render
 
         public Renderer()
         {
-            blueFill = new SKPaint { Color = SKColors.LightBlue, IsStroke = false };
-            redFill = new SKPaint { Color = SKColors.PaleVioletRed, IsStroke = false };
+            blueFill = new SKPaint { Color = SKColors.LightBlue, IsStroke = false, IsAntialias = true };
+            redFill = new SKPaint { Color = SKColors.PaleVioletRed, IsStroke = false, IsAntialias = true };
             whiteFill = new SKPaint { Color = SKColors.White, IsStroke = false, IsAntialias = true };
             blackStroke = new SKPaint { Color = SKColors.Black, IsStroke = true, IsAntialias = true };
         }
@@ -30,11 +30,12 @@ namespace Thousand.Render
 
         public SKImage Render(Layout.Diagram diagram)
         {
-            var info = new SKImageInfo(diagram.Width, diagram.Height);
+            var info = new SKImageInfo(diagram.Width*2, diagram.Height*2);
             using var surface = SKSurface.Create(info);            
             
             var canvas = surface.Canvas;
             canvas.Clear(SKColors.White);
+            canvas.Scale(2f);
 
             var state = new RenderState(canvas);
 
@@ -91,14 +92,25 @@ namespace Thousand.Render
             var label = state.Labels[shape.Fit];
 
             var textBox = new SKRect(label.Origin.X, label.Origin.Y, label.Origin.X + label.Text.MeasuredWidth, label.Origin.Y + label.Text.MeasuredHeight);
-            var paddedBox = shape.Kind switch
-            {
-                ShapeKind.Square => Pad(textBox, 4),
-                ShapeKind.Oval => Pad(textBox, 10),
-                ShapeKind.Rounded => Pad(textBox, 4)
-            };
 
-            return new(label.Center, paddedBox);
+            var path = new SKPath();
+            switch (shape.Kind)
+            {
+                case ShapeKind.Square:
+                    path.AddRect(Pad(textBox, 4));
+                    break;
+
+                case ShapeKind.Oval: 
+                    path.AddOval(Pad(textBox, 10));
+                    break;
+
+                case ShapeKind.Rounded:
+                    path.AddRoundRect(new SKRoundRect(Pad(textBox, 4), 4));
+                    break;
+            };
+            path.Close();
+
+            return new(label.Center, path);
         }
 
         private void PaintShape(RenderState state, Layout.Shape shape)
@@ -108,80 +120,62 @@ namespace Thousand.Render
             var stroke = new SKPaint { Color = shape.Stroke.SK(), IsAntialias = true, IsStroke = true };
             var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
 
-            switch (shape.Kind)
-            {
-                case ShapeKind.Square:
-                    state.Canvas.DrawRect(measures.Box, fill);
-                    state.Canvas.DrawRect(measures.Box, stroke);
-                    break;
-
-                case ShapeKind.Oval:
-                    state.Canvas.DrawOval(measures.Box, fill);
-                    state.Canvas.DrawOval(measures.Box, stroke);
-                    break;
-
-                case ShapeKind.Rounded:
-                    var paddedBox = new SKRoundRect(measures.Box, 4);
-                    state.Canvas.DrawRoundRect(paddedBox, fill);
-                    state.Canvas.DrawRoundRect(paddedBox, stroke);
-                    break;
-            }
+            state.Canvas.DrawPath(measures.Path, fill);
+            state.Canvas.DrawPath(measures.Path, stroke);
         }
 
-        // XXX better algorithm: calculate notional line between centers, find intersection with shapes, move start/end
         private void PaintLine(RenderState state, Layout.Line line)
         {
             var from = state.Shapes[line.From];
             var to = state.Shapes[line.To];
 
-            var startX = 0f;
-            var endX = 0f;
-            if (from.Center.X < to.Center.X)
-            {
-                startX = from.Box.Right;
-                endX = to.Box.Left;
-            }
-            else if (from.Center.X > to.Center.X)
-            {
-                startX = from.Box.Left;
-                endX = to.Box.Right;
-            }
-            else
-            {
-                startX = from.Center.X;
-                endX = to.Center.X;
-            }
-
-            var startY = 0f;
-            var endY = 0f;
-            if (from.Center.Y < to.Center.Y)
-            {
-                startY = from.Box.Bottom;
-                endY = to.Box.Top;
-            }
-            else if (from.Center.Y > to.Center.Y)
-            {
-                startY = from.Box.Top;
-                endY = to.Box.Bottom;
-            }
-            else
-            {
-                startY = from.Center.Y;
-                endY = to.Center.Y;
-            }
-
-            var start = new SKPoint(startX, startY);
-            var end = new SKPoint(endX, endY);
-
+            // used as fill or hairline, rather than stroke in the Skia sense
             var stroke = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
+
+            // for a non-hairline of width n, establish start points +n/2 and -n/2 perpendicular to the line
+            var width = 1.0f;
+            var unitPath = Normalize(to.Center - from.Center, width/2);
+            var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
+            var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
+
+            // draw a thin rectangle of the desired width
+            var path = new SKPath();
+            path.MoveTo(from.Center);
+            path.LineTo(from.Center + offset1);
+            path.LineTo(to.Center + offset1);
+            path.LineTo(to.Center);
+            path.LineTo(to.Center + offset2);
+            path.LineTo(from.Center + offset2);
+            path.Close();
+
+            // subtract the rectangle regions within src/dst shapes 
+            var visiblePath = path.Op(from.Path, SKPathOp.Difference).Op(to.Path, SKPathOp.Difference);
+
+            // create the points for a hairline (and end cap positioning)
+            var start = visiblePath.Points[0];
+            var end = visiblePath.Points[3];
+            if ((start - to.Center).LengthSquared < (start - from.Center).LengthSquared)
+            {
+                var swap = start;
+                start = end;
+                end = swap;
+            }
+
+            // draw the main line
             state.Canvas.DrawLine(start, end, stroke);
 
-            // XXX does not angle arrow - always faces right
+            // draw end cap
             var arrowhead = new SKPath();
-            arrowhead.MoveTo(end);
-            arrowhead.LineTo(end + new SKPoint(-7, -5));
-            arrowhead.LineTo(end + new SKPoint(-7, 5));
+            var arrowLength = Normalize(to.Center - from.Center, 7f);
+            var arrowWidth = Normalize(to.Center - from.Center, 4f);
+            var base1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(arrowWidth);
+            var base2 = SKMatrix.CreateRotationDegrees(90).MapPoint(arrowWidth);
+
+            arrowhead.MoveTo(end - arrowLength);
+            arrowhead.LineTo(end - arrowLength + base1);
             arrowhead.LineTo(end);
+            arrowhead.LineTo(end - arrowLength + base2);
+            arrowhead.Close();
 
             state.Canvas.DrawPath(arrowhead, stroke);
         }
@@ -189,6 +183,11 @@ namespace Thousand.Render
         private static SKRect Pad(SKRect box, float padding)
         {
             return new SKRect(box.Left - padding, box.Top - padding, box.Right + padding, box.Bottom + padding);
+        }
+
+        private static SKPoint Normalize(SKPoint vector, float length = 1.0f)
+        {
+            return new SKPoint(vector.X / vector.Length * length, vector.Y / vector.Length * length);
         }
     }
 }
