@@ -11,20 +11,15 @@ namespace Thousand
 
         public static Layout.Diagram Compose(AST.Document document)
         {
-            var shapes = new List<Layout.Shape>();
-            var labels = new List<Layout.Label>();
-            var lines = new List<Layout.Line>();
+            // pass 1: canonicalise AST elements, arranging the nodes on a grid 
+            var labelledShapes = new List<LabelledShape>();
 
-            var indexedNodes = document.Declarations.OfType<AST.Node>().ToList();
-            var indexedPoints = new (int x, int y)[indexedNodes.Count];
-
-            var nextX = W/2;
-            for (var i = 0; i < indexedNodes.Count; i++)
+            var nextX = 1;
+            var nextY = 1;
+            foreach (var node in document.Declarations.OfType<AST.Node>())
             {
-                var node = indexedNodes[i];
-                var point = (x: nextX, y: W / 2);
-                indexedPoints[i] = point;
-
+                var x = nextX;
+                var y = nextY;
                 var label = node.Label;
                 var shape = ShapeKind.Square;
                 var stroke = Colour.Black;
@@ -49,24 +44,43 @@ namespace Thousand
                         case AST.NodeFillAttribute nfc:
                             fill = nfc.Colour;
                             break;
+
+                        case AST.NodeRowAttribute nra:
+                            y = nra.Value;
+                            break;
+
+                        case AST.NodeColumnAttribute nca:
+                            x = nca.Value;
+                            break;
                     }
                 }
 
-                var layoutLabel = new Layout.Label(point.x, point.y, label);
+                labelledShapes.Add(new(y, x, node.Label, shape, stroke, fill));
 
-                labels.Add(layoutLabel);
-                shapes.Add(new(point.x, point.y, shape, layoutLabel, stroke, fill));
+                nextX = x + 1;
+                nextY = y;
+            }
+
+            // pass 2: 
+            var shapes = new List<Layout.Shape>();
+            var labels = new List<Layout.Label>();
+            var lines = new List<Layout.Line>();
+
+            foreach (var node in labelledShapes)
+            {
+                var label = new Layout.Label(node.Column * W - (W/2), node.Row * W - (W / 2), node.Label);
+                var shape = new Layout.Shape(label.X, label.Y, node.Kind, label, node.Stroke, node.Fill);
+
+                labels.Add(label);
+                shapes.Add(shape);
 
                 nextX += W;
             }
 
             foreach (var edge in document.Declarations.OfType<AST.Edge>())
             {
-                var nFrom = indexedNodes.Single(n => n.Label.Equals(edge.From, StringComparison.OrdinalIgnoreCase));
-                var nTo = indexedNodes.Single(n => n.Label.Equals(edge.To, StringComparison.OrdinalIgnoreCase));
-
-                var from = indexedNodes.IndexOf(nFrom);               
-                var to = indexedNodes.IndexOf(nTo);
+                var nFrom = shapes.Single(n => n.Fit.Content.Equals(edge.From, StringComparison.OrdinalIgnoreCase));
+                var nTo = shapes.Single(n => n.Fit.Content.Equals(edge.To, StringComparison.OrdinalIgnoreCase));
 
                 var colour = Colour.Black;
 
@@ -80,10 +94,16 @@ namespace Thousand
                     }
                 }
 
-                lines.Add(new(shapes[from], shapes[to], colour));
+                lines.Add(new(nFrom, nTo, colour));
             }
 
-            return new(labels.Count * W, W, shapes, labels, lines);
+            return new(
+                labelledShapes.Select(s => s.Column).Max() * W,
+                labelledShapes.Select(s => s.Row).Max() * W, 
+                shapes, 
+                labels, 
+                lines
+            );
         }
     }
 }

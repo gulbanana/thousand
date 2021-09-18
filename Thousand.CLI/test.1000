@@ -1,7 +1,9 @@
-﻿node "Rounded Thing" [shape=rounded, stroke=green, row=1] 
-node "Square\nThing" [stroke=red, fill=#99f, column=2]
-node "Some Thing" [label="Oval Thing", shape=oval, fill=#ccc]
-node  "Another Thing"
+﻿node "top left" [shape=oval]
+node "top centre" [shape=oval]
+node "top right" [shape=oval]
+node "bottom left" [shape=rounded,row=2,column=1]
+node "bottom right" [shape=rounded,column=3]
 
-edge "Square\nThing" "Some Thing"
-edge "Some Thing" "Another Thing" [stroke=#ff0044]
+edge "top left" "top centre"
+edge "top right" "top centre"
+edge "top left" "bottom right"
