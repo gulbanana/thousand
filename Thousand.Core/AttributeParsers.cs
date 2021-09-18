@@ -16,6 +16,9 @@ namespace Thousand
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
                 .Or(Keyword.Statics<Colour>());
 
+        public static TokenListParser<TokenKind, int> CountingNumberValue { get; } =
+            Token.EqualTo(TokenKind.Integer).Apply(TextParsers.CountingNumber);
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
             from key in Key(NodeAttributeKind.Label)
             from value in Token.EqualTo(TokenKind.String).Apply(TextParsers.String)
@@ -36,11 +39,23 @@ namespace Thousand
             from value in ColourValue
             select new AST.NodeFillAttribute(value) as AST.NodeAttribute;
 
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeRowAttribute { get; } =
+            from key in Key(NodeAttributeKind.Row)
+            from value in CountingNumberValue
+            select new AST.NodeRowAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
+            from key in Key(NodeAttributeKind.Column)
+            from value in CountingNumberValue
+            select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
             NodeLabelAttribute
                 .Or(NodeShapeAttribute)
                 .Or(NodeStrokeAttribute)
-                .Or(NodeFillAttribute);
+                .Or(NodeFillAttribute)
+                .Or(NodeRowAttribute)
+                .Or(NodeColumnAttribute);
 
         public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeStrokeAttribute { get; } =
             from key in Key(EdgeAttributeKind.Stroke)

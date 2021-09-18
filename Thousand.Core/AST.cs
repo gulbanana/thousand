@@ -12,6 +12,8 @@ namespace Thousand.AST
     public record NodeShapeAttribute(ShapeKind Kind) : NodeAttribute;
     public record NodeStrokeAttribute(Colour Colour) : NodeAttribute;
     public record NodeFillAttribute(Colour Colour) : NodeAttribute;
+    public record NodeRowAttribute(int Value) : NodeAttribute;
+    public record NodeColumnAttribute(int Value) : NodeAttribute;
 
     public abstract record EdgeAttribute;
     public record EdgeStrokeAttribute(Colour Colour) : EdgeAttribute;

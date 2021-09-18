@@ -1,4 +1,5 @@
 ﻿using Superpower;
+using Superpower.Model;
 using Superpower.Parsers;
 using System;
 using System.Globalization;
@@ -9,6 +10,11 @@ namespace Thousand
 {
     internal static class TextParsers
     {
+        private static bool IsLatinDigit(char ch)
+        {
+            return ch >= '0' && ch <= '9';
+        }
+
         public static TextParser<string> String { get; } =
             from open in Character.EqualTo('"')
             from chars in Character.ExceptIn('"', '\\')
@@ -45,5 +51,32 @@ namespace Thousand
 
         public static TextParser<Colour> Colour { get; } =
             Character.EqualTo('#').IgnoreThen(LongColour.Try().Or(ShortColour));
+
+        /// <summary>A positive integer</summary>
+        public static TextParser<int> CountingNumber { get; } = input =>
+        {
+            var next = input.ConsumeChar();
+
+            if (!next.HasValue || !IsLatinDigit(next.Value))
+            {
+                return Result.Empty<int>(input, "digit");
+            }
+
+            TextSpan remainder;
+            var val = 0;
+            do
+            {
+                val = 10 * val + (next.Value - '0');
+                remainder = next.Remainder;
+                next = remainder.ConsumeChar();
+            } while (next.HasValue && IsLatinDigit(next.Value));
+
+            if (val < 1)
+            {
+                return Result.Empty<int>(input, "positive number");
+            }
+
+            return Result.Value(val, input, remainder);
+        };
     }
 }

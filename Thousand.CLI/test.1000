@@ -1,5 +1,5 @@
-﻿node "Rounded Thing" [shape=rounded, stroke=green] 
-node "Square\nThing" [stroke=red, fill=#99f]
+﻿node "Rounded Thing" [shape=rounded, stroke=green, row=1] 
+node "Square\nThing" [stroke=red, fill=#99f, column=2]
 node "Some Thing" [label="Oval Thing", shape=oval, fill=#ccc]
 node  "Another Thing"
 

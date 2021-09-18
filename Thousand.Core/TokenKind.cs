@@ -24,5 +24,7 @@ namespace Thousand
 
         [Token(Description = "colour literal")]
         Colour,
+
+        Integer,
     }
 }

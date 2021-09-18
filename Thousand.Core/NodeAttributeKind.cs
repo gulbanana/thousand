@@ -5,6 +5,8 @@
         Label,
         Shape,
         Stroke,
-        Fill
+        Fill,
+        Row,
+        Column
     }
 }

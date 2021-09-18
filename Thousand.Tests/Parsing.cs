@@ -43,6 +43,30 @@ namespace Thousand.Tests
             Assert.False(result.HasValue);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(100)]
+        [InlineData(10000)]
+        public void ValidInteger(int v)
+        {
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = AttributeParsers.CountingNumberValue(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(v, result.Value);
+        }
+
+        [Theory]
+        [InlineData("0")]
+        [InlineData("-1")]
+        public void InvalidInteger(string v)
+        {
+            var tokens = tokenizer.Tokenize(v);
+            var result = AttributeParsers.CountingNumberValue(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
         [Fact]
         public void ValidAttributeList_Single()
         {

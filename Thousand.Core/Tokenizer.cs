@@ -41,6 +41,7 @@ namespace Thousand
                 .Match(parseNewLine, TokenKind.NewLine)
                 .Match(Identifier.CStyle, TokenKind.Keyword)
                 .Match(parseStringToken, TokenKind.String)
+                .Match(Numerics.Integer, TokenKind.Integer)
                 .Match(Character.EqualTo('#').IgnoreThen(Character.HexDigit.AtLeastOnce()), TokenKind.Colour)
                 .Build();
         }
