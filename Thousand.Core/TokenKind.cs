@@ -22,6 +22,7 @@ namespace Thousand
 
         String,
 
+        [Token(Description = "colour literal")]
         Colour,
     }
 }

@@ -27,8 +27,8 @@ namespace Thousand
 
                 var label = node.Label;
                 var shape = ShapeKind.Square;
-                var stroke = new Colour(0, 0, 0);
-                var fill = new Colour(255, 255, 255);
+                var stroke = Colour.Black;
+                var fill = Colour.White;
 
                 foreach (var attr in node.Attributes)
                 {
@@ -68,7 +68,7 @@ namespace Thousand
                 var from = indexedNodes.IndexOf(nFrom);               
                 var to = indexedNodes.IndexOf(nTo);
 
-                var colour = new Colour(0, 0, 0);
+                var colour = Colour.Black;
 
                 foreach (var attr in edge.Attributes)
                 {

@@ -19,7 +19,8 @@ namespace Thousand.CLI
             }
 
             var diagram = Composer.Compose(document);
-            using var renderer = new Renderer();
+            
+            using var renderer = new Render.Renderer();
             var image = renderer.Render(diagram);
 
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "thousand-test.png");

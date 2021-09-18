@@ -1,7 +1,7 @@
-﻿node "Rounded Thing" [Shape=Rounded, stroke =  #00ff00] 
-  node "Square\nThing"
-node "Some Thing" [label="Oval Thing",shape=oval,Fill=#d0d0d0]
+﻿node "Rounded Thing" [shape=rounded, stroke=green] 
+node "Square\nThing" [stroke=red, fill=blue]
+node "Some Thing" [label="Oval Thing", shape=oval, fill=#d0d0d0]
+node  "Another Thing"
 
 edge "Square\nThing" "Some Thing"
-node  "Another Thing"
-edge "Some Thing" "Another Thing"   [stroke=#ff0044]
+edge "Some Thing" "Another Thing" [stroke=#ff0044]

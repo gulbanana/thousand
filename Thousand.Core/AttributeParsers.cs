@@ -12,6 +12,10 @@ namespace Thousand
             Token.EqualToValueIgnoreCase(TokenKind.Keyword, kind.ToString()!)
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
+        public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
+            Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
+                .Or(Keyword.Statics<Colour>());
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
             from key in Key(NodeAttributeKind.Label)
             from value in Token.EqualTo(TokenKind.String).Apply(TextParsers.String)
@@ -19,17 +23,17 @@ namespace Thousand
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
             from key in Key(NodeAttributeKind.Shape)
-            from shape in Enums.Value<ShapeKind>()
-            select new AST.NodeShapeAttribute(shape) as AST.NodeAttribute;
+            from value in Keyword.Enum<ShapeKind>()
+            select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeStrokeAttribute { get; } =
             from key in Key(NodeAttributeKind.Stroke)
-            from value in Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
+            from value in ColourValue
             select new AST.NodeStrokeAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeFillAttribute { get; } =
             from key in Key(NodeAttributeKind.Fill)
-            from value in Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
+            from value in ColourValue
             select new AST.NodeFillAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
@@ -40,7 +44,7 @@ namespace Thousand
 
         public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeStrokeAttribute { get; } =
             from key in Key(EdgeAttributeKind.Stroke)
-            from value in Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
+            from value in ColourValue
             select new AST.EdgeStrokeAttribute(value) as AST.EdgeAttribute;
 
         public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeAttribute { get; } =

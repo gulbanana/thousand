@@ -3,7 +3,7 @@ using System;
 using Thousand.Model;
 using Topten.RichTextKit;
 
-namespace Thousand
+namespace Thousand.Render
 {
     public class Renderer : IDisposable
     {
