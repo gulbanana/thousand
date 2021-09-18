@@ -1,7 +1,29 @@
 ﻿@page "/"
+@code {
+    static readonly string template = @"node ""Rounded Thing"" [shape=rounded, stroke=green] 
+node ""Square\nThing"" [stroke=red, fill=#99f]
+node ""Some Thing"" [label=""Oval Thing"", shape=oval, fill=#ccc]
+node ""Another Thing""
 
-<h1>Hello, world!</h1>
+edge ""Square\nThing"" ""Some Thing""
+edge ""Some Thing"" ""Another Thing"" [stroke=#ff0044]";
 
-Welcome to your new app.
+    string _source = template;
+    string source
+    {
+        get => _source;
+        set
+        {
+            _source = value;
+            StateHasChanged();
+        }
+    }
+}
+<h1>Live Preview</h1>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<div class="layout">
+    <textarea @bind="source" @bind:event="oninput" spellcheck="false">
+    </textarea>
+
+    <LivePreview Source="@source" />
+</div>

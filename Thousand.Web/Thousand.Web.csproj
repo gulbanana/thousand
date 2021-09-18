@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>disable</Nullable>
@@ -6,5 +6,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Pages\Index - Copy.razor.css">
+      <DependentUpon>Index.razor.css</DependentUpon>
+    </None>
   </ItemGroup>
 </Project>
