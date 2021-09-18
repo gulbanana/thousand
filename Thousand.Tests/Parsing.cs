@@ -15,6 +15,35 @@ namespace Thousand.Tests
         }
 
         [Fact]
+        public void ValidColour()
+        {
+            var tokens = tokenizer.Tokenize(@"#ffffff");
+            var result = AttributeParsers.ColourValue(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(Colour.White, result.Value);
+        }
+
+        [Fact]
+        public void ValidColour_Short()
+        {
+            var tokens = tokenizer.Tokenize(@"#fff");
+            var result = AttributeParsers.ColourValue(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(Colour.White, result.Value);
+        }
+
+        [Fact]
+        public void InvalidColour()
+        {
+            var tokens = tokenizer.Tokenize(@"#ffff");
+            var result = AttributeParsers.ColourValue(tokens);
+
+            Assert.False(result.HasValue);
+        }
+
+        [Fact]
         public void ValidAttributeList_Single()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square]");

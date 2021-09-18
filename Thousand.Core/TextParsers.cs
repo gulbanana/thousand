@@ -28,11 +28,22 @@ namespace Thousand
             from close in Character.EqualTo('"')
             select new string(chars);
 
-        public static TextParser<Colour> Colour { get; } =
-            from hash in Character.EqualTo('#')
+        private static TextParser<Colour> LongColour { get; } =
             from r in Character.HexDigit.Repeat(2)
             from g in Character.HexDigit.Repeat(2)
             from b in Character.HexDigit.Repeat(2)
             select new Colour(byte.Parse(r, NumberStyles.HexNumber), byte.Parse(g, NumberStyles.HexNumber), byte.Parse(b, NumberStyles.HexNumber));
+
+        private static TextParser<Colour> ShortColour { get; } =
+            from r in Character.HexDigit
+            from g in Character.HexDigit
+            from b in Character.HexDigit
+            select new Colour(
+                byte.Parse(new string(new[] { r, r }), NumberStyles.HexNumber), 
+                byte.Parse(new string(new[] { g, g }), NumberStyles.HexNumber), 
+                byte.Parse(new string(new[] { b, b }), NumberStyles.HexNumber));
+
+        public static TextParser<Colour> Colour { get; } =
+            Character.EqualTo('#').IgnoreThen(LongColour.Try().Or(ShortColour));
     }
 }

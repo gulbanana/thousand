@@ -27,6 +27,7 @@ namespace Thousand.Tests
         [InlineData("#000000")]
         [InlineData("#123456")]
         [InlineData("#ffffff")]
+        [InlineData("#ccc")]
         public void Colour(string input)
         {
             var output = sut.Tokenize(input);
