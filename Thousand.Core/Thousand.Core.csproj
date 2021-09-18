@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Thousand</RootNamespace>
+    <NoWarn>CS8524</NoWarn>
   </PropertyGroup>
   
   <ItemGroup>

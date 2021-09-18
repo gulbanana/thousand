@@ -80,7 +80,7 @@ namespace Thousand
                     }
                 }
 
-                lines.Add(new(indexedPoints[from].x, indexedPoints[from].y, indexedPoints[to].x, indexedPoints[to].y, colour));
+                lines.Add(new(shapes[from], shapes[to], colour));
             }
 
             return new(labels.Count * W, W, shapes, labels, lines);
