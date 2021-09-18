@@ -8,22 +8,64 @@ node ""Another Thing""
 edge ""Square\nThing"" ""Some Thing""
 edge ""Some Thing"" ""Another Thing"" [stroke=#ff0044]";
 
-    string _source = template;
-    string source
+    Superpower.Tokenizer<TokenKind> tokenizer;
+    Superpower.TokenListParser<TokenKind, AST.Document> parser;
+    string source = template;
+    AST.Document doc;
+    string err;
+
+    string Source
     {
-        get => _source;
+        get => source;
         set
         {
-            _source = value;
-            StateHasChanged();
+            source = value;
+            Parse();
         }
+    }
+
+    protected override void OnInitialized()
+    {
+        tokenizer = Tokenizer.Build();
+        parser = Parser.Build();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Parse();
+    }
+
+    private void Parse()
+    {
+        var tokens = tokenizer.TryTokenize(source);
+        if (!tokens.HasValue)
+        {
+            doc = null;
+            err = tokens.ToString();
+            return;
+        }
+
+        var ast = parser(tokens.Value);
+        if (!ast.HasValue)
+        {
+            doc = null;
+            err = ast.ToString();
+            return;
+        }
+
+        doc = ast.Value;
+        err = null;
+
+        StateHasChanged();
     }
 }
 <h1>Live Preview</h1>
 
 <div class="layout">
-    <textarea @bind="source" @bind:event="oninput" spellcheck="false">
+    <textarea @bind="Source" @bind:event="oninput" spellcheck="false">
     </textarea>
 
-    <LivePreview Source="@source" />
+    <div>
+        <LivePreview Source="@doc" Error="@err" />
+    </div>
 </div>

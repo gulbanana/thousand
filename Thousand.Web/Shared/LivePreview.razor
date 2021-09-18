@@ -1,63 +1,49 @@
 ﻿@using System.IO
 @code {
-    [Parameter] public string Source { get; set; }
-    Superpower.Tokenizer<TokenKind> tokenizer;
-    Superpower.TokenListParser<TokenKind, AST.Document> parser;
-    Render.Renderer renderer;
-    string dataURL;
-    string error;
+        [Parameter] public AST.Document Source { get; set; }
+        [Parameter] public string Error { get; set; }
+        Render.Renderer renderer;
+        string dataURL;
+        string error;
 
     protected override void OnInitialized()
     {
-        tokenizer = Tokenizer.Build();
-        parser = Parser.Build();
         renderer = new Render.Renderer();
     }
 
     protected override void OnParametersSet()
     {
-        try
+        error = Error;
+
+        if (error == null && Source != null)
         {
-            var tokens = tokenizer.TryTokenize(Source);
-            if (!tokens.HasValue)
+            try
             {
-                dataURL = null;
-                error = tokens.ToString();
-                return;
-            }
+                var diagram = Composer.Compose(Source);
+                var image = renderer.Render(diagram);
+                using (var stream = new MemoryStream())
+                {
+                    image.Encode().SaveTo(stream);
+                    var base64 = Convert.ToBase64String(stream.ToArray());
 
-            var ast = parser(tokens.Value);
-            if (!ast.HasValue)
+                    dataURL = "data:image/png;base64," + base64;
+                }
+            }
+            catch (Exception e)
             {
-                dataURL = null;
-                error = ast.ToString();
-                return;
+                error = e.Message;
             }
-
-            var diagram = Composer.Compose(ast.Value);
-            var image = renderer.Render(diagram);
-            using (var stream = new MemoryStream())
-            {
-                image.Encode().SaveTo(stream);
-                var base64 = Convert.ToBase64String(stream.ToArray());
-
-                dataURL = "data:image/png;base64," + base64;
-                error = null;
-            }
-        }
-        catch (Exception e)
-        {
-            dataURL = null;
-            error = e.Message;
         }
     }
 }
 
-@if (error == null)
-{
-    <img src="@dataURL" />
-}
-else
-{
-    <p>@error</p>
-}
+<div class="layout">
+    @if (dataURL != null)
+    {
+        <img src="@dataURL" />
+    }
+    @if (error != null)
+    {
+        <div class="overlay">@error</div>
+    }
+</div>

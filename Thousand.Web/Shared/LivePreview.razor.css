@@ -1,0 +1,11 @@
+﻿.layout {
+    display: grid;
+}
+
+.layout > * {
+    grid-area: 1/1/1/1;
+}
+
+.overlay {
+    background: #ccc8;
+}

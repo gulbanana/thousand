@@ -9,4 +9,17 @@
 
 textarea {
     height: 600px;
+    outline: none;
+}
+
+.layout > * {
+    border: 2px solid black;
+}
+
+.layout > div {
+    display: grid;
+}
+
+.error {
+    border-color: red;
 }
