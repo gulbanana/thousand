@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Thousand.Model;
 
@@ -9,8 +10,11 @@ namespace Thousand
     {
         internal const int W = 150;
 
-        public static Layout.Diagram Compose(AST.Document document)
+        public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out IReadOnlyList<string> warnings, out IReadOnlyList<string> errors)
         {
+            var ws = new List<string>();
+            var es = new List<string>();
+
             // pass 1: canonicalise AST elements, arranging the nodes on a grid 
             var labelledShapes = new List<LabelledShape>();
 
@@ -77,10 +81,31 @@ namespace Thousand
                 nextX += W;
             }
 
+            Layout.Shape? find(string label)
+            {
+                var found = shapes.Where(n => n.Fit.Content.Equals(label, StringComparison.OrdinalIgnoreCase));
+                var n = found.Count();
+                if (n == 0)
+                {
+                    ws.Add($"No node found matching label '{label}'.");
+                    return null;
+                }
+                else if (n > 1)
+                {
+                    ws.Add($"Multiple nodes found matching label '{label}'.");
+                    return null;
+                }
+                else
+                {
+                    return found.Single();
+                }
+            }
+
             foreach (var edge in document.Declarations.OfType<AST.Edge>())
             {
-                var nFrom = shapes.Single(n => n.Fit.Content.Equals(edge.From, StringComparison.OrdinalIgnoreCase));
-                var nTo = shapes.Single(n => n.Fit.Content.Equals(edge.To, StringComparison.OrdinalIgnoreCase));
+                var nFrom = find(edge.From);
+                var nTo = find(edge.To);
+                if (nFrom == null || nTo == null) continue;
 
                 var colour = Colour.Black;
 
@@ -97,13 +122,18 @@ namespace Thousand
                 lines.Add(new(nFrom, nTo, colour));
             }
 
-            return new(
+
+            warnings = ws;
+            errors = es;
+            diagram = new(
                 labelledShapes.Select(s => s.Column).Max() * W,
                 labelledShapes.Select(s => s.Row).Max() * W, 
                 shapes, 
                 labels, 
                 lines
             );
+
+            return !es.Any();
         }
     }
 }

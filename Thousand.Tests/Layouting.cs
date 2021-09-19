@@ -8,10 +8,11 @@ namespace Thousand.Tests
         [Fact]
         public void CreateFromDiagram()
         {
-            var diagram = new AST.Document(new AST.Node[] { new("foo", Array.Empty<AST.NodeAttribute>()), new("bar", Array.Empty<AST.NodeAttribute>()) });
-            var layout = Composer.Compose(diagram);
+            var document = new AST.Document(new AST.Node[] { new("foo", Array.Empty<AST.NodeAttribute>()), new("bar", Array.Empty<AST.NodeAttribute>()) });
+            var result = Composer.TryCompose(document, out var layout, out var warnings, out var errors);
 
-            Assert.Equal(300, layout.Width);
+            Assert.True(result, string.Join(Environment.NewLine, errors));
+            Assert.Equal(300, layout!.Width);
             Assert.Equal(150, layout.Height);
         }
     }

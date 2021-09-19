@@ -1,9 +1,8 @@
 ﻿@page "/"
 @code {
-    Superpower.Tokenizer<TokenKind> tokenizer;
-    Superpower.TokenListParser<TokenKind, AST.Document> parser;
+    DiagramGenerator generator;
     string source;
-    AST.Document doc;
+    Layout.Diagram doc;
     string err;
 
     string Source
@@ -19,8 +18,7 @@
     protected override void OnInitialized()
     {
         source = System.IO.File.ReadAllText("demo.1000");
-        tokenizer = Tokenizer.Build();
-        parser = Parser.Build();
+        generator = new DiagramGenerator();
     }
 
     protected override void OnParametersSet()
@@ -30,24 +28,15 @@
 
     private void Parse()
     {
-        var tokens = tokenizer.TryTokenize(source);
-        if (!tokens.HasValue)
+        generator.GenerateDiagram(source).Switch(result =>
+        {
+            doc = result.Diagram;
+            err = result.Warnings.Any() ? string.Join(Environment.NewLine, result.Warnings.Select(e => e.Message)) : null;
+        }, errors =>
         {
             doc = null;
-            err = tokens.ToString();
-            return;
-        }
-
-        var ast = parser(tokens.Value);
-        if (!ast.HasValue)
-        {
-            doc = null;
-            err = ast.ToString();
-            return;
-        }
-
-        doc = ast.Value;
-        err = null;
+            err = string.Join(Environment.NewLine, errors.Select(e => e.Message));
+        });        
 
         StateHasChanged();
     }
@@ -59,6 +48,6 @@
     </textarea>
 
     <div>
-        <LivePreview Source="@doc" Error="@err" />
+        <LivePreview Diagram="@doc" Error="@err" />
     </div>
 </div>

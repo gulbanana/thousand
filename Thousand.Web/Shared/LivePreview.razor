@@ -1,10 +1,10 @@
 ﻿@using System.IO
 @code {
-        [Parameter] public AST.Document Source { get; set; }
-        [Parameter] public string Error { get; set; }
-        Render.Renderer renderer;
-        string dataURL;
-        string error;
+    [Parameter] public Layout.Diagram Diagram { get; set; }
+    [Parameter] public string Error { get; set; }
+    Render.Renderer renderer;
+    string dataURL;
+    string error;
 
     protected override void OnInitialized()
     {
@@ -15,12 +15,12 @@
     {
         error = Error;
 
-        if (error == null && Source != null)
+        if (Diagram != null)
         {
             try
             {
-                var diagram = Composer.Compose(Source);
-                var image = renderer.Render(diagram);
+                var image = renderer.Render(Diagram);
+
                 using (var stream = new MemoryStream())
                 {
                     image.Encode().SaveTo(stream);
