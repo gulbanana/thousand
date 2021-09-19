@@ -1,6 +1,6 @@
 ﻿using Superpower.Display;
 
-namespace Thousand
+namespace Thousand.Parse
 {
     public enum TokenKind
     {

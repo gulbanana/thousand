@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Thousand.Model;
+using Thousand.Parse;
 using Xunit;
 
 namespace Thousand.Tests

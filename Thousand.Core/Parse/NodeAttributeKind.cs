@@ -1,4 +1,4 @@
-﻿namespace Thousand
+﻿namespace Thousand.Parse
 {
     public enum NodeAttributeKind
     {

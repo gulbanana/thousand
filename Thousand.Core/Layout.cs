@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Thousand.Model;
 
+// Intermediate representation shared between Compose and Render stages
 namespace Thousand.Layout
 {
     public record Label(int X, int Y, string Content);

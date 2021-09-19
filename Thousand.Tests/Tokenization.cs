@@ -1,4 +1,5 @@
 using System.Linq;
+using Thousand.Parse;
 using Xunit;
 
 namespace Thousand.Tests

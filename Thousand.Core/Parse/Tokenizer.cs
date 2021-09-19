@@ -3,7 +3,7 @@ using Superpower.Model;
 using Superpower.Parsers;
 using Superpower.Tokenizers;
 
-namespace Thousand
+namespace Thousand.Parse
 {
     public static class Tokenizer
     {

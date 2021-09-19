@@ -4,7 +4,7 @@ using Superpower.Parsers;
 using System.Linq;
 using Thousand.Model;
 
-namespace Thousand
+namespace Thousand.Parse
 {
     public static class AttributeParsers
     {

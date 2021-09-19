@@ -1,12 +1,11 @@
 ﻿using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
-using System;
 using System.Globalization;
 using System.Linq;
 using Thousand.Model;
 
-namespace Thousand
+namespace Thousand.Parse
 {
     internal static class TextParsers
     {

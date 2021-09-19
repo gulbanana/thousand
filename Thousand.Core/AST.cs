@@ -1,5 +1,6 @@
 ﻿using Thousand.Model;
 
+// Intermediate representation shared between Parse and Compose stages
 namespace Thousand.AST
 {
     public abstract record Declaration;

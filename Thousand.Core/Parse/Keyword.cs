@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Thousand
+namespace Thousand.Parse
 {
     public static class Keyword
     {

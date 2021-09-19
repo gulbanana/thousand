@@ -3,7 +3,7 @@ using SkiaSharp;
 using Superpower;
 using System;
 using System.Linq;
-using Thousand.AST;
+using Thousand.Parse;
 
 namespace Thousand
 {
@@ -11,7 +11,7 @@ namespace Thousand
     public class DiagramGenerator : IDisposable
     {
         private readonly Tokenizer<TokenKind> tokenizer;
-        private readonly TokenListParser<TokenKind, Document> parser;
+        private readonly TokenListParser<TokenKind, AST.Document> parser;
         private readonly Render.Renderer renderer;
 
         public DiagramGenerator()

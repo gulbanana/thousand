@@ -1,5 +1,4 @@
-﻿using Superpower;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Thousand
 {
@@ -11,11 +10,6 @@ namespace Thousand
             {
                 if (elem is not null) yield return elem;
             }
-        }
-
-        public static TokenListParser<TokenKind, U> Cast<T, U>(this TokenListParser<TokenKind, T> pT) where T : U
-        {
-            return pT.Select(x => (U)x);
         }
     }
 }
