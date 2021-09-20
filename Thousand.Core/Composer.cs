@@ -16,7 +16,7 @@ namespace Thousand
             var es = new List<string>();
 
             // pass 1: canonicalise AST elements, arranging the nodes on a grid 
-            var labelledShapes = new List<LabelledShape>();
+            var objects = new List<Model.Object>();
 
             var nextX = 1;
             var nextY = 1;
@@ -59,7 +59,7 @@ namespace Thousand
                     }
                 }
 
-                labelledShapes.Add(new(y, x, node.Label, shape, stroke, fill));
+                objects.Add(new(node.Name, y, x, label, shape, stroke, fill));
 
                 nextX = x + 1;
                 nextY = y;
@@ -70,29 +70,39 @@ namespace Thousand
             var labels = new List<Layout.Label>();
             var lines = new List<Layout.Line>();
 
-            foreach (var node in labelledShapes)
+            foreach (var obj in objects)
             {
-                var label = new Layout.Label(node.Column * W - (W/2), node.Row * W - (W / 2), node.Label);
-                var shape = new Layout.Shape(label.X, label.Y, node.Kind, label, node.Stroke, node.Fill);
+                if (obj.Label != null)
+                {
+                    var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label);
+                    var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.Stroke, obj.Fill);
 
-                labels.Add(label);
-                shapes.Add(shape);
+                    labels.Add(label);
+                    shapes.Add(shape);
+                }
+                else
+                {
+                    var shape = new Layout.Shape(obj.Name, obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Kind, null, obj.Stroke, obj.Fill);
+
+                    shapes.Add(shape);
+                }
 
                 nextX += W;
             }
 
-            Layout.Shape? find(string label)
+            Layout.Shape? find(string identifierOrLabel)
             {
-                var found = shapes.Where(n => n.Fit.Content.Equals(label, StringComparison.OrdinalIgnoreCase));
+                var found = shapes.Where(n => (n.Name != null && n.Name.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)) ||
+                                              (n.Fit != null && n.Fit.Content.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
                 var n = found.Count();
                 if (n == 0)
                 {
-                    ws.Add($"No node found matching label '{label}'.");
+                    ws.Add($"No node found with name or label '{identifierOrLabel}'.");
                     return null;
                 }
                 else if (n > 1)
                 {
-                    ws.Add($"Multiple nodes found matching label '{label}'.");
+                    ws.Add($"Multiple nodes found with name or label '{identifierOrLabel}'.");
                     return null;
                 }
                 else
@@ -126,8 +136,8 @@ namespace Thousand
             warnings = ws.Select(w => new GenerationError(w)).ToArray();
             errors = es.Select(w => new GenerationError(w)).ToArray();
             diagram = new(
-                labelledShapes.Select(s => s.Column).Max() * W,
-                labelledShapes.Select(s => s.Row).Max() * W, 
+                objects.Select(s => s.Column).Max() * W,
+                objects.Select(s => s.Row).Max() * W, 
                 shapes, 
                 labels, 
                 lines

@@ -89,6 +89,11 @@ namespace Thousand.Render
 
         private PShape MeasureShape(RenderState state, Layout.Shape shape)
         {
+            if (shape.Fit == null)
+            {
+                throw new NotSupportedException("shape has no label");
+            }    
+
             var label = state.Labels[shape.Fit];
 
             var textBox = new SKRect(label.Origin.X, label.Origin.Y, label.Origin.X + label.Text.MeasuredWidth, label.Origin.Y + label.Text.MeasuredHeight);
@@ -150,6 +155,10 @@ namespace Thousand.Render
 
             // subtract the rectangle regions within src/dst shapes 
             var visiblePath = path.Op(from.Path, SKPathOp.Difference).Op(to.Path, SKPathOp.Difference);
+            if (visiblePath.PointCount == 0)
+            {
+                return; // XXX warning
+            }
 
             // create the points for a hairline (and end cap positioning)
             var start = visiblePath.Points[0];

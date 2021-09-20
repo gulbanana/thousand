@@ -1,0 +1,3 @@
+object alex [label="Alex Gardener\nCount Salford\nd. 1742",stroke=blue]
+object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue]
+alex -> ruth

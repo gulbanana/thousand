@@ -1,9 +1,9 @@
-﻿node "top left" [fill=#ccc,shape=oval]
-node "top centre" [fill=#ccc,stroke=#00ff00] 
-node "top right" [fill=#ccc,shape=oval]
-node "bottom left" [fill=#ccc,shape=rounded,row=2,column=1]
-node "bottom right" [fill=#ccc,shape=rounded,column=3]
+﻿object "top left" [fill=#ccc,shape=oval]
+object mid [label="top centre",fill=#ccc,stroke=#00ff00] 
+object right "top right" [fill=#ccc,shape=oval]
+object "bottom left" [fill=#ccc,shape=rounded,row=2,column=1]
+object "bottom right" [fill=#ccc,shape=rounded,column=3]
 
-edge "top left" "top centre" [stroke=red]
-edge "top right" "top centre" [stroke=blue]
-edge "top left" "bottom right"
+"top left" -> mid [stroke=red]
+right -> mid [stroke=blue]
+"top left" -> "bottom right"

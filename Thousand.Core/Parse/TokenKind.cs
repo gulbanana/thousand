@@ -26,5 +26,7 @@ namespace Thousand.Parse
         Colour,
 
         Integer,
+
+        Arrow,
     }
 }

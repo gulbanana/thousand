@@ -19,6 +19,12 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, string> String { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String);
 
+        public static TokenListParser<TokenKind, string> Keyword { get; } =
+            Token.EqualTo(TokenKind.Keyword).Apply(Identifier.CStyle).Select(s => s.ToStringValue());
+
+        public static TokenListParser<TokenKind, string> Target { get; } =
+            String.Or(Keyword);
+
         public static TokenListParser<TokenKind, TA[]> AttributeList<TA>(TokenListParser<TokenKind, TA> attributeParser) =>
             from begin in Token.EqualTo(TokenKind.LeftBracket)
             from values in attributeParser.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
@@ -26,15 +32,17 @@ namespace Thousand.Parse
             select values;
 
         public static TokenListParser<TokenKind, AST.Node> Node { get; } =
-            from keyword in Token.EqualToValue(TokenKind.Keyword, "node")
-            from label in String
-            from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())            
-            select new AST.Node(label, attrs);
+            from @class in Keyword
+            where @class == "object"
+            from identifier in Keyword.AsNullable().OptionalOrDefault()
+            from label in String.AsNullable().OptionalOrDefault()
+            from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
+            select new AST.Node(@class, identifier, label, attrs);
 
         public static TokenListParser<TokenKind, AST.Edge> Edge { get; } =
-            from keyword in Token.EqualToValue(TokenKind.Keyword, "edge")
-            from @from in String
-            from @to in String
+            from @from in Target
+            from arrow in Token.EqualTo(TokenKind.Arrow)
+            from @to in Target
             from attrs in AttributeList(AttributeParsers.EdgeAttribute).OptionalOrDefault(Array.Empty<AST.EdgeAttribute>())
             select new AST.Edge(@from, @to, attrs);
 
