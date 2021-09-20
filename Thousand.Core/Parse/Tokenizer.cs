@@ -34,6 +34,7 @@ namespace Thousand.Parse
 
             return new TokenizerBuilder<TokenKind>()
                 .Ignore(parseInLineWhiteSpace)
+                .Ignore(Comment.CPlusPlusStyle)
                 .Match(Character.EqualTo('['), TokenKind.LeftBracket)
                 .Match(Character.EqualTo(']'), TokenKind.RightBracket)
                 .Match(Character.EqualTo('='), TokenKind.EqualsSign)
