@@ -162,7 +162,7 @@ namespace Thousand.Render
 
             // create the points for a hairline (and end cap positioning)
             var start = visiblePath.Points[0];
-            var end = visiblePath.Points[3];
+            var end = visiblePath.Points[visiblePath.PointCount-3];
             if ((start - to.Center).LengthSquared < (start - from.Center).LengthSquared)
             {
                 var swap = start;

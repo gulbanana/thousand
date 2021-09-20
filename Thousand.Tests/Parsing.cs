@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Thousand.Model;
 using Thousand.Parse;
 using Xunit;
@@ -140,26 +141,25 @@ bar""");
         }
 
         [Fact]
-        public void ValidEdge()
+        public void ValidEdges()
         {
             var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar""");
-            var result = Parser.Edge(tokens);
+            var result = Parser.Edges(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.From);
-            Assert.Equal("bar", result.Value.To);
-            Assert.Empty(result.Value.Attributes);
+            Assert.Equal("foo", result.Value.First().Target);
+            Assert.Equal("bar", result.Value.Last().Target);
         }
 
         [Fact]
-        public void ValidEdge_Attributed()
+        public void ValidEdges_Attributed()
         {
             var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar"" [stroke=#000000]");
-            var result = Parser.Edge(tokens);
+            var result = Parser.AttributedEdges(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.From);
-            Assert.Equal("bar", result.Value.To);
+            Assert.Equal("foo", result.Value.Elements.First().Target);
+            Assert.Equal("bar", result.Value.Elements.Last().Target);
             AssertEx.Sequence(result.Value.Attributes, new AST.EdgeStrokeAttribute(new Colour(0, 0, 0)));
         }
 
@@ -231,10 +231,20 @@ foo -> bar");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations, 
-                new AST.Node("object", "foo", null, Array.Empty<AST.NodeAttribute>()),
-                new AST.Node("object", "bar", null, Array.Empty<AST.NodeAttribute>()),
-                new AST.Edge("foo", "bar", Array.Empty<AST.EdgeAttribute>()));
+            Assert.Collection(result.Value.Declarations,
+                d => Assert.Equal(new AST.Node("object", "foo", null, Array.Empty<AST.NodeAttribute>()), d),
+                d => Assert.Equal(new AST.Node("object", "bar", null, Array.Empty<AST.NodeAttribute>()), d),
+                d =>
+                {
+                    if (d is not AST.Edges e)
+                    {
+                        Assert.IsType<AST.Edges>(d);
+                    }
+                    else
+                    {
+                        AssertEx.Sequence(e.Elements, new AST.Edge("foo", ArrowKind.Forward), new AST.Edge("bar", null));
+                    }                    
+                });
         }
     }
 }

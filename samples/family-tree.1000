@@ -1,3 +1,12 @@
 object alex [label="Alex Gardener\nCount Salford\nd. 1742",stroke=blue]
 object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue]
+object taragos [row=2,column=1]
+object miles
+object barbara
+object ivan
+object charles
+
 alex -> ruth
+ruth -> taragos
+ruth -> miles -> barbara
+ruth -> ivan -> charles

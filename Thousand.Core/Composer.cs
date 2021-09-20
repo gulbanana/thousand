@@ -10,13 +10,16 @@ namespace Thousand
     {
         internal const int W = 150;
 
+        private record Object(string? Name, int Row, int Column, string? Label, ShapeKind Kind, Colour Stroke, Colour Fill);
+        private record Edge(Object FromTarget, Object ToTarget, ArrowKind Direction, Colour Stroke);
+
         public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
         {
             var ws = new List<string>();
             var es = new List<string>();
 
-            // pass 1: canonicalise AST elements, arranging the nodes on a grid 
-            var objects = new List<Model.Object>();
+            // pass 1: canonicalise AST elements, arranging the nodes on a grid and extracting edges from chains
+            var objects = new List<Object>();
 
             var nextX = 1;
             var nextY = 1;
@@ -24,7 +27,7 @@ namespace Thousand
             {
                 var x = nextX;
                 var y = nextY;
-                var label = node.Label;
+                var label = node.Label ?? node.Name;
                 var shape = ShapeKind.Square;
                 var stroke = Colour.Black;
                 var fill = Colour.White;
@@ -65,35 +68,12 @@ namespace Thousand
                 nextY = y;
             }
 
-            // pass 2: 
-            var shapes = new List<Layout.Shape>();
-            var labels = new List<Layout.Label>();
-            var lines = new List<Layout.Line>();
+            var edges = new List<Edge>();
 
-            foreach (var obj in objects)
+            Object? find(string identifierOrLabel)
             {
-                if (obj.Label != null)
-                {
-                    var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label);
-                    var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.Stroke, obj.Fill);
-
-                    labels.Add(label);
-                    shapes.Add(shape);
-                }
-                else
-                {
-                    var shape = new Layout.Shape(obj.Name, obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Kind, null, obj.Stroke, obj.Fill);
-
-                    shapes.Add(shape);
-                }
-
-                nextX += W;
-            }
-
-            Layout.Shape? find(string identifierOrLabel)
-            {
-                var found = shapes.Where(n => (n.Name != null && n.Name.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)) ||
-                                              (n.Fit != null && n.Fit.Content.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
+                var found = objects.Where(n => (n.Name != null && n.Name.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)) ||
+                                              (n.Label != null && n.Label.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
                 var n = found.Count();
                 if (n == 0)
                 {
@@ -111,25 +91,66 @@ namespace Thousand
                 }
             }
 
-            foreach (var edge in document.Declarations.OfType<AST.Edge>())
+            foreach (var chain in document.Declarations.OfType<AST.Edges>())
             {
-                var nFrom = find(edge.From);
-                var nTo = find(edge.To);
-                if (nFrom == null || nTo == null) continue;
+                var stroke = Colour.Black;
 
-                var colour = Colour.Black;
-
-                foreach (var attr in edge.Attributes)
+                foreach (var attr in chain.Attributes)
                 {
                     switch (attr)
                     {
                         case AST.EdgeStrokeAttribute esa:
-                            colour = esa.Colour;
+                            stroke = esa.Colour;
                             break;
                     }
                 }
 
-                lines.Add(new(nFrom, nTo, colour));
+                for (var i = 0; i < chain.Elements.Length - 1; i++)
+                {
+                    var from = chain.Elements[i];
+                    var to = chain.Elements[i+1];
+
+                    var fromTarget = find(from.Target);
+                    var toTarget = find(to.Target);
+
+                    if (fromTarget != null && toTarget != null && from.Direction.HasValue)
+                    {
+                        edges.Add(new(fromTarget, toTarget, from.Direction.Value, stroke));
+                    }                    
+                }
+            }
+
+            // pass 2: create drawables from the canonicalised AST
+            var shapes = new Dictionary<Object, Layout.Shape>();
+            var labels = new List<Layout.Label>();
+            var lines = new List<Layout.Line>();
+
+            foreach (var obj in objects)
+            {
+                if (obj.Label != null)
+                {
+                    var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label);
+                    var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.Stroke, obj.Fill);
+
+                    labels.Add(label);
+                    shapes.Add(obj, shape);
+                }
+                else
+                {
+                    var shape = new Layout.Shape(obj.Name, obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Kind, null, obj.Stroke, obj.Fill);
+
+                    shapes.Add(obj, shape);
+                }
+
+                nextX += W;
+            }
+
+            foreach (var edge in edges)
+            {
+                var from = shapes[edge.FromTarget];
+                var to = shapes[edge.ToTarget];
+
+                lines.Add(new(from, to, edge.Stroke));
             }
 
 
@@ -138,7 +159,7 @@ namespace Thousand
             diagram = new(
                 objects.Select(s => s.Column).Max() * W,
                 objects.Select(s => s.Row).Max() * W, 
-                shapes, 
+                shapes.Values.ToList(), 
                 labels, 
                 lines
             );

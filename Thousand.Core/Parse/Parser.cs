@@ -2,7 +2,9 @@
 using Superpower.Model;
 using Superpower.Parsers;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand.Parse
 {
@@ -39,16 +41,24 @@ namespace Thousand.Parse
             from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
             select new AST.Node(@class, identifier, label, attrs);
 
-        public static TokenListParser<TokenKind, AST.Edge> Edge { get; } =
-            from @from in Target
+        public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
+            from dst in Target
+            select Enumerable.Repeat(new AST.Edge(dst, null), 1);
+
+        public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> Edges { get; } =
+            from src in Target
             from arrow in Token.EqualTo(TokenKind.Arrow)
-            from @to in Target
+            from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
+            select next.Prepend(new(src, ArrowKind.Forward));
+
+        public static TokenListParser<TokenKind, AST.Edges> AttributedEdges { get; } =
+            from chain in Edges
             from attrs in AttributeList(AttributeParsers.EdgeAttribute).OptionalOrDefault(Array.Empty<AST.EdgeAttribute>())
-            select new AST.Edge(@from, @to, attrs);
+            select new AST.Edges(chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.Declaration?> Declaration { get; } =
             Node.Cast<AST.Node, AST.Declaration>().AsNullable()
-            .Or(Edge.Cast<AST.Edge, AST.Declaration>().AsNullable())
+            .Or(AttributedEdges.Cast<AST.Edges, AST.Declaration>().AsNullable())
             .OptionalOrDefault();
             
         public static TokenListParser<TokenKind, AST.Document> Document { get; } =
