@@ -31,7 +31,7 @@ namespace Thousand.CLI
             {
                 foreach (var error in errors)
                 {
-                    Console.WriteLine(error);
+                    Console.WriteLine(error.Message);
                 }
 
                 Console.ReadKey();
