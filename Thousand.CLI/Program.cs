@@ -8,7 +8,7 @@ namespace Thousand.CLI
     {
         static void Main()
         {
-            var graph = File.ReadAllText("test.1000");
+            var graph = File.ReadAllText(@"demo.1000");
 
             using var generator = new DiagramGenerator();
 

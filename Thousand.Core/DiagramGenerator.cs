@@ -45,10 +45,10 @@ namespace Thousand
 
             if (!Composer.TryCompose(parsed.Value, out var diagram, out var warnings, out var errors))
             {
-                return errors.Select(e => new GenerationError(e)).ToArray();
+                return errors;
             }
 
-            return new GenerationResult<Layout.Diagram>(diagram, warnings.Select(w => new GenerationError(w)).ToArray());
+            return new GenerationResult<Layout.Diagram>(diagram, warnings);
         }
 
         /// <summary>Create a diagram from source code.</summary>

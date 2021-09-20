@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="test.1000" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\samples\demo.1000" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 ﻿@page "/"
 @using System.IO
-@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+@using Microsoft.Extensions.FileProviders
 @code {
     DiagramGenerator generator;
     string source;
@@ -20,7 +20,8 @@
     protected override void OnInitialized()
     {
         generator = new DiagramGenerator();
-        using (var sourceStream = Environment.ContentRootFileProvider.GetFileInfo("demo.1000").CreateReadStream())
+        
+        using (var sourceStream = new EmbeddedFileProvider(typeof(Program).Assembly).GetFileInfo("samples.demo.1000").CreateReadStream())
         {
             using (var reader = new StreamReader(sourceStream))
             { 

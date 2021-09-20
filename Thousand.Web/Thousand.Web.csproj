@@ -7,4 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\samples\*.1000" Link="samples\%(Filename).1000" />
+  </ItemGroup>
 </Project>

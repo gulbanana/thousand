@@ -10,7 +10,7 @@ namespace Thousand
     {
         internal const int W = 150;
 
-        public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out IReadOnlyList<string> warnings, out IReadOnlyList<string> errors)
+        public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
         {
             var ws = new List<string>();
             var es = new List<string>();
@@ -123,8 +123,8 @@ namespace Thousand
             }
 
 
-            warnings = ws;
-            errors = es;
+            warnings = ws.Select(w => new GenerationError(w)).ToArray();
+            errors = es.Select(w => new GenerationError(w)).ToArray();
             diagram = new(
                 labelledShapes.Select(s => s.Column).Max() * W,
                 labelledShapes.Select(s => s.Row).Max() * W, 

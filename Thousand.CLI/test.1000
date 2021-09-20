@@ -1,9 +1,0 @@
-﻿node "top left" [fill=#ccc,shape=oval]
-node "top centre" [fill=#ccc] 
-node "top right" [fill=#ccc,shape=oval]
-node "bottom left" [fill=#ccc,shape=rounded,row=2,column=1]
-node "bottom right" [fill=#ccc,shape=rounded,column=3]
-
-edge "top left" "top centre"
-edge "top right" "top centre"
-edge "top left" "bottom right"
