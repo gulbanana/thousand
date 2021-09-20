@@ -22,11 +22,14 @@ jobs:
         dotnet-version: '5.0.x'
         include-prerelease: true
 
-    - name: Build with dotnet
+    - name: dotnet build
       run: dotnet build --configuration Release
 
     - name: dotnet publish
-      run: dotnet publish -c Release Thousand.Web -o ${{env.DOTNET_ROOT}}/thousand
+      run: dotnet publish -c Release --no-build Thousand.Web -o ${{env.DOTNET_ROOT}}/thousand
+
+    - name: dotnet test
+      run: dotnet test -c Release --no-build Thousand.Tests
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v2
