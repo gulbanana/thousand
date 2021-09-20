@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using System.IO
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
 @code {
     DiagramGenerator generator;
     string source;
@@ -17,8 +19,14 @@
 
     protected override void OnInitialized()
     {
-        source = System.IO.File.ReadAllText("demo.1000");
         generator = new DiagramGenerator();
+        using (var sourceStream = Environment.ContentRootFileProvider.GetFileInfo("demo.1000").CreateReadStream())
+        {
+            using (var reader = new StreamReader(sourceStream))
+            { 
+                source = reader.ReadToEnd();
+            }
+        }
     }
 
     protected override void OnParametersSet()
@@ -31,12 +39,12 @@
         generator.GenerateDiagram(source).Switch(result =>
         {
             doc = result.Diagram;
-            err = result.Warnings.Any() ? string.Join(Environment.NewLine, result.Warnings.Select(e => e.Message)) : null;
+            err = result.Warnings.Any() ? result.Warnings.Join() : null;
         }, errors =>
         {
             doc = null;
-            err = string.Join(Environment.NewLine, errors.Select(e => e.Message));
-        });        
+            err = errors.Join();
+        });
 
         StateHasChanged();
     }
