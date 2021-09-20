@@ -2,6 +2,7 @@
 @using System.IO
 @using Microsoft.Extensions.FileProviders
 @code {
+    IFileProvider provider;
     DiagramGenerator generator;
     string source;
     string sample;
@@ -31,9 +32,10 @@
 
     protected override void OnInitialized()
     {
+        provider = new EmbeddedFileProvider(typeof(Program).Assembly);
         generator = new DiagramGenerator();
 
-        using (var sourceStream = new EmbeddedFileProvider(typeof(Program).Assembly).GetFileInfo("samples.demo.1000").CreateReadStream())
+        using (var sourceStream = provider.GetDirectoryContents("").First().CreateReadStream())
         {
             using (var reader = new StreamReader(sourceStream))
             {
@@ -49,7 +51,7 @@
 
     private void SetSample(string name)
     {
-        using (var sourceStream = new EmbeddedFileProvider(typeof(Program).Assembly).GetFileInfo(name).CreateReadStream())
+        using (var sourceStream = provider.GetFileInfo(name).CreateReadStream())
         {
             using (var reader = new StreamReader(sourceStream))
             {
@@ -83,8 +85,10 @@
         <div class="bottom-bar">
             <label>Sample diagrams:</label>
             <select @bind="Sample">
-                <option value="samples.demo.1000">demo.1000</option>
-                <option value="samples.family-tree.1000">family-tree.1000</option>
+                @foreach (var file in provider.GetDirectoryContents(""))
+                {
+                    <option value="@file.Name">@file.Name[8..]</option>
+                }
             </select>
         </div>
     </div>
