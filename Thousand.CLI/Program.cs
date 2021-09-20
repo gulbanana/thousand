@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Thousand.CLI
 {
     class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
-            var graph = File.ReadAllText(@"demo.1000");
+            var graph = File.ReadAllText(args.Single());
 
             using var generator = new DiagramGenerator();
 

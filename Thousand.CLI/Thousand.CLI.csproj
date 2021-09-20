@@ -7,8 +7,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\samples\demo.1000" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
 </Project>

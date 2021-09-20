@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Thousand.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "../../../../samples/demo.1000"
+    }
+  }
+}
