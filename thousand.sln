@@ -7,11 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thousand.Core", "Thousand.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thousand.Tests", "Thousand.Tests\Thousand.Tests.csproj", "{C205D0CD-F05C-4680-BB80-FE648D6399B8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F460748E-CC26-4413-8128-C466AC45A90D}"
-	ProjectSection(SolutionItems) = preProject
-		Directory.Build.props = Directory.Build.props
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thousand.CLI", "Thousand.CLI\Thousand.CLI.csproj", "{536711D3-5E32-455E-8EF7-4C8DEEBB8CD3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thousand.Web", "Thousand.Web\Thousand.Web.csproj", "{C4332726-5E64-4FF9-8FBD-F3F6A9901648}"
