@@ -18,6 +18,24 @@ namespace Thousand
             var ws = new List<string>();
             var es = new List<string>();
 
+            // pass 0: register classes
+            var classes = new Dictionary<string, AST.NodeAttribute[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "object", new AST.NodeAttribute[0] }
+            };
+
+            foreach (var c in document.Declarations.OfType<AST.Class>())
+            {
+                var attrs = c.Attributes;
+
+                if (c.Base != null)
+                {
+                    attrs = classes[c.Base].Concat(attrs).ToArray();
+                }
+
+                classes.Add(c.Name, attrs);
+            }
+
             // pass 1: canonicalise AST elements, arranging the nodes on a grid and extracting edges from chains
             var objects = new List<Object>();
 
@@ -25,6 +43,12 @@ namespace Thousand
             var nextY = 1;
             foreach (var node in document.Declarations.OfType<AST.Node>())
             {
+                if (!classes.ContainsKey(node.Class))
+                {
+                    ws.Add($"Object class '{node.Class}' not defined.");
+                    continue;
+                }
+
                 var x = nextX;
                 var xSet = false;
                 var y = nextY;
@@ -34,7 +58,7 @@ namespace Thousand
                 var fill = Colour.White;
                 var fontSize = 20f;
 
-                foreach (var attr in node.Attributes)
+                foreach (var attr in classes[node.Class].Concat(node.Attributes))
                 {
                     switch (attr)
                     {
@@ -195,8 +219,8 @@ namespace Thousand
             warnings = ws.Select(w => new GenerationError(w)).ToArray();
             errors = es.Select(w => new GenerationError(w)).ToArray();
             diagram = new(
-                objects.Select(s => s.Column).Max() * W,
-                objects.Select(s => s.Row).Max() * W, 
+                objects.Select(s => s.Column).Append(0).Max() * W,
+                objects.Select(s => s.Row).Append(0).Max() * W, 
                 scale,
                 background,
                 shapes.Values.ToList(), 

@@ -16,6 +16,9 @@ namespace Thousand.Parse
         [Token(Example = ",")]
         Comma,
 
+        [Token(Example = ":")]
+        Colon,
+
         NewLine,
 
         Keyword,

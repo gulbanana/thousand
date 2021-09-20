@@ -1,40 +1,44 @@
-object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue,column=3,fontsize=14]
-object alex [label="Alex Gardener\nCount Salford\nd. 1742",stroke=blue,column=5]
+class vampire [fontsize=14]
+class invictus:vampire [stroke=blue]
+class carthian:vampire [stroke=green]
 
-object ivan "Ivan Bebutov\nd. 1751 f. 1861" [row=2]
-object miles "Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"
-object taragos "Taragos Heron\nd. 1890 f. 1984"
-object sancho "\"Sancho\"\naka \"Watson\"\naka \"Samwise\"\nd. 1811" [column=5]
-object melody
-object sylvia
+invictus ruth [label="Ruth Henning Gardener\nd. 1744",column=2]
+invictus alex [label="Alex Gardener\nCount Salford\nd. 1742",column=5]
 
-object charles "Charles Horse\nCourt Harpy\nd. 1861 f. 1984" [row=3]
-object barbara "Barbara Barrigan\nd. 1920"
-object anne "Anne Conner\nd. 1925 f. 1984"
-object sator "\"Sator Arepo\"\nd. 1900 f. 1984"
-object simon
-object george
-object agatha [column=7]
+invictus ivan "Ivan Bebutov\nd. 1751 f. 1861" [row=2]
+invictus miles "Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"
+invictus taragos "Taragos Heron\nd. 1890 f. 1984"
+carthian sancho "\"Sancho\"\naka \"Watson\"\naka \"Samwise\"\nd. 1811"
+invictus melody "Melody St. Ives Pettigrew\nEarl Ashton-under-Lyne\nd. 1839 f. 1984"
+invictus sylvia "Sylvia Hursley-Apple\nBaron Bradford\nd. 1881 f. 1984"
 
-object kyle "Kyle Killarney\nd. 1982 f. 1984" [row=4]
-object doug "Doug Killarney\nd. 1982"
-object craig "Craig Dunlop\nd. 1945" [column=4]
-object suzie
-object fanny
-object eliza [column=7]
+invictus charles "Charles Horse\nCourt Harpy\nd. 1861 f. 1984" [row=3]
+carthian barbara "Barbara Barrigan\nd. 1920"
+carthian anne "Anne Conner\nd. 1925 f. 1984"
+invictus sator "\"Sator Arepo\"\nd. 1900 f. 1984"
+invictus simon "Simon Saltine Waterford\nBaron Deansgate\nd. 1914 f. 1984"
+carthian george "George Pettigrew\nd. 1840 f. 1984"
+invictus agatha "Agatha Hursley-Apple\nd. 1901" [column=7]
 
-object maeve [row=5,column=7]
+carthian kyle "Kyle Killarney\nd. 1982 f. 1984" [row=4]
+carthian doug "Doug Killarney\nd. 1982"
+carthian craig "Craig Dunlop\nd. 1945" [column=4]
+carthian suzie "Susan Cutsworth\nd. 1918"
+invictus fanny "Fanny Smith\nd. 1918 f. 1942"
+carthian eliza "Eliza Beth Hursley\nd. 1921" [column=7]
+
+carthian maeve "Maeve Baker\nd. 1941 f. 1984" [row=5,column=7]
 
 alex -> ruth
 
 ruth -> taragos
 ruth -> miles -> barbara
 ruth -> ivan -> charles
-kyle <- charles -> doug
+	kyle <- charles -> doug
 
 alex -> sancho 
-craig <- sator <- sancho -> anne
+	craig <- sator <- sancho -> anne
 alex -> melody
-simon <- melody -> george
-suzie <- simon -> fanny
+	simon <- melody -> george
+	suzie <- simon -> fanny
 alex -> sylvia -> agatha -> eliza -> maeve

@@ -67,5 +67,13 @@ bar"" ""baz""
             Assert.Equal(@"""foo
 bar""", output.ElementAt(1).ToStringValue());
         }
+
+        [Fact]
+        public void SubclassWithoutBase()
+        {
+            var output = sut.Tokenize(@"class foo : [label=""bar""]");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.Keyword, TokenKind.Colon, TokenKind.LeftBracket, TokenKind.Keyword, TokenKind.EqualsSign, TokenKind.String, TokenKind.RightBracket);
+        }
     }
 }

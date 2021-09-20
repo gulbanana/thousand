@@ -33,9 +33,21 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 
+        public static TokenListParser<TokenKind, string?> BaseClass { get; } =
+            Token.EqualTo(TokenKind.Colon)
+                 .IgnoreThen(Keyword)
+                 .AsNullable()
+                 .OptionalOrDefault();
+
+        public static TokenListParser<TokenKind, AST.Class> Class { get; } =
+            from keyword in Token.EqualToValue(TokenKind.Keyword, "class")
+            from name in Keyword
+            from baseClass in BaseClass
+            from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
+            select new AST.Class(name, baseClass, attrs);
+
         public static TokenListParser<TokenKind, AST.Node> Node { get; } =
             from @class in Keyword
-            where @class == "object"
             from identifier in Keyword.AsNullable().OptionalOrDefault()
             from label in String.AsNullable().OptionalOrDefault()
             from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
@@ -58,10 +70,12 @@ namespace Thousand.Parse
             select new AST.Edges(chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.Declaration?> Declaration { get; } =
-            Node.Cast<AST.Node, AST.Declaration>().AsNullable()
-            .Or(AttributedEdges.Cast<AST.Edges, AST.Declaration>().AsNullable().Try())
-            .Or(AttributeParsers.DocumentAttribute.Cast<AST.DocumentAttribute, AST.Declaration>().AsNullable())
-            .OptionalOrDefault();
+            AttributeParsers.DocumentAttribute.Cast<AST.DocumentAttribute, AST.Declaration>()
+                .Or(AttributedEdges.Cast<AST.Edges, AST.Declaration>().Try())
+                .Or(Class.Cast<AST.Class, AST.Declaration>())
+                .Or(Node.Cast<AST.Node, AST.Declaration>())
+                .AsNullable()
+                .OptionalOrDefault();
             
         public static TokenListParser<TokenKind, AST.Document> Document { get; } =
             Declaration.ManyDelimitedBy(NewLine)

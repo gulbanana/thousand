@@ -39,6 +39,7 @@ namespace Thousand.Parse
                 .Match(Character.EqualTo(']'), TokenKind.RightBracket)
                 .Match(Character.EqualTo('='), TokenKind.EqualsSign)
                 .Match(Character.EqualTo(','), TokenKind.Comma)
+                .Match(Character.EqualTo(':'), TokenKind.Colon)
                 .Match(parseNewLine, TokenKind.NewLine)
                 .Match(Identifier.CStyle, TokenKind.Keyword)
                 .Match(parseStringToken, TokenKind.String)

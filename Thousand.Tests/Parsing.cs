@@ -99,6 +99,67 @@ namespace Thousand.Tests
         }
 
         [Fact]
+        public void ValidClass()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo [label=""bar""]");
+            var result = Parser.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name);
+            Assert.Null(result.Value.Base);
+            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
+        }
+
+        [Fact]
+        public void ValidClass_Subclass()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : baz [label=""bar""]");
+            var result = Parser.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name);
+            Assert.Equal("baz", result.Value.Base);
+            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
+        }
+
+        [Fact]
+        public void InvalidClass_SubclassWithoutBase()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : [label=""bar""]");
+            var result = Parser.Class(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Fact]
+        public void ValidBaseClass()
+        {
+            var tokens = tokenizer.Tokenize(@": bar");
+            var result = Parser.BaseClass(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("bar", result.Value);
+        }
+
+        [Fact]
+        public void InvalidBaseClass()
+        {
+            var tokens = tokenizer.Tokenize(@" : ");
+            var result = Parser.BaseClass(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Fact]
+        public void InvalidBaseClass_FollowedByAttributes()
+        {
+            var tokens = tokenizer.Tokenize(@" : [label=""bar""]");
+            var result = Parser.BaseClass(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Fact]
         public void ValidNode()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""");
@@ -164,12 +225,14 @@ bar""");
         }
 
         [Fact]
-        public void InvalidNode_WrongKeyword()
+        public void ValidNode_CustomClass()
         {
-            var tokens = tokenizer.Tokenize(@"obj ""foo""");
+            var tokens = tokenizer.Tokenize(@"foo bar ""Bar""");
             var result = Parser.Node(tokens);
 
-            Assert.False(result.HasValue, result.ToString());
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Class);
+            Assert.Equal("bar", result.Value.Name);
         }
 
         [Fact]

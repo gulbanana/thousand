@@ -4,6 +4,7 @@
 namespace Thousand.AST
 {
     public abstract record Declaration;
+    public record Class(string Name, string? Base, NodeAttribute[] Attributes) : Declaration;
     public record Node(string Class, string? Name, string? Label, NodeAttribute[] Attributes) : Declaration;
     public record Edge(string Target, ArrowKind? Direction);
     public record Edges(Edge[] Elements, EdgeAttribute[] Attributes) : Declaration;
