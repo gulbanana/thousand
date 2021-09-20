@@ -1,12 +1,25 @@
-object alex [label="Alex Gardener\nCount Salford\nd. 1742",stroke=blue]
-object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue]
-object taragos [row=2,column=1]
+object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue,column=3]
+object alex [label="Alex Gardener\nCount Salford\nd. 1742",stroke=blue,column=5]
+
+object ivan [row=2]
 object miles
+object taragos 
+object sancho [column=5]
+object melody
+object sylvia
+
+object charles [row=3]
 object barbara
-object ivan
-object charles
+object agatha [column=7]
+object eliza [row=4,column=7]
+object maeve [row=5,column=7]
 
 alex -> ruth
+
 ruth -> taragos
 ruth -> miles -> barbara
 ruth -> ivan -> charles
+
+alex -> sancho 
+alex -> melody
+alex -> sylvia -> agatha -> eliza -> maeve

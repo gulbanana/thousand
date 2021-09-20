@@ -26,6 +26,7 @@ namespace Thousand
             foreach (var node in document.Declarations.OfType<AST.Node>())
             {
                 var x = nextX;
+                var xSet = false;
                 var y = nextY;
                 var label = node.Label ?? node.Name;
                 var shape = ShapeKind.Square;
@@ -53,11 +54,19 @@ namespace Thousand
                             break;
 
                         case AST.NodeRowAttribute nra:
-                            y = nra.Value;
+                            if (y != nra.Value)
+                            {
+                                y = nra.Value;
+                                if (!xSet)
+                                {
+                                    x = 1;
+                                }
+                            }
                             break;
 
                         case AST.NodeColumnAttribute nca:
                             x = nca.Value;
+                            xSet = true;
                             break;
                     }
                 }
