@@ -11,7 +11,7 @@ namespace Thousand
         internal const int W = 150;
 
         private record Object(string? Name, int Row, int Column, string? Label, ShapeKind Kind, Colour Stroke, Colour Fill);
-        private record Edge(Object FromTarget, Object ToTarget, ArrowKind Direction, Colour Stroke);
+        private record Edge(Object FromTarget, Object ToTarget, Colour Stroke);
 
         public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
         {
@@ -124,7 +124,14 @@ namespace Thousand
 
                     if (fromTarget != null && toTarget != null && from.Direction.HasValue)
                     {
-                        edges.Add(new(fromTarget, toTarget, from.Direction.Value, stroke));
+                        if (from.Direction.Value == ArrowKind.Forward)
+                        {
+                            edges.Add(new(fromTarget, toTarget, stroke));
+                        }
+                        else
+                        {
+                            edges.Add(new(toTarget, fromTarget, stroke));
+                        }
                     }                    
                 }
             }

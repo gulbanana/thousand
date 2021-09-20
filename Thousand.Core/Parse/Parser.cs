@@ -47,9 +47,10 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> Edges { get; } =
             from src in Target
-            from arrow in Token.EqualTo(TokenKind.Arrow)
+            from arrow in Token.EqualTo(TokenKind.RightArrow).Value(ArrowKind.Forward)
+                          .Or(Token.EqualTo(TokenKind.LeftArrow).Value(ArrowKind.Backward))
             from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
-            select next.Prepend(new(src, ArrowKind.Forward));
+            select next.Prepend(new(src, arrow));
 
         public static TokenListParser<TokenKind, AST.Edges> AttributedEdges { get; } =
             from chain in Edges

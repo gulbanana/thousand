@@ -2,6 +2,7 @@
 {
     public enum ArrowKind
     {
-        Forward
+        Forward,
+        Backward
     }
 }

@@ -22,7 +22,10 @@ namespace Thousand.Parse
 
         String,
 
-        Arrow,
+        [Token(Example = "<-")]
+        LeftArrow,
+        [Token(Example = "->")]
+        RightArrow,
 
         [Token(Description = "colour literal")]
         Colour,
