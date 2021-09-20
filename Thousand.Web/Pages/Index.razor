@@ -4,6 +4,7 @@
 @code {
     DiagramGenerator generator;
     string source;
+    string sample;
     Layout.Diagram doc;
     string err;
 
@@ -17,14 +18,25 @@
         }
     }
 
+    string Sample
+    {
+        get => sample;
+        set
+        {
+            sample = value;
+            SetSample(sample);
+            Parse();
+        }
+    }
+
     protected override void OnInitialized()
     {
         generator = new DiagramGenerator();
-        
+
         using (var sourceStream = new EmbeddedFileProvider(typeof(Program).Assembly).GetFileInfo("samples.demo.1000").CreateReadStream())
         {
             using (var reader = new StreamReader(sourceStream))
-            { 
+            {
                 source = reader.ReadToEnd();
             }
         }
@@ -33,6 +45,17 @@
     protected override void OnParametersSet()
     {
         Parse();
+    }
+
+    private void SetSample(string name)
+    {
+        using (var sourceStream = new EmbeddedFileProvider(typeof(Program).Assembly).GetFileInfo(name).CreateReadStream())
+        {
+            using (var reader = new StreamReader(sourceStream))
+            {
+                source = reader.ReadToEnd();
+            }
+        }
     }
 
     private void Parse()
@@ -53,8 +76,18 @@
 <h1>Live Preview</h1>
 
 <div class="layout">
-    <textarea @bind="Source" @bind:event="oninput" spellcheck="false">
-    </textarea>
+    <div class="editor">
+        <textarea @bind="Source" @bind:event="oninput" spellcheck="false">
+        </textarea>
+
+        <div class="bottom-bar">
+            <label>Sample diagrams:</label>
+            <select @bind="Sample">
+                <option value="samples.demo.1000">demo.1000</option>
+                <option value="samples.family-tree.1000">family-tree.1000</option>
+            </select>
+        </div>
+    </div>
 
     <div>
         <LivePreview Diagram="@doc" Error="@err" />

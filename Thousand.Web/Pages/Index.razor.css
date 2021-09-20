@@ -7,8 +7,21 @@
     grid-column-gap: 2rem;
 }
 
+.editor {
+    display: grid;
+    grid-template-rows: 1fr auto;
+}
+
+.bottom-bar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+}
+
+label {
+    margin-bottom: 0;
+}
+
 textarea {
-    height: 600px;
     outline: none;
 }
 
