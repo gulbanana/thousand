@@ -71,7 +71,7 @@ namespace Thousand.Render
         {
             var text = new RichString()
                 .FontFamily(SKTypeface.Default.FamilyName)
-                .FontSize(20)
+                .FontSize(label.FontSize)
                 .Alignment(TextAlignment.Center)
                 .Add(label.Content);
 

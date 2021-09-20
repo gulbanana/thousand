@@ -66,13 +66,19 @@ namespace Thousand.Parse
             from value in CountingNumberValue
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeFontSizeAttribute { get; } =
+            from key in Key(NodeAttributeKind.FontSize)
+            from value in DecimalValue
+            select new AST.NodeFontSizeAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
             NodeLabelAttribute
                 .Or(NodeShapeAttribute)
                 .Or(NodeStrokeAttribute)
                 .Or(NodeFillAttribute)
                 .Or(NodeRowAttribute)
-                .Or(NodeColumnAttribute);
+                .Or(NodeColumnAttribute)
+                .Or(NodeFontSizeAttribute);
 
         public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeStrokeAttribute { get; } =
             from key in Key(EdgeAttributeKind.Stroke)

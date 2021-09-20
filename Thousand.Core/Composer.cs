@@ -10,7 +10,7 @@ namespace Thousand
     {
         internal const int W = 150;
 
-        private record Object(string? Name, int Row, int Column, string? Label, ShapeKind Kind, Colour Stroke, Colour Fill);
+        private record Object(string? Name, int Row, int Column, string? Label, ShapeKind Kind, Colour Stroke, Colour Fill, float FontSize);
         private record Edge(Object FromTarget, Object ToTarget, Colour Stroke);
 
         public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
@@ -32,6 +32,7 @@ namespace Thousand
                 var shape = ShapeKind.Square;
                 var stroke = Colour.Black;
                 var fill = Colour.White;
+                var fontSize = 20f;
 
                 foreach (var attr in node.Attributes)
                 {
@@ -68,10 +69,14 @@ namespace Thousand
                             x = nca.Value;
                             xSet = true;
                             break;
+
+                        case AST.NodeFontSizeAttribute nfsa:
+                            fontSize = nfsa.Value;
+                            break;
                     }
                 }
 
-                objects.Add(new(node.Name, y, x, label, shape, stroke, fill));
+                objects.Add(new(node.Name, y, x, label, shape, stroke, fill, fontSize));
 
                 nextX = x + 1;
                 nextY = y;
@@ -145,7 +150,7 @@ namespace Thousand
             {
                 if (obj.Label != null)
                 {
-                    var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label);
+                    var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label, obj.FontSize);
                     var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.Stroke, obj.Fill);
 
                     labels.Add(label);

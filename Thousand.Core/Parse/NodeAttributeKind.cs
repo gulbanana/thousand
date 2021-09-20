@@ -7,6 +7,7 @@
         Stroke,
         Fill,
         Row,
-        Column
+        Column,
+        FontSize
     }
 }

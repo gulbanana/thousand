@@ -1,4 +1,4 @@
-object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue,column=3]
+object ruth [label="Ruth Henning Gardener\nd. 1744",stroke=blue,column=3,fontsize=14]
 object alex [label="Alex Gardener\nCount Salford\nd. 1742",stroke=blue,column=5]
 
 object ivan "Ivan Bebutov\nd. 1751 f. 1861" [row=2]
