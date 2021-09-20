@@ -25,11 +25,11 @@ jobs:
     - name: dotnet build
       run: dotnet build --configuration Release
 
-    - name: dotnet publish
-      run: dotnet publish -c Release --no-build Thousand.Web -o ${{env.DOTNET_ROOT}}/thousand
-
     - name: dotnet test
       run: dotnet test -c Release --no-build Thousand.Tests
+
+    - name: dotnet publish
+      run: dotnet publish -c Release --no-build Thousand.Web -o ${{env.DOTNET_ROOT}}/thousand
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v2
