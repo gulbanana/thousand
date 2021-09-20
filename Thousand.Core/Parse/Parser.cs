@@ -58,7 +58,8 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.Declaration?> Declaration { get; } =
             Node.Cast<AST.Node, AST.Declaration>().AsNullable()
-            .Or(AttributedEdges.Cast<AST.Edges, AST.Declaration>().AsNullable())
+            .Or(AttributedEdges.Cast<AST.Edges, AST.Declaration>().AsNullable().Try())
+            .Or(AttributeParsers.DocumentAttribute.Cast<AST.DocumentAttribute, AST.Declaration>().AsNullable())
             .OptionalOrDefault();
             
         public static TokenListParser<TokenKind, AST.Document> Document { get; } =

@@ -22,11 +22,11 @@ namespace Thousand.Parse
 
         String,
 
+        Arrow,
+
         [Token(Description = "colour literal")]
         Colour,
 
-        Integer,
-
-        Arrow,
+        Number,
     }
 }

@@ -42,7 +42,7 @@ namespace Thousand.Parse
                 .Match(parseNewLine, TokenKind.NewLine)
                 .Match(Identifier.CStyle, TokenKind.Keyword)
                 .Match(parseStringToken, TokenKind.String)
-                .Match(Numerics.Integer, TokenKind.Integer)
+                .Match(Numerics.Decimal, TokenKind.Number)
                 .Match(Character.EqualTo('#').IgnoreThen(Character.HexDigit.AtLeastOnce()), TokenKind.Colour)
                 .Match(Span.EqualTo("->"), TokenKind.Arrow)
                 .Build();

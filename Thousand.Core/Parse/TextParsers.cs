@@ -77,5 +77,9 @@ namespace Thousand.Parse
 
             return Result.Value(val, input, remainder);
         };
+
+        /// <summary>Matches decimal numbers, for example <code>-1.23</code>, converted into a <see cref="float"/>.</summary>
+        public static TextParser<float> DecimalFloat { get; } =
+            Numerics.Decimal.Select(span => float.Parse(span.ToStringValue(), CultureInfo.InvariantCulture));
     }
 }

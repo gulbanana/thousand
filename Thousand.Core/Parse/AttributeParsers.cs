@@ -17,7 +17,24 @@ namespace Thousand.Parse
                 .Or(Keyword.Statics<Colour>());
 
         public static TokenListParser<TokenKind, int> CountingNumberValue { get; } =
-            Token.EqualTo(TokenKind.Integer).Apply(TextParsers.CountingNumber);
+            Token.EqualTo(TokenKind.Number).Apply(TextParsers.CountingNumber);
+
+        public static TokenListParser<TokenKind, float> DecimalValue { get; } =
+            Token.EqualTo(TokenKind.Number).Apply(TextParsers.DecimalFloat);
+
+        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentScaleAttribute { get; } =
+            from key in Key(DiagramAttributeKind.Scale)
+            from value in DecimalValue
+            select new AST.DocumentScaleAttribute(value) as AST.DocumentAttribute;
+
+        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentBackgroundAttribute { get; } =
+            from key in Key(DiagramAttributeKind.Background)
+            from value in ColourValue
+            select new AST.DocumentBackgroundAttribute(value) as AST.DocumentAttribute;
+
+        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
+            DocumentScaleAttribute
+            .Or(DocumentBackgroundAttribute);
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
             from key in Key(NodeAttributeKind.Label)

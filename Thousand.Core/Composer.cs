@@ -162,12 +162,31 @@ namespace Thousand
                 lines.Add(new(from, to, edge.Stroke));
             }
 
+            // pass 3: apply doc-level attributes
+            var scale = 1f;
+            var background = Colour.White;            
+
+            foreach (var attr in document.Declarations.OfType<AST.DocumentAttribute>())
+            {
+                switch (attr)
+                {
+                    case AST.DocumentScaleAttribute dsa:
+                        scale = dsa.Value;
+                        break;
+
+                    case AST.DocumentBackgroundAttribute dba:
+                        background = dba.Colour;
+                        break;
+                }
+            }
 
             warnings = ws.Select(w => new GenerationError(w)).ToArray();
             errors = es.Select(w => new GenerationError(w)).ToArray();
             diagram = new(
                 objects.Select(s => s.Column).Max() * W,
                 objects.Select(s => s.Row).Max() * W, 
+                scale,
+                background,
                 shapes.Values.ToList(), 
                 labels, 
                 lines

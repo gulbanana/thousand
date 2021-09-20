@@ -1,7 +1,9 @@
-﻿object "top left" [fill=#ccc,shape=oval]
-object mid [label="top centre",fill=#ccc,stroke=#00ff00] 
+﻿scale = 2.0
+
+object "top left" [fill=#ccc,shape=oval]
+object mid [label="top centre",fill=#ccc,stroke=#0f0] 
 object right "top right" [fill=#ccc,shape=oval]
-object "bottom left" [fill=#ccc,shape=rounded,row=2,column=1]
+object "bottom left" [fill=#ccc,shape=rounded,row=2]
 object "bottom right" [fill=#ccc,shape=rounded,column=3]
 
 "top left" -> mid [stroke=red]

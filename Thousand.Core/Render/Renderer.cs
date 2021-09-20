@@ -30,12 +30,12 @@ namespace Thousand.Render
 
         public SKImage Render(Layout.Diagram diagram)
         {
-            var info = new SKImageInfo(diagram.Width*2, diagram.Height*2);
+            var info = new SKImageInfo((int)(diagram.Width * diagram.Scale), (int)(diagram.Height * diagram.Scale));
             using var surface = SKSurface.Create(info);            
             
             var canvas = surface.Canvas;
-            canvas.Clear(SKColors.White);
-            canvas.Scale(2f);
+            canvas.Scale(diagram.Scale);
+            canvas.Clear(diagram.Background.SK());            
 
             var state = new RenderState(canvas);
 

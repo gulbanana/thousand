@@ -19,4 +19,8 @@ namespace Thousand.AST
 
     public abstract record EdgeAttribute;
     public record EdgeStrokeAttribute(Colour Colour) : EdgeAttribute;
+
+    public abstract record DocumentAttribute : Declaration;
+    public record DocumentScaleAttribute(float Value) : DocumentAttribute;
+    public record DocumentBackgroundAttribute(Colour Colour) : DocumentAttribute;
 }
