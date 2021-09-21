@@ -33,25 +33,27 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 
-        public static TokenListParser<TokenKind, string?> BaseClass { get; } =
+        public static TokenListParser<TokenKind, string[]> ClassList { get; } =
+            Keyword.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+
+        public static TokenListParser<TokenKind, string[]> BaseClasses { get; } =
             Token.EqualTo(TokenKind.Colon)
-                 .IgnoreThen(Keyword)
-                 .AsNullable()
-                 .OptionalOrDefault();
+                 .IgnoreThen(ClassList)
+                 .OptionalOrDefault(Array.Empty<string>());
 
         public static TokenListParser<TokenKind, AST.Class> Class { get; } =
             from keyword in Token.EqualToValue(TokenKind.Keyword, "class")
             from name in Keyword
-            from baseClass in BaseClass
+            from bases in BaseClasses
             from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
-            select new AST.Class(name, baseClass, attrs);
+            select new AST.Class(name, bases, attrs);
 
         public static TokenListParser<TokenKind, AST.Node> Node { get; } =
-            from @class in Keyword
+            from classes in ClassList
             from identifier in Keyword.AsNullable().OptionalOrDefault()
             from label in String.AsNullable().OptionalOrDefault()
             from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
-            select new AST.Node(@class, identifier, label, attrs);
+            select new AST.Node(classes, identifier, label, attrs);
 
         public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
             from dst in Target

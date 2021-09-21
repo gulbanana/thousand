@@ -24,16 +24,27 @@ namespace Thousand
                 { "object", new AST.NodeAttribute[0] }
             };
 
+            AST.NodeAttribute[] findClass(string name)
+            {
+                if (!classes!.ContainsKey(name))
+                {
+                    ws.Add($"Object class '{name}' not defined.");
+                    return Array.Empty<AST.NodeAttribute>();
+                }
+                else
+                {
+                    return classes[name];
+                }
+            };
+
             foreach (var c in document.Declarations.OfType<AST.Class>())
             {
-                var attrs = c.Attributes;
+                var attrs = c.BaseClasses
+                    .SelectMany(findClass)
+                    .Concat(c.Attributes)
+                    .ToArray();
 
-                if (c.Base != null)
-                {
-                    attrs = classes[c.Base].Concat(attrs).ToArray();
-                }
-
-                classes.Add(c.Name, attrs);
+                classes[c.Name] = attrs;
             }
 
             // pass 1: canonicalise AST elements, arranging the nodes on a grid and extracting edges from chains
@@ -43,12 +54,6 @@ namespace Thousand
             var nextY = 1;
             foreach (var node in document.Declarations.OfType<AST.Node>())
             {
-                if (!classes.ContainsKey(node.Class))
-                {
-                    ws.Add($"Object class '{node.Class}' not defined.");
-                    continue;
-                }
-
                 var x = nextX;
                 var xSet = false;
                 var y = nextY;
@@ -58,7 +63,7 @@ namespace Thousand
                 var fill = Colour.White;
                 var fontSize = 20f;
 
-                foreach (var attr in classes[node.Class].Concat(node.Attributes))
+                foreach (var attr in node.Classes.SelectMany(findClass).Concat(node.Attributes))
                 {
                     switch (attr)
                     {

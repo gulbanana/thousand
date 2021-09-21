@@ -106,20 +106,29 @@ namespace Thousand.Tests
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name);
-            Assert.Null(result.Value.Base);
+            Assert.Empty(result.Value.BaseClasses);
             AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
         }
 
         [Fact]
         public void ValidClass_Subclass()
         {
-            var tokens = tokenizer.Tokenize(@"class foo : baz [label=""bar""]");
+            var tokens = tokenizer.Tokenize(@"class foo : baz");
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name);
-            Assert.Equal("baz", result.Value.Base);
-            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
+            AssertEx.Sequence(result.Value.BaseClasses, "baz");
+        }
+
+        [Fact]
+        public void ValidClass_SubclassWithMultipleBases()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : bar.baz");
+            var result = Parser.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.BaseClasses, "bar", "baz");
         }
 
         [Fact]
@@ -135,17 +144,17 @@ namespace Thousand.Tests
         public void ValidBaseClass()
         {
             var tokens = tokenizer.Tokenize(@": bar");
-            var result = Parser.BaseClass(tokens);
+            var result = Parser.BaseClasses(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("bar", result.Value);
+            AssertEx.Sequence(result.Value, "bar");
         }
 
         [Fact]
         public void InvalidBaseClass()
         {
             var tokens = tokenizer.Tokenize(@" : ");
-            var result = Parser.BaseClass(tokens);
+            var result = Parser.BaseClasses(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -154,7 +163,7 @@ namespace Thousand.Tests
         public void InvalidBaseClass_FollowedByAttributes()
         {
             var tokens = tokenizer.Tokenize(@" : [label=""bar""]");
-            var result = Parser.BaseClass(tokens);
+            var result = Parser.BaseClasses(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -162,21 +171,23 @@ namespace Thousand.Tests
         [Fact]
         public void ValidNode()
         {
-            var tokens = tokenizer.Tokenize(@"object ""foo""");
+            var tokens = tokenizer.Tokenize(@"object foo");
             var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("object", null, "foo", Array.Empty<AST.NodeAttribute>()), result.Value);
+            AssertEx.Sequence(result.Value.Classes, "object");
+            Assert.Equal("foo", result.Value.Name);
         }
 
         [Fact]
         public void ValidNode_WhiteSpace()
         {
-            var tokens = tokenizer.Tokenize(@"   object     ""foo""    ");
+            var tokens = tokenizer.Tokenize(@"   object     foo    ");
             var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("object", null, "foo", Array.Empty<AST.NodeAttribute>()), result.Value);
+            AssertEx.Sequence(result.Value.Classes, "object");
+            Assert.Equal("foo", result.Value.Name);
         }
 
         [Fact]
@@ -187,7 +198,8 @@ bar""");
             var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(new AST.Node("object", null, "foo" + Environment.NewLine+"bar", Array.Empty<AST.NodeAttribute>()), result.Value);
+            AssertEx.Sequence(result.Value.Classes, "object");
+            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Label);
         }
 
         [Fact]
@@ -231,8 +243,20 @@ bar""");
             var result = Parser.Node(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Class);
+            AssertEx.Sequence(result.Value.Classes, "foo");
             Assert.Equal("bar", result.Value.Name);
+            Assert.Equal("Bar", result.Value.Label);
+        }
+
+        [Fact]
+        public void ValidNode_CustomClasses()
+        {
+            var tokens = tokenizer.Tokenize(@"foo.bar baz");
+            var result = Parser.Node(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.Classes, "foo", "bar");
+            Assert.Equal("baz", result.Value.Name);
         }
 
         [Fact]
@@ -251,7 +275,8 @@ bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations, new AST.Node("object", null, "foo", Array.Empty<AST.NodeAttribute>()));
+            Assert.Single(result.Value.Declarations);
+            Assert.IsType<AST.Node>(result.Value.Declarations.Single());
         }
 
         [Fact]
@@ -264,10 +289,7 @@ object ""baz""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations, 
-                new AST.Node("object", null, "foo", Array.Empty<AST.NodeAttribute>()), 
-                new AST.Node("object", null, "bar", Array.Empty<AST.NodeAttribute>()), 
-                new AST.Node("object", null, "baz", Array.Empty<AST.NodeAttribute>()));
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.Node>().Select(n => n.Label), "foo", "bar", "baz");
         }
 
         [Fact]
@@ -280,9 +302,7 @@ object ""bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations, 
-                new AST.Node("object", null, "foo", Array.Empty<AST.NodeAttribute>()), 
-                new AST.Node("object", null, "bar", Array.Empty<AST.NodeAttribute>()));
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.Node>().Select(n => n.Label), "foo", "bar");
         }
 
         [Fact]
@@ -295,8 +315,8 @@ foo -> bar");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Collection(result.Value.Declarations,
-                d => Assert.Equal(new AST.Node("object", "foo", null, Array.Empty<AST.NodeAttribute>()), d),
-                d => Assert.Equal(new AST.Node("object", "bar", null, Array.Empty<AST.NodeAttribute>()), d),
+                d => Assert.IsType<AST.Node>(d),
+                d => Assert.IsType<AST.Node>(d),
                 d =>
                 {
                     if (d is not AST.Edges e)
