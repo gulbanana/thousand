@@ -26,7 +26,7 @@ namespace Thousand
 
             AST.NodeAttribute[] findClass(string name)
             {
-                if (!classes!.ContainsKey(name))
+                if (!classes.ContainsKey(name))
                 {
                     ws.Add($"Object class '{name}' not defined.");
                     return Array.Empty<AST.NodeAttribute>();
