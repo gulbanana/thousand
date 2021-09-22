@@ -21,7 +21,7 @@ namespace Thousand
             // pass 0: register classes
             var classes = new Dictionary<string, AST.NodeAttribute[]>(StringComparer.OrdinalIgnoreCase)
             {
-                { "object", new AST.NodeAttribute[0] }
+                { "object", Array.Empty<AST.NodeAttribute>() }
             };
 
             AST.NodeAttribute[] findClass(string name)
