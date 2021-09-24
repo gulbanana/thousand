@@ -53,7 +53,8 @@ namespace Thousand.Parse
             from identifier in Keyword.AsNullable().OptionalOrDefault()
             from label in String.AsNullable().OptionalOrDefault()
             from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
-            select new AST.Node(classes, identifier, label, attrs);
+            from children in Superpower.Parse.Ref(() => Scope!).Select(s => s.Declarations).AsNullable().OptionalOrDefault(Array.Empty<AST.ScopeDeclaration>())
+            select new AST.Node(classes, identifier, label, attrs, children);
 
         public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
             from dst in Target
@@ -71,16 +72,29 @@ namespace Thousand.Parse
             from attrs in AttributeList(AttributeParsers.EdgeAttribute).OptionalOrDefault(Array.Empty<AST.EdgeAttribute>())
             select new AST.Edges(chain.ToArray(), attrs);
 
-        public static TokenListParser<TokenKind, AST.Declaration?> Declaration { get; } =
-            AttributeParsers.DocumentAttribute.Cast<AST.DocumentAttribute, AST.Declaration>()
-                .Or(AttributedEdges.Cast<AST.Edges, AST.Declaration>().Try())
-                .Or(Class.Cast<AST.Class, AST.Declaration>())
-                .Or(Node.Cast<AST.Node, AST.Declaration>())
+        public static TokenListParser<TokenKind, AST.ScopeDeclaration?> ScopeDeclaration { get; } =
+            AttributeParsers.NodeAttribute.Cast<AST.NodeAttribute, AST.ScopeDeclaration>()
+                .Or(AttributedEdges.Cast<AST.Edges, AST.ScopeDeclaration>().Try())
+                .Or(Node.Cast<AST.Node, AST.ScopeDeclaration>())
+                .AsNullable()
+                .OptionalOrDefault();
+
+        public static TokenListParser<TokenKind, AST.Scope> Scope { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftBrace)
+            from decs in ScopeDeclaration.ManyDelimitedBy(NewLine)
+            from end in Token.EqualTo(TokenKind.RightBrace)
+            select new AST.Scope(decs.WhereNotNull().ToArray());
+
+        public static TokenListParser<TokenKind, AST.DocumentDeclaration?> DocumentDeclaration { get; } =
+            AttributeParsers.DocumentAttribute.Cast<AST.DocumentAttribute, AST.DocumentDeclaration>()
+                .Or(AttributedEdges.Cast<AST.Edges, AST.DocumentDeclaration>().Try())
+                .Or(Class.Cast<AST.Class, AST.DocumentDeclaration>())
+                .Or(Node.Cast<AST.Node, AST.DocumentDeclaration>())
                 .AsNullable()
                 .OptionalOrDefault();
             
         public static TokenListParser<TokenKind, AST.Document> Document { get; } =
-            Declaration.ManyDelimitedBy(NewLine)
+            DocumentDeclaration.ManyDelimitedBy(NewLine)
                 .Select(decs => new AST.Document(decs.WhereNotNull().ToArray()))
                 .AtEnd();
     }

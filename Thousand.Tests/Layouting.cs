@@ -9,8 +9,8 @@ namespace Thousand.Tests
         public void CreateFromDiagram()
         {
             var document = new AST.Document(
-                new AST.Node[] { new(new[]{"object"}, null, "foo", Array.Empty<AST.NodeAttribute>()), 
-                new(new[]{"object"}, null, "bar", Array.Empty<AST.NodeAttribute>()) 
+                new AST.Node[] { new(new[]{"object"}, null, "foo", Array.Empty<AST.NodeAttribute>(), Array.Empty<AST.ScopeDeclaration>()), 
+                new(new[]{"object"}, null, "bar", Array.Empty<AST.NodeAttribute>(), Array.Empty<AST.ScopeDeclaration>()) 
             });
             var result = Composer.TryCompose(document, out var layout, out var warnings, out var errors);
 

@@ -37,6 +37,8 @@ namespace Thousand.Parse
                 .Ignore(Comment.CPlusPlusStyle)
                 .Match(Character.EqualTo('['), TokenKind.LeftBracket)
                 .Match(Character.EqualTo(']'), TokenKind.RightBracket)
+                .Match(Character.EqualTo('{'), TokenKind.LeftBrace)
+                .Match(Character.EqualTo('}'), TokenKind.RightBrace)
                 .Match(Character.EqualTo('='), TokenKind.EqualsSign)
                 .Match(Character.EqualTo(','), TokenKind.Comma)
                 .Match(Character.EqualTo(':'), TokenKind.Colon)

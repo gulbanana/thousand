@@ -2,8 +2,12 @@ class vampire [fontsize=14]
 class invictus:vampire [stroke=blue]
 class carthian:vampire [stroke=green]
 
-invictus ruth [label="Ruth Henning Gardener\nd. 1744",column=2]
-invictus alex [label="Alex Gardener\nCount Salford\nd. 1742",column=5]
+row gardeners {
+	fill=red
+
+	invictus ruth [label="Ruth Henning Gardener\nd. 1744",column=2]
+	invictus alex [label="Alex Gardener\nCount Salford\nd. 1742",column=5]
+}
 
 invictus ivan "Ivan Bebutov\nd. 1751 f. 1861" [row=2]
 invictus miles "Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"
