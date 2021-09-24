@@ -11,4 +11,8 @@
     <PackageReference Include="SkiaSharp" Version="2.80.3" />
     <PackageReference Include="Topten.RichTextKit" Version="0.4.145" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="stdlib.1000" />
+  </ItemGroup>
 </Project>

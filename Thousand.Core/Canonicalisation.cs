@@ -11,19 +11,49 @@ namespace Thousand
         private readonly List<string> es;
         private readonly Dictionary<string, AST.NodeAttribute[]> classes;
         private readonly List<IR.Object> objects;
-        public IReadOnlyList<IR.Object> Objects => objects;
+        private readonly List<IR.Edge> edges;
+
         private int nextX;
         private int nextY;
 
-        public Canonicalisation(List<string> ws, List<string> es, AST.Document document)
+        public IReadOnlyList<IR.Object> Objects => objects;
+        public IReadOnlyList<IR.Edge> Edges => edges;
+        public IR.Config Config { get; private set; }
+
+        public Canonicalisation(List<string> ws, List<string> es, IEnumerable<AST.Document> documents)
         {
             this.ws = ws;
             this.es = es;
 
-            classes = new Dictionary<string, AST.NodeAttribute[]>(StringComparer.OrdinalIgnoreCase)
+            classes = new();
+            objects = new();
+            edges = new();
+
+            nextX = 1;
+            nextY = 1;
+            Config = new IR.Config(1f, Colour.White);
+
+            foreach (var doc in documents)
             {
-                { "object", Array.Empty<AST.NodeAttribute>() }
-            };
+                AddDocument(doc);
+            }
+        }
+
+        private void AddDocument(AST.Document document)
+        {
+            foreach (var attr in document.Declarations.OfType<AST.DocumentAttribute>())
+            {
+                switch (attr)
+                {
+                    case AST.DocumentScaleAttribute dsa:
+                        Config = Config with { Scale = dsa.Value };
+                        break;
+
+                    case AST.DocumentBackgroundAttribute dba:
+                        Config = Config with { Background = dba.Colour };
+                        break;
+                }
+            }
 
             foreach (var c in document.Declarations.OfType<AST.Class>())
             {
@@ -35,17 +65,18 @@ namespace Thousand
                 classes[c.Name] = attrs;
             }
 
-            objects = new();
-
-            nextX = 1;
-            nextY = 1;
             foreach (var node in document.Declarations.OfType<AST.Node>())
             {
-                MakeObject(node);
+                AddObject(node);
+            }
+
+            foreach (var chain in document.Declarations.OfType<AST.Edges>())
+            {
+                AddEdges(chain);
             }
         }
 
-        private void MakeObject(AST.Node node)
+        private void AddObject(AST.Node node)
         {
             var x = nextX;
             var xSet = false;
@@ -102,7 +133,12 @@ namespace Thousand
             {
                 foreach (var child in node.Children.OfType<AST.Node>())
                 {
-                    MakeObject(child);
+                    AddObject(child);
+                }
+
+                foreach (var chain in node.Children.OfType<AST.Edges>())
+                {
+                    AddEdges(chain);
                 }
             }
             else
@@ -112,6 +148,42 @@ namespace Thousand
 
             nextX = x + 1;
             nextY = y;
+        }
+
+        private void AddEdges(AST.Edges chain)
+        {
+            var stroke = Colour.Black;
+
+            foreach (var attr in chain.Attributes)
+            {
+                switch (attr)
+                {
+                    case AST.EdgeStrokeAttribute esa:
+                        stroke = esa.Colour;
+                        break;
+                }
+            }
+
+            for (var i = 0; i < chain.Elements.Length - 1; i++)
+            {
+                var from = chain.Elements[i];
+                var to = chain.Elements[i + 1];
+
+                var fromTarget = FindObject(from.Target);
+                var toTarget = FindObject(to.Target);
+
+                if (fromTarget != null && toTarget != null && from.Direction.HasValue)
+                {
+                    if (from.Direction.Value == ArrowKind.Forward)
+                    {
+                        edges.Add(new(fromTarget, toTarget, stroke));
+                    }
+                    else
+                    {
+                        edges.Add(new(toTarget, fromTarget, stroke));
+                    }
+                }
+            }
         }
 
         public AST.NodeAttribute[] FindClass(string name)

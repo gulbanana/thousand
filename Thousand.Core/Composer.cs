@@ -11,50 +11,16 @@ namespace Thousand
 
         public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
         {
+            return TryCompose(new[] { document }, out diagram, out warnings, out errors);
+        }
+
+        public static bool TryCompose(IEnumerable<AST.Document> documents, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
+        {
             var ws = new List<string>();
             var es = new List<string>();
 
-            var ir = new Canonicalisation(ws, es, document);
+            var ir = new Canonicalisation(ws, es, documents);
 
-            var edges = new List<IR.Edge>();
-
-            foreach (var chain in document.Declarations.OfType<AST.Edges>())
-            {
-                var stroke = Colour.Black;
-
-                foreach (var attr in chain.Attributes)
-                {
-                    switch (attr)
-                    {
-                        case AST.EdgeStrokeAttribute esa:
-                            stroke = esa.Colour;
-                            break;
-                    }
-                }
-
-                for (var i = 0; i < chain.Elements.Length - 1; i++)
-                {
-                    var from = chain.Elements[i];
-                    var to = chain.Elements[i+1];
-
-                    var fromTarget = ir.FindObject(from.Target);
-                    var toTarget = ir.FindObject(to.Target);
-
-                    if (fromTarget != null && toTarget != null && from.Direction.HasValue)
-                    {
-                        if (from.Direction.Value == ArrowKind.Forward)
-                        {
-                            edges.Add(new(fromTarget, toTarget, stroke));
-                        }
-                        else
-                        {
-                            edges.Add(new(toTarget, fromTarget, stroke));
-                        }
-                    }                    
-                }
-            }
-
-            // pass 2: create drawables from the canonicalised AST
             var shapes = new Dictionary<IR.Object, Layout.Shape>();
             var labels = new List<Layout.Label>();
             var lines = new List<Layout.Line>();
@@ -77,7 +43,7 @@ namespace Thousand
                 }
             }
 
-            foreach (var edge in edges)
+            foreach (var edge in ir.Edges)
             {
                 var from = shapes[edge.FromTarget];
                 var to = shapes[edge.ToTarget];
@@ -85,31 +51,13 @@ namespace Thousand
                 lines.Add(new(from, to, edge.Stroke));
             }
 
-            // pass 3: apply doc-level attributes
-            var scale = 1f;
-            var background = Colour.White;            
-
-            foreach (var attr in document.Declarations.OfType<AST.DocumentAttribute>())
-            {
-                switch (attr)
-                {
-                    case AST.DocumentScaleAttribute dsa:
-                        scale = dsa.Value;
-                        break;
-
-                    case AST.DocumentBackgroundAttribute dba:
-                        background = dba.Colour;
-                        break;
-                }
-            }
-
             warnings = ws.Select(w => new GenerationError(w)).ToArray();
             errors = es.Select(w => new GenerationError(w)).ToArray();
             diagram = new(
                 ir.Objects.Select(s => s.Column).Append(0).Max() * W,
                 ir.Objects.Select(s => s.Row).Append(0).Max() * W, 
-                scale,
-                background,
+                ir.Config.Scale,
+                ir.Config.Background,
                 shapes.Values.ToList(), 
                 labels, 
                 lines

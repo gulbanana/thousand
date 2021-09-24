@@ -2,6 +2,8 @@
 using SkiaSharp;
 using Superpower;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Thousand.Parse;
 
@@ -10,6 +12,14 @@ namespace Thousand
     /// <summary>Main high-level entry point</summary>
     public class DiagramGenerator : IDisposable
     {
+        public static string ReadStdlib()
+        {
+            using var resource = typeof(DiagramGenerator).Assembly.GetManifestResourceStream("Thousand.stdlib.1000");
+            using var reader = new StreamReader(resource!);
+
+            return reader.ReadToEnd();
+        }
+
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly TokenListParser<TokenKind, AST.Document> parser;
         private readonly Render.Renderer renderer;
@@ -26,12 +36,9 @@ namespace Thousand
             renderer.Dispose();
         }
 
-        /// <summary>Create a diagram from source code.</summary>
-        /// <param name="source">.1000 source text.</param>
-        /// <returns>Either the generated diagram (as a data structure) and zero-or-more-warnings, or one-or-more errors.</returns>
-        public OneOf<GenerationResult<Layout.Diagram>, GenerationError[]> GenerateDiagram(string source)
-        {           
-            var tokenized = tokenizer.TryTokenize(source);
+        private OneOf<GenerationResult<AST.Document>, GenerationError[]> Parse(string sourceFile)
+        {
+            var tokenized = tokenizer.TryTokenize(sourceFile);
             if (!tokenized.HasValue)
             {
                 return new GenerationError[] { new(tokenized.ToString()) };
@@ -41,9 +48,35 @@ namespace Thousand
             if (!parsed.HasValue)
             {
                 return new GenerationError[] { new(parsed.ToString()) };
-            }            
+            }
 
-            if (!Composer.TryCompose(parsed.Value, out var diagram, out var warnings, out var errors))
+            return new GenerationResult<AST.Document>(parsed.Value, Array.Empty<GenerationError>());
+        }
+
+        /// <summary>Create a diagram from source code.</summary>
+        /// <param name="source">.1000 source text.</param>
+        /// <returns>Either the generated diagram (as a data structure) and zero-or-more-warnings, or one-or-more errors.</returns>
+        public OneOf<GenerationResult<Layout.Diagram>, GenerationError[]> GenerateDiagram(string source, bool stdlib = true)
+        {
+            var sources = new List<string>();
+            if (stdlib) sources.Add(ReadStdlib());
+            sources.Add(source);
+
+            var parses = new List<AST.Document>();
+            foreach (var s in sources)
+            {
+                var result = Parse(s);
+                if (result.IsT1)
+                {
+                    return result.AsT1;
+                }
+                else
+                {
+                    parses.Add(result.AsT0.Diagram);
+                }
+            }
+
+            if (!Composer.TryCompose(parses, out var diagram, out var warnings, out var errors))
             {
                 return errors;
             }
@@ -54,9 +87,9 @@ namespace Thousand
         /// <summary>Create a diagram from source code.</summary>
         /// <param name="source">.1000 source text.</param>
         /// <returns>Either the generated diagram (as a Skia image) and zero-or-more-warnings, or one-or-more errors.</returns>
-        public OneOf<GenerationResult<SKImage>, GenerationError[]> GenerateImage(string source)
+        public OneOf<GenerationResult<SKImage>, GenerationError[]> GenerateImage(string source, bool stdlib = true)
         {
-            return GenerateDiagram(source).MapT0(result =>
+            return GenerateDiagram(source, stdlib).MapT0(result =>
             {
                 var image = renderer.Render(result.Diagram);
                 return new GenerationResult<SKImage>(image, result.Warnings);

@@ -3,10 +3,10 @@ class invictus:vampire [stroke=blue]
 class carthian:vampire [stroke=green]
 
 row gardeners {
-	fill=red
-
 	invictus ruth [label="Ruth Henning Gardener\nd. 1744",column=2]
 	invictus alex [label="Alex Gardener\nCount Salford\nd. 1742",column=5]
+
+	ruth <- alex
 }
 
 invictus ivan "Ivan Bebutov\nd. 1751 f. 1861" [row=2]
@@ -32,8 +32,6 @@ invictus fanny "Fanny Smith\nd. 1918 f. 1942"
 carthian eliza "Eliza Beth Hursley\nd. 1921" [column=7]
 
 carthian maeve "Maeve Baker\nd. 1941 f. 1984" [row=5,column=7]
-
-alex -> ruth
 
 ruth -> taragos
 ruth -> miles -> barbara
