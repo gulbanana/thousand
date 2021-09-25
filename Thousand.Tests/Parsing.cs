@@ -81,11 +81,11 @@ namespace Thousand.Tests
         [Fact]
         public void ValidAttributeList_Multiple()
         {
-            var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval,shape=rounded]");
+            var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval]");
             var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Oval), new AST.NodeShapeAttribute(ShapeKind.Rounded));
+            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Oval));
         }
 
         [Fact]
