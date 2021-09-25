@@ -1,7 +1,6 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Thousand.Model;
 using Topten.RichTextKit;
 
@@ -70,16 +69,28 @@ namespace Thousand.Render
             var path = new SKPath();
             switch (shape.Kind)
             {
+                case ShapeKind.RoundRect:
+                    path.AddRoundRect(new SKRoundRect(Pad(textBox, 5), 5));
+                    break;
+
+                case ShapeKind.Rectangle:
+                    path.AddRect(Pad(textBox, 5));
+                    break;
+
                 case ShapeKind.Square:
-                    path.AddRect(Pad(textBox, 4));
+                    path.AddRect(Square(Pad(textBox, 5)));
                     break;
 
                 case ShapeKind.Oval:
+                    path.AddCircle(shape.X, shape.Y, Pad(textBox, 10).Width/2);
+                    break;
+
+                case ShapeKind.Circle:
                     path.AddOval(Pad(textBox, 10));
                     break;
 
-                case ShapeKind.Rounded:
-                    path.AddRoundRect(new SKRoundRect(Pad(textBox, 4), 4));
+                case ShapeKind.Diamond:
+                    path.AddPoly(Diamond(Pad(textBox, 10)));
                     break;
             };
             path.Close();
@@ -166,6 +177,31 @@ namespace Thousand.Render
         private static SKPoint Normalize(SKPoint vector, float length = 1.0f)
         {
             return new SKPoint(vector.X / vector.Length * length, vector.Y / vector.Length * length);
+        }
+
+        private SKRect Square(SKRect box)
+        {
+            if (box.Width > box.Height)
+            {
+                var radius = box.Width / 2;
+                return new SKRect(box.Left, box.MidY - radius, box.Right, box.MidY + radius);
+            }
+            else
+            {
+                var radius = box.Width / 2;
+                return new SKRect(box.Left, box.MidY - radius, box.Right, box.MidY + radius);
+            }
+        }
+
+        private SKPoint[] Diamond(SKRect box)
+        {
+            return new SKPoint[]
+            {
+                new(box.Left, box.MidY),
+                new(box.MidX, box.Top),
+                new(box.Right, box.MidY),
+                new(box.MidX, box.Bottom),
+            };
         }
     }
 }

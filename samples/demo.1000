@@ -1,11 +1,13 @@
 ﻿scale = 2.0
+class object [fill=#ccc]
 
-object "top left" [fill=#ccc,shape=oval]
-object mid [label="top centre",fill=#ccc,stroke=#0f0] 
-object right "top right" [fill=#ccc,shape=oval]
-object "bottom left" [fill=#ccc,shape=rounded,row=2]
-object "bottom right" [fill=#ccc,shape=rounded,column=3]
+object "Top Left"
+object mid [shape=rectangle,label="top centre",stroke=#0f0] 
+object right "top right" [shape=square]
+object Center [shape=diamond,row=2,column=2]
+object "bottom left" [shape=circle,row=3]
+object "bottom right" [shape=oval,column=3]
 
 "top left" -> mid [stroke=red]
 right -> mid [stroke=blue]
-"top left" -> "bottom right"
+center -> "bottom right"

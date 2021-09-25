@@ -82,7 +82,7 @@ namespace Thousand
             var xSet = false;
             var y = nextY;
             var label = node.Label ?? node.Name;
-            var shape = ShapeKind.Square;
+            var shape = ShapeKind.RoundRect;
             var stroke = Colour.Black;
             var fill = Colour.White;
             var fontSize = 20f;
