@@ -5,8 +5,8 @@ object "Top Left"
 object mid [shape=rectangle,label="top centre",stroke=#0f0] 
 object right "top right" [shape=square]
 object Center [shape=diamond,row=2,column=2]
-object "bottom left" [shape=circle,row=3]
-object "bottom right" [shape=oval,column=3]
+object "bottom left" [shape=oval,row=3]
+object "bottom right" [shape=circle,column=3]
 
 "top left" -> mid [stroke=red]
 right -> mid [stroke=blue]

@@ -82,11 +82,11 @@ namespace Thousand.Render
                     break;
 
                 case ShapeKind.Oval:
-                    path.AddCircle(shape.X, shape.Y, Pad(textBox, 10).Width/2);
+                    path.AddOval(Pad(textBox, 10));
                     break;
 
                 case ShapeKind.Circle:
-                    path.AddOval(Pad(textBox, 10));
+                    path.AddCircle(shape.X, shape.Y, Pad(textBox, 10).Width/2);
                     break;
 
                 case ShapeKind.Diamond:
