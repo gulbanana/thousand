@@ -69,7 +69,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.Edges> AttributedEdges { get; } =
             from chain in Edges
-            from attrs in AttributeList(AttributeParsers.EdgeAttribute).OptionalOrDefault(Array.Empty<AST.EdgeAttribute>())
+            from attrs in AttributeList(AttributeParsers.LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
             select new AST.Edges(chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.ScopeDeclaration?> ScopeDeclaration { get; } =

@@ -233,7 +233,7 @@ bar""");
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Elements.First().Target);
             Assert.Equal("bar", result.Value.Elements.Last().Target);
-            AssertEx.Sequence(result.Value.Attributes, new AST.EdgeStrokeAttribute(new Colour(0, 0, 0)));
+            AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeAttribute(new Colour(0, 0, 0)));
         }
 
         [Fact]

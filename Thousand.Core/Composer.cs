@@ -47,7 +47,7 @@ namespace Thousand
                 var from = shapes[edge.FromTarget];
                 var to = shapes[edge.ToTarget];
 
-                lines.Add(new(from, to, edge.Stroke));
+                lines.Add(new(from, to, edge.Stroke, edge.Width));
             }
 
             warnings = ws.Select(w => new GenerationError(w)).ToArray();

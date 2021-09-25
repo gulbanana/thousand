@@ -12,6 +12,11 @@ namespace Thousand.Parse
             Token.EqualToValueIgnoreCase(TokenKind.Keyword, kind.ToString()!)
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
+        private static TokenListParser<TokenKind, Token<TokenKind>> Keys<TK>(params TK[] kinds) where TK : struct =>
+            kinds.Select(k => Token.EqualToValueIgnoreCase(TokenKind.Keyword, k.ToString()!))
+                 .Aggregate((p1, p2) => p1.Or(p2))
+                 .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
+
         public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
                 .Or(Keyword.Statics<Colour>());
@@ -62,7 +67,7 @@ namespace Thousand.Parse
             select new AST.NodeRowAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
-            from key in Key(NodeAttributeKind.Column)
+            from key in Keys(NodeAttributeKind.Col, NodeAttributeKind.Column)
             from value in CountingNumberValue
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
@@ -80,12 +85,18 @@ namespace Thousand.Parse
                 .Or(NodeColumnAttribute)
                 .Or(NodeFontSizeAttribute);
 
-        public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeStrokeAttribute { get; } =
-            from key in Key(EdgeAttributeKind.Stroke)
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeAttribute { get; } =
+            from key in Key(LineAttributeKind.Stroke)
             from value in ColourValue
-            select new AST.EdgeStrokeAttribute(value) as AST.EdgeAttribute;
+            select new AST.LineStrokeAttribute(value) as AST.LineAttribute;
 
-        public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeAttribute { get; } =
-            EdgeStrokeAttribute;
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineWidthAttribute { get; } =
+            from key in Key(LineAttributeKind.Width)
+            from value in DecimalValue.OrNone()
+            select new AST.LineWidthAttribute(value) as AST.LineAttribute;
+
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
+            LineStrokeAttribute
+                .Or(LineWidthAttribute);
     }
 }

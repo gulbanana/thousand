@@ -10,4 +10,4 @@ object "bottom right" [shape=circle,column=3]
 
 "top left" -> mid [stroke=red]
 right -> mid [stroke=blue]
-center -> "bottom right"
+mid -> center -> "bottom right"

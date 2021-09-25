@@ -8,7 +8,7 @@ namespace Thousand.AST
     public record Class(string Name, string[] BaseClasses, NodeAttribute[] Attributes) : DocumentDeclaration;
     public record Node(string[] Classes, string? Name, string? Label, NodeAttribute[] Attributes, ScopeDeclaration[] Children) : ScopeDeclaration;
     public record Edge(string Target, ArrowKind? Direction);
-    public record Edges(Edge[] Elements, EdgeAttribute[] Attributes) : ScopeDeclaration;
+    public record Edges(Edge[] Elements, LineAttribute[] Attributes) : ScopeDeclaration;
     public record Scope(ScopeDeclaration[] Declarations);
     public record Document(DocumentDeclaration[] Declarations);
 
@@ -23,8 +23,9 @@ namespace Thousand.AST
     public record NodeColumnAttribute(int Value) : NodeAttribute;
     public record NodeFontSizeAttribute(float Value) : NodeAttribute;
 
-    public abstract record EdgeAttribute;
-    public record EdgeStrokeAttribute(Colour Colour) : EdgeAttribute;
+    public abstract record LineAttribute;
+    public record LineStrokeAttribute(Colour Colour) : LineAttribute;
+    public record LineWidthAttribute(float? Value) : LineAttribute;
 
     public abstract record DocumentAttribute : DocumentDeclaration;
     public record DocumentScaleAttribute(float Value) : DocumentAttribute;

@@ -1,0 +1,19 @@
+scale = 2.0
+class object [fill=#ccc,shape=circle]
+
+object A
+object B
+object C
+object D [row=2]
+object E
+object F
+
+// hairlines
+a-> b [width=none] 
+a-> e [width=none]
+a-> d [width=none]
+
+// scaling lines
+b-> c [width=1]
+b-> e [width=1]
+b-> f [width=1]

@@ -153,13 +153,18 @@ namespace Thousand
         private void AddEdges(AST.Edges chain)
         {
             var stroke = Colour.Black;
+            var width = new float?();
 
             foreach (var attr in chain.Attributes)
             {
                 switch (attr)
                 {
-                    case AST.EdgeStrokeAttribute esa:
-                        stroke = esa.Colour;
+                    case AST.LineStrokeAttribute lsa:
+                        stroke = lsa.Colour;
+                        break;
+
+                    case AST.LineWidthAttribute lwa:
+                        width = lwa.Value;
                         break;
                 }
             }
@@ -176,11 +181,11 @@ namespace Thousand
                 {
                     if (from.Direction.Value == ArrowKind.Forward)
                     {
-                        edges.Add(new(fromTarget, toTarget, stroke));
+                        edges.Add(new(fromTarget, toTarget, stroke, width));
                     }
                     else
                     {
-                        edges.Add(new(toTarget, fromTarget, stroke));
+                        edges.Add(new(toTarget, fromTarget, stroke, width));
                     }
                 }
             }

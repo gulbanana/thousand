@@ -115,11 +115,11 @@ namespace Thousand.Render
             var to = Shapes[line.To];
 
             // used as fill or hairline, rather than stroke in the Skia sense
-            var stroke = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
+            var stroke = new SKPaint { Color = line.Stroke.SK(), IsAntialias = false };
+            var fill = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
 
             // for a non-hairline of width n, establish start points +n/2 and -n/2 perpendicular to the line
-            var width = 1.0f;
-            var unitPath = Normalize(to.Center - from.Center, width / 2);
+            var unitPath = Normalize(to.Center - from.Center, line.Width/2 ?? 1f);
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
@@ -133,25 +133,27 @@ namespace Thousand.Render
             path.LineTo(from.Center + offset2);
             path.Close();
 
-            // subtract the rectangle regions within src/dst shapes 
+            // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
             var visiblePath = path.Op(from.Path, SKPathOp.Difference).Op(to.Path, SKPathOp.Difference);
             if (visiblePath.PointCount == 0)
             {
                 return; // XXX warning
             }
 
-            // create the points for a hairline (and end cap positioning)
-            var start = visiblePath.Points[0];
-            var end = visiblePath.Points[visiblePath.PointCount - 3];
-            if ((start - to.Center).LengthSquared < (start - from.Center).LengthSquared)
-            {
-                var swap = start;
-                start = end;
-                end = swap;
-            }
+            // use the first and last line points within the drawn region as the points for a hairline (and end cap positioning)
+            visiblePath.GetBounds(out var visibleBounds);
+            var start = PointOnRect(visibleBounds, from.Center);
+            var end = PointOnRect(visibleBounds, to.Center);
 
             // draw the main line
-            canvas.DrawLine(start, end, stroke);
+            if (line.Width.HasValue)
+            {
+                canvas.DrawPath(visiblePath, fill);
+            }
+            else // hairline
+            {
+                canvas.DrawLine(start, end, stroke);
+            } 
 
             // draw end cap
             var arrowhead = new SKPath();
@@ -166,7 +168,7 @@ namespace Thousand.Render
             arrowhead.LineTo(end - arrowLength + base2);
             arrowhead.Close();
 
-            canvas.DrawPath(arrowhead, stroke);
+            canvas.DrawPath(arrowhead, fill);
         }
 
         private static SKRect Pad(SKRect box, float padding)
@@ -202,6 +204,64 @@ namespace Thousand.Render
                 new(box.Right, box.MidY),
                 new(box.MidX, box.Bottom),
             };
+        }
+
+        private static SKPoint PointOnRect(SKRect box, SKPoint vectorFromCenter)
+        {
+            var x = vectorFromCenter.X;
+            var y = vectorFromCenter.Y;
+            var minX = box.Left;
+            var minY = box.Top;
+            var maxX = box.Right;
+            var maxY = box.Bottom;
+
+            // if (midX - x == 0) -> m == ±Inf -> minYx/maxYx == x (because value / ±Inf = ±0)
+            var midX = (minX + maxX) / 2;
+            var midY = (minY + maxY) / 2;
+            var m = (midY - y) / (midX - x);
+
+            if (x <= midX)
+            { 
+                var minXy = m * (minX - x) + y;
+                if (minY <= minXy && minXy <= maxY)
+                {
+                    return new(minX, minXy);
+                }
+            }
+
+            if (x >= midX)
+            { 
+                var maxXy = m * (maxX - x) + y;
+                if (minY <= maxXy && maxXy <= maxY)
+                {
+                    return new(maxX, maxXy);
+                }
+            }
+
+            if (y <= midY)
+            { 
+                var minYx = (minY - y) / m + x;
+                if (minX <= minYx && minYx <= maxX)
+                {
+                    return new(minYx, minY);
+                }
+            }
+
+            if (y >= midY)
+            { 
+                var maxYx = (maxY - y) / m + x;
+                if (minX <= maxYx && maxYx <= maxX)
+                {
+                    return new(maxYx, maxY);
+                }
+            }
+
+            if (x == midX && y == midY)
+            {
+                return new(x, y);
+            }
+
+            throw new Exception("Cannot find intersection");
         }
     }
 }
