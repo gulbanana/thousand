@@ -87,9 +87,13 @@ namespace Thousand.Parse
             from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
             select next.Prepend(new(src, arrow));
 
+        public static TokenListParser<TokenKind, AST.EdgeAttribute> EdgeAttribute { get; } =
+            AttributeParsers.ArrowAttribute.Select(x => (AST.EdgeAttribute)x)
+                .Or(AttributeParsers.LineAttribute.Select(x => (AST.EdgeAttribute)x));
+
         public static TokenListParser<TokenKind, AST.EdgeChain> AttributedEdges { get; } =
             from chain in Edges
-            from attrs in AttributeList(AttributeParsers.LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
+            from attrs in AttributeList(EdgeAttribute).OptionalOrDefault(Array.Empty<AST.EdgeAttribute>())
             select new AST.EdgeChain(chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =

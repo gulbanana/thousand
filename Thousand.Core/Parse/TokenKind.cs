@@ -16,6 +16,12 @@ namespace Thousand.Parse
         [Token(Example = "}")]
         RightBrace,
 
+        [Token(Example = "(")]
+        LeftParenthesis,
+
+        [Token(Example = ")")]
+        RightParenthesis,
+
         [Token(Example = "=")]
         EqualsSign,
 

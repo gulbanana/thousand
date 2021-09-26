@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using Thousand.Layout;
 using Thousand.Model;
 using Topten.RichTextKit;
 
@@ -10,11 +11,13 @@ namespace Thousand.Render
     {
         public readonly Dictionary<Layout.Label, PLabel> Labels;
         public readonly Dictionary<Layout.Shape, PShape> Shapes;
+        public readonly Dictionary<Layout.Line, PLine> Lines;
 
         public RenderState()
         {
             Labels = new();
             Shapes = new();
+            Lines = new();
         }
 
         public void Dispose()
@@ -86,11 +89,11 @@ namespace Thousand.Render
                     break;
 
                 case ShapeKind.Circle:
-                    path.AddCircle(shape.X, shape.Y, Pad(textBox, 10).Width/2);
+                    path.AddCircle(shape.Center.X, shape.Center.Y, Pad(textBox, 10).Width/2);
                     break;
 
                 case ShapeKind.Diamond:
-                    path.AddPoly(Diamond(Pad(textBox, 10)));
+                    path.AddPoly(Diamond(Pad(textBox, 15)));
                     break;
             };
             path.Close();
@@ -114,28 +117,34 @@ namespace Thousand.Render
             canvas.DrawPath(measures.Path, stroke);
         }
 
+        public PLine MeasureLine(Line line)
+        {
+            return new(line.Start.SK(), line.End.SK());
+        }
+
         public void PaintLine(SKCanvas canvas, Layout.Line line)
         {
+            var measures = Lines[line];
             var from = Shapes[line.From];
             var to = Shapes[line.To];
-
+            
             // used as fill or hairline, rather than stroke in the Skia sense
             var stroke = new SKPaint { Color = line.Stroke.SK(), IsAntialias = false };
             var fill = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
 
             // for a non-hairline of width n, establish start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = Normalize(to.Center - from.Center, line.Width/2 ?? 1f);
+            var unitPath = Normalize(measures.To - measures.From, line.Width/2 ?? 1f);
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
             // draw a thin rectangle of the desired width
             var path = new SKPath();
-            path.MoveTo(from.Center);
-            path.LineTo(from.Center + offset1);
-            path.LineTo(to.Center + offset1);
-            path.LineTo(to.Center);
-            path.LineTo(to.Center + offset2);
-            path.LineTo(from.Center + offset2);
+            path.MoveTo(measures.From);
+            path.LineTo(measures.From + offset1);
+            path.LineTo(measures.To + offset1);
+            path.LineTo(measures.To);
+            path.LineTo(measures.To + offset2);
+            path.LineTo(measures.From + offset2);
             path.Close();
 
             // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
@@ -147,8 +156,8 @@ namespace Thousand.Render
 
             // use the first and last line points within the drawn region as the points for a hairline (and end cap positioning)
             visiblePath.GetBounds(out var visibleBounds);
-            var start = PointOnRect(visibleBounds, from.Center);
-            var end = PointOnRect(visibleBounds, to.Center);
+            var start = PointOnRect(visibleBounds, measures.From);
+            var end = PointOnRect(visibleBounds, measures.To);
 
             // draw the main line
             if (line.Width.HasValue)
@@ -162,8 +171,8 @@ namespace Thousand.Render
 
             // draw end cap
             var arrowhead = new SKPath();
-            var arrowLength = Normalize(to.Center - from.Center, 7f);
-            var arrowWidth = Normalize(to.Center - from.Center, 4f);
+            var arrowLength = Normalize(measures.To - measures.From, 7f);
+            var arrowWidth = Normalize(measures.To - measures.From, 4f);
             var base1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(arrowWidth);
             var base2 = SKMatrix.CreateRotationDegrees(90).MapPoint(arrowWidth);
 

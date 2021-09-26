@@ -18,15 +18,51 @@ namespace Thousand.Parse
                  .Aggregate((p1, p2) => p1.Or(p2))
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
-        public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
-            Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
-                .Or(Keyword.Statics<Colour>());
-
         public static TokenListParser<TokenKind, int> CountingNumberValue { get; } =
             Token.EqualTo(TokenKind.Number).Apply(TextParsers.CountingNumber);
 
+        public static TokenListParser<TokenKind, int> WholeNumberValue { get; } =
+            Token.EqualTo(TokenKind.Number).Apply(TextParsers.WholeNumber);
+
+        public static TokenListParser<TokenKind, int> IntegerValue { get; } =
+            Token.EqualTo(TokenKind.Number).Apply(Numerics.IntegerInt32);
+
         public static TokenListParser<TokenKind, float> DecimalValue { get; } =
             Token.EqualTo(TokenKind.Number).Apply(TextParsers.DecimalFloat);
+
+        public static TokenListParser<TokenKind, Point> PointValue { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            from x in IntegerValue
+            from comma in Token.EqualTo(TokenKind.Comma)
+            from y in IntegerValue
+            from end in Token.EqualTo(TokenKind.RightParenthesis)
+            select new Point(x, y);
+
+        public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
+            Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
+                .Or(Keyword.Statics<Colour>());
+        #endregion
+
+        #region arrow group, used only by edges
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetStart)
+            from value in PointValue
+            select new AST.ArrowOffsetStartAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetEnd)
+            from value in PointValue
+            select new AST.ArrowOffsetEndAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetBothAttribute { get; } =
+            from key in Key(ArrowAttributeKind.Offset)
+            from value in PointValue
+            select new AST.ArrowOffsetBothAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
+            ArrowOffsetStartAttribute
+                .Or(ArrowOffsetEndAttribute)
+                .Or(ArrowOffsetBothAttribute);
         #endregion
 
         #region doc group, used only by diagrams
@@ -47,7 +83,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.LineAttribute> LineWidthAttribute { get; } =
             from key in Key(LineAttributeKind.Width)
-            from value in DecimalValue.OrNone()
+            from value in WholeNumberValue.OrNone()
             select new AST.LineWidthAttribute(value) as AST.LineAttribute;
 
         public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
@@ -63,7 +99,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontSizeAttribute { get; } =
             from key in Key(TextAttributeKind.FontSize)
-            from value in DecimalValue
+            from value in CountingNumberValue
             select new AST.TextFontSizeAttribute(value) as AST.TextAttribute;
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } =

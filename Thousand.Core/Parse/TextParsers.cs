@@ -78,6 +78,33 @@ namespace Thousand.Parse
             return Result.Value(val, input, remainder);
         };
 
+        /// <summary>A non-negative integer</summary>
+        public static TextParser<int> WholeNumber { get; } = input =>
+        {
+            var next = input.ConsumeChar();
+
+            if (!next.HasValue || !IsLatinDigit(next.Value))
+            {
+                return Result.Empty<int>(input, "digit");
+            }
+
+            TextSpan remainder;
+            var val = 0;
+            do
+            {
+                val = 10 * val + (next.Value - '0');
+                remainder = next.Remainder;
+                next = remainder.ConsumeChar();
+            } while (next.HasValue && IsLatinDigit(next.Value));
+
+            if (val < 0)
+            {
+                return Result.Empty<int>(input, "non-negative number");
+            }
+
+            return Result.Value(val, input, remainder);
+        };
+
         /// <summary>Matches decimal numbers, for example <code>-1.23</code>, converted into a <see cref="float"/>.</summary>
         public static TextParser<float> DecimalFloat { get; } =
             Numerics.Decimal.Select(span => float.Parse(span.ToStringValue(), CultureInfo.InvariantCulture));

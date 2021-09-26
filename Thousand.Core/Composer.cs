@@ -29,16 +29,16 @@ namespace Thousand
                 if (obj.Label != null)
                 {
                     var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label, obj.FontSize);
-                    var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.StrokeWidth, obj.Stroke, obj.Fill);
+                    var shape = new Layout.Shape(obj.Name, new(label.X, label.Y), obj.Kind, label, obj.StrokeWidth, obj.Stroke, obj.Fill);
 
                     labels.Add(label);
-                    shapes.Add(obj, shape);
+                    shapes[obj] = shape;
                 }
                 else
                 {
-                    var shape = new Layout.Shape(obj.Name, obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Kind, null, obj.StrokeWidth, obj.Stroke, obj.Fill);
+                    var shape = new Layout.Shape(obj.Name, new(obj.Column * W - (W / 2), obj.Row * W - (W / 2)), obj.Kind, null, obj.StrokeWidth, obj.Stroke, obj.Fill);
 
-                    shapes.Add(obj, shape);
+                    shapes[obj] = shape;
                 }
             }
 
@@ -47,7 +47,7 @@ namespace Thousand
                 var from = shapes[edge.FromTarget];
                 var to = shapes[edge.ToTarget];
 
-                lines.Add(new(from, to, edge.Stroke, edge.Width));
+                lines.Add(new(from, to, from.Center + edge.FromOffset, to.Center + edge.ToOffset, edge.Stroke, edge.Width));
             }
 
             warnings = ws.Select(w => new GenerationError(w)).ToArray();

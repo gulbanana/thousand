@@ -1,0 +1,15 @@
+class stage [shape=oval]
+
+stage Tokenize [shape=diamond]
+stage Parse
+stage Canonicalise
+stage Compose
+stage Encode [shape=rectangle]
+stage Render [row=2,col=3]
+stage Render2 [label="Render2"] // should be grouped
+
+Tokenize -> Parse -> Canonicalise -> Compose -> Encode
+Canonicalise -> Render [offset=(-5,0)]
+Canonicalise <- Render [offset=(5,0)]
+Compose -> Render2 [offset=(-5,0)]
+Compose <- Render2 [offset=(5,0)]

@@ -181,19 +181,41 @@ namespace Thousand
         {
             var stroke = Colour.Black;
             var width = new float?(1);
+            var offsetStart = Point.Origin;
+            var offsetEnd = Point.Origin;
 
             foreach (var attr in chain.Attributes)
             {
-                switch (attr)
+                attr.Switch(arrow =>
                 {
-                    case AST.LineStrokeAttribute lsa:
-                        stroke = lsa.Colour;
-                        break;
+                    switch (arrow)
+                    {
+                        case AST.ArrowOffsetStartAttribute aosa:
+                            offsetStart = aosa.Offset;
+                            break;
 
-                    case AST.LineWidthAttribute lwa:
-                        width = lwa.Value;
-                        break;
-                }
+                        case AST.ArrowOffsetEndAttribute aoea:
+                            offsetEnd = aoea.Offset;
+                            break;
+
+                        case AST.ArrowOffsetBothAttribute aoba:
+                            offsetStart = aoba.Offset;
+                            offsetEnd = aoba.Offset;
+                            break;
+                    }
+                }, line =>
+                {
+                    switch (line)
+                    {
+                        case AST.LineStrokeAttribute lsa:
+                            stroke = lsa.Colour;
+                            break;
+
+                        case AST.LineWidthAttribute lwa:
+                            width = lwa.Value;
+                            break;
+                    }
+                });
             }
 
             for (var i = 0; i < chain.Elements.Length - 1; i++)
@@ -208,11 +230,11 @@ namespace Thousand
                 {
                     if (from.Direction.Value == ArrowKind.Forward)
                     {
-                        edges.Add(new(fromTarget, toTarget, stroke, width));
+                        edges.Add(new(fromTarget, toTarget, offsetStart, offsetEnd, stroke, width));
                     }
                     else
                     {
-                        edges.Add(new(toTarget, fromTarget, stroke, width));
+                        edges.Add(new(toTarget, fromTarget, offsetStart, offsetEnd, stroke, width));
                     }
                 }
             }

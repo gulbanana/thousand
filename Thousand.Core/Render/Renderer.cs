@@ -19,6 +19,11 @@ namespace Thousand.Render
         {
             using var state = new RenderState();
 
+            foreach (var line in diagram.Lines)
+            {
+                state.Lines[line] = state.MeasureLine(line);
+            }
+
             foreach (var label in diagram.Labels)
             {
                 state.Labels[label] = state.MeasureLabel(label);
