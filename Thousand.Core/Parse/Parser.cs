@@ -10,9 +10,9 @@ namespace Thousand.Parse
 {
     public static class Parser
     {
-        public static TokenListParser<TokenKind, AST.Document> Build()
+        public static TokenListParser<TokenKind, AST.Diagram> Build()
         {
-            return Parser.Document;
+            return Parser.Diagram;
         }
 
         public static TokenListParser<TokenKind, Unit> NewLine { get; } =
@@ -41,20 +41,40 @@ namespace Thousand.Parse
                  .IgnoreThen(ClassList)
                  .OptionalOrDefault(Array.Empty<string>());
 
+        public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
+            AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
+                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.LineAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
+
+
+        public static TokenListParser<TokenKind, AST.ObjectDeclaration?> ObjectDeclaration { get; } =
+            ObjectAttribute.Select(a => (AST.ObjectDeclaration)a)
+                .Or(Superpower.Parse.Ref(() => AttributedEdges!).Select(a => (AST.ObjectDeclaration)a).Try())
+                .Or(Superpower.Parse.Ref(() => Object!).Select(a => (AST.ObjectDeclaration)a))
+                .AsNullable()
+                .OptionalOrDefault();
+
+        public static TokenListParser<TokenKind, AST.ObjectDeclaration[]> Scope { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftBrace)
+            from decs in ObjectDeclaration.ManyDelimitedBy(NewLine)
+            from end in Token.EqualTo(TokenKind.RightBrace)
+            select decs.WhereNotNull().ToArray();
+
         public static TokenListParser<TokenKind, AST.Class> Class { get; } =
             from keyword in Token.EqualToValue(TokenKind.Keyword, "class")
             from name in Keyword
             from bases in BaseClasses
-            from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
+            from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             select new AST.Class(name, bases, attrs);
 
-        public static TokenListParser<TokenKind, AST.Node> Node { get; } =
+        public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in ClassList
             from identifier in Keyword.AsNullable().OptionalOrDefault()
             from label in String.AsNullable().OptionalOrDefault()
-            from attrs in AttributeList(AttributeParsers.NodeAttribute).OptionalOrDefault(Array.Empty<AST.NodeAttribute>())
-            from children in Superpower.Parse.Ref(() => Scope!).Select(s => s.Declarations).AsNullable().OptionalOrDefault(Array.Empty<AST.ScopeDeclaration>())
-            select new AST.Node(classes, identifier, label, attrs, children);
+            from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from children in Superpower.Parse.Ref(() => Scope!).OptionalOrDefault(Array.Empty<AST.ObjectDeclaration>())
+            select new AST.TypedObject(classes, identifier, label, attrs, children);
 
         public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
             from dst in Target
@@ -67,35 +87,26 @@ namespace Thousand.Parse
             from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
             select next.Prepend(new(src, arrow));
 
-        public static TokenListParser<TokenKind, AST.Edges> AttributedEdges { get; } =
+        public static TokenListParser<TokenKind, AST.EdgeChain> AttributedEdges { get; } =
             from chain in Edges
             from attrs in AttributeList(AttributeParsers.LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
-            select new AST.Edges(chain.ToArray(), attrs);
+            select new AST.EdgeChain(chain.ToArray(), attrs);
 
-        public static TokenListParser<TokenKind, AST.ScopeDeclaration?> ScopeDeclaration { get; } =
-            AttributeParsers.NodeAttribute.Cast<AST.NodeAttribute, AST.ScopeDeclaration>()
-                .Or(AttributedEdges.Cast<AST.Edges, AST.ScopeDeclaration>().Try())
-                .Or(Node.Cast<AST.Node, AST.ScopeDeclaration>())
-                .AsNullable()
-                .OptionalOrDefault();
+        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
+            AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
+                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.Scope> Scope { get; } =
-            from begin in Token.EqualTo(TokenKind.LeftBrace)
-            from decs in ScopeDeclaration.ManyDelimitedBy(NewLine)
-            from end in Token.EqualTo(TokenKind.RightBrace)
-            select new AST.Scope(decs.WhereNotNull().ToArray());
-
-        public static TokenListParser<TokenKind, AST.DocumentDeclaration?> DocumentDeclaration { get; } =
-            AttributeParsers.DocumentAttribute.Cast<AST.DocumentAttribute, AST.DocumentDeclaration>()
-                .Or(AttributedEdges.Cast<AST.Edges, AST.DocumentDeclaration>().Try())
-                .Or(Class.Cast<AST.Class, AST.DocumentDeclaration>())
-                .Or(Node.Cast<AST.Node, AST.DocumentDeclaration>())
+        public static TokenListParser<TokenKind, AST.DiagramDeclaration?> DiagramDeclaration { get; } =
+            DiagramAttribute.Select(x => (AST.DiagramDeclaration)x)
+                .Or(AttributedEdges.Select(x => (AST.DiagramDeclaration)x).Try())
+                .Or(Class.Select(x => (AST.DiagramDeclaration)x))
+                .Or(Object.Select(x => (AST.DiagramDeclaration)x))
                 .AsNullable()
                 .OptionalOrDefault();
             
-        public static TokenListParser<TokenKind, AST.Document> Document { get; } =
-            DocumentDeclaration.ManyDelimitedBy(NewLine)
-                .Select(decs => new AST.Document(decs.WhereNotNull().ToArray()))
+        public static TokenListParser<TokenKind, AST.Diagram> Diagram { get; } =
+            DiagramDeclaration.ManyDelimitedBy(NewLine)
+                .Select(decs => new AST.Diagram(decs.WhereNotNull().ToArray()))
                 .AtEnd();
     }
 }

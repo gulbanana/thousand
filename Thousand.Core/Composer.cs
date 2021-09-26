@@ -8,12 +8,12 @@ namespace Thousand
     {
         internal const int W = 150;
 
-        public static bool TryCompose(AST.Document document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
+        public static bool TryCompose(AST.Diagram document, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
         {
             return TryCompose(new[] { document }, out diagram, out warnings, out errors);
         }
 
-        public static bool TryCompose(IEnumerable<AST.Document> documents, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
+        public static bool TryCompose(IEnumerable<AST.Diagram> documents, [NotNullWhen(true)] out Layout.Diagram? diagram, out GenerationError[] warnings, out GenerationError[] errors)
         {
             var ws = new List<string>();
             var es = new List<string>();
@@ -29,14 +29,14 @@ namespace Thousand
                 if (obj.Label != null)
                 {
                     var label = new Layout.Label(obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Label, obj.FontSize);
-                    var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.Stroke, obj.Fill);
+                    var shape = new Layout.Shape(obj.Name, label.X, label.Y, obj.Kind, label, obj.StrokeWidth, obj.Stroke, obj.Fill);
 
                     labels.Add(label);
                     shapes.Add(obj, shape);
                 }
                 else
                 {
-                    var shape = new Layout.Shape(obj.Name, obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Kind, null, obj.Stroke, obj.Fill);
+                    var shape = new Layout.Shape(obj.Name, obj.Column * W - (W / 2), obj.Row * W - (W / 2), obj.Kind, null, obj.StrokeWidth, obj.Stroke, obj.Fill);
 
                     shapes.Add(obj, shape);
                 }

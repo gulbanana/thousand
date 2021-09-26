@@ -21,7 +21,7 @@ namespace Thousand
         }
 
         private readonly Tokenizer<TokenKind> tokenizer;
-        private readonly TokenListParser<TokenKind, AST.Document> parser;
+        private readonly TokenListParser<TokenKind, AST.Diagram> parser;
         private readonly Render.Renderer renderer;
 
         public DiagramGenerator()
@@ -36,7 +36,7 @@ namespace Thousand
             renderer.Dispose();
         }
 
-        private OneOf<GenerationResult<AST.Document>, GenerationError[]> Parse(string sourceFile)
+        private OneOf<GenerationResult<AST.Diagram>, GenerationError[]> Parse(string sourceFile)
         {
             var tokenized = tokenizer.TryTokenize(sourceFile);
             if (!tokenized.HasValue)
@@ -50,7 +50,7 @@ namespace Thousand
                 return new GenerationError[] { new(parsed.ToString()) };
             }
 
-            return new GenerationResult<AST.Document>(parsed.Value, Array.Empty<GenerationError>());
+            return new GenerationResult<AST.Diagram>(parsed.Value, Array.Empty<GenerationError>());
         }
 
         /// <summary>Create a diagram from source code.</summary>
@@ -62,7 +62,7 @@ namespace Thousand
             if (stdlib) sources.Add(ReadStdlib());
             sources.Add(source);
 
-            var parses = new List<AST.Document>();
+            var parses = new List<AST.Diagram>();
             foreach (var s in sources)
             {
                 var result = Parse(s);

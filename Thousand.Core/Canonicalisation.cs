@@ -9,7 +9,7 @@ namespace Thousand
     {
         private readonly List<string> ws;
         private readonly List<string> es;
-        private readonly Dictionary<string, AST.NodeAttribute[]> classes;
+        private readonly Dictionary<string, AST.ObjectAttribute[]> classes;
         private readonly List<IR.Object> objects;
         private readonly List<IR.Edge> edges;
 
@@ -20,7 +20,7 @@ namespace Thousand
         public IReadOnlyList<IR.Edge> Edges => edges;
         public IR.Config Config { get; private set; }
 
-        public Canonicalisation(List<string> ws, List<string> es, IEnumerable<AST.Document> documents)
+        public Canonicalisation(List<string> ws, List<string> es, IEnumerable<AST.Diagram> documents)
         {
             this.ws = ws;
             this.es = es;
@@ -39,23 +39,30 @@ namespace Thousand
             }
         }
 
-        private void AddDocument(AST.Document document)
+        private void AddDocument(AST.Diagram diagram)
         {
-            foreach (var attr in document.Declarations.OfType<AST.DocumentAttribute>())
+            foreach (var attr in diagram.Declarations.Where(d => d.IsT0).Select(d => d.AsT0))
             {
-                switch (attr)
+                attr.Switch(doc =>
                 {
-                    case AST.DocumentScaleAttribute dsa:
-                        Config = Config with { Scale = dsa.Value };
-                        break;
-
-                    case AST.DocumentBackgroundAttribute dba:
-                        Config = Config with { Background = dba.Colour };
-                        break;
-                }
+                    switch (doc)
+                    {
+                        case AST.DocumentScaleAttribute dsa:
+                            Config = Config with { Scale = dsa.Value };
+                            break;
+                    }
+                }, region =>
+                {
+                    switch (region)
+                    {
+                        case AST.RegionFillAttribute rfa:
+                            Config = Config with { Background = rfa.Colour };
+                            break;
+                    }
+                });
             }
 
-            foreach (var c in document.Declarations.OfType<AST.Class>())
+            foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
                 var attrs = c.BaseClasses
                     .SelectMany(FindClass)
@@ -65,18 +72,18 @@ namespace Thousand
                 classes[c.Name] = attrs;
             }
 
-            foreach (var node in document.Declarations.OfType<AST.Node>())
+            foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
             {
                 AddObject(node);
             }
 
-            foreach (var chain in document.Declarations.OfType<AST.Edges>())
+            foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
                 AddEdges(chain);
             }
         }
 
-        private void AddObject(AST.Node node)
+        private void AddObject(AST.TypedObject node)
         {
             var x = nextX;
             var xSet = false;
@@ -86,74 +93,94 @@ namespace Thousand
             var stroke = Colour.Black;
             var fill = Colour.White;
             var fontSize = 20f;
+            var strokeWidth = new float?(1);
 
-            foreach (var attr in node.Classes.SelectMany(FindClass).Concat(node.Attributes))
+            foreach (var attr in node.Classes.SelectMany(FindClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
-                switch (attr)
+                attr.Switch(n =>
                 {
-                    case AST.NodeLabelAttribute nla:
-                        label = nla.Content;
-                        break;
+                    switch (n)
+                    {
+                        case AST.NodeShapeAttribute nsa:
+                            shape = nsa.Kind;
+                            break;
 
-                    case AST.NodeShapeAttribute nsa:
-                        shape = nsa.Kind;
-                        break;
-
-                    case AST.NodeStrokeAttribute nsc:
-                        stroke = nsc.Colour;
-                        break;
-
-                    case AST.NodeFillAttribute nfc:
-                        fill = nfc.Colour;
-                        break;
-
-                    case AST.NodeRowAttribute nra:
-                        if (y != nra.Value)
-                        {
-                            y = nra.Value;
-                            if (!xSet)
+                        case AST.NodeRowAttribute nra:
+                            if (y != nra.Value)
                             {
-                                x = 1;
+                                y = nra.Value;
+                                if (!xSet)
+                                {
+                                    x = 1;
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                    case AST.NodeColumnAttribute nca:
-                        x = nca.Value;
-                        xSet = true;
-                        break;
+                        case AST.NodeColumnAttribute nca:
+                            x = nca.Value;
+                            xSet = true;
+                            break;
+                    }
+                }, r =>
+                {
+                    switch (r)
+                    {
+                        case AST.RegionFillAttribute nfc:
+                            fill = nfc.Colour;
+                            break;
+                    }
+                }, l =>
+                {
+                    switch (l)
+                    {
+                        case AST.LineStrokeAttribute lsa:
+                            stroke = lsa.Colour;
+                            break;
 
-                    case AST.NodeFontSizeAttribute nfsa:
-                        fontSize = nfsa.Value;
-                        break;
-                }
+                        case AST.LineWidthAttribute lwa:
+                            strokeWidth = lwa.Value;
+                            break;
+                    }
+                }, t =>
+                {
+                    switch (t)
+                    {
+                        case AST.TextLabelAttribute nla:
+                            label = nla.Content;
+                            break;
+
+                        case AST.TextFontSizeAttribute nfsa:
+                            fontSize = nfsa.Value;
+                            break;
+                    }
+                });
             }
 
             if (node.Children.Any())
             {
-                foreach (var child in node.Children.OfType<AST.Node>())
+                foreach (var child in node.Children.Where(d => d.IsT1).Select(d => d.AsT1))
                 {
                     AddObject(child);
                 }
 
-                foreach (var chain in node.Children.OfType<AST.Edges>())
+                foreach (var chain in node.Children.Where(d => d.IsT2).Select(d => d.AsT2))
                 {
                     AddEdges(chain);
                 }
             }
             else
             {
-                objects.Add(new(node.Name, y, x, label, shape, stroke, fill, fontSize));
+                objects.Add(new(node.Name, y, x, label, shape, stroke, fill, fontSize, strokeWidth));
             }
 
             nextX = x + 1;
             nextY = y;
         }
 
-        private void AddEdges(AST.Edges chain)
+        private void AddEdges(AST.EdgeChain chain)
         {
             var stroke = Colour.Black;
-            var width = new float?();
+            var width = new float?(1);
 
             foreach (var attr in chain.Attributes)
             {
@@ -191,12 +218,12 @@ namespace Thousand
             }
         }
 
-        public AST.NodeAttribute[] FindClass(string name)
+        public AST.ObjectAttribute[] FindClass(string name)
         {
             if (!classes.ContainsKey(name))
             {
                 ws.Add($"Object class '{name}' not defined.");
-                return Array.Empty<AST.NodeAttribute>();
+                return Array.Empty<AST.ObjectAttribute>();
             }
             else
             {

@@ -1,6 +1,6 @@
 ﻿namespace Thousand.Parse
 {
-    public enum DiagramAttributeKind
+    public enum DocumentAttributeKind
     {
         Scale,
         Background

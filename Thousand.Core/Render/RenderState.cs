@@ -105,6 +105,11 @@ namespace Thousand.Render
             var stroke = new SKPaint { Color = shape.Stroke.SK(), IsAntialias = true, IsStroke = true };
             var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
 
+            if (shape.StrokeWidth.HasValue)
+            {
+                stroke.StrokeWidth = shape.StrokeWidth.Value;
+            }
+
             canvas.DrawPath(measures.Path, fill);
             canvas.DrawPath(measures.Path, stroke);
         }

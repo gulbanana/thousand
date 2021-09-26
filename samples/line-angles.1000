@@ -1,12 +1,13 @@
 scale = 2.0
-class object [fill=#ccc,shape=circle]
+class node [fill=#ccc,shape=circle]
+class thin : node[width=none]
 
-object A
-object B
-object C
-object D [row=2]
-object E
-object F
+thin A
+thin B
+node C
+thin D [row=2]
+node E
+node F
 
 // hairlines
 a-> b [width=none] 
