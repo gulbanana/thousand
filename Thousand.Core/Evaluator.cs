@@ -1,26 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Thousand.Model;
 
 namespace Thousand
 {
-    internal class Canonicalisation
+    public class Evaluator
     {
-        private readonly List<string> ws;
-        private readonly List<string> es;
+        private readonly List<GenerationError> ws;
+        private readonly List<GenerationError> es;
         private readonly Dictionary<string, AST.ObjectAttribute[]> classes;
         private readonly List<IR.Object> objects;
         private readonly List<IR.Edge> edges;
 
-        private int nextX;
-        private int nextY;
-
+        public IR.Config Config { get; private set; }
         public IReadOnlyList<IR.Object> Objects => objects;
         public IReadOnlyList<IR.Edge> Edges => edges;
-        public IR.Config Config { get; private set; }
 
-        public Canonicalisation(List<string> ws, List<string> es, IEnumerable<AST.Diagram> documents)
+        public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> ws, List<GenerationError> es, [NotNullWhen(true)] out IR.Rules? rules)
+        {
+            try
+            {
+                var evaluation = new Evaluator(ws, es, documents);
+                rules = new IR.Rules(evaluation.Config, evaluation.Objects, evaluation.Edges);
+                return !es.Any();
+            }
+            catch (Exception e)
+            {
+                es.Add(new(e));
+                rules = null;
+                return false;
+            }
+        }
+
+        private Evaluator(List<GenerationError> ws, List<GenerationError> es, IEnumerable<AST.Document> documents)
         {
             this.ws = ws;
             this.es = es;
@@ -29,8 +43,6 @@ namespace Thousand
             objects = new();
             edges = new();
 
-            nextX = 1;
-            nextY = 1;
             Config = new IR.Config(1f, Colour.White);
 
             foreach (var doc in documents)
@@ -39,7 +51,7 @@ namespace Thousand
             }
         }
 
-        private void AddDocument(AST.Diagram diagram)
+        private void AddDocument(AST.Document diagram)
         {
             foreach (var attr in diagram.Declarations.Where(d => d.IsT0).Select(d => d.AsT0))
             {
@@ -85,9 +97,8 @@ namespace Thousand
 
         private void AddObject(AST.TypedObject node)
         {
-            var x = nextX;
-            var xSet = false;
-            var y = nextY;
+            var row = new int?();
+            var column = new int?();            
             var label = node.Label ?? node.Name;
             var shape = ShapeKind.RoundRect;
             var stroke = Colour.Black;
@@ -106,19 +117,11 @@ namespace Thousand
                             break;
 
                         case AST.NodeRowAttribute nra:
-                            if (y != nra.Value)
-                            {
-                                y = nra.Value;
-                                if (!xSet)
-                                {
-                                    x = 1;
-                                }
-                            }
+                            row = nra.Value;
                             break;
 
                         case AST.NodeColumnAttribute nca:
-                            x = nca.Value;
-                            xSet = true;
+                            column = nca.Value;
                             break;
                     }
                 }, r =>
@@ -170,11 +173,8 @@ namespace Thousand
             }
             else
             {
-                objects.Add(new(node.Name, y, x, label, shape, stroke, fill, fontSize, strokeWidth));
+                objects.Add(new(node.Name, row, column, label, shape, stroke, fill, fontSize, strokeWidth));
             }
-
-            nextX = x + 1;
-            nextY = y;
         }
 
         private void AddEdges(AST.EdgeChain chain)
@@ -240,11 +240,11 @@ namespace Thousand
             }
         }
 
-        public AST.ObjectAttribute[] FindClass(string name)
+        private AST.ObjectAttribute[] FindClass(string name)
         {
             if (!classes.ContainsKey(name))
             {
-                ws.Add($"Object class '{name}' not defined.");
+                ws.Add(new($"Object class '{name}' not defined."));
                 return Array.Empty<AST.ObjectAttribute>();
             }
             else
@@ -253,19 +253,19 @@ namespace Thousand
             }
         }
 
-        public IR.Object? FindObject(string identifierOrLabel)
+        private IR.Object? FindObject(string identifierOrLabel)
         {
             var found = objects.Where(n => (n.Name != null && n.Name.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)) ||
                                           (n.Label != null && n.Label.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
             var n = found.Count();
             if (n == 0)
             {
-                ws.Add($"No node found with name or label '{identifierOrLabel}'.");
+                ws.Add(new($"No node found with name or label '{identifierOrLabel}'."));
                 return null;
             }
             else if (n > 1)
             {
-                ws.Add($"Multiple nodes found with name or label '{identifierOrLabel}'.");
+                ws.Add(new($"Multiple nodes found with name or label '{identifierOrLabel}'."));
                 return null;
             }
             else

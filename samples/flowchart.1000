@@ -1,15 +1,16 @@
-class stage [shape=oval]
+class stage [shape=oval, stroke=green]
+class platStage : stage [stroke=blue]
 
 stage Tokenize [shape=diamond]
 stage Parse
-stage Canonicalise
+stage Evaluate
 stage Compose
-stage Encode [shape=rectangle]
-stage Render [row=2,col=3]
-stage Render2 [label="Render2"] // should be grouped
+// should be grouped
+platStage Measure [row=2,col=3]
+platStage Render 
+platStage Encode [shape=rectangle]
 
-Tokenize -> Parse -> Canonicalise -> Compose -> Encode
-Canonicalise -> Render [offset=(-5,0)]
-Canonicalise <- Render [offset=(5,0)]
-Compose -> Render2 [offset=(-5,0)]
-Compose <- Render2 [offset=(5,0)]
+Tokenize -> Parse -> Evaluate -> Compose
+Evaluate -> Measure [offset=(-5,0)]
+Evaluate <- Measure [offset=(5,0)]
+Compose -> Render -> Encode

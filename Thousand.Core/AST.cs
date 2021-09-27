@@ -34,11 +34,11 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class EdgeAttribute : OneOfBase<ArrowAttribute, LineAttribute> { }
 
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute> { }    
-    [GenerateOneOf] public partial class DiagramDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, EdgeChain> { }
+    [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, EdgeChain> { }
 
     public record Class(string Name, string[] BaseClasses, ObjectAttribute[] Attributes);
     public record TypedObject(string[] Classes, string? Name, string? Label, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
     public record Edge(string Target, ArrowKind? Direction);
     public record EdgeChain(Edge[] Elements, EdgeAttribute[] Attributes);
-    public record Diagram(DiagramDeclaration[] Declarations);
+    public record Document(DocumentDeclaration[] Declarations);
 }

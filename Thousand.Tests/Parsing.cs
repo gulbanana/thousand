@@ -272,11 +272,11 @@ bar""");
         public void ValidDocument_SingleNode()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""");
-            var result = Parser.Diagram(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Declarations);
-            Assert.IsType<AST.TypedObject>(result.Value.Declarations.Single());
+            Assert.True(result.Value.Declarations.Single().IsT2);
         }
 
         [Fact]
@@ -286,10 +286,10 @@ bar""");
 object ""bar""
 object ""baz""");
 
-            var result = Parser.Diagram(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Label), "foo", "bar", "baz");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Label), "foo", "bar", "baz");
         }
 
         [Fact]
@@ -299,10 +299,10 @@ object ""baz""");
 
 object ""bar""");
 
-            var result = Parser.Diagram(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Label), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Label), "foo", "bar");
         }
 
         [Fact]
@@ -311,12 +311,12 @@ object ""bar""");
             var tokens = tokenizer.Tokenize(@"object foo
 object bar
 foo -> bar");
-            var result = Parser.Diagram(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Collection(result.Value.Declarations,
-                d => Assert.IsType<AST.TypedObject>(d),
-                d => Assert.IsType<AST.TypedObject>(d),
+                d => Assert.True(d.IsT2),
+                d => Assert.True(d.IsT2),
                 d =>
                 {
                     Assert.True(d.IsT3);

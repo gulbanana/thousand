@@ -10,9 +10,9 @@ namespace Thousand.Parse
 {
     public static class Parser
     {
-        public static TokenListParser<TokenKind, AST.Diagram> Build()
+        public static TokenListParser<TokenKind, AST.Document> Build()
         {
-            return Parser.Diagram;
+            return Parser.Document;
         }
 
         public static TokenListParser<TokenKind, Unit> NewLine { get; } =
@@ -100,17 +100,17 @@ namespace Thousand.Parse
             AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.DiagramDeclaration?> DiagramDeclaration { get; } =
-            DiagramAttribute.Select(x => (AST.DiagramDeclaration)x)
-                .Or(AttributedEdges.Select(x => (AST.DiagramDeclaration)x).Try())
-                .Or(Class.Select(x => (AST.DiagramDeclaration)x))
-                .Or(Object.Select(x => (AST.DiagramDeclaration)x))
+        public static TokenListParser<TokenKind, AST.DocumentDeclaration?> DocumentDeclaration { get; } =
+            DiagramAttribute.Select(x => (AST.DocumentDeclaration)x)
+                .Or(AttributedEdges.Select(x => (AST.DocumentDeclaration)x).Try())
+                .Or(Class.Select(x => (AST.DocumentDeclaration)x))
+                .Or(Object.Select(x => (AST.DocumentDeclaration)x))
                 .AsNullable()
                 .OptionalOrDefault();
             
-        public static TokenListParser<TokenKind, AST.Diagram> Diagram { get; } =
-            DiagramDeclaration.ManyDelimitedBy(NewLine)
-                .Select(decs => new AST.Diagram(decs.WhereNotNull().ToArray()))
+        public static TokenListParser<TokenKind, AST.Document> Document { get; } =
+            DocumentDeclaration.ManyDelimitedBy(NewLine)
+                .Select(decs => new AST.Document(decs.WhereNotNull().ToArray()))
                 .AtEnd();
     }
 }
