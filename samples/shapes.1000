@@ -1,0 +1,17 @@
+object a [label="Example", shape=square]
+object b [label="Example", shape=rectangle]
+object c [label="Example", shape=roundrect]
+object d [label="Example", shape=oval]
+object e [label="Example", shape=circle]
+
+object f [label="Example", shape=rectangle,row=2]
+object g [label="Example", shape=roundrect]
+object h [label="Example", shape=oval]
+object i [label="Example", shape=circle]
+object j [label="Example", shape=square]
+
+object k [label="Example", shape=roundrect,row=3]
+object l [label="Example", shape=oval]
+object m [label="Example", shape=circle]
+object n [label="Example", shape=square]
+object o [label="Example", shape=rectangle]

@@ -181,8 +181,8 @@ namespace Thousand
         {
             var stroke = Colour.Black;
             var width = new float?(1);
-            var offsetStart = Point.Origin;
-            var offsetEnd = Point.Origin;
+            var offsetStart = Point.Zero;
+            var offsetEnd = Point.Zero;
 
             foreach (var attr in chain.Attributes)
             {

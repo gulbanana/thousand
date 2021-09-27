@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand
 {
     public static class Composer
     {
-        internal const int W = 150;
+        internal const int W = 200;
 
-        public static bool TryCompose(IR.Rules ir, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
+        public static bool TryCompose(IR.Rules ir, IReadOnlyDictionary<string, Point> measures, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
         {
             var shapes = new Dictionary<IR.Object, Layout.Shape>();
             var labels = new List<Layout.Label>();
@@ -32,21 +33,24 @@ namespace Thousand
                     currentColumn = obj.Column.Value;
                 }
 
-                var row = obj.Row ?? currentRow;
-                if (obj.Label != null)
+                var center = new Point(currentColumn * W - (W / 2), currentRow * W - (W / 2));
+                Rect box;
+                if (!string.IsNullOrEmpty(obj.Label))
                 {
-                    var label = new Layout.Label(currentColumn * W - (W / 2), currentRow * W - (W / 2), obj.Label, obj.FontSize);
-                    var shape = new Layout.Shape(obj.Name, new(label.X, label.Y), obj.Kind, label, obj.StrokeWidth, obj.Stroke, obj.Fill);
-
+                    var textBox = new Rect(measures[obj.Label]).CenteredAt(center);
+                    var label = new Layout.Label(textBox, obj.Label, obj.FontSize);
                     labels.Add(label);
-                    shapes[obj] = shape;
+
+                    box = textBox.Pad(15);
                 }
                 else
                 {
-                    var shape = new Layout.Shape(obj.Name, new(currentColumn * W - (W / 2), currentRow * W - (W / 2)), obj.Kind, null, obj.StrokeWidth, obj.Stroke, obj.Fill);
-
-                    shapes[obj] = shape;
+                    box = new Rect(center, Point.Zero);
                 }
+
+                if (obj.Kind == ShapeKind.Square || obj.Kind == ShapeKind.Circle) box = box.Square();
+                var shape = new Layout.Shape(obj.Name, obj.Kind, box, obj.StrokeWidth, obj.Stroke, obj.Fill);
+                shapes[obj] = shape;
 
                 maxRow = Math.Max(currentRow, maxRow);
                 maxColumn = Math.Max(currentColumn, maxColumn);
@@ -58,7 +62,7 @@ namespace Thousand
                 var from = shapes[edge.FromTarget];
                 var to = shapes[edge.ToTarget];
 
-                lines.Add(new(from, to, from.Center + edge.FromOffset, to.Center + edge.ToOffset, edge.Stroke, edge.Width));
+                lines.Add(new(from, to, from.Bounds.Center() + edge.FromOffset, to.Bounds.Center() + edge.ToOffset, edge.Stroke, edge.Width));
             }
 
             diagram = new(

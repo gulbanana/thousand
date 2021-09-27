@@ -1,9 +1,11 @@
 ﻿using SkiaSharp;
 using System;
+using System.Collections.Generic;
+using Thousand.Model;
 
 namespace Thousand.Render
 {
-    public class Renderer : IDisposable
+    public class Renderer : IRenderer<SKImage>, IDisposable
     {
         public Renderer()
         {
@@ -15,28 +17,40 @@ namespace Thousand.Render
             // no shared resources yet, but there probably will be
         }
 
+        public IReadOnlyDictionary<string, Point> MeasureTextBlocks(IR.Rules ir)
+        {
+            var result = new Dictionary<string, Point>();
+
+            foreach (var o in ir.Objects)
+            {
+                if (o.Label != null)
+                {
+                    var text = new Topten.RichTextKit.RichString()
+                        .FontFamily(SKTypeface.Default.FamilyName)
+                        .FontSize(o.FontSize)
+                        .Alignment(Topten.RichTextKit.TextAlignment.Center)
+                        .Add(o.Label);
+
+                    result[o.Label] = new((int)MathF.Ceiling(text.MeasuredWidth), (int)MathF.Ceiling(text.MeasuredHeight));
+                }
+            }
+
+            return result;
+        }
+
         public SKImage Render(Layout.Diagram diagram)
         {
             using var state = new RenderState();
 
-            foreach (var line in diagram.Lines)
-            {
-                state.Lines[line] = state.MeasureLine(line);
-            }
-
-            foreach (var label in diagram.Labels)
-            {
-                state.Labels[label] = state.MeasureLabel(label);
-            }
-
             foreach (var shape in diagram.Shapes)
             {
-                state.Shapes[shape] = state.MeasureShape(shape);
+                state.ShapePaths[shape] = state.MeasureShape(shape);
             }
 
-            var d = state.MeasureDiagram(diagram);
+            var pixelWidth = (int)(diagram.Width * diagram.Scale);
+            var pixelHeight = (int)(diagram.Height * diagram.Scale);
+            var info = new SKImageInfo(pixelWidth, pixelHeight);
 
-            var info = new SKImageInfo(d.PixelWidth, d.PixelHeight);
             using var surface = SKSurface.Create(info);
             var canvas = surface.Canvas;
 

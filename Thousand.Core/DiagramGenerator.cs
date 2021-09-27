@@ -4,7 +4,6 @@ using Superpower;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Thousand.Parse;
 
 namespace Thousand
@@ -22,7 +21,7 @@ namespace Thousand
 
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly TokenListParser<TokenKind, AST.Document> parser;
-        private readonly Render.Renderer renderer;
+        private readonly IRenderer<SKImage> renderer;
 
         public DiagramGenerator()
         {
@@ -84,7 +83,9 @@ namespace Thousand
                 return errors.ToArray();
             }
 
-            if (!Composer.TryCompose(rules, warnings, errors, out var diagram))
+            var measuredText = renderer.MeasureTextBlocks(rules);
+
+            if (!Composer.TryCompose(rules, measuredText, warnings, errors, out var diagram))
             {
                 return errors.ToArray();
             }

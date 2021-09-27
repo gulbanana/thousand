@@ -34,7 +34,7 @@ namespace Thousand.Tests
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, new Dictionary<string, Point>(), warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(300, layout!.Width);
@@ -54,7 +54,7 @@ namespace Thousand.Tests
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, new Dictionary<string, Point>(), warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(300, layout!.Width);
@@ -73,7 +73,7 @@ namespace Thousand.Tests
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, new Dictionary<string, Point>(), warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(450, layout!.Width);

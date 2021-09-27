@@ -1,7 +1,6 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
-using Thousand.Layout;
 using Thousand.Model;
 using Topten.RichTextKit;
 
@@ -9,27 +8,15 @@ namespace Thousand.Render
 {
     internal class RenderState : IDisposable
     {
-        public readonly Dictionary<Layout.Label, PLabel> Labels;
-        public readonly Dictionary<Layout.Shape, PShape> Shapes;
-        public readonly Dictionary<Layout.Line, PLine> Lines;
+        public readonly Dictionary<Layout.Shape, SKPath> ShapePaths;
 
         public RenderState()
         {
-            Labels = new();
-            Shapes = new();
-            Lines = new();
+            ShapePaths = new();
         }
 
         public void Dispose()
         {
-        }
-
-        public PDiagram MeasureDiagram(Layout.Diagram diagram)
-        {
-            return new(
-                (int)(diagram.Width * diagram.Scale),
-                (int)(diagram.Height * diagram.Scale)
-            );
         }
 
         public void PaintDiagram(SKCanvas canvas, Layout.Diagram diagram)
@@ -38,7 +25,7 @@ namespace Thousand.Render
             canvas.Clear(diagram.Background.SK());
         }
 
-        public PLabel MeasureLabel(Layout.Label label)
+        public void PaintLabel(SKCanvas canvas, Layout.Label label)
         {
             var text = new RichString()
                 .FontFamily(SKTypeface.Default.FamilyName)
@@ -46,64 +33,48 @@ namespace Thousand.Render
                 .Alignment(TextAlignment.Center)
                 .Add(label.Content);
 
-            var center = new SKPoint(label.X, label.Y);
-            var origin = center - new SKPoint(text.MeasuredWidth / 2, text.MeasuredHeight / 2);
-
-            return new(text, center, origin);
+            text.Paint(canvas, label.Bounds.Origin().SK());
         }
 
-        public void PaintLabel(SKCanvas canvas, Layout.Label label)
+        public SKPath MeasureShape(Layout.Shape shape)
         {
-            var measures = Labels[label];
-            measures.Text.Paint(canvas, measures.Origin);
-        }
-
-        public PShape MeasureShape(Layout.Shape shape)
-        {
-            if (shape.Fit == null)
-            {
-                throw new NotSupportedException("shape has no label");
-            }
-
-            var label = Labels[shape.Fit];
-
-            var textBox = new SKRect(label.Origin.X, label.Origin.Y, label.Origin.X + label.Text.MeasuredWidth, label.Origin.Y + label.Text.MeasuredHeight);
+            var bounds = shape.Bounds.SK();
 
             var path = new SKPath();
             switch (shape.Kind)
             {
                 case ShapeKind.RoundRect:
-                    path.AddRoundRect(new SKRoundRect(Pad(textBox, 5), 5));
+                    path.AddRoundRect(new SKRoundRect(bounds, 5));
                     break;
 
                 case ShapeKind.Rectangle:
-                    path.AddRect(Pad(textBox, 5));
+                    path.AddRect(bounds);
                     break;
 
                 case ShapeKind.Square:
-                    path.AddRect(Square(Pad(textBox, 5)));
+                    path.AddRect(bounds);
                     break;
 
                 case ShapeKind.Oval:
-                    path.AddOval(Pad(textBox, 10));
+                    path.AddOval(bounds);
                     break;
 
                 case ShapeKind.Circle:
-                    path.AddCircle(shape.Center.X, shape.Center.Y, Pad(textBox, 10).Width/2);
+                    path.AddCircle(bounds.MidX, bounds.MidY, bounds.Width/2);
                     break;
 
                 case ShapeKind.Diamond:
-                    path.AddPoly(Diamond(Pad(textBox, 15)));
+                    path.AddPoly(Diamond(bounds));
                     break;
             };
             path.Close();
 
-            return new(label.Center, path);
+            return path;
         }
 
         public void PaintShape(SKCanvas canvas, Layout.Shape shape)
         {
-            var measures = Shapes[shape];
+            var path = ShapePaths[shape];
 
             var stroke = new SKPaint { Color = shape.Stroke.SK(), IsAntialias = true, IsStroke = true };
             var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
@@ -113,42 +84,38 @@ namespace Thousand.Render
                 stroke.StrokeWidth = shape.StrokeWidth.Value;
             }
 
-            canvas.DrawPath(measures.Path, fill);
-            canvas.DrawPath(measures.Path, stroke);
-        }
-
-        public PLine MeasureLine(Line line)
-        {
-            return new(line.Start.SK(), line.End.SK());
+            canvas.DrawPath(path, fill);
+            canvas.DrawPath(path, stroke);
         }
 
         public void PaintLine(SKCanvas canvas, Layout.Line line)
         {
-            var measures = Lines[line];
-            var from = Shapes[line.From];
-            var to = Shapes[line.To];
+            var fromPoint = line.Start.SK();
+            var toPoint = line.End.SK();
+            var fromPath = ShapePaths[line.From];
+            var toPath = ShapePaths[line.To];
             
             // used as fill or hairline, rather than stroke in the Skia sense
             var stroke = new SKPaint { Color = line.Stroke.SK(), IsAntialias = false };
             var fill = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
 
             // for a non-hairline of width n, establish start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = Normalize(measures.To - measures.From, line.Width/2 ?? 1f);
+            var unitPath = Normalize(toPoint - fromPoint, line.Width/2 ?? 1f);
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
             // draw a thin rectangle of the desired width
             var path = new SKPath();
-            path.MoveTo(measures.From);
-            path.LineTo(measures.From + offset1);
-            path.LineTo(measures.To + offset1);
-            path.LineTo(measures.To);
-            path.LineTo(measures.To + offset2);
-            path.LineTo(measures.From + offset2);
+            path.MoveTo(fromPoint);
+            path.LineTo(fromPoint + offset1);
+            path.LineTo(toPoint + offset1);
+            path.LineTo(toPoint);
+            path.LineTo(toPoint + offset2);
+            path.LineTo(fromPoint + offset2);
             path.Close();
 
             // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
-            var visiblePath = path.Op(from.Path, SKPathOp.Difference).Op(to.Path, SKPathOp.Difference);
+            var visiblePath = path.Op(fromPath, SKPathOp.Difference).Op(toPath, SKPathOp.Difference);
             if (visiblePath.PointCount == 0)
             {
                 return; // XXX warning
@@ -156,8 +123,8 @@ namespace Thousand.Render
 
             // use the first and last line points within the drawn region as the points for a hairline (and end cap positioning)
             visiblePath.GetBounds(out var visibleBounds);
-            var start = PointOnRect(visibleBounds, measures.From);
-            var end = PointOnRect(visibleBounds, measures.To);
+            var start = PointOnRect(visibleBounds, fromPoint);
+            var end = PointOnRect(visibleBounds, toPoint);
 
             // draw the main line
             if (line.Width.HasValue)
@@ -171,8 +138,8 @@ namespace Thousand.Render
 
             // draw end cap
             var arrowhead = new SKPath();
-            var arrowLength = Normalize(measures.To - measures.From, 7f);
-            var arrowWidth = Normalize(measures.To - measures.From, 4f);
+            var arrowLength = Normalize(toPoint - fromPoint, 7f);
+            var arrowWidth = Normalize(toPoint - fromPoint, 4f);
             var base1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(arrowWidth);
             var base2 = SKMatrix.CreateRotationDegrees(90).MapPoint(arrowWidth);
 
@@ -185,28 +152,9 @@ namespace Thousand.Render
             canvas.DrawPath(arrowhead, fill);
         }
 
-        private static SKRect Pad(SKRect box, float padding)
-        {
-            return new SKRect(box.Left - padding, box.Top - padding, box.Right + padding, box.Bottom + padding);
-        }
-
         private static SKPoint Normalize(SKPoint vector, float length = 1.0f)
         {
             return new SKPoint(vector.X / vector.Length * length, vector.Y / vector.Length * length);
-        }
-
-        private SKRect Square(SKRect box)
-        {
-            if (box.Width > box.Height)
-            {
-                var radius = box.Width / 2;
-                return new SKRect(box.Left, box.MidY - radius, box.Right, box.MidY + radius);
-            }
-            else
-            {
-                var radius = box.Width / 2;
-                return new SKRect(box.Left, box.MidY - radius, box.Right, box.MidY + radius);
-            }
         }
 
         private SKPoint[] Diamond(SKRect box)
