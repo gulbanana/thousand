@@ -1,0 +1,10 @@
+class point [label=""]
+class node [label="",width=20,height=20,shape=circle,fill=black]
+
+node a
+point b
+node c
+node d [row=2,col=2]
+
+d -> b
+a <- b -> c
