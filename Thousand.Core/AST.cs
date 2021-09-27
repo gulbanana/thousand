@@ -19,9 +19,12 @@ namespace Thousand.AST
     public record RegionFillAttribute(Colour Colour) : RegionAttribute;
 
     public abstract record NodeAttribute;
-    public record NodeShapeAttribute(ShapeKind Kind) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
+    public record NodeShapeAttribute(ShapeKind Kind) : NodeAttribute;
+    public record NodePaddingAttribute(int Value) : NodeAttribute;
+    public record NodeWidthAttribute(int Value) : NodeAttribute;
+    public record NodeHeightAttribute(int Value) : NodeAttribute;
 
     public abstract record ArrowAttribute;
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;

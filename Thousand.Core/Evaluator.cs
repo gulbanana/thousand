@@ -98,9 +98,12 @@ namespace Thousand
         private void AddObject(AST.TypedObject node)
         {
             var row = new int?();
-            var column = new int?();            
+            var column = new int?();
+            var width = new int?();
+            var height = new int?();
             var label = node.Label ?? node.Name;
             var shape = ShapeKind.RoundRect;
+            var padding = 15;
             var stroke = Colour.Black;
             var fill = Colour.White;
             var fontSize = 20f;
@@ -116,12 +119,24 @@ namespace Thousand
                             shape = nsa.Kind;
                             break;
 
+                        case AST.NodePaddingAttribute npa:
+                            padding = npa.Value;
+                            break;
+
                         case AST.NodeRowAttribute nra:
                             row = nra.Value;
                             break;
 
                         case AST.NodeColumnAttribute nca:
                             column = nca.Value;
+                            break;
+
+                        case AST.NodeWidthAttribute nwa:
+                            width = nwa.Value;
+                            break;
+
+                        case AST.NodeHeightAttribute nha:
+                            height = nha.Value;
                             break;
                     }
                 }, r =>
@@ -173,7 +188,7 @@ namespace Thousand
             }
             else
             {
-                objects.Add(new(node.Name, row, column, label, shape, stroke, fill, fontSize, strokeWidth));
+                objects.Add(new(node.Name, row, column, width, height, label, shape, padding, stroke, fill, fontSize, strokeWidth));
             }
         }
 

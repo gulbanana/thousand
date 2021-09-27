@@ -3,8 +3,10 @@
     public enum NodeAttributeKind
     {
         Shape,
-        Fill,
+        Padding,
         Row,
         Col, Column,
+        Width,
+        Height
     }
 }

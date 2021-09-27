@@ -108,11 +108,6 @@ namespace Thousand.Parse
         #endregion
 
         #region node group, used only by objects
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
-            from key in Key(NodeAttributeKind.Shape)
-            from value in Keyword.Enum<ShapeKind>()
-            select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
-
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeRowAttribute { get; } =
             from key in Key(NodeAttributeKind.Row)
             from value in CountingNumberValue
@@ -123,15 +118,38 @@ namespace Thousand.Parse
             from value in CountingNumberValue
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
+            from key in Key(NodeAttributeKind.Shape)
+            from value in Keyword.Enum<ShapeKind>()
+            select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
+            from key in Keys(NodeAttributeKind.Padding)
+            from value in WholeNumberValue
+            select new AST.NodePaddingAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeWidthAttribute { get; } =
+            from key in Key(NodeAttributeKind.Width)
+            from value in CountingNumberValue
+            select new AST.NodeWidthAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeHeightAttribute { get; } =
+            from key in Keys(NodeAttributeKind.Height)
+            from value in CountingNumberValue
+            select new AST.NodeHeightAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
             NodeShapeAttribute
+                .Or(NodePaddingAttribute)
                 .Or(NodeRowAttribute)
-                .Or(NodeColumnAttribute);
+                .Or(NodeColumnAttribute)
+                .Or(NodeWidthAttribute)
+                .Or(NodeHeightAttribute);
         #endregion
 
         #region region group, used by objects and diagrams
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionFillAttribute { get; } =
-            from key in Key(NodeAttributeKind.Fill)
+            from key in Key(RegionAttributeKind.Fill)
             from value in ColourValue
             select new AST.RegionFillAttribute(value) as AST.RegionAttribute;
 

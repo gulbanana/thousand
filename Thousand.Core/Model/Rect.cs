@@ -36,5 +36,10 @@
                 return new Rect(mid.X - radius,Top, mid.X + radius, Bottom);
             }
         }
+
+        public Rect Grow(int toWidth, int toHeight)
+        {
+            return new Rect(0, 0, toWidth, toHeight).CenteredAt(Center());
+        }
     }
 }

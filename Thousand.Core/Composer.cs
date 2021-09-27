@@ -8,7 +8,7 @@ namespace Thousand
 {
     public static class Composer
     {
-        internal const int W = 200;
+        internal const int W = 150;
 
         public static bool TryCompose(IR.Rules ir, IReadOnlyDictionary<string, Point> measures, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
         {
@@ -41,11 +41,16 @@ namespace Thousand
                     var label = new Layout.Label(textBox, obj.Label, obj.FontSize);
                     labels.Add(label);
 
-                    box = textBox.Pad(15);
+                    box = new Rect(measures[obj.Label]).CenteredAt(center).Pad(obj.Padding);
                 }
                 else
                 {
                     box = new Rect(center, Point.Zero);
+                }
+
+                if (obj.Width.HasValue || obj.Height.HasValue)
+                {
+                    box = box.Grow(obj.Width ?? box.Width, obj.Height ?? box.Height);
                 }
 
                 if (obj.Kind == ShapeKind.Square || obj.Kind == ShapeKind.Circle) box = box.Square();

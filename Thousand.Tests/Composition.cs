@@ -28,8 +28,8 @@ namespace Thousand.Tests
                 new IR.Config(1, Colour.White),
                 new IR.Object[]
                 {
-                    new("foo", null, null, null, ShapeKind.RoundRect, Colour.Black, Colour.White, 20f, null),
-                    new("bar", null, null, null, ShapeKind.RoundRect, Colour.Black, Colour.White, 20f, null)
+                    new("foo", null, null, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null),
+                    new("bar", null, null, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null)
                 },
                 new IR.Edge[] { }
             );
@@ -48,8 +48,8 @@ namespace Thousand.Tests
                 new IR.Config(1, Colour.White),
                 new IR.Object[]
                 {
-                    new("foo", null, null, null, ShapeKind.RoundRect, Colour.Black, Colour.White, 20f, null),
-                    new("bar", null, 2, null, ShapeKind.RoundRect, Colour.Black, Colour.White, 20f, null)
+                    new("foo", null, null, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null),
+                    new("bar", null, 2, null, null, null,ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null)
                 },
                 new IR.Edge[] { }
             );
@@ -68,7 +68,7 @@ namespace Thousand.Tests
                 new IR.Config(1, Colour.White),
                 new IR.Object[]
                 {
-                    new("foo", 3, 3, null, ShapeKind.RoundRect, Colour.Black, Colour.White, 20f, null)
+                    new("foo", 3, 3, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null)
                 },
                 new IR.Edge[] { }
             );
