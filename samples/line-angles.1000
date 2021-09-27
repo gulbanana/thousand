@@ -1,6 +1,6 @@
 scale = 2.0
 class node [fill=#ccc,shape=circle]
-class thin : node[width=none]
+class thin : node [strokewidth=none]
 
 thin A
 thin B
@@ -10,11 +10,11 @@ node E
 node F
 
 // hairlines
-a-> b [width=none] 
-a-> e [width=none]
-a-> d [width=none]
+a-> b [strokewidth=none] 
+a-> e [strokewidth=none]
+a-> d [strokewidth=none]
 
 // scaling lines
-b-> c [width=1]
-b-> e [width=1]
-b-> f [width=1]
+b-> c [strokewidth=1]
+b-> e [strokewidth=1]
+b-> f [strokewidth=1]

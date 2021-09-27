@@ -82,7 +82,7 @@ namespace Thousand.Parse
             select new AST.LineStrokeAttribute(value) as AST.LineAttribute;
 
         public static TokenListParser<TokenKind, AST.LineAttribute> LineWidthAttribute { get; } =
-            from key in Key(LineAttributeKind.Width)
+            from key in Key(LineAttributeKind.StrokeWidth)
             from value in WholeNumberValue.OrNone()
             select new AST.LineWidthAttribute(value) as AST.LineAttribute;
 
