@@ -1,5 +1,5 @@
-class point [label=""]
-class node [label="",width=20,height=20,shape=circle,fill=black]
+class point [label=none]
+class node [label=none,shape=circle,width=20,height=20,fill=black]
 
 node a
 point b

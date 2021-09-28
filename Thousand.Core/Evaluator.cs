@@ -107,7 +107,7 @@ namespace Thousand
             var stroke = Colour.Black;
             var strokeWidth = new int?(1);
             var fill = Colour.White;
-            var label = node.Label ?? node.Name;
+            var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
             var fontSize = 20;
 
             foreach (var attr in node.Classes.SelectMany(FindClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
@@ -273,19 +273,18 @@ namespace Thousand
             }
         }
 
-        private IR.Object? FindObject(string identifierOrLabel)
+        private IR.Object? FindObject(string identifier)
         {
-            var found = objects.Where(n => (n.Name != null && n.Name.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)) ||
-                                          (n.Text != null && n.Text.Label.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
+            var found = objects.Where(n => n.Name != null && n.Name.Equals(identifier, StringComparison.OrdinalIgnoreCase));
             var n = found.Count();
             if (n == 0)
             {
-                ws.Add(new($"No node found with name or label '{identifierOrLabel}'."));
+                ws.Add(new($"No node found with name '{identifier}'."));
                 return null;
             }
             else if (n > 1)
             {
-                ws.Add(new($"Multiple nodes found with name or label '{identifierOrLabel}'."));
+                ws.Add(new($"Multiple nodes found with name '{identifier}'."));
                 return null;
             }
             else

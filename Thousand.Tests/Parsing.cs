@@ -199,7 +199,7 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes, "object");
-            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Label);
+            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Name);
         }
 
         [Fact]
@@ -209,7 +209,7 @@ bar""");
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Label);
+            Assert.Equal("foo", result.Value.Name);
             AssertEx.Sequence(result.Value.Attributes, new AST.TextLabelAttribute("bar"));
         }
 
@@ -239,13 +239,12 @@ bar""");
         [Fact]
         public void ValidNode_CustomClass()
         {
-            var tokens = tokenizer.Tokenize(@"foo bar ""Bar""");
+            var tokens = tokenizer.Tokenize(@"foo bar");
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes, "foo");
             Assert.Equal("bar", result.Value.Name);
-            Assert.Equal("Bar", result.Value.Label);
         }
 
         [Fact]
@@ -265,6 +264,7 @@ bar""");
             var tokens = tokenizer.Tokenize(@"object");
             var result = Parser.Object(tokens);
 
+            AssertEx.Sequence(result.Value.Classes, "object");
             Assert.True(result.HasValue, result.ToString());
         }
 
@@ -289,7 +289,7 @@ object ""baz""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Label), "foo", "bar", "baz");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name), "foo", "bar", "baz");
         }
 
         [Fact]
@@ -302,7 +302,7 @@ object ""bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Label), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name), "foo", "bar");
         }
 
         [Fact]

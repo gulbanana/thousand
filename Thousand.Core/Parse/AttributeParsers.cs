@@ -41,6 +41,10 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
                 .Or(Keyword.Statics<Colour>());
+
+        public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
+            Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
+                .Or(Token.EqualTo(TokenKind.None).Value(default(string?)));
         #endregion
 
         #region arrow group, used only by edges
@@ -94,7 +98,7 @@ namespace Thousand.Parse
         #region text group, used only by objects (so far)
         public static TokenListParser<TokenKind, AST.TextAttribute> TextLabelAttribute { get; } =
             from key in Key(TextAttributeKind.Label)
-            from value in Token.EqualTo(TokenKind.String).Apply(TextParsers.String)
+            from value in NullableStringValue
             select new AST.TextLabelAttribute(value) as AST.TextAttribute;
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontSizeAttribute { get; } =

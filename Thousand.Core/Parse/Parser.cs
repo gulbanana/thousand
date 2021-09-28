@@ -70,11 +70,10 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in ClassList
-            from identifier in Keyword.AsNullable().OptionalOrDefault()
-            from label in String.AsNullable().OptionalOrDefault()
+            from name in Keyword.Or(String).AsNullable().OptionalOrDefault()
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Superpower.Parse.Ref(() => Scope!).OptionalOrDefault(Array.Empty<AST.ObjectDeclaration>())
-            select new AST.TypedObject(classes, identifier, label, attrs, children);
+            select new AST.TypedObject(classes, name, attrs, children);
 
         public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
             from dst in Target

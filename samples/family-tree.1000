@@ -9,29 +9,31 @@ row gardeners {
 	ruth <- alex
 }
 
-invictus ivan "Ivan Bebutov\nd. 1751 f. 1861" [row=2]
-invictus miles "Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"
-invictus taragos "Taragos Heron\nd. 1890 f. 1984"
-carthian sancho "\"Sancho\"\naka \"Watson\"\naka \"Samwise\"\nd. 1811"
-invictus melody "Melody St. Ives Pettigrew\nEarl Ashton-under-Lyne\nd. 1839 f. 1984"
-invictus sylvia "Sylvia Hursley-Apple\nBaron Bradford\nd. 1881 f. 1984"
+// XXX can we use content templates to name these people more fluently than [label]?
 
-invictus charles "Charles Horse\nCourt Harpy\nd. 1861 f. 1984" [row=3]
-carthian barbara "Barbara Barrigan\nd. 1920"
-carthian anne "Anne Conner\nd. 1925 f. 1984"
-invictus sator "\"Sator Arepo\"\nd. 1900 f. 1984"
-invictus simon "Simon Saltine Waterford\nBaron Deansgate\nd. 1914 f. 1984"
-carthian george "George Pettigrew\nd. 1840 f. 1984"
-invictus agatha "Agatha Hursley-Apple\nd. 1901" [column=7]
+invictus ivan [label="Ivan Bebutov\nd. 1751 f. 1861", row=2]
+invictus miles [label="Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"]
+invictus taragos [label="Taragos Heron\nd. 1890 f. 1984"]
+carthian sancho [label="\"Sancho\"\naka \"Watson\"\naka \"Samwise\"\nd. 1811"]
+invictus melody [label="Melody St. Ives Pettigrew\nEarl Ashton-under-Lyne\nd. 1839 f. 1984"]
+invictus sylvia [label="Sylvia Hursley-Apple\nBaron Bradford\nd. 1881 f. 1984"]
 
-carthian kyle "Kyle Killarney\nd. 1982 f. 1984" [row=4]
-carthian doug "Doug Killarney\nd. 1982"
-carthian craig "Craig Dunlop\nd. 1945" [column=4]
-carthian suzie "Susan Cutsworth\nd. 1918"
-invictus fanny "Fanny Smith\nd. 1918 f. 1942"
-carthian eliza "Eliza Beth Hursley\nd. 1921" [column=7]
+invictus charles [label="Charles Horse\nCourt Harpy\nd. 1861 f. 1984", row=3]
+carthian barbara [label="Barbara Barrigan\nd. 1920"]
+carthian anne [label="Anne Conner\nd. 1925 f. 1984"]
+invictus sator [label="\"Sator Arepo\"\nd. 1900 f. 1984"]
+invictus simon [label="Simon Saltine Waterford\nBaron Deansgate\nd. 1914 f. 1984"]
+carthian george [label="George Pettigrew\nd. 1840 f. 1984"]
+invictus agatha [label="Agatha Hursley-Apple\nd. 1901", column=7]
 
-carthian maeve "Maeve Baker\nd. 1941 f. 1984" [row=5,column=7]
+carthian kyle [label="Kyle Killarney\nd. 1982 f. 1984", row=4]
+carthian doug [label="Doug Killarney\nd. 1982"]
+carthian craig [label="Craig Dunlop\nd. 1945", column=4]
+carthian suzie [label="Susan Cutsworth\nd. 1918"]
+invictus fanny [label="Fanny Smith\nd. 1918 f. 1942"]
+carthian eliza [label="Eliza Beth Hursley\nd. 1921", column=7]
+
+carthian maeve [label="Maeve Baker\nd. 1941 f. 1984", row=5, column=7]
 
 ruth -> taragos
 ruth -> miles -> barbara

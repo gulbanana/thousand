@@ -8,7 +8,7 @@ namespace Thousand.AST
     public record DocumentScaleAttribute(float Value) : DocumentAttribute;
 
     public abstract record TextAttribute;
-    public record TextLabelAttribute(string Content) : TextAttribute;
+    public record TextLabelAttribute(string? Content) : TextAttribute;
     public record TextFontSizeAttribute(int Value) : TextAttribute;
 
     public abstract record LineAttribute;
@@ -41,7 +41,7 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, EdgeChain> { }
 
     public record Class(string Name, string[] BaseClasses, ObjectAttribute[] Attributes);
-    public record TypedObject(string[] Classes, string? Name, string? Label, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
+    public record TypedObject(string[] Classes, string? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
     public record Edge(string Target, ArrowKind? Direction);
     public record EdgeChain(Edge[] Elements, EdgeAttribute[] Attributes);
     public record Document(DocumentDeclaration[] Declarations);
