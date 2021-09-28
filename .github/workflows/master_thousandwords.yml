@@ -55,6 +55,6 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'thousandwords'
-        slot-name: 'staging'
+        # slot-name: 'staging'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_5574ab46d63d4e05919351e4aff5b797 }}
         package: .
