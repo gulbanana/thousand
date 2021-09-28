@@ -35,13 +35,13 @@ namespace Thousand
 
                 var center = new Point(currentColumn * W - (W / 2), currentRow * W - (W / 2));
                 Rect box;
-                if (!string.IsNullOrEmpty(obj.Label))
+                if (obj.Text != null && obj.Text.Label != string.Empty)
                 {
-                    var textBox = new Rect(measures[obj.Label]).CenteredAt(center);
-                    var label = new Layout.Label(textBox, obj.Label, obj.FontSize);
+                    var textBox = new Rect(measures[obj.Text.Label]).CenteredAt(center);
+                    var label = new Layout.Label(textBox, obj.Text.Label, obj.Text.FontSize);
                     labels.Add(label);
 
-                    box = new Rect(measures[obj.Label]).CenteredAt(center).Pad(obj.Padding);
+                    box = new Rect(measures[obj.Text.Label]).CenteredAt(center).Pad(obj.Padding);
                 }
                 else
                 {
@@ -53,8 +53,8 @@ namespace Thousand
                     box = box.Grow(obj.Width ?? box.Width, obj.Height ?? box.Height);
                 }
 
-                if (obj.Kind == ShapeKind.Square || obj.Kind == ShapeKind.Circle) box = box.Square();
-                var shape = new Layout.Shape(obj.Name, obj.Kind, box, obj.StrokeWidth, obj.Stroke, obj.Fill);
+                if (obj.Kind is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle) box = box.Square();
+                var shape = new Layout.Shape(obj.Name, obj.Kind, box, obj.CornerRadius, obj.Stroke.Width, obj.Stroke.Colour, obj.Fill);
                 shapes[obj] = shape;
 
                 maxRow = Math.Max(currentRow, maxRow);

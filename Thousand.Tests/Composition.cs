@@ -5,15 +5,18 @@ using Xunit;
 
 namespace Thousand.Tests
 {
+
     public class Composition : IDisposable
     {
         private readonly List<GenerationError> warnings;
         private List<GenerationError> errors;
+        private IReadOnlyDictionary<string, Point> measures;
 
         public Composition()
         {
             warnings = new List<GenerationError>();
             errors = new List<GenerationError>();
+            measures = new MockMeasures(new Point(10, 10));
         }
 
         public void Dispose()
@@ -28,13 +31,13 @@ namespace Thousand.Tests
                 new IR.Config(1, Colour.White),
                 new IR.Object[]
                 {
-                    new("foo", null, null, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null),
-                    new("bar", null, null, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null)
+                    new IR.Object("foo"),
+                    new IR.Object("bar")
                 },
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, new Dictionary<string, Point>(), warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, measures, warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(300, layout!.Width);
@@ -48,13 +51,13 @@ namespace Thousand.Tests
                 new IR.Config(1, Colour.White),
                 new IR.Object[]
                 {
-                    new("foo", null, null, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null),
-                    new("bar", null, 2, null, null, null,ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null)
+                    new IR.Object("foo"),
+                    new IR.Object("bar") with { Column = 2 }
                 },
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, new Dictionary<string, Point>(), warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, measures, warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(300, layout!.Width);
@@ -68,12 +71,12 @@ namespace Thousand.Tests
                 new IR.Config(1, Colour.White),
                 new IR.Object[]
                 {
-                    new("foo", 3, 3, null, null, null, ShapeKind.RoundRect, 15, Colour.Black, Colour.White, 20f, null)
+                    new IR.Object("foo") with { Row = 3, Column = 3 },
                 },
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, new Dictionary<string, Point>(), warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, measures, warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(450, layout!.Width);

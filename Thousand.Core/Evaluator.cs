@@ -100,14 +100,15 @@ namespace Thousand
             var row = new int?();
             var column = new int?();
             var width = new int?();
-            var height = new int?();
-            var label = node.Label ?? node.Name;
+            var height = new int?();            
             var shape = ShapeKind.RoundRect;
             var padding = 15;
+            var cornerRadius = 5;
             var stroke = Colour.Black;
+            var strokeWidth = new int?(1);
             var fill = Colour.White;
-            var fontSize = 20f;
-            var strokeWidth = new float?(1);
+            var label = node.Label ?? node.Name;
+            var fontSize = 20;
 
             foreach (var attr in node.Classes.SelectMany(FindClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
@@ -115,14 +116,6 @@ namespace Thousand
                 {
                     switch (n)
                     {
-                        case AST.NodeShapeAttribute nsa:
-                            shape = nsa.Kind;
-                            break;
-
-                        case AST.NodePaddingAttribute npa:
-                            padding = npa.Value;
-                            break;
-
                         case AST.NodeRowAttribute nra:
                             row = nra.Value;
                             break;
@@ -137,6 +130,18 @@ namespace Thousand
 
                         case AST.NodeHeightAttribute nha:
                             height = nha.Value;
+                            break;
+
+                        case AST.NodeShapeAttribute nsa:
+                            shape = nsa.Kind;
+                            break;
+
+                        case AST.NodePaddingAttribute npa:
+                            padding = npa.Value;
+                            break;
+
+                        case AST.NodeCornerRadiusAttribute ncra:
+                            cornerRadius = ncra.Value;
                             break;
                     }
                 }, r =>
@@ -188,7 +193,7 @@ namespace Thousand
             }
             else
             {
-                objects.Add(new(node.Name, row, column, width, height, label, shape, padding, stroke, fill, fontSize, strokeWidth));
+                objects.Add(new(node.Name, label == null ? null : new IR.Text(label, fontSize), row, column, width, height, shape, padding, cornerRadius, new IR.Stroke(stroke, strokeWidth), fill));
             }
         }
 
@@ -271,7 +276,7 @@ namespace Thousand
         private IR.Object? FindObject(string identifierOrLabel)
         {
             var found = objects.Where(n => (n.Name != null && n.Name.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)) ||
-                                          (n.Label != null && n.Label.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
+                                          (n.Text != null && n.Text.Label.Equals(identifierOrLabel, StringComparison.OrdinalIgnoreCase)));
             var n = found.Count();
             if (n == 0)
             {

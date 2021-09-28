@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Thousand.Model;
 
 namespace Thousand.Render
@@ -21,18 +22,15 @@ namespace Thousand.Render
         {
             var result = new Dictionary<string, Point>();
 
-            foreach (var o in ir.Objects)
-            {
-                if (o.Label != null)
-                {
-                    var text = new Topten.RichTextKit.RichString()
-                        .FontFamily(SKTypeface.Default.FamilyName)
-                        .FontSize(o.FontSize)
-                        .Alignment(Topten.RichTextKit.TextAlignment.Center)
-                        .Add(o.Label);
+            foreach (var t in ir.Objects.Select(o => o.Text).WhereNotNull())
+            {                
+                var text = new Topten.RichTextKit.RichString()
+                    .FontFamily(SKTypeface.Default.FamilyName)
+                    .FontSize(t.FontSize)
+                    .Alignment(Topten.RichTextKit.TextAlignment.Center)
+                    .Add(t.Label);
 
-                    result[o.Label] = new((int)MathF.Ceiling(text.MeasuredWidth), (int)MathF.Ceiling(text.MeasuredHeight));
-                }
+                result[t.Label] = new((int)MathF.Ceiling(text.MeasuredWidth), (int)MathF.Ceiling(text.MeasuredHeight));
             }
 
             return result;

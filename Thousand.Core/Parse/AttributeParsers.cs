@@ -118,29 +118,35 @@ namespace Thousand.Parse
             from value in CountingNumberValue
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
-            from key in Key(NodeAttributeKind.Shape)
-            from value in Keyword.Enum<ShapeKind>()
-            select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
-
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
-            from key in Keys(NodeAttributeKind.Padding)
-            from value in WholeNumberValue
-            select new AST.NodePaddingAttribute(value) as AST.NodeAttribute;
-
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeWidthAttribute { get; } =
             from key in Key(NodeAttributeKind.Width)
             from value in CountingNumberValue
             select new AST.NodeWidthAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeHeightAttribute { get; } =
-            from key in Keys(NodeAttributeKind.Height)
+            from key in Key(NodeAttributeKind.Height)
             from value in CountingNumberValue
             select new AST.NodeHeightAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
+            from key in Key(NodeAttributeKind.Shape)
+            from value in Keyword.Enum<ShapeKind>()
+            select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
+            from key in Key(NodeAttributeKind.Padding)
+            from value in WholeNumberValue
+            select new AST.NodePaddingAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeCornerRadiusAttribute { get; } =
+            from key in Keys(NodeAttributeKind.Corner, NodeAttributeKind.CornerRadius)
+            from value in WholeNumberValue
+            select new AST.NodeCornerRadiusAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
             NodeShapeAttribute
                 .Or(NodePaddingAttribute)
+                .Or(NodeCornerRadiusAttribute)
                 .Or(NodeRowAttribute)
                 .Or(NodeColumnAttribute)
                 .Or(NodeWidthAttribute)

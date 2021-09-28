@@ -4,6 +4,7 @@
     {
         RoundRect,
         Rectangle,
+        RoundSquare,
         Square,
         Oval,
         Circle,

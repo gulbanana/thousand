@@ -1,8 +1,9 @@
 class object [width=100]
 
 object square [shape=square]
+object roundsquare [shape=roundsquare, label="round\nsquare"]
 object rectangle [shape=rectangle]
-object roundrect [shape=roundrect]
+object roundrect [shape=roundrect, label="round\nrect"]
 object diamond [shape=diamond]
 object oval [shape=oval]
 object circle [shape=circle]

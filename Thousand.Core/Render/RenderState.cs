@@ -44,13 +44,11 @@ namespace Thousand.Render
             switch (shape.Kind)
             {
                 case ShapeKind.RoundRect:
-                    path.AddRoundRect(new SKRoundRect(bounds, 5));
+                case ShapeKind.RoundSquare:
+                    path.AddRoundRect(new SKRoundRect(bounds, shape.CornerRadius));
                     break;
 
                 case ShapeKind.Rectangle:
-                    path.AddRect(bounds);
-                    break;
-
                 case ShapeKind.Square:
                     path.AddRect(bounds);
                     break;
