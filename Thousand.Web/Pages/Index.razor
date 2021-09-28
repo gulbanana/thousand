@@ -1,12 +1,12 @@
 ﻿@page "/"
 @using System.IO
 @using Microsoft.Extensions.FileProviders
+@inject Render.SKDiagramGenerator generator
 @code {
     IFileProvider provider;
-    DiagramGenerator generator;
     string source;
     string sample;
-    Layout.Diagram doc;
+    SkiaSharp.SKImage img;
     string err;
 
     string Source
@@ -33,7 +33,6 @@
     protected override void OnInitialized()
     {
         provider = new EmbeddedFileProvider(typeof(Program).Assembly);
-        generator = new DiagramGenerator();
 
         using (var sourceStream = provider.GetDirectoryContents("").First().CreateReadStream())
         {
@@ -62,15 +61,19 @@
 
     private void Parse()
     {
-        generator.GenerateDiagram(source).Switch(result =>
+        var doc = generator.GenerateDiagram(source).Match(result =>
         {
-            doc = result.Diagram;
             err = result.Warnings.Any() ? result.Warnings.Join() : null;
+            return result.Diagram;
         }, errors =>
         {
-            doc = null;
             err = errors.Join();
+            return null;
         });
+
+        // XXX display the source-position errors in some nice way, maybe in a monaco editor
+
+        img = doc == null ? null : generator.GenerateImage(doc);
 
         StateHasChanged();
     }
@@ -95,6 +98,6 @@
     </div>
 
     <div class="preview">
-        <LivePreview Diagram="@doc" Error="@err" />
+        <LivePreview Image="@img" Error="@err" />
     </div>
 </div>

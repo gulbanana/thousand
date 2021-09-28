@@ -19,7 +19,7 @@ namespace Thousand.Tests
         {
             var graph = File.ReadAllText(@"samples\" + filename);
 
-            using var generator = new DiagramGenerator();
+            using var generator = new Render.SKDiagramGenerator();
 
             generator
                 .GenerateImage(graph)

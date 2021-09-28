@@ -1,5 +1,4 @@
 ﻿using OneOf;
-using SkiaSharp;
 using Superpower;
 using System;
 using System.Collections.Generic;
@@ -9,11 +8,11 @@ using Thousand.Parse;
 namespace Thousand
 {
     /// <summary>Main high-level entry point</summary>
-    public class DiagramGenerator : IDisposable
+    public class DiagramGenerator<T> : IDisposable
     {
         public static string ReadStdlib()
         {
-            using var resource = typeof(DiagramGenerator).Assembly.GetManifestResourceStream("Thousand.stdlib.1000");
+            using var resource = typeof(DiagramGenerator<>).Assembly.GetManifestResourceStream("Thousand.stdlib.1000");
             using var reader = new StreamReader(resource!);
 
             return reader.ReadToEnd();
@@ -21,13 +20,13 @@ namespace Thousand
 
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly TokenListParser<TokenKind, AST.Document> parser;
-        private readonly IRenderer<SKImage> renderer;
+        private readonly IRenderer<T> renderer;
 
-        public DiagramGenerator()
+        public DiagramGenerator(IRenderer<T> renderer)
         {
+            this.renderer = renderer;
             tokenizer = Tokenizer.Build();
-            parser = Parser.Build();
-            renderer = new Render.Renderer();
+            parser = Parser.Build();            
         }
 
         public void Dispose()
@@ -93,16 +92,24 @@ namespace Thousand
             return new GenerationResult<Layout.Diagram>(diagram, warnings.ToArray());
         }
 
-        /// <summary>Create a diagram from source code.</summary>
+        /// <summary>Create an image from source code.</summary>
         /// <param name="source">.1000 source text.</param>
         /// <returns>Either the generated diagram (as a Skia image) and zero-or-more-warnings, or one-or-more errors.</returns>
-        public OneOf<GenerationResult<SKImage>, GenerationError[]> GenerateImage(string source, bool stdlib = true)
+        public OneOf<GenerationResult<T>, GenerationError[]> GenerateImage(string source, bool stdlib = true)
         {
             return GenerateDiagram(source, stdlib).MapT0(result =>
             {
                 var image = renderer.Render(result.Diagram);
-                return new GenerationResult<SKImage>(image, result.Warnings);
+                return new GenerationResult<T>(image, result.Warnings);
             });
+        }
+
+        /// <summary>Create an image from a diagram.</summary>
+        /// <param name="diagram">Data structure produced from a .1000 file.</param>
+        /// <returns>Either the generated diagram (as a Skia image) and zero-or-more-warnings, or one-or-more errors.</returns>
+        public T GenerateImage(Layout.Diagram diagram)
+        {
+            return renderer.Render(diagram);
         }
     }
 }

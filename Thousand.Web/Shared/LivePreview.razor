@@ -1,29 +1,21 @@
 ﻿@using System.IO
 @code {
-    [Parameter] public Layout.Diagram Diagram { get; set; }
+    [Parameter] public SkiaSharp.SKImage Image { get; set; }
     [Parameter] public string Error { get; set; }
-    Render.Renderer renderer;
     string dataURL;
     string error;
-
-    protected override void OnInitialized()
-    {
-        renderer = new Render.Renderer();
-    }
 
     protected override void OnParametersSet()
     {
         error = Error;
 
-        if (Diagram != null)
+        if (Image != null)
         {
             try
             {
-                var image = renderer.Render(Diagram);
-
                 using (var stream = new MemoryStream())
                 {
-                    image.Encode().SaveTo(stream);
+                    Image.Encode().SaveTo(stream);
                     var base64 = Convert.ToBase64String(stream.ToArray());
 
                     dataURL = "data:image/png;base64," + base64;
