@@ -2,10 +2,13 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .main {
     flex: 1;
+    overflow: hidden;
 }
 
 .sidebar {
