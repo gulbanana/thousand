@@ -43,7 +43,7 @@ namespace Thousand
             objects = new();
             edges = new();
 
-            Config = new IR.Config(1f, Colour.White);
+            Config = new IR.Config();
 
             foreach (var doc in documents)
             {
@@ -69,6 +69,36 @@ namespace Thousand
                     {
                         case AST.RegionFillAttribute rfa:
                             Config = Config with { Background = rfa.Colour };
+                            break;
+
+                        case AST.RegionLayoutAttribute rla:
+                            Config = Config with 
+                            {
+                                Region = Config.Region with 
+                                {
+                                    Layout = rla.Kind
+                                }
+                            };
+                            break;
+
+                        case AST.RegionMarginAttribute rma:
+                            Config = Config with
+                            {
+                                Region = Config.Region with
+                                {
+                                    Margin = rma.Value
+                                }
+                            };
+                            break;
+
+                        case AST.RegionGutterAttribute rga:
+                            Config = Config with
+                            {
+                                Region = Config.Region with
+                                {
+                                    Gutter = rga.Value
+                                }
+                            };
                             break;
                     }
                 });
@@ -107,6 +137,7 @@ namespace Thousand
             var stroke = Colour.Black;
             var strokeWidth = new int?(1);
             var fill = Colour.White;
+            var region = new IR.Region();            
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
             var fontSize = 20;
 
@@ -148,8 +179,20 @@ namespace Thousand
                 {
                     switch (r)
                     {
-                        case AST.RegionFillAttribute nfc:
-                            fill = nfc.Colour;
+                        case AST.RegionFillAttribute rfa:
+                            fill = rfa.Colour;
+                            break;
+
+                        case AST.RegionLayoutAttribute rla:
+                            region = region with { Layout = rla.Kind };
+                            break;
+
+                        case AST.RegionMarginAttribute rma:
+                            region = region with { Margin = rma.Value };
+                            break;
+
+                        case AST.RegionGutterAttribute rga:
+                            region = region with { Gutter = rga.Value };
                             break;
                     }
                 }, l =>
@@ -193,7 +236,7 @@ namespace Thousand
             }
             else
             {
-                objects.Add(new(node.Name, label == null ? null : new IR.Text(label, fontSize), row, column, width, height, shape, padding, cornerRadius, new IR.Stroke(stroke, strokeWidth), fill));
+                objects.Add(new(node.Name, label == null ? null : new IR.Text(label, fontSize), region, row, column, width, height, shape, padding, cornerRadius, new IR.Stroke(stroke, strokeWidth), fill));
             }
         }
 

@@ -163,8 +163,26 @@ namespace Thousand.Parse
             from value in ColourValue
             select new AST.RegionFillAttribute(value) as AST.RegionAttribute;
 
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutAttribute { get; } =
+            from key in Key(RegionAttributeKind.Layout)
+            from value in Keyword.Enum<LayoutKind>()
+            select new AST.RegionLayoutAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionMarginAttribute { get; } =
+            from key in Key(RegionAttributeKind.Margin)
+            from value in WholeNumberValue
+            select new AST.RegionMarginAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionGutterAttribute { get; } =
+            from key in Key(RegionAttributeKind.Gutter)
+            from value in WholeNumberValue
+            select new AST.RegionGutterAttribute(value) as AST.RegionAttribute;
+
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } =
-            RegionFillAttribute;
+            RegionFillAttribute
+                .Or(RegionLayoutAttribute)
+                .Or(RegionMarginAttribute)
+                .Or(RegionGutterAttribute);
         #endregion
     }
 }

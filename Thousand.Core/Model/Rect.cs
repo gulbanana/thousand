@@ -17,7 +17,12 @@
             new Point(Width, Height)
         );
 
-        public Rect Pad(int padding)
+        public Rect PadFromOrigin(int padding)
+        {
+            return new Rect(Left - padding, Top - padding, Right + padding, Bottom + padding);
+        }
+
+        public Rect PadFromCenter(int padding)
         {
             return new Rect(Left - padding, Top - padding, Right + padding, Bottom + padding);
         }

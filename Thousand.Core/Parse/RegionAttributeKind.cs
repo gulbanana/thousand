@@ -2,6 +2,9 @@
 {
     public enum RegionAttributeKind
     {
-        Fill
+        Fill,
+        Layout,
+        Margin,
+        Gutter
     }
 }

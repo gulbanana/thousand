@@ -1,0 +1,13 @@
+layout=grid
+margin=0
+gutter=20
+
+class box [stroke=red, fill=red, width=100, height=100]
+class w50 [width=50]
+class h50 [height=50]
+
+box     a [width=100,height=100]
+box.w50 b
+box     c
+box.h50 d [row=2,col=3]
+box     e [row=3,col=3]

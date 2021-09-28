@@ -1,12 +1,13 @@
 TO DO
 -----
 
+* (major) recursive, non-grid layouts
+* per-shape (and diagram) margins
 * shorthand properties (stroke, font, etc)
 * explicit hairlines rather than null/0 (and support 0)
-* shape=none (with no padding? correct lines, anyway)
+* shape=none (with no padding? correct lines, somehow)
 * IdentifierOrKeyword, hyphen formatting
 * make sure anonymous objects work
-* (major) recursive, autosizing layouts
 * stdlib - node, point, text, row, etc
 * catch render failures
 * bidi/0di edges

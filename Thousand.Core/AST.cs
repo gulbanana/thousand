@@ -17,6 +17,9 @@ namespace Thousand.AST
 
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour Colour) : RegionAttribute;
+    public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
+    public record RegionMarginAttribute(int Value) : RegionAttribute;
+    public record RegionGutterAttribute(int Value) : RegionAttribute;
 
     public abstract record NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;

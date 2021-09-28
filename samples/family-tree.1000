@@ -1,4 +1,7 @@
-class vampire [fontsize=14, padding=5] // try height=85
+gutter=25
+margin=10
+
+class vampire [fontsize=14, padding=5, height=85] // try height=85
 class invictus:vampire [stroke=blue]
 class carthian:vampire [stroke=green]
 
