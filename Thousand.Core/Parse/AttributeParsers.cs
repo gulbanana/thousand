@@ -10,11 +10,11 @@ namespace Thousand.Parse
     {
         #region utilities and types
         private static TokenListParser<TokenKind, Token<TokenKind>> Key<TK>(TK kind) where TK : struct =>
-            Token.EqualToValueIgnoreCase(TokenKind.Keyword, kind.ToString()!)
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, kind.ToString()!)
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
         private static TokenListParser<TokenKind, Token<TokenKind>> Keys<TK>(params TK[] kinds) where TK : struct =>
-            kinds.Select(k => Token.EqualToValueIgnoreCase(TokenKind.Keyword, k.ToString()!))
+            kinds.Select(k => Token.EqualToValueIgnoreCase(TokenKind.Identifier, k.ToString()!))
                  .Aggregate((p1, p2) => p1.Or(p2))
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
@@ -40,14 +40,14 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
-                .Or(Token.EqualTo(TokenKind.None).Value(default(string?)));
+                .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));
 
         public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
-                .Or(Keyword.Statics<Colour>());
+                .Or(Identifier.Statics<Colour>());
 
         public static TokenListParser<TokenKind, Width> WidthValue { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Keyword, "hairline").Value(new HairlineWidth() as Width)
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(new HairlineWidth() as Width)
                 .Or(WholeNumberValue.OrNone().Select(x => x.HasValue ? new PositiveWidth(x.Value) : new ZeroWidth() as Width));
         #endregion
 
@@ -84,22 +84,22 @@ namespace Thousand.Parse
         #endregion
 
         #region line group, used by objects and edges
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeColourAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeColourAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeColour)
             from value in ColourValue
-            select new AST.LineStrokeColourAttribute(value) as AST.LineAttribute;
+            select new AST.StrokeColourAttribute(value) as AST.StrokeAttribute;
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeWidthAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeWidthAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeWidth)
             from value in WidthValue
-            select new AST.LineStrokeWidthAttribute(value) as AST.LineAttribute;
+            select new AST.StrokeWidthAttribute(value) as AST.StrokeAttribute;
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeStyleAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeStyleAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeStyle)
-            from value in Keyword.Enum<StrokeKind>()
-            select new AST.LineStrokeStyleAttribute(value) as AST.LineAttribute;
+            from value in Identifier.Enum<StrokeKind>()
+            select new AST.StrokeStyleAttribute(value) as AST.StrokeAttribute;
 
-        private static TokenListParserResult<TokenKind, AST.LineStrokeAttribute> StrokeValues(TokenList<TokenKind> input)
+        private static TokenListParserResult<TokenKind, AST.StrokeShorthandAttribute> StrokeValues(TokenList<TokenKind> input)
         {
             Colour? s1 = null;
             StrokeKind? s2 = null;
@@ -111,7 +111,7 @@ namespace Thousand.Parse
                 var next = remainder.ConsumeToken();
 
                 var asColour = ColourValue.Try()(remainder);
-                var asStyle = Keyword.Enum<StrokeKind>().Try()(remainder);
+                var asStyle = Identifier.Enum<StrokeKind>().Try()(remainder);
                 var asWidth = WidthValue.Try()(remainder);
 
                 if (asColour.HasValue)
@@ -136,20 +136,20 @@ namespace Thousand.Parse
 
             if (s1 != null || s2 != null || s3 != null)
             {
-                return TokenListParserResult.Value<TokenKind, AST.LineStrokeAttribute>(new AST.LineStrokeAttribute(s1, s2, s3), input, remainder);
+                return TokenListParserResult.Value<TokenKind, AST.StrokeShorthandAttribute>(new AST.StrokeShorthandAttribute(s1, s2, s3), input, remainder);
             }
             else
             {
-                return TokenListParserResult.Empty<TokenKind, AST.LineStrokeAttribute>(input);
+                return TokenListParserResult.Empty<TokenKind, AST.StrokeShorthandAttribute>(input);
             }
         }
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeAttribute { get; } =
             from key in Key(LineAttributeKind.Stroke)
-            from value in new TokenListParser<TokenKind, AST.LineStrokeAttribute>(StrokeValues)
-            select value as AST.LineAttribute;
+            from value in new TokenListParser<TokenKind, AST.StrokeShorthandAttribute>(StrokeValues)
+            select value as AST.StrokeAttribute;
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineAttribute { get; } =
             LineStrokeAttribute
                 .Or(LineStrokeColourAttribute)
                 .Or(LineStrokeWidthAttribute)
@@ -195,7 +195,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
             from key in Key(NodeAttributeKind.Shape)
-            from value in Keyword.Enum<ShapeKind>()
+            from value in Identifier.Enum<ShapeKind>()
             select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
@@ -226,7 +226,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutAttribute { get; } =
             from key in Key(RegionAttributeKind.Layout)
-            from value in Keyword.Enum<LayoutKind>()
+            from value in Identifier.Enum<LayoutKind>()
             select new AST.RegionLayoutAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionMarginAttribute { get; } =

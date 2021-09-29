@@ -20,7 +20,7 @@ namespace Thousand.Tests
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.Keyword, TokenKind.Keyword, TokenKind.Keyword);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier, TokenKind.Identifier, TokenKind.Identifier, TokenKind.Identifier);
             AssertEx.Sequence(output.Select(t => t.ToStringValue()), "node", "edge", "foo", "bar");
         }
 
@@ -50,7 +50,7 @@ namespace Thousand.Tests
         {
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.NewLine, TokenKind.Keyword);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier, TokenKind.NewLine, TokenKind.Identifier);
         }
 
         [Fact]
@@ -73,7 +73,7 @@ bar""", output.ElementAt(1).ToStringValue());
         {
             var output = sut.Tokenize(@"class foo : [label=""bar""]");
 
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Keyword, TokenKind.Keyword, TokenKind.Colon, TokenKind.LeftBracket, TokenKind.Keyword, TokenKind.EqualsSign, TokenKind.String, TokenKind.RightBracket);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.ClassKeyword, TokenKind.Identifier, TokenKind.Colon, TokenKind.LeftBracket, TokenKind.Identifier, TokenKind.EqualsSign, TokenKind.String, TokenKind.RightBracket);
         }
     }
 }

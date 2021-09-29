@@ -34,12 +34,15 @@ namespace Thousand.Parse
         [Token(Example = ".")]
         Period,
 
-        [Token(Example = "none")]
-        None,
-
         NewLine,
 
-        Keyword,
+        [Token(Example = "none")]
+        NoneKeyword,
+
+        [Token(Example = "class")]
+        ClassKeyword,
+
+        Identifier,
 
         String,
 

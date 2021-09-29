@@ -1,3 +1,5 @@
-class object
+class object [shape=roundrect]
+
+class line [offset=(0, 0)]
 
 class row

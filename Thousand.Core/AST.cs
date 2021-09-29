@@ -11,11 +11,11 @@ namespace Thousand.AST
     public record TextLabelAttribute(string? Content) : TextAttribute;
     public record TextFontSizeAttribute(int Value) : TextAttribute;
 
-    public abstract record LineAttribute;
-    public record LineStrokeColourAttribute(Colour Colour) : LineAttribute;
-    public record LineStrokeStyleAttribute(StrokeKind Kind) : LineAttribute;
-    public record LineStrokeWidthAttribute(Width Value) : LineAttribute;
-    public record LineStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : LineAttribute;
+    public abstract record StrokeAttribute;
+    public record StrokeColourAttribute(Colour Colour) : StrokeAttribute;
+    public record StrokeStyleAttribute(StrokeKind Kind) : StrokeAttribute;
+    public record StrokeWidthAttribute(Width Value) : StrokeAttribute;
+    public record StrokeShorthandAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : StrokeAttribute;
 
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour Colour) : RegionAttribute;
@@ -37,17 +37,21 @@ namespace Thousand.AST
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetBothAttribute(Point Offset) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, LineAttribute, TextAttribute> { }
-    [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, EdgeChain> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, StrokeAttribute, TextAttribute> { }
+    [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
 
-    [GenerateOneOf] public partial class EdgeAttribute : OneOfBase<ArrowAttribute, LineAttribute> { }
-
+    [GenerateOneOf] public partial class LineAttribute : OneOfBase<ArrowAttribute, StrokeAttribute> { }
+    
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute> { }    
-    [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, EdgeChain> { }
+    [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, TypedLine> { }
 
-    public record Class(string Name, string[] BaseClasses, ObjectAttribute[] Attributes);
+    public abstract record Class(string Name, string[] BaseClasses);
+    public record ObjectClass(string Name, string[] BaseClasses, ObjectAttribute[] Attributes) : Class(Name, BaseClasses);
+    public record LineClass(string Name, string[] BaseClasses, LineAttribute[] Attributes) : Class(Name, BaseClasses);
+    public record ObjectOrLineClass(string Name, string[] BaseClasses, StrokeAttribute[] Attributes) : Class(Name, BaseClasses);
+
     public record TypedObject(string[] Classes, string? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
     public record Edge(string Target, ArrowKind? Direction);
-    public record EdgeChain(Edge[] Elements, EdgeAttribute[] Attributes);
+    public record TypedLine(Edge[] Elements, LineAttribute[] Attributes);
     public record Document(DocumentDeclaration[] Declarations);
 }

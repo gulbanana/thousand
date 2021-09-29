@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Thousand.Parse
 {
-    public static class Keyword
+    public static class Identifier
     {
         public static TokenListParser<TokenKind, T> Enum<T>() where T : struct, Enum
         {
@@ -16,10 +16,10 @@ namespace Thousand.Parse
                 throw new Exception($"Enum {typeof(T).Name} has no values.");
             }
 
-            var parser = Token.EqualToValueIgnoreCase(TokenKind.Keyword, values.First().ToString()!).Value(values.First());
+            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, values.First().ToString()!).Value(values.First());
             foreach (var v in values.Skip(1))
             {
-                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Keyword, v.ToString()!).Value(v));
+                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, v.ToString()!).Value(v));
             }
             return parser;
         }
@@ -35,10 +35,10 @@ namespace Thousand.Parse
             var names = props.Select(p => p.Name);            
             var values = props.Select(p => (T)p.GetValue(null)!);
 
-            var parser = Token.EqualToValueIgnoreCase(TokenKind.Keyword, names.First()).Value(values.First());
+            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, names.First()).Value(values.First());
             foreach (var t in names.Zip(values, Tuple.Create).Skip(1))
             {
-                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Keyword, t.Item1).Value(t.Item2));
+                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, t.Item1).Value(t.Item2));
             }
             return parser;
         }

@@ -10,13 +10,14 @@ namespace Thousand
     {
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
-        private readonly Dictionary<string, AST.ObjectAttribute[]> classes;
+        private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
+        private readonly Dictionary<string, AST.LineAttribute[]> lineClasses;
         private readonly List<IR.Object> objects;
-        private readonly List<IR.Edge> edges;
+        private readonly List<IR.Edge> lines;
 
         public IR.Config Config { get; private set; }
         public IReadOnlyList<IR.Object> Objects => objects;
-        public IReadOnlyList<IR.Edge> Edges => edges;
+        public IReadOnlyList<IR.Edge> Edges => lines;
 
         public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> ws, List<GenerationError> es, [NotNullWhen(true)] out IR.Rules? rules)
         {
@@ -39,9 +40,10 @@ namespace Thousand
             this.ws = ws;
             this.es = es;
 
-            classes = new();
+            objectClasses = new(StringComparer.OrdinalIgnoreCase);
+            lineClasses = new(StringComparer.OrdinalIgnoreCase);
             objects = new();
-            edges = new();
+            lines = new();
 
             Config = new IR.Config();
 
@@ -106,12 +108,39 @@ namespace Thousand
 
             foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
-                var attrs = c.BaseClasses
-                    .SelectMany(FindClass)
-                    .Concat(c.Attributes)
-                    .ToArray();
+                if (c is AST.ObjectClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => objectClasses.ContainsKey(b)))
+                {
+                    var localAttrs = c switch
+                    {
+                        AST.ObjectClass oc => oc.Attributes,
+                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ec => new AST.ObjectAttribute(ec)),
+                        _ => Enumerable.Empty<AST.ObjectAttribute>()
+                    };
 
-                classes[c.Name] = attrs;
+                    var allAttrs = c.BaseClasses
+                        .SelectMany(FindObjectClass)
+                        .Concat(localAttrs)
+                        .ToArray();
+
+                    objectClasses[c.Name] = allAttrs;
+                }
+
+                if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => lineClasses.ContainsKey(b)))
+                {
+                    var localAttrs = c switch
+                    {
+                        AST.LineClass lc => lc.Attributes,
+                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ec => new AST.LineAttribute(ec)),
+                        _ => Enumerable.Empty<AST.LineAttribute>()
+                    };
+
+                    var allAttrs = c.BaseClasses
+                        .SelectMany(FindLineClass)
+                        .Concat(localAttrs)
+                        .ToArray();
+
+                    lineClasses[c.Name] = allAttrs;
+                }
             }
 
             foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
@@ -140,7 +169,7 @@ namespace Thousand
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
             var fontSize = 20;
 
-            foreach (var attr in node.Classes.SelectMany(FindClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
+            foreach (var attr in node.Classes.SelectMany(FindObjectClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
                 attr.Switch(n =>
                 {
@@ -198,19 +227,19 @@ namespace Thousand
                 {
                     switch (l)
                     {
-                        case AST.LineStrokeColourAttribute lsca:
+                        case AST.StrokeColourAttribute lsca:
                             stroke = stroke with { Colour = lsca.Colour };
                             break;
 
-                        case AST.LineStrokeWidthAttribute lswa:
+                        case AST.StrokeWidthAttribute lswa:
                             stroke = stroke with { Width = lswa.Value };
                             break;
 
-                        case AST.LineStrokeStyleAttribute lssa:
+                        case AST.StrokeStyleAttribute lssa:
                             stroke = stroke with { Style = lssa.Kind };
                             break;
 
-                        case AST.LineStrokeAttribute lsa:
+                        case AST.StrokeShorthandAttribute lsa:
                             if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
                             if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
@@ -249,7 +278,7 @@ namespace Thousand
             }
         }
 
-        private void AddEdges(AST.EdgeChain chain)
+        private void AddEdges(AST.TypedLine chain)
         {
             var stroke = new Stroke();
             var offsetStart = Point.Zero;
@@ -278,19 +307,19 @@ namespace Thousand
                 {
                     switch (line)
                     {
-                        case AST.LineStrokeColourAttribute lsa:
+                        case AST.StrokeColourAttribute lsa:
                             stroke = stroke with { Colour = lsa.Colour };
                             break;
 
-                        case AST.LineStrokeWidthAttribute lwa:
+                        case AST.StrokeWidthAttribute lwa:
                             stroke = stroke with { Width = lwa.Value };
                             break;
 
-                        case AST.LineStrokeStyleAttribute lsa:
+                        case AST.StrokeStyleAttribute lsa:
                             stroke = stroke with { Style = lsa.Kind };
                             break;
 
-                        case AST.LineStrokeAttribute lsa:
+                        case AST.StrokeShorthandAttribute lsa:
                             if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
                             if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
@@ -311,26 +340,55 @@ namespace Thousand
                 {
                     if (from.Direction.Value == ArrowKind.Forward)
                     {
-                        edges.Add(new(fromTarget, toTarget, offsetStart, offsetEnd, stroke));
+                        lines.Add(new(fromTarget, toTarget, offsetStart, offsetEnd, stroke));
                     }
                     else
                     {
-                        edges.Add(new(toTarget, fromTarget, offsetStart, offsetEnd, stroke));
+                        lines.Add(new(toTarget, fromTarget, offsetStart, offsetEnd, stroke));
                     }
                 }
             }
         }
 
-        private AST.ObjectAttribute[] FindClass(string name)
+        private AST.ObjectAttribute[] FindObjectClass(string name)
         {
-            if (!classes.ContainsKey(name))
+            if (!objectClasses.ContainsKey(name))
             {
-                ws.Add(new($"Object class '{name}' not defined."));
+                if (lineClasses.ContainsKey(name))
+                {
+                    ws.Add(new($"Class '{name}' can only be used for lines, not objects."));
+                }
+                else
+                {
+                    ws.Add(new($"Class '{name}' not defined."));
+                }
+                
                 return Array.Empty<AST.ObjectAttribute>();
             }
             else
             {
-                return classes[name];
+                return objectClasses[name];
+            }
+        }
+
+        private AST.LineAttribute[] FindLineClass(string name)
+        {
+            if (!lineClasses.ContainsKey(name))
+            {
+                if (!objectClasses.ContainsKey(name))
+                {
+                    ws.Add(new($"Class '{name}' can only be used for objects, not lines."));
+                }
+                else
+                {
+                    ws.Add(new($"Class '{name}' not defined."));
+                }
+
+                return Array.Empty<AST.LineAttribute>();
+            }
+            else
+            {
+                return lineClasses[name];
             }
         }
 

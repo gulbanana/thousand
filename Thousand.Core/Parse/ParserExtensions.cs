@@ -14,7 +14,7 @@ namespace Thousand.Parse
         {
             return pT
                 .Select(v => new T?(v))
-                .Or(Token.EqualTo(TokenKind.None).Value(new T?()));
+                .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(new T?()));
         }
     }
 }
