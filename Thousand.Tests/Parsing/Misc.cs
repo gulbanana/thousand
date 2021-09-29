@@ -205,40 +205,72 @@ line foo -> bar");
         public void ValidDeclaration_Attribute()
         {
             var tokens = tokenizer.Tokenize(@"fill=black");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = Parser.DocumentDeclarations(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT0);
+            Assert.True(result.Value.Single().IsT0);
         }
 
         [Fact]
         public void ValidDeclaration_Class()
         {
             var tokens = tokenizer.Tokenize(@"class foo [stroke=none]");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = Parser.DocumentDeclarations(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT1);
+            Assert.True(result.Value.Single().IsT1);
         }
 
         [Fact]
         public void ValidDeclaration_Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo [shape=square]");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = Parser.DocumentDeclarations(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT2);
+            Assert.True(result.Value.Single().IsT2);
         }
 
         [Fact]
         public void ValidDeclaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [offset=(0,0)]");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = Parser.DocumentDeclarations(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT3);
+            Assert.True(result.Value.Single().IsT3);
+        }
+
+        [Fact]
+        public void ValidDeclaration_All()
+        {
+            var tokens = tokenizer.Tokenize(@"fill=black
+class foo [stroke=none]
+object foo [shape=square]
+line foo->bar [offset=(0,0)]");
+            var result = Parser.DocumentDeclarations(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Equal(4, result.Value.Count);
+            Assert.True(result.Value[0].IsT0);
+            Assert.True(result.Value[1].IsT1);
+            Assert.True(result.Value[2].IsT2);
+            Assert.True(result.Value[3].IsT3);
+        }
+
+        [Fact]
+        public void ValidDeclaration_BlankLines()
+        {
+            var tokens = tokenizer.Tokenize(@"fill=black
+
+
+class foo [stroke=none]");
+            var result = Parser.DocumentDeclarations(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Equal(2, result.Value.Count);
+            Assert.True(result.Value[0].IsT0);
+            Assert.True(result.Value[1].IsT1);
         }
     }
 }

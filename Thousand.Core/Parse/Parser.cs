@@ -122,80 +122,110 @@ namespace Thousand.Parse
             select klass;
 
         // handwritten top-level parser, because the language syntax is pretty ambiguous. if parsed with combinators, the errors aren't very good
-        public static TokenListParser<TokenKind, AST.DocumentDeclaration> DocumentDeclaration { get; } = input =>
+        public static TokenListParser<TokenKind, IReadOnlyList<AST.DocumentDeclaration>> DocumentDeclarations { get; } = originalInput =>
         {
-            var fail = TokenListParserResult.Empty<TokenKind, AST.DocumentDeclaration>(input, new[] { "attribute", "class", "object", "line" });
+            var result = new List<AST.DocumentDeclaration>();
 
-            var first = input.ConsumeToken();
-            if (!first.HasValue) return fail;
-            
-            if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
+            var input = originalInput;
+            while (!input.IsAtEnd)
             {
-                var klass = ClassContent(first.Remainder);
-                if (klass.HasValue)
-                {
-                    return TokenListParserResult.Value<TokenKind, AST.DocumentDeclaration>(klass.Value, input, klass.Remainder);
-                }
-                else
-                {
-                    if (klass.Expectations != null)
-                    {
-                        return TokenListParserResult.Empty<TokenKind, AST.DocumentDeclaration>(klass.Remainder, klass.Expectations);
-                    }
-                    else 
-                    {
-                        return TokenListParserResult.Empty<TokenKind, AST.DocumentDeclaration>(klass.Remainder);
-                    }
-                }
-            }
-            else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
-            {
-                var second = first.Remainder.ConsumeToken();
-                if (!second.HasValue) return fail;
+                var fail = TokenListParserResult.Empty<TokenKind, IReadOnlyList<AST.DocumentDeclaration>>(input, new[] { "attribute", "class", "object", "line" });
 
-                if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
-                {
-                    return DiagramAttribute.Select(x => (AST.DocumentDeclaration)x)(input);
-                }
-                else // could still be an object or a line
-                {
-                    var classList = ClassList(input);
-                    if (classList.HasValue)
-                    {
-                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue)
-                        {
-                            return fail;
-                        }
+                var first = input.ConsumeToken();
+                if (!first.HasValue) return fail;
 
-                        var arrow = identifier.Remainder.ConsumeToken();
-                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
-                        { 
-                            return LineContent(classList.Value).Select(x => (AST.DocumentDeclaration)x)(classList.Remainder);
-                        }
-                        else
-                        {
-                            return ObjectContent(classList.Value).Select(x => (AST.DocumentDeclaration)x)(classList.Remainder);
-                        }
+                if (first.Value.Kind == TokenKind.NewLine)
+                {
+                    input = first.Remainder;
+                }
+                else if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
+                {
+                    var klass = ClassContent(first.Remainder);
+                    if (klass.HasValue)
+                    {
+                        result.Add(klass.Value);
+                        input = klass.Remainder;
                     }
                     else
                     {
-                        return fail;
+                        return TokenListParserResult.CastEmpty<TokenKind, AST.Class, IReadOnlyList<AST.DocumentDeclaration>>(klass);                        
                     }
                 }
+                else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
+                {
+                    var second = first.Remainder.ConsumeToken();
+                    if (!second.HasValue) return fail;
+
+                    if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
+                    {
+                        var attr = DiagramAttribute.Select(x => (AST.DocumentDeclaration)x)(input);
+                        if (attr.HasValue)
+                        {
+                            result.Add(attr.Value);
+                            input = attr.Remainder;
+                        }
+                        else
+                        {
+                            return TokenListParserResult.CastEmpty<TokenKind, AST.DocumentDeclaration, IReadOnlyList<AST.DocumentDeclaration>>(attr);
+                        }
+                    }
+                    else // could still be an object or a line
+                    {
+                        var classList = ClassList(input);
+                        if (classList.HasValue)
+                        {
+                            var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
+                            if (!identifier.HasValue)
+                            {
+                                return fail;
+                            }
+
+                            var arrow = identifier.Remainder.ConsumeToken();
+                            if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                            {
+                                var line = LineContent(classList.Value)(classList.Remainder);
+                                if (line.HasValue)
+                                {
+                                    result.Add(line.Value);
+                                    input = line.Remainder;
+                                }
+                                else
+                                {
+                                    return TokenListParserResult.CastEmpty<TokenKind, AST.TypedLine, IReadOnlyList<AST.DocumentDeclaration>>(line);
+                                }
+                            }
+                            else
+                            {
+                                var objekt = ObjectContent(classList.Value)(classList.Remainder);
+                                if (objekt.HasValue)
+                                {
+                                    result.Add(objekt.Value);
+                                    input = objekt.Remainder;
+                                }
+                                else
+                                {
+                                    return TokenListParserResult.CastEmpty<TokenKind, AST.TypedObject, IReadOnlyList<AST.DocumentDeclaration>>(objekt);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return fail;
+                        }
+                    }
+                }
+                else
+                {
+                    return fail;
+                }
             }
-            else
-            {
-                return fail;
-            }
+
+            return TokenListParserResult.Value<TokenKind, IReadOnlyList<AST.DocumentDeclaration>>(result, originalInput, input);
         };
-            
+
         public static TokenListParser<TokenKind, AST.Document> Document { get; } =
-            DocumentDeclaration
-                .AsNullable()
-                .OptionalOrDefault()
-                .ManyDelimitedBy(NewLine)
-                .Select(decs => new AST.Document(decs.WhereNotNull().ToArray()))
+            DocumentDeclarations
+                .Select(decs => new AST.Document(decs.ToArray()))
                 .AtEnd();
     }
 }
