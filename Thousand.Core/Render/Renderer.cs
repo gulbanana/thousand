@@ -47,7 +47,7 @@ namespace Thousand.Render
 
             var pixelWidth = (int)(diagram.Width * diagram.Scale);
             var pixelHeight = (int)(diagram.Height * diagram.Scale);
-            var info = new SKImageInfo(pixelWidth, pixelHeight);
+            var info = new SKImageInfo(Math.Max(pixelWidth, 1), Math.Max(pixelHeight, 1));
 
             using var surface = SKSurface.Create(info);
             var canvas = surface.Canvas;
