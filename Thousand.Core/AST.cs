@@ -14,7 +14,7 @@ namespace Thousand.AST
     public abstract record LineAttribute;
     public record LineStrokeColourAttribute(Colour Colour) : LineAttribute;
     public record LineStrokeStyleAttribute(StrokeKind Kind) : LineAttribute;
-    public record LineStrokeWidthAttribute(int? Value) : LineAttribute;
+    public record LineStrokeWidthAttribute(Width Value) : LineAttribute;
     public record LineStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : LineAttribute;
 
     public abstract record RegionAttribute;

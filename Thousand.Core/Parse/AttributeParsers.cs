@@ -38,13 +38,17 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select new Point(x, y);
 
+        public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
+            Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
+                .Or(Token.EqualTo(TokenKind.None).Value(default(string?)));
+
         public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
                 .Or(Keyword.Statics<Colour>());
 
-        public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
-            Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
-                .Or(Token.EqualTo(TokenKind.None).Value(default(string?)));
+        public static TokenListParser<TokenKind, Width> WidthValue { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Keyword, "hairline").Value(new HairlineWidth() as Width)
+                .Or(WholeNumberValue.OrNone().Select(x => x.HasValue ? new PositiveWidth(x.Value) : new ZeroWidth() as Width));
         #endregion
 
         #region arrow group, used only by edges
@@ -87,7 +91,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeWidthAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeWidth)
-            from value in WholeNumberValue.OrNone()
+            from value in WidthValue
             select new AST.LineStrokeWidthAttribute(value) as AST.LineAttribute;
 
         public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeStyleAttribute { get; } =
@@ -108,7 +112,7 @@ namespace Thousand.Parse
 
                 var asColour = ColourValue.Try()(remainder);
                 var asStyle = Keyword.Enum<StrokeKind>().Try()(remainder);
-                var asWidth = WholeNumberValue.OrNone().Try()(remainder);
+                var asWidth = WidthValue.Try()(remainder);
 
                 if (asColour.HasValue)
                 {
@@ -120,7 +124,7 @@ namespace Thousand.Parse
                 }
                 else if (asWidth.HasValue)
                 {
-                    s3 = new Width(asWidth.Value);
+                    s3 = asWidth.Value;
                 }
                 else
                 {

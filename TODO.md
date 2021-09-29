@@ -4,7 +4,6 @@ TO DO
 * (major) recursive, non-grid layouts
 * per-shape (and diagram) margins; the diagram needs a default, 2 or 5px or something
 * generalise shorthand properties (font, etc)
-* explicit hairlines rather than null/0 (and support 0, or at least none)
 * shape=none (with no padding? correct lines, somehow)
 * IdentifierOrKeyword, hyphen formatting
 * make sure anonymous objects work

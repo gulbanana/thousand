@@ -2,7 +2,7 @@ scale = 2.0
 gutter = 40
 
 class node [fill=#ccc,shape=circle]
-class thin : node [stroke=none]
+class thin : node [stroke=hairline]
 class dash [stroke=dashed]
 
 thin A 
@@ -13,9 +13,9 @@ node E
 node F
 
 // hairlines
-a-> b [stroke=dashed none] 
-a-> e [stroke=none]
-a-> d [stroke=none]
+a-> b [stroke=dashed hairline] 
+a-> e [stroke=hairline]
+a-> d [stroke=hairline]
 
 // scaling lines
 b-> c [stroke=dashed 1]

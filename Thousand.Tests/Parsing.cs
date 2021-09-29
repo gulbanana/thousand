@@ -351,7 +351,7 @@ foo -> bar");
         [Fact]
         public void StrokeShorthand_SingleWidth()
         {
-            var tokens = tokenizer.Tokenize($"stroke=1");
+            var tokens = tokenizer.Tokenize($"stroke=none");
             var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -360,13 +360,13 @@ foo -> bar");
             var lsa = (AST.LineStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Width);
-            Assert.Equal(1, lsa.Width!.Value);
+            Assert.True(lsa.Width is ZeroWidth);
         }
 
         [Fact]
         public void StrokeShorthand_Multiple()
         {
-            var tokens = tokenizer.Tokenize($"stroke=1 black");
+            var tokens = tokenizer.Tokenize($"stroke=2 black");
             var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -378,9 +378,30 @@ foo -> bar");
             Assert.Equal(Colour.Black, lsa.Colour);
 
             Assert.NotNull(lsa.Width);
-            Assert.Equal(1, lsa.Width!.Value);
+            Assert.True(lsa.Width is PositiveWidth(2));
 
             Assert.Null(lsa.Style);
+        }
+
+        [Fact]
+        public void StrokeShorthand_All()
+        {
+            var tokens = tokenizer.Tokenize($"stroke=solid green hairline");
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
+
+            var lsa = (AST.LineStrokeAttribute)result.Value;
+
+            Assert.NotNull(lsa.Colour);
+            Assert.Equal(Colour.Green, lsa.Colour);
+
+            Assert.NotNull(lsa.Width);
+            Assert.True(lsa.Width is HairlineWidth);
+
+            Assert.NotNull(lsa.Style);
+            Assert.Equal(StrokeKind.Solid, lsa.Style!.Value);
         }
 
         [Fact]

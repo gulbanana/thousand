@@ -1,0 +1,22 @@
+scale=1
+gutter=50
+
+class box [fill=#ccc, shape=roundsquare]
+class r1 : box [row=1]
+class r2 : box [row=2]
+class r3 : box [row=3]
+
+// no lines (still includes an arrow, because you will be able to turn that off separately!
+r1 a [stroke=red none]
+r1 b [stroke=red none]
+a -> b -> a [stroke=red none]
+
+// the default - aligned to real pixels at any scale
+r2 c [stroke=green hairline]
+r2 d [stroke=green hairline]
+c -> d -> c[stroke=green hairline]
+
+// lines with a vector-scaling width
+r3 e [stroke=blue 1]
+r3 f [stroke=blue 1]
+e -> f -> e[stroke=blue 1]

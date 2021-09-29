@@ -73,17 +73,22 @@ namespace Thousand.Render
         public void PaintShape(SKCanvas canvas, Layout.Shape shape)
         {
             var path = ShapePaths[shape];
+            
+            var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
+            canvas.DrawPath(path, fill);
 
             var stroke = new SKPaint { Color = shape.Stroke.Colour.SK(), IsAntialias = true, IsStroke = true, PathEffect = StrokeEffect(shape.Stroke.Style) };
-            var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
-
-            if (shape.Stroke.Width.HasValue)
+            if (shape.Stroke.Width is not ZeroWidth)
             {
-                stroke.StrokeWidth = shape.Stroke.Width.Value;
-            }
+                stroke.StrokeWidth = shape.Stroke.Width switch
+                {
+                    HairlineWidth => 0,
+                    PositiveWidth(var w) => w,
+                    _ => throw new NotSupportedException()
+                };
 
-            canvas.DrawPath(path, fill);
-            canvas.DrawPath(path, stroke);
+                canvas.DrawPath(path, stroke);
+            }                        
         }
 
         public void PaintLine(SKCanvas canvas, Layout.Line line)
@@ -96,12 +101,12 @@ namespace Thousand.Render
             var stroke = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = false, PathEffect = StrokeEffect(line.Stroke.Style) };
             var fill = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true };
 
-            // for a non-hairline of width n, establish start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = Normalize(toPoint - fromPoint, line.Stroke.Width ?? 1f);
+            // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
+            var unitPath = Normalize(toPoint - fromPoint);
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
-            // draw a thin rectangle of the desired width
+            // draw a thin rectangle using the control points
             var path = new SKPath();
             path.MoveTo(fromPoint);
             path.LineTo(fromPoint + offset1);
@@ -124,12 +129,17 @@ namespace Thousand.Render
             var end = PointOnRect(visibleBounds, toPoint);
 
             // draw the main line
-            if (line.Stroke.Width.HasValue)
+            if (line.Stroke.Width is not ZeroWidth)
             {
-                stroke.StrokeWidth = line.Stroke.Width.Value;
-            }
+                stroke.StrokeWidth = line.Stroke.Width switch
+                {
+                    HairlineWidth => 0,
+                    PositiveWidth(var w) => w,
+                    _ => throw new NotSupportedException()
+                };
 
-            canvas.DrawLine(start, end, stroke);
+                canvas.DrawLine(start, end, stroke);
+            }
 
             // draw end cap
             var arrowhead = new SKPath();

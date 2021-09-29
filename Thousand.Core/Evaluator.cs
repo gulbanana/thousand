@@ -212,7 +212,7 @@ namespace Thousand
 
                         case AST.LineStrokeAttribute lsa:
                             if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
-                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width.Value };
+                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
                             break;
                     }
@@ -292,7 +292,7 @@ namespace Thousand
 
                         case AST.LineStrokeAttribute lsa:
                             if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
-                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width.Value };
+                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
                             break;
                     }
