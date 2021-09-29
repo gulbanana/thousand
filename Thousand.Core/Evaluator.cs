@@ -134,8 +134,7 @@ namespace Thousand
             var shape = ShapeKind.RoundRect;
             var padding = 15;
             var cornerRadius = 5;
-            var stroke = Colour.Black;
-            var strokeWidth = new int?(1);
+            var stroke = new Stroke();
             var fill = Colour.White;
             var region = new IR.Region();            
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
@@ -199,12 +198,22 @@ namespace Thousand
                 {
                     switch (l)
                     {
-                        case AST.LineStrokeAttribute lsa:
-                            stroke = lsa.Colour;
+                        case AST.LineStrokeColourAttribute lsca:
+                            stroke = stroke with { Colour = lsca.Colour };
                             break;
 
-                        case AST.LineWidthAttribute lwa:
-                            strokeWidth = lwa.Value;
+                        case AST.LineStrokeWidthAttribute lswa:
+                            stroke = stroke with { Width = lswa.Value };
+                            break;
+
+                        case AST.LineStrokeStyleAttribute lssa:
+                            stroke = stroke with { Style = lssa.Kind };
+                            break;
+
+                        case AST.LineStrokeAttribute lsa:
+                            if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
+                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width.Value };
+                            if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
                             break;
                     }
                 }, t =>
@@ -236,14 +245,13 @@ namespace Thousand
             }
             else
             {
-                objects.Add(new(node.Name, label == null ? null : new IR.Text(label, fontSize), region, row, column, width, height, shape, padding, cornerRadius, new IR.Stroke(stroke, strokeWidth), fill));
+                objects.Add(new(node.Name, label == null ? null : new IR.Text(label, fontSize), region, row, column, width, height, shape, padding, cornerRadius, stroke, fill));
             }
         }
 
         private void AddEdges(AST.EdgeChain chain)
         {
-            var stroke = Colour.Black;
-            var width = new float?(1);
+            var stroke = new Stroke();
             var offsetStart = Point.Zero;
             var offsetEnd = Point.Zero;
 
@@ -270,12 +278,22 @@ namespace Thousand
                 {
                     switch (line)
                     {
-                        case AST.LineStrokeAttribute lsa:
-                            stroke = lsa.Colour;
+                        case AST.LineStrokeColourAttribute lsa:
+                            stroke = stroke with { Colour = lsa.Colour };
                             break;
 
-                        case AST.LineWidthAttribute lwa:
-                            width = lwa.Value;
+                        case AST.LineStrokeWidthAttribute lwa:
+                            stroke = stroke with { Width = lwa.Value };
+                            break;
+
+                        case AST.LineStrokeStyleAttribute lsa:
+                            stroke = stroke with { Style = lsa.Kind };
+                            break;
+
+                        case AST.LineStrokeAttribute lsa:
+                            if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
+                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width.Value };
+                            if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
                             break;
                     }
                 });
@@ -293,11 +311,11 @@ namespace Thousand
                 {
                     if (from.Direction.Value == ArrowKind.Forward)
                     {
-                        edges.Add(new(fromTarget, toTarget, offsetStart, offsetEnd, stroke, width));
+                        edges.Add(new(fromTarget, toTarget, offsetStart, offsetEnd, stroke));
                     }
                     else
                     {
-                        edges.Add(new(toTarget, fromTarget, offsetStart, offsetEnd, stroke, width));
+                        edges.Add(new(toTarget, fromTarget, offsetStart, offsetEnd, stroke));
                     }
                 }
             }

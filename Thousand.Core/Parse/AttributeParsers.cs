@@ -80,19 +80,76 @@ namespace Thousand.Parse
         #endregion
 
         #region line group, used by objects and edges
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeAttribute { get; } =
-            from key in Key(LineAttributeKind.Stroke)
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeColourAttribute { get; } =
+            from key in Key(LineAttributeKind.StrokeColour)
             from value in ColourValue
-            select new AST.LineStrokeAttribute(value) as AST.LineAttribute;
+            select new AST.LineStrokeColourAttribute(value) as AST.LineAttribute;
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineWidthAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeWidthAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeWidth)
             from value in WholeNumberValue.OrNone()
-            select new AST.LineWidthAttribute(value) as AST.LineAttribute;
+            select new AST.LineStrokeWidthAttribute(value) as AST.LineAttribute;
+
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeStyleAttribute { get; } =
+            from key in Key(LineAttributeKind.StrokeStyle)
+            from value in Keyword.Enum<StrokeKind>()
+            select new AST.LineStrokeStyleAttribute(value) as AST.LineAttribute;
+
+        private static TokenListParserResult<TokenKind, AST.LineStrokeAttribute> StrokeValues(TokenList<TokenKind> input)
+        {
+            Colour? s1 = null;
+            StrokeKind? s2 = null;
+            Width? s3 = null;
+
+            var remainder = input;
+            while (!remainder.IsAtEnd && (s1 == null || s2 == null || s3 == null))
+            {
+                var next = remainder.ConsumeToken();
+
+                var asColour = ColourValue.Try()(remainder);
+                var asStyle = Keyword.Enum<StrokeKind>().Try()(remainder);
+                var asWidth = WholeNumberValue.OrNone().Try()(remainder);
+
+                if (asColour.HasValue)
+                {
+                    s1 = asColour.Value;
+                }                               
+                else if (asStyle.HasValue)
+                {
+                    s2 = asStyle.Value;
+                }
+                else if (asWidth.HasValue)
+                {
+                    s3 = new Width(asWidth.Value);
+                }
+                else
+                {
+                    break;
+                }
+
+                remainder = next.Remainder;
+            }
+
+            if (s1 != null || s2 != null || s3 != null)
+            {
+                return TokenListParserResult.Value<TokenKind, AST.LineStrokeAttribute>(new AST.LineStrokeAttribute(s1, s2, s3), input, remainder);
+            }
+            else
+            {
+                return TokenListParserResult.Empty<TokenKind, AST.LineStrokeAttribute>(input);
+            }
+        }
+
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeAttribute { get; } =
+            from key in Key(LineAttributeKind.Stroke)
+            from value in new TokenListParser<TokenKind, AST.LineStrokeAttribute>(StrokeValues)
+            select value as AST.LineAttribute;
 
         public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
             LineStrokeAttribute
-                .Or(LineWidthAttribute);
+                .Or(LineStrokeColourAttribute)
+                .Or(LineStrokeWidthAttribute)
+                .Or(LineStrokeStyleAttribute);
         #endregion
 
         #region text group, used only by objects (so far)

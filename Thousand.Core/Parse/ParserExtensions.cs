@@ -3,7 +3,7 @@ using Superpower.Parsers;
 
 namespace Thousand.Parse
 {
-    public static class ParserExtensions
+    internal static class ParserExtensions
     {
         public static TokenListParser<TokenKind, U> Cast<T, U>(this TokenListParser<TokenKind, T> pT) where T : U
         {

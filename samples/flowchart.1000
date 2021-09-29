@@ -1,16 +1,21 @@
-class stage [shape=oval, stroke=green]
+gutter=25
+class stage [shape=oval, stroke=green,padding=10,height=60]
 class platStage : stage [stroke=blue]
+class artefact [shape=square,padding=10, width=60]
 
-stage Tokenize [shape=diamond]
-stage Parse
+stage "Tokenize/Parse" 
+artefact AST 
 stage Evaluate
+artefact IR
 stage Compose
+artefact Layout [row=2,col=5]
 // should be grouped
-platStage Measure [row=2,col=3]
-platStage Render 
-platStage Encode [shape=rectangle]
+platStage Measure [row=3,col=3]
+platStage Render [col=5]
+artefact Image
+platStage Encode 
 
-Tokenize -> Parse -> Evaluate -> Compose
+
+"Tokenize/Parse" -> AST -> Evaluate -> IR -> Compose -> Layout -> Render -> Image -> Encode
 Evaluate -> Measure [offset=(-5,0)]
 Evaluate <- Measure [offset=(5,0)]
-Compose -> Render -> Encode

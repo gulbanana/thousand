@@ -1,20 +1,23 @@
 scale = 2.0
-class node [fill=#ccc,shape=circle]
-class thin : node [strokewidth=none]
+gutter = 40
 
-thin A
-thin B
-node C
+class node [fill=#ccc,shape=circle]
+class thin : node [stroke=none]
+class dash [stroke=dashed]
+
+thin A 
+thin.dash B
+node.dash C
 thin D [row=2]
-node E
+node E 
 node F
 
 // hairlines
-a-> b [strokewidth=none] 
-a-> e [strokewidth=none]
-a-> d [strokewidth=none]
+a-> b [stroke=dashed none] 
+a-> e [stroke=none]
+a-> d [stroke=none]
 
 // scaling lines
-b-> c [strokewidth=1]
-b-> e [strokewidth=1]
-b-> f [strokewidth=1]
+b-> c [stroke=dashed 1]
+b-> e [stroke=1]
+b-> f [stroke=1]

@@ -74,12 +74,12 @@ namespace Thousand.Render
         {
             var path = ShapePaths[shape];
 
-            var stroke = new SKPaint { Color = shape.Stroke.SK(), IsAntialias = true, IsStroke = true };
+            var stroke = new SKPaint { Color = shape.Stroke.Colour.SK(), IsAntialias = true, IsStroke = true, PathEffect = StrokeEffect(shape.Stroke.Style) };
             var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
 
-            if (shape.StrokeWidth.HasValue)
+            if (shape.Stroke.Width.HasValue)
             {
-                stroke.StrokeWidth = shape.StrokeWidth.Value;
+                stroke.StrokeWidth = shape.Stroke.Width.Value;
             }
 
             canvas.DrawPath(path, fill);
@@ -92,13 +92,12 @@ namespace Thousand.Render
             var toPoint = line.End.SK();
             var fromPath = ShapePaths[line.From];
             var toPath = ShapePaths[line.To];
-            
-            // used as fill or hairline, rather than stroke in the Skia sense
-            var stroke = new SKPaint { Color = line.Stroke.SK(), IsAntialias = false };
-            var fill = new SKPaint { Color = line.Stroke.SK(), IsAntialias = true };
+
+            var stroke = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = false, PathEffect = StrokeEffect(line.Stroke.Style) };
+            var fill = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true };
 
             // for a non-hairline of width n, establish start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = Normalize(toPoint - fromPoint, line.Width/2 ?? 1f);
+            var unitPath = Normalize(toPoint - fromPoint, line.Stroke.Width ?? 1f);
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
@@ -119,20 +118,18 @@ namespace Thousand.Render
                 return; // XXX warning
             }
 
-            // use the first and last line points within the drawn region as the points for a hairline (and end cap positioning)
+            // use the intersection of the straight path with the drawable region's bounding box as the first and last points for the real line
             visiblePath.GetBounds(out var visibleBounds);
             var start = PointOnRect(visibleBounds, fromPoint);
             var end = PointOnRect(visibleBounds, toPoint);
 
             // draw the main line
-            if (line.Width.HasValue)
+            if (line.Stroke.Width.HasValue)
             {
-                canvas.DrawPath(visiblePath, fill);
+                stroke.StrokeWidth = line.Stroke.Width.Value;
             }
-            else // hairline
-            {
-                canvas.DrawLine(start, end, stroke);
-            } 
+
+            canvas.DrawLine(start, end, stroke);
 
             // draw end cap
             var arrowhead = new SKPath();
@@ -223,5 +220,11 @@ namespace Thousand.Render
 
             throw new Exception("Cannot find intersection");
         }
+
+        private static SKPathEffect? StrokeEffect(StrokeKind style) => style switch
+        {
+            StrokeKind.Dashed => SKPathEffect.CreateDash(new[] { 3f, 2f }, 0f),
+            _ => null
+        };
     }
 }

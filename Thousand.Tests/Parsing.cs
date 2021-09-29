@@ -227,13 +227,13 @@ bar""");
         [Fact]
         public void ValidEdges_Attributed()
         {
-            var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar"" [stroke=#000000]");
+            var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar"" [strokeColour=#000000]");
             var result = Parser.AttributedEdges(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Elements.First().Target);
             Assert.Equal("bar", result.Value.Elements.Last().Target);
-            AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeAttribute(new Colour(0, 0, 0)));
+            AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeColourAttribute(new Colour(0, 0, 0)));
         }
 
         [Fact]
@@ -322,6 +322,82 @@ foo -> bar");
                     Assert.True(d.IsT3);
                     AssertEx.Sequence(d.AsT3.Elements, new AST.Edge("foo", ArrowKind.Forward), new AST.Edge("bar", null));             
                 });
+        }
+
+        [Fact]
+        public void StrokeShorthand_InvalidKeyword()
+        {
+            var tokens = tokenizer.Tokenize(@"stroke=square");
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Theory, InlineData("#000"), InlineData("black")]
+        public void StrokeShorthand_SingleColour(string c)
+        {
+            var tokens = tokenizer.Tokenize($"stroke={c}");
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
+
+            var lsa = (AST.LineStrokeAttribute)result.Value;
+
+            Assert.NotNull(lsa.Colour);
+            Assert.Equal(Colour.Black, lsa.Colour);
+        }
+
+        [Fact]
+        public void StrokeShorthand_SingleWidth()
+        {
+            var tokens = tokenizer.Tokenize($"stroke=1");
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
+
+            var lsa = (AST.LineStrokeAttribute)result.Value;
+
+            Assert.NotNull(lsa.Width);
+            Assert.Equal(1, lsa.Width!.Value);
+        }
+
+        [Fact]
+        public void StrokeShorthand_Multiple()
+        {
+            var tokens = tokenizer.Tokenize($"stroke=1 black");
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
+
+            var lsa = (AST.LineStrokeAttribute)result.Value;
+
+            Assert.NotNull(lsa.Colour);
+            Assert.Equal(Colour.Black, lsa.Colour);
+
+            Assert.NotNull(lsa.Width);
+            Assert.Equal(1, lsa.Width!.Value);
+
+            Assert.Null(lsa.Style);
+        }
+
+        [Fact]
+        public void StrokeShorthand_InContext()
+        {
+            var tokens = tokenizer.Tokenize($"object [stroke=dashed black]");
+            var result = Parser.Object(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Single(result.Value.Attributes);
+            Assert.True(result.Value.Attributes.Single().IsT2);
+
+            var lsa = (AST.LineStrokeAttribute)result.Value.Attributes.Single().AsT2;
+            
+            Assert.NotNull(lsa.Colour);
+            Assert.Null(lsa.Width);
+            Assert.NotNull(lsa.Style);
         }
     }
 }

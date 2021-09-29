@@ -76,7 +76,7 @@ namespace Thousand
                 var center = new Point(colCenters[measures.col-1], rowCenters[measures.row-1]);
                 var box = new Rect(measures.size).CenteredAt(center);
                 
-                var shape = new Layout.Shape(obj.Name, obj.Kind, box, obj.CornerRadius, obj.Stroke.Width, obj.Stroke.Colour, obj.Fill);
+                var shape = new Layout.Shape(obj.Name, obj.Kind, box, obj.CornerRadius, obj.Stroke, obj.Fill);
                 shapes[obj] = shape;
 
                 if (obj.Text != null && obj.Text.Label != string.Empty)
@@ -93,7 +93,7 @@ namespace Thousand
                 var from = shapes[edge.FromTarget];
                 var to = shapes[edge.ToTarget];
 
-                lines.Add(new(from, to, from.Bounds.Center() + edge.FromOffset, to.Bounds.Center() + edge.ToOffset, edge.Stroke, edge.Width));
+                lines.Add(new(from, to, from.Bounds.Center() + edge.FromOffset, to.Bounds.Center() + edge.ToOffset, edge.Stroke));
             }
 
             diagram = new(
