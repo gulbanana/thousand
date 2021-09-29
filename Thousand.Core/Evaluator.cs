@@ -150,7 +150,7 @@ namespace Thousand
 
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
-                AddEdges(chain);
+                AddLine(chain);
             }
         }
 
@@ -269,7 +269,7 @@ namespace Thousand
 
                 foreach (var chain in node.Children.Where(d => d.IsT2).Select(d => d.AsT2))
                 {
-                    AddEdges(chain);
+                    AddLine(chain);
                 }
             }
             else
@@ -278,13 +278,13 @@ namespace Thousand
             }
         }
 
-        private void AddEdges(AST.TypedLine chain)
+        private void AddLine(AST.TypedLine line)
         {
             var stroke = new Stroke();
             var offsetStart = Point.Zero;
             var offsetEnd = Point.Zero;
 
-            foreach (var attr in chain.Attributes)
+            foreach (var attr in line.Classes.SelectMany(FindLineClass).Concat(line.Attributes))
             {
                 attr.Switch(arrow =>
                 {
@@ -328,10 +328,10 @@ namespace Thousand
                 });
             }
 
-            for (var i = 0; i < chain.Elements.Length - 1; i++)
+            for (var i = 0; i < line.Elements.Length - 1; i++)
             {
-                var from = chain.Elements[i];
-                var to = chain.Elements[i + 1];
+                var from = line.Elements[i];
+                var to = line.Elements[i + 1];
 
                 var fromTarget = FindObject(from.Target);
                 var toTarget = FindObject(to.Target);
@@ -375,7 +375,7 @@ namespace Thousand
         {
             if (!lineClasses.ContainsKey(name))
             {
-                if (!objectClasses.ContainsKey(name))
+                if (objectClasses.ContainsKey(name))
                 {
                     ws.Add(new($"Class '{name}' can only be used for objects, not lines."));
                 }

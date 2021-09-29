@@ -127,7 +127,7 @@ namespace Thousand.Render
             visiblePath.GetBounds(out var visibleBounds);
             var start = PointOnRect(visibleBounds, fromPoint);
             var end = PointOnRect(visibleBounds, toPoint);
-
+             
             // draw the main line
             if (line.Stroke.Width is not ZeroWidth)
             {

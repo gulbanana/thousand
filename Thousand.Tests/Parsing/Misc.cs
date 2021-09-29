@@ -104,7 +104,7 @@ bar""");
         [Fact]
         public void ValidEdges_Attributed()
         {
-            var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar"" [strokeColour=#000000]");
+            var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [strokeColour=#000000]");
             var result = Parser.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -187,7 +187,7 @@ object ""bar""");
         {
             var tokens = tokenizer.Tokenize(@"object foo
 object bar
-foo -> bar");
+line foo -> bar");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -197,8 +197,48 @@ foo -> bar");
                 d =>
                 {
                     Assert.True(d.IsT3);
-                    AssertEx.Sequence(d.AsT3.Elements, new AST.Edge("foo", ArrowKind.Forward), new AST.Edge("bar", null));             
+                    AssertEx.Sequence(d.AsT3.Elements, new AST.Edge("foo", ArrowKind.Forward), new AST.Edge("bar", null));
                 });
+        }
+
+        [Fact]
+        public void ValidDeclaration_Attribute()
+        {
+            var tokens = tokenizer.Tokenize(@"fill=black");
+            var result = Parser.DocumentDeclaration(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT0);
+        }
+
+        [Fact]
+        public void ValidDeclaration_Class()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo [stroke=none]");
+            var result = Parser.DocumentDeclaration(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT1);
+        }
+
+        [Fact]
+        public void ValidDeclaration_Object()
+        {
+            var tokens = tokenizer.Tokenize(@"object foo [shape=square]");
+            var result = Parser.DocumentDeclaration(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT2);
+        }
+
+        [Fact]
+        public void ValidDeclaration_Line()
+        {
+            var tokens = tokenizer.Tokenize(@"line foo->bar [offset=(0,0)]");
+            var result = Parser.DocumentDeclaration(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT3);
         }
     }
 }

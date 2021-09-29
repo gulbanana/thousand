@@ -52,6 +52,6 @@ namespace Thousand.AST
 
     public record TypedObject(string[] Classes, string? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
     public record Edge(string Target, ArrowKind? Direction);
-    public record TypedLine(Edge[] Elements, LineAttribute[] Attributes);
+    public record TypedLine(string[] Classes, Edge[] Elements, LineAttribute[] Attributes);
     public record Document(DocumentDeclaration[] Declarations);
 }

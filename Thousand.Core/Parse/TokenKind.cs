@@ -50,6 +50,10 @@ namespace Thousand.Parse
         LeftArrow,
         [Token(Example = "->")]
         RightArrow,
+        [Token(Example = "--")]
+        NoArrow,
+        [Token(Example = "<>")]
+        DoubleArrow,
 
         [Token(Description = "colour literal")]
         Colour,

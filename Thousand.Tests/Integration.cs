@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using Thousand.Parse;
 using Xunit;
 
 namespace Thousand.Tests
@@ -12,6 +13,15 @@ namespace Thousand.Tests
             {
                 yield return new object[] {Path.GetFileName(filename) };
             }
+        }
+
+        [Fact]
+        public void ParseStdlib()
+        {
+            var source = DiagramGenerator<object>.ReadStdlib();
+            var tokens = Tokenizer.Build().Tokenize(source);
+            var ast = Parser.Build()(tokens);
+            Assert.True(ast.HasValue, ast.ToString());
         }
 
         [Theory, MemberData(nameof(Samples))]

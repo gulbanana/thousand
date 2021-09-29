@@ -1,0 +1,14 @@
+gutter=50
+
+class box [width=80,height=80]
+box A
+box B
+box C
+box D
+
+class top [stroke=red,offset=(0,-10)]
+class bottom [stroke=blue,offset=(0,10)]
+top A -> B -> C -> D
+line A -> B -> C
+bottom A -> B
+bottom C -> D

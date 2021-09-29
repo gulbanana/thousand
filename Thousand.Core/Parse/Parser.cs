@@ -47,6 +47,7 @@ namespace Thousand.Parse
                 .Or(AttributeParsers.LineAttribute.Select(x => (AST.ObjectAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
 
+        // XXX rewrite this to work like DocumentDeclaration when i have a more-fixed idea of what's in an object scope
         public static TokenListParser<TokenKind, AST.ObjectDeclaration?> ObjectDeclaration { get; } =
             ObjectAttribute.Select(a => (AST.ObjectDeclaration)a)
                 .Or(Superpower.Parse.Ref(() => Line!).Select(a => (AST.ObjectDeclaration)a).Try())
@@ -60,12 +61,16 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBrace)
             select decs.WhereNotNull().ToArray();
 
-        public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
-            from classes in ClassList
+        public static TokenListParser<TokenKind, AST.TypedObject> ObjectContent(string[] classes) =>
             from name in Identifier.Or(String).AsNullable().OptionalOrDefault()
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Superpower.Parse.Ref(() => Scope!).OptionalOrDefault(Array.Empty<AST.ObjectDeclaration>())
             select new AST.TypedObject(classes, name, attrs, children);
+
+        public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
+            from classes in ClassList
+            from objekt in ObjectContent(classes)
+            select objekt;
 
         public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
             from dst in Target
@@ -82,10 +87,15 @@ namespace Thousand.Parse
             AttributeParsers.ArrowAttribute.Select(x => (AST.LineAttribute)x)
                 .Or(AttributeParsers.LineAttribute.Select(x => (AST.LineAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
+        public static TokenListParser<TokenKind, AST.TypedLine> LineContent(string[] classes) =>
             from chain in Edges
             from attrs in AttributeList(EdgeAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
-            select new AST.TypedLine(chain.ToArray(), attrs);
+            select new AST.TypedLine(classes, chain.ToArray(), attrs);
+
+        public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
+            from classes in ClassList
+            from line in LineContent(classes)
+            select line;
 
         public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
             AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
@@ -100,23 +110,91 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.Class> ObjectOrLineClassBody(string name, string[] bases) =>
             AttributeList(AttributeParsers.LineAttribute).OptionalOrDefault(Array.Empty<AST.StrokeAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
 
-        public static TokenListParser<TokenKind, AST.Class> Class { get; } =
-            from keyword in Token.EqualTo(TokenKind.ClassKeyword)
+        public static TokenListParser<TokenKind, AST.Class> ClassContent { get; } =
             from name in Identifier
             from bases in BaseClasses
             from klass in ObjectOrLineClassBody(name, bases).Try().Or(ObjectClassBody(name, bases).Try()).Or(LineClassBody(name, bases))
             select klass;
 
-        public static TokenListParser<TokenKind, AST.DocumentDeclaration?> DocumentDeclaration { get; } =
-            DiagramAttribute.Select(x => (AST.DocumentDeclaration)x)
-                .Or(Line.Select(x => (AST.DocumentDeclaration)x).Try())
-                .Or(Class.Select(x => (AST.DocumentDeclaration)x))
-                .Or(Object.Select(x => (AST.DocumentDeclaration)x))
-                .AsNullable()
-                .OptionalOrDefault();
+        public static TokenListParser<TokenKind, AST.Class> Class { get; } =
+            from keyword in Token.EqualTo(TokenKind.ClassKeyword)
+            from klass in ClassContent
+            select klass;
+
+        // handwritten top-level parser, because the language syntax is pretty ambiguous. if parsed with combinators, the errors aren't very good
+        public static TokenListParser<TokenKind, AST.DocumentDeclaration> DocumentDeclaration { get; } = input =>
+        {
+            var fail = TokenListParserResult.Empty<TokenKind, AST.DocumentDeclaration>(input, new[] { "attribute", "class", "object", "line" });
+
+            var first = input.ConsumeToken();
+            if (!first.HasValue) return fail;
+            
+            if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
+            {
+                var klass = ClassContent(first.Remainder);
+                if (klass.HasValue)
+                {
+                    return TokenListParserResult.Value<TokenKind, AST.DocumentDeclaration>(klass.Value, input, klass.Remainder);
+                }
+                else
+                {
+                    if (klass.Expectations != null)
+                    {
+                        return TokenListParserResult.Empty<TokenKind, AST.DocumentDeclaration>(klass.Remainder, klass.Expectations);
+                    }
+                    else 
+                    {
+                        return TokenListParserResult.Empty<TokenKind, AST.DocumentDeclaration>(klass.Remainder);
+                    }
+                }
+            }
+            else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
+            {
+                var second = first.Remainder.ConsumeToken();
+                if (!second.HasValue) return fail;
+
+                if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
+                {
+                    return DiagramAttribute.Select(x => (AST.DocumentDeclaration)x)(input);
+                }
+                else // could still be an object or a line
+                {
+                    var classList = ClassList(input);
+                    if (classList.HasValue)
+                    {
+                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
+                        if (!identifier.HasValue)
+                        {
+                            return fail;
+                        }
+
+                        var arrow = identifier.Remainder.ConsumeToken();
+                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                        { 
+                            return LineContent(classList.Value).Select(x => (AST.DocumentDeclaration)x)(classList.Remainder);
+                        }
+                        else
+                        {
+                            return ObjectContent(classList.Value).Select(x => (AST.DocumentDeclaration)x)(classList.Remainder);
+                        }
+                    }
+                    else
+                    {
+                        return fail;
+                    }
+                }
+            }
+            else
+            {
+                return fail;
+            }
+        };
             
         public static TokenListParser<TokenKind, AST.Document> Document { get; } =
-            DocumentDeclaration.ManyDelimitedBy(NewLine)
+            DocumentDeclaration
+                .AsNullable()
+                .OptionalOrDefault()
+                .ManyDelimitedBy(NewLine)
                 .Select(decs => new AST.Document(decs.WhereNotNull().ToArray()))
                 .AtEnd();
     }

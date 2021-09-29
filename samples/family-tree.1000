@@ -9,7 +9,7 @@ row gardeners {
 	invictus ruth [label="Ruth Henning Gardener\nd. 1744",column=2]
 	invictus alex [label="Alex Gardener\nCount Salford\nd. 1742",column=5]
 
-	ruth <- alex
+	line ruth <- alex
 }
 
 // XXX can we use content templates to name these people more fluently than [label]?
@@ -38,14 +38,14 @@ carthian eliza [label="Eliza Beth Hursley\nd. 1921", column=7]
 
 carthian maeve [label="Maeve Baker\nd. 1941 f. 1984", row=5, column=7]
 
-ruth -> taragos
-ruth -> miles -> barbara
-ruth -> ivan -> charles
-	kyle <- charles -> doug
+line ruth -> taragos
+line ruth -> miles -> barbara
+line ruth -> ivan -> charles
+	line kyle <- charles -> doug
 
-alex -> sancho 
-	craig <- sator <- sancho -> anne
-alex -> melody
-	simon <- melody -> george
-	suzie <- simon -> fanny
-alex -> sylvia -> agatha -> eliza -> maeve
+line alex -> sancho 
+	line craig <- sator <- sancho -> anne
+line alex -> melody
+	line simon <- melody -> george
+	line suzie <- simon -> fanny
+line alex -> sylvia -> agatha -> eliza -> maeve
