@@ -88,11 +88,63 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.Class> ObjectOrLineClassBody(string name, string[] bases) =>
             AttributeList(AttributeParsers.StrokeAttribute).OptionalOrDefault(Array.Empty<AST.StrokeAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
 
+        public static TokenListParser<TokenKind, AST.Class> ClassBody(string name, string[] bases) => input =>
+        {
+            var begin = Token.EqualTo(TokenKind.LeftBracket)(input);
+            if (!begin.HasValue)
+            {
+                // XXX process object-class scopes
+                return TokenListParserResult.Value<TokenKind, AST.Class>(new AST.ObjectOrLineClass(name, bases, Array.Empty<AST.StrokeAttribute>()), input, input);
+            }
+
+            var remainder = begin.Remainder;
+            while (true)
+            {
+                var eitherAttr = AttributeParsers.StrokeAttribute(remainder);
+                if (eitherAttr.HasValue)
+                {
+                    remainder = eitherAttr.Remainder;                            
+                    var next = remainder.ConsumeToken();
+
+                    if (!next.HasValue)
+                    {
+                        return ObjectOrLineClassBody(name, bases)(input);
+                    } 
+                    else if (next.Value.Kind == TokenKind.Comma)
+                    {
+                        remainder = next.Remainder;
+                        continue;
+                    }
+                    else if (next.Value.Kind == TokenKind.RightBracket)
+                    {
+                        break;
+                    }
+                }
+
+                var objectAttr = ObjectAttribute(remainder);
+                if (objectAttr.HasValue)
+                {
+                    return ObjectClassBody(name, bases)(input);
+                }
+
+                var lineAttr = LineAttribute(remainder);
+                if (lineAttr.HasValue)
+                {
+                    return LineClassBody(name, bases)(input);
+                }
+
+                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.Class>(ObjectAttribute.Value(Unit.Value).Or(LineAttribute.Value(Unit.Value))(remainder));
+            }
+
+            // XXX process object-class scopes
+            return ObjectOrLineClassBody(name, bases)(input);
+        };
+
         public static TokenListParser<TokenKind, AST.Class> Class { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier
             from bases in BaseClasses
-            from klass in ObjectOrLineClassBody(name, bases).Try().Or(ObjectClassBody(name, bases).Try()).Or(LineClassBody(name, bases))
+            from klass in ClassBody(name, bases)
             select klass;
 
         public static TokenListParser<TokenKind, AST.ObjectDeclaration> ObjectDeclaration { get; } = input =>

@@ -54,17 +54,17 @@ namespace Thousand.Parse
         #region arrow group, used only by edges
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStart)
-            from value in PointValue
+            from value in PointValue.Named("point")
             select new AST.ArrowOffsetStartAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetEnd)
-            from value in PointValue
+            from value in PointValue.Named("point")
             select new AST.ArrowOffsetEndAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetBothAttribute { get; } =
             from key in Key(ArrowAttributeKind.Offset)
-            from value in PointValue
+            from value in PointValue.Named("point")
             select new AST.ArrowOffsetBothAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =

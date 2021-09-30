@@ -2,7 +2,6 @@ TO DO
 -----
 
 * (major) recursive, non-grid layouts
-* improve error quality for class attribute lists
 * per-shape (and diagram) margins; the diagram needs a default, 2 or 5px or something
 * generalise shorthand properties (font, etc)
 * shape=none (with no padding? correct lines, somehow)
