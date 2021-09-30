@@ -16,7 +16,7 @@ namespace Thousand.Tests.Parsing
         }
 
         [Fact]
-        public void ValidAttributeList_Single()
+        public void AttributeList_Single()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square]");
             var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
@@ -26,7 +26,7 @@ namespace Thousand.Tests.Parsing
         }
 
         [Fact]
-        public void ValidAttributeList_Multiple()
+        public void AttributeList_Multiple()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval]");
             var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
@@ -36,7 +36,7 @@ namespace Thousand.Tests.Parsing
         }
 
         [Fact]
-        public void ValidAttributeList_Whitespace()
+        public void AttributeList_Whitespace()
         {
             var tokens = tokenizer.Tokenize(@"[ shape=square,shape = square, shape=square]");
             var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
@@ -46,7 +46,7 @@ namespace Thousand.Tests.Parsing
         }
 
         [Fact]
-        public void ValidNode()
+        public void Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo");
             var result = Parser.Object(tokens);
@@ -57,7 +57,7 @@ namespace Thousand.Tests.Parsing
         }
 
         [Fact]
-        public void ValidNode_WhiteSpace()
+        public void Object_WhiteSpace()
         {
             var tokens = tokenizer.Tokenize(@"   object     foo    ");
             var result = Parser.Object(tokens);
@@ -68,7 +68,7 @@ namespace Thousand.Tests.Parsing
         }
 
         [Fact]
-        public void ValidNode_Multiline()
+        public void Object_Multiline()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo
 bar""");
@@ -80,7 +80,7 @@ bar""");
         }
 
         [Fact]
-        public void ValidNode_Attributed()
+        public void Object_Attributed()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo"" [label=""bar""]");
             var result = Parser.Object(tokens);
@@ -91,7 +91,39 @@ bar""");
         }
 
         [Fact]
-        public void ValidEdges()
+        public void Object_CustomClass()
+        {
+            var tokens = tokenizer.Tokenize(@"foo bar");
+            var result = Parser.Object(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.Classes, "foo");
+            Assert.Equal("bar", result.Value.Name);
+        }
+
+        [Fact]
+        public void Object_CustomClasses()
+        {
+            var tokens = tokenizer.Tokenize(@"foo.bar baz");
+            var result = Parser.Object(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.Classes, "foo", "bar");
+            Assert.Equal("baz", result.Value.Name);
+        }
+
+        [Fact]
+        public void Object_Anonymous()
+        {
+            var tokens = tokenizer.Tokenize(@"object");
+            var result = Parser.Object(tokens);
+
+            AssertEx.Sequence(result.Value.Classes, "object");
+            Assert.True(result.HasValue, result.ToString());
+        }
+
+        [Fact]
+        public void Line_Bare()
         {
             var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar""");
             var result = Parser.Edges(tokens);
@@ -102,7 +134,7 @@ bar""");
         }
 
         [Fact]
-        public void ValidEdges_Attributed()
+        public void Line_Attributed()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [strokeColour=#000000]");
             var result = Parser.Line(tokens);
@@ -114,39 +146,45 @@ bar""");
         }
 
         [Fact]
-        public void ValidNode_CustomClass()
+        public void Scope_Empty()
         {
-            var tokens = tokenizer.Tokenize(@"foo bar");
-            var result = Parser.Object(tokens);
+            var tokens = tokenizer.Tokenize(@"{}");
+            var result = Parser.Scope(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "foo");
-            Assert.Equal("bar", result.Value.Name);
+            Assert.Empty(result.Value);
         }
 
         [Fact]
-        public void ValidNode_CustomClasses()
+        public void Scope_Bare()
         {
-            var tokens = tokenizer.Tokenize(@"foo.bar baz");
-            var result = Parser.Object(tokens);
+            var tokens = tokenizer.Tokenize(@"{
+	object foo
+    object bar 
+    line foo <- bar
+}");
+            var result = Parser.Scope(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "foo", "bar");
-            Assert.Equal("baz", result.Value.Name);
+            Assert.Equal(3, result.Value.Length);
         }
 
         [Fact]
-        public void ValidNode_Anonymous()
+        public void Scope_InContext()
         {
-            var tokens = tokenizer.Tokenize(@"object");
+            var tokens = tokenizer.Tokenize(@"object {
+	object foo
+    object bar 
+    line foo <- bar
+}");
             var result = Parser.Object(tokens);
 
-            AssertEx.Sequence(result.Value.Classes, "object");
             Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(3, result.Value.Children.Length);
         }
 
         [Fact]
-        public void ValidDocument_SingleNode()
+        public void Document_SingleNode()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""");
             var result = Parser.Document(tokens);
@@ -157,7 +195,7 @@ bar""");
         }
 
         [Fact]
-        public void ValidDocument_MultiNode()
+        public void Document_MultiNode()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""
 object ""bar""
@@ -170,7 +208,7 @@ object ""baz""");
         }
 
         [Fact]
-        public void ValidDocument_EmptyLines()
+        public void Document_EmptyLines()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""
 
@@ -183,7 +221,7 @@ object ""bar""");
         }
 
         [Fact]
-        public void ValidDocument_NodesAndEdge()
+        public void Document_NodesAndEdge()
         {
             var tokens = tokenizer.Tokenize(@"object foo
 object bar
@@ -202,75 +240,75 @@ line foo -> bar");
         }
 
         [Fact]
-        public void ValidDeclaration_Attribute()
+        public void Declaration_Attribute()
         {
             var tokens = tokenizer.Tokenize(@"fill=black");
-            var result = Parser.DocumentDeclarations(tokens);
+            var result = Parser.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.Single().IsT0);
+            Assert.True(result.Value.IsT0);
         }
 
         [Fact]
-        public void ValidDeclaration_Class()
+        public void Declaration_Class()
         {
             var tokens = tokenizer.Tokenize(@"class foo [stroke=none]");
-            var result = Parser.DocumentDeclarations(tokens);
+            var result = Parser.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.Single().IsT1);
+            Assert.True(result.Value.IsT1);
         }
 
         [Fact]
-        public void ValidDeclaration_Object()
+        public void Declaration_Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo [shape=square]");
-            var result = Parser.DocumentDeclarations(tokens);
+            var result = Parser.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.Single().IsT2);
+            Assert.True(result.Value.IsT2);
         }
 
         [Fact]
-        public void ValidDeclaration_Line()
+        public void Declaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [offset=(0,0)]");
-            var result = Parser.DocumentDeclarations(tokens);
+            var result = Parser.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.Single().IsT3);
+            Assert.True(result.Value.IsT3);
         }
 
         [Fact]
-        public void ValidDeclaration_All()
+        public void Declaration_All()
         {
             var tokens = tokenizer.Tokenize(@"fill=black
 class foo [stroke=none]
 object foo [shape=square]
 line foo->bar [offset=(0,0)]");
-            var result = Parser.DocumentDeclarations(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue);
-            Assert.Equal(4, result.Value.Count);
-            Assert.True(result.Value[0].IsT0);
-            Assert.True(result.Value[1].IsT1);
-            Assert.True(result.Value[2].IsT2);
-            Assert.True(result.Value[3].IsT3);
+            Assert.Equal(4, result.Value.Declarations.Length);
+            Assert.True(result.Value.Declarations[0].IsT0);
+            Assert.True(result.Value.Declarations[1].IsT1);
+            Assert.True(result.Value.Declarations[2].IsT2);
+            Assert.True(result.Value.Declarations[3].IsT3);
         }
 
         [Fact]
-        public void ValidDeclaration_BlankLines()
+        public void Declaration_BlankLines()
         {
             var tokens = tokenizer.Tokenize(@"fill=black
 
 
 class foo [stroke=none]");
-            var result = Parser.DocumentDeclarations(tokens);
+            var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue);
-            Assert.Equal(2, result.Value.Count);
-            Assert.True(result.Value[0].IsT0);
-            Assert.True(result.Value[1].IsT1);
+            Assert.Equal(2, result.Value.Declarations.Length);
+            Assert.True(result.Value.Declarations[0].IsT0);
+            Assert.True(result.Value.Declarations[1].IsT1);
         }
     }
 }

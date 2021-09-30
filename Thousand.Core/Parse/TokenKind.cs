@@ -46,13 +46,13 @@ namespace Thousand.Parse
 
         String,
 
-        [Token(Example = "<-")]
+        [Token(Description = "arrow")]
         LeftArrow,
-        [Token(Example = "->")]
+        [Token(Description = "arrow")]
         RightArrow,
-        [Token(Example = "--")]
+        [Token(Description = "arrow")]
         NoArrow,
-        [Token(Example = "<>")]
+        [Token(Description = "arrow")]
         DoubleArrow,
 
         [Token(Description = "colour literal")]
