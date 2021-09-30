@@ -44,7 +44,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
             AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.LineAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.ObjectAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
 
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
@@ -65,14 +65,14 @@ namespace Thousand.Parse
             from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
             select next.Prepend(new(src, arrow));
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> EdgeAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
             AttributeParsers.ArrowAttribute.Select(x => (AST.LineAttribute)x)
-                .Or(AttributeParsers.LineAttribute.Select(x => (AST.LineAttribute)x));
+                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.LineAttribute)x));
 
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in ClassList
             from chain in Edges
-            from attrs in AttributeList(EdgeAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
+            from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
             select new AST.TypedLine(classes, chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
@@ -83,10 +83,10 @@ namespace Thousand.Parse
             AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.Class);
 
         public static TokenListParser<TokenKind, AST.Class> LineClassBody(string name, string[] bases) =>
-            AttributeList(EdgeAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.Class);
+            AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.Class);
 
         public static TokenListParser<TokenKind, AST.Class> ObjectOrLineClassBody(string name, string[] bases) =>
-            AttributeList(AttributeParsers.LineAttribute).OptionalOrDefault(Array.Empty<AST.StrokeAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
+            AttributeList(AttributeParsers.StrokeAttribute).OptionalOrDefault(Array.Empty<AST.StrokeAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
 
         public static TokenListParser<TokenKind, AST.Class> Class { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)

@@ -71,7 +71,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_InvalidKeyword()
         {
             var tokens = tokenizer.Tokenize(@"stroke=square");
-            var result = AttributeParsers.LineStrokeAttribute(tokens);
+            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -80,7 +80,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleColour(string c)
         {
             var tokens = tokenizer.Tokenize($"stroke={c}");
-            var result = AttributeParsers.LineStrokeAttribute(tokens);
+            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -95,7 +95,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleWidth()
         {
             var tokens = tokenizer.Tokenize($"stroke=none");
-            var result = AttributeParsers.LineStrokeAttribute(tokens);
+            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -110,7 +110,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_Multiple()
         {
             var tokens = tokenizer.Tokenize($"stroke=2 black");
-            var result = AttributeParsers.LineStrokeAttribute(tokens);
+            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -130,7 +130,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_All()
         {
             var tokens = tokenizer.Tokenize($"stroke=solid green hairline");
-            var result = AttributeParsers.LineStrokeAttribute(tokens);
+            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);

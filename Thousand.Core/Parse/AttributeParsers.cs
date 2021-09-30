@@ -83,18 +83,18 @@ namespace Thousand.Parse
             DocumentScaleAttribute;
         #endregion
 
-        #region line group, used by objects and edges
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeColourAttribute { get; } =
+        #region stroke group, used by objects and lines
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeColourAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeColour)
             from value in ColourValue
             select new AST.StrokeColourAttribute(value) as AST.StrokeAttribute;
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeWidthAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeWidthAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeWidth)
             from value in WidthValue
             select new AST.StrokeWidthAttribute(value) as AST.StrokeAttribute;
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeStyleAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeStyleAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeStyle)
             from value in Identifier.Enum<StrokeKind>()
             select new AST.StrokeStyleAttribute(value) as AST.StrokeAttribute;
@@ -144,16 +144,16 @@ namespace Thousand.Parse
             }
         }
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineStrokeAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeShorthandAttribute { get; } =
             from key in Key(LineAttributeKind.Stroke)
             from value in new TokenListParser<TokenKind, AST.StrokeShorthandAttribute>(StrokeValues)
             select value as AST.StrokeAttribute;
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> LineAttribute { get; } =
-            LineStrokeAttribute
-                .Or(LineStrokeColourAttribute)
-                .Or(LineStrokeWidthAttribute)
-                .Or(LineStrokeStyleAttribute);
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeAttribute { get; } =
+            StrokeShorthandAttribute
+                .Or(StrokeColourAttribute)
+                .Or(StrokeWidthAttribute)
+                .Or(StrokeStyleAttribute);
         #endregion
 
         #region text group, used only by objects (so far)
