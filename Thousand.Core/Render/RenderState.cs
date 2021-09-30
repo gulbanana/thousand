@@ -98,7 +98,7 @@ namespace Thousand.Render
             var fromPath = ShapePaths[line.From];
             var toPath = ShapePaths[line.To];
 
-            var stroke = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = false, PathEffect = StrokeEffect(line.Stroke.Style) };
+            var stroke = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true, PathEffect = StrokeEffect(line.Stroke.Style) };
             var fill = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true };
 
             // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
