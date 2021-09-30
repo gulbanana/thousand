@@ -34,7 +34,7 @@ namespace Thousand.Parse
         [Token(Example = ".")]
         Period,
 
-        NewLine,
+        LineSeparator,
 
         [Token(Example = "none")]
         NoneKeyword,

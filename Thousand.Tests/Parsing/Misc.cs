@@ -221,6 +221,17 @@ object ""bar""");
         }
 
         [Fact]
+        public void Document_SingleSeparatedLine()
+        {
+            var tokens = tokenizer.Tokenize(@"object ""foo""; object ""bar""");
+
+            var result = Parser.Document(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name), "foo", "bar");
+        }
+
+        [Fact]
         public void Document_NodesAndEdge()
         {
             var tokens = tokenizer.Tokenize(@"object foo

@@ -9,7 +9,7 @@ namespace Thousand.Parse
     {
         public static Tokenizer<TokenKind> Build()
         {
-            TextParser<Unit> parseNewLine = Character.EqualTo('\r').Optional().IgnoreThen(Character.EqualTo('\n').Value(Unit.Value));
+            TextParser<Unit> parseLineSeparator = Character.EqualTo(';').Or(Character.EqualTo('\r').Optional().IgnoreThen(Character.EqualTo('\n'))).Value(Unit.Value);
 
             TextParser<Unit> parseInLineWhiteSpace = input =>
             {
@@ -47,7 +47,7 @@ namespace Thousand.Parse
                 .Match(Character.EqualTo('.'), TokenKind.Period)
                 .Match(Span.EqualToIgnoreCase("none"), TokenKind.NoneKeyword)
                 .Match(Span.EqualToIgnoreCase("class"), TokenKind.ClassKeyword)
-                .Match(parseNewLine, TokenKind.NewLine)
+                .Match(parseLineSeparator, TokenKind.LineSeparator)
                 .Match(Superpower.Parsers.Identifier.CStyle, TokenKind.Identifier)
                 .Match(parseStringToken, TokenKind.String)
                 .Match(Numerics.Decimal, TokenKind.Number)

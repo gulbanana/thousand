@@ -50,7 +50,7 @@ namespace Thousand.Tests
         {
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier, TokenKind.NewLine, TokenKind.Identifier);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier, TokenKind.LineSeparator, TokenKind.Identifier);
         }
 
         [Fact]
@@ -63,7 +63,7 @@ bar"" ""baz""
 
             var output = sut.Tokenize(input);
 
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.NewLine, TokenKind.String, TokenKind.String, TokenKind.NewLine);
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.LineSeparator, TokenKind.String, TokenKind.String, TokenKind.LineSeparator);
             Assert.Equal(@"""foo
 bar""", output.ElementAt(1).ToStringValue());
         }

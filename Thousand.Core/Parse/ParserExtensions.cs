@@ -34,7 +34,7 @@ namespace Thousand.Parse
                 {
                     break;
                 }
-                else if (first.Value.Kind == TokenKind.NewLine)
+                else if (first.Value.Kind == TokenKind.LineSeparator)
                 {
                     input = first.Remainder;
                 }

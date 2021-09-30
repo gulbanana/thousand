@@ -16,7 +16,7 @@ namespace Thousand.Parse
         }
 
         public static TokenListParser<TokenKind, Unit> NewLine { get; } =
-            Token.EqualTo(TokenKind.NewLine).Value(Unit.Value);
+            Token.EqualTo(TokenKind.LineSeparator).Value(Unit.Value);
 
         public static TokenListParser<TokenKind, string> String { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String);
