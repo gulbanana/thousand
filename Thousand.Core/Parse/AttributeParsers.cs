@@ -30,14 +30,6 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, float> DecimalValue { get; } =
             Token.EqualTo(TokenKind.Number).Apply(TextParsers.DecimalFloat);
 
-        public static TokenListParser<TokenKind, Point> PointValue { get; } =
-            (from begin in Token.EqualTo(TokenKind.LeftParenthesis)
-            from x in IntegerValue
-            from comma in Token.EqualTo(TokenKind.Comma)
-            from y in IntegerValue
-            from end in Token.EqualTo(TokenKind.RightParenthesis)
-            select new Point(x, y)).Named("point");
-
         public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
                 .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));
@@ -52,25 +44,43 @@ namespace Thousand.Parse
         #endregion
 
         #region arrow group, used only by edges
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetStart)
-            from value in PointValue
-            select new AST.ArrowOffsetStartAttribute(value) as AST.ArrowAttribute;
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetStartX)
+            from value in IntegerValue
+            select new AST.ArrowOffsetStartXAttribute(value) as AST.ArrowAttribute;
 
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetEnd)
-            from value in PointValue
-            select new AST.ArrowOffsetEndAttribute(value) as AST.ArrowAttribute;
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartYAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetStartY)
+            from value in IntegerValue
+            select new AST.ArrowOffsetStartYAttribute(value) as AST.ArrowAttribute;
 
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetBothAttribute { get; } =
-            from key in Key(ArrowAttributeKind.Offset)
-            from value in PointValue
-            select new AST.ArrowOffsetBothAttribute(value) as AST.ArrowAttribute;
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndXAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetEndX)
+            from value in IntegerValue
+            select new AST.ArrowOffsetEndXAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndYAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetEndY)
+            from value in IntegerValue
+            select new AST.ArrowOffsetEndYAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetXAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetX)
+            from value in IntegerValue
+            select new AST.ArrowOffsetXAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetYAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetY)
+            from value in IntegerValue
+            select new AST.ArrowOffsetYAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
-            ArrowOffsetStartAttribute
-                .Or(ArrowOffsetEndAttribute)
-                .Or(ArrowOffsetBothAttribute);
+            ArrowOffsetStartXAttribute
+                .Or(ArrowOffsetStartYAttribute)
+                .Or(ArrowOffsetEndXAttribute)
+                .Or(ArrowOffsetEndYAttribute)
+                .Or(ArrowOffsetXAttribute)
+                .Or(ArrowOffsetYAttribute);
         #endregion
 
         #region doc group, used only by diagrams

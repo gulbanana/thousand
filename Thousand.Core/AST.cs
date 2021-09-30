@@ -33,9 +33,12 @@ namespace Thousand.AST
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
     public abstract record ArrowAttribute;
-    public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
-    public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
-    public record ArrowOffsetBothAttribute(Point Offset) : ArrowAttribute;
+    public record ArrowOffsetStartXAttribute(int Offset) : ArrowAttribute;
+    public record ArrowOffsetStartYAttribute(int Offset) : ArrowAttribute;
+    public record ArrowOffsetEndXAttribute(int Offset) : ArrowAttribute;
+    public record ArrowOffsetEndYAttribute(int Offset) : ArrowAttribute;
+    public record ArrowOffsetXAttribute(int Offset) : ArrowAttribute;
+    public record ArrowOffsetYAttribute(int Offset) : ArrowAttribute;
 
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, StrokeAttribute, TextAttribute> { }
     [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }

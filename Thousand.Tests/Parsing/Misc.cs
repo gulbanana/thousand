@@ -303,7 +303,7 @@ line foo -> bar");
         [Fact]
         public void Declaration_Line()
         {
-            var tokens = tokenizer.Tokenize(@"line foo->bar [offset=(0,0)]");
+            var tokens = tokenizer.Tokenize(@"line foo->bar [offsetX=0]");
             var result = Parser.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
@@ -316,7 +316,7 @@ line foo -> bar");
             var tokens = tokenizer.Tokenize(@"fill=black
 class foo [stroke=none]
 object foo [shape=square]
-line foo->bar [offset=(0,0)]");
+line foo->bar [offsetX=1]");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue);

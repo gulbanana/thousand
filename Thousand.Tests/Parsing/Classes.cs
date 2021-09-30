@@ -96,12 +96,12 @@ namespace Thousand.Tests.Parsing
         [Fact]
         public void LineClass()
         {
-            var tokens = tokenizer.Tokenize(@"class foo [offset=(1,1)]");
+            var tokens = tokenizer.Tokenize(@"class foo [offsetX=1]");
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.LineClass>(result.Value);
-            AssertEx.Sequence(((AST.LineClass)result.Value).Attributes, new AST.ArrowOffsetBothAttribute(new Point(1,1)));
+            AssertEx.Sequence(((AST.LineClass)result.Value).Attributes, new AST.ArrowOffsetXAttribute(1));
         }
 
         [Fact]

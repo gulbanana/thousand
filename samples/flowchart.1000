@@ -16,5 +16,5 @@ artefact Image
 platStage Encode 
 
 line "Tokenize/Parse" -> AST -> Evaluate -> IR -> Compose -> Layout -> Render -> Image -> Encode
-line Evaluate -> Measure [offset=(-5,0)]
-line Evaluate <- Measure [offset=(5,0)]
+line Evaluate -> Measure [offsetX=-5]
+line Evaluate <- Measure [offsetX=5]

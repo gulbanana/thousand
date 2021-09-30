@@ -2,8 +2,8 @@
 {
     public enum ArrowAttributeKind
     {
-        Offset,
-        OffsetStart,
-        OffsetEnd
+        OffsetX, OffsetY,
+        OffsetStartX, OffsetStartY,
+        OffsetEndX, OffsetEndY
     }
 }

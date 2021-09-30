@@ -296,17 +296,30 @@ namespace Thousand
                 {
                     switch (arrow)
                     {
-                        case AST.ArrowOffsetStartAttribute aosa:
-                            offsetStart = aosa.Offset;
+                        case AST.ArrowOffsetStartXAttribute aosa:
+                            offsetStart = offsetStart with { X = aosa.Offset };
                             break;
 
-                        case AST.ArrowOffsetEndAttribute aoea:
-                            offsetEnd = aoea.Offset;
+                        case AST.ArrowOffsetStartYAttribute aosa:
+                            offsetStart = offsetStart with { Y = aosa.Offset };
                             break;
 
-                        case AST.ArrowOffsetBothAttribute aoba:
-                            offsetStart = aoba.Offset;
-                            offsetEnd = aoba.Offset;
+                        case AST.ArrowOffsetEndXAttribute aoea:
+                            offsetEnd = offsetEnd with { X = aoea.Offset };
+                            break;
+
+                        case AST.ArrowOffsetEndYAttribute aoea:
+                            offsetEnd = offsetEnd with { Y = aoea.Offset };
+                            break;
+
+                        case AST.ArrowOffsetXAttribute aoa:
+                            offsetStart = offsetStart with { X = aoa.Offset };
+                            offsetEnd = offsetEnd with { X = aoa.Offset };
+                            break;
+
+                        case AST.ArrowOffsetYAttribute aoa:
+                            offsetStart = offsetStart with { Y = aoa.Offset };
+                            offsetEnd = offsetEnd with { Y = aoa.Offset };
                             break;
                     }
                 }, line =>
