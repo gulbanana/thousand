@@ -156,6 +156,12 @@ namespace Thousand
 
         private void AddObject(AST.TypedObject node)
         {
+            if (objects.Where(n => n.Name != null && n.Name.Equals(node.Name, StringComparison.OrdinalIgnoreCase)).Any())
+            {
+                es.Add(new GenerationError($"Duplicate object name '{node.Name}'."));
+                return;
+            }
+
             var row = new int?();
             var column = new int?();
             var width = new int?();
@@ -398,12 +404,12 @@ namespace Thousand
             var n = found.Count();
             if (n == 0)
             {
-                ws.Add(new($"No node found with name '{identifier}'."));
+                ws.Add(new($"No object found with name '{identifier}'."));
                 return null;
             }
             else if (n > 1)
             {
-                ws.Add(new($"Multiple nodes found with name '{identifier}'."));
+                ws.Add(new($"Multiple objects found with name '{identifier}'."));
                 return null;
             }
             else

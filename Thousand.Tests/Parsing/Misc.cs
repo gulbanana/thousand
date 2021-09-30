@@ -281,6 +281,26 @@ line foo -> bar");
         }
 
         [Fact]
+        public void Declaration_AnonymousObject()
+        {
+            var tokens = tokenizer.Tokenize(@"object {}");
+            var result = Parser.DocumentDeclaration(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT2);
+        }
+
+        [Fact]
+        public void Declaration_WhollyAnonymousObject()
+        {
+            var tokens = tokenizer.Tokenize(@"object");
+            var result = Parser.DocumentDeclaration(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT2);
+        }
+
+        [Fact]
         public void Declaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [offset=(0,0)]");

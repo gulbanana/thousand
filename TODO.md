@@ -7,7 +7,6 @@ TO DO
 * generalise shorthand properties (font, etc)
 * shape=none (with no padding? correct lines, somehow)
 * IdentifierOrKeyword, hyphen formatting
-* make sure anonymous objects work
 * stdlib - node, point, text, row, etc
 * bidi/0di edges
 * editable end caps

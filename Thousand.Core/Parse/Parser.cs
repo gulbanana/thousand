@@ -103,9 +103,12 @@ namespace Thousand.Parse
             if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {
                 var second = first.Remainder.ConsumeToken();
-                if (!second.HasValue) return fail;
-
-                if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
+                
+                if (!second.HasValue) // this is a trivial object!
+                {
+                    return Object.Select(x => (AST.ObjectDeclaration)x)(input);
+                }
+                else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
                     return ObjectAttribute.Select(x => (AST.ObjectDeclaration)x)(input);
                 }
@@ -115,9 +118,9 @@ namespace Thousand.Parse
                     if (classList.HasValue)
                     {
                         var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue)
+                        if (!identifier.HasValue) // a slightly less trivial object 
                         {
-                            return fail;
+                            return Object.Select(x => (AST.ObjectDeclaration)x)(input);
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
@@ -161,8 +164,11 @@ namespace Thousand.Parse
             else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {
                 var second = first.Remainder.ConsumeToken();
-                if (!second.HasValue) return fail;
 
+                if (!second.HasValue) // this is a trivial object!
+                {
+                    return Object.Select(x => (AST.DocumentDeclaration)x)(input);
+                }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
                     return DiagramAttribute.Select(x => (AST.DocumentDeclaration)x)(input);
@@ -173,9 +179,9 @@ namespace Thousand.Parse
                     if (classList.HasValue)
                     {
                         var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue)
+                        if (!identifier.HasValue) // a slightly less trivial object 
                         {
-                            return fail;
+                            return Object.Select(x => (AST.DocumentDeclaration)x)(input);
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
