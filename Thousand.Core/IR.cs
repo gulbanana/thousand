@@ -11,7 +11,7 @@ namespace Thousand.IR
         public Region() : this(LayoutKind.Grid, 0, 20) { }
     }
 
-    public record Config(float Scale, Colour Background, Region Region)
+    public record Config(float Scale, Colour? Background, Region Region)
     {
         public Config() : this(1, Colour.White, new Region()) { }
     }

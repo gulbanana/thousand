@@ -12,6 +12,13 @@ namespace Thousand.Parse
             return pT.Select(x => (U)x);
         }
 
+        public static TokenListParser<TokenKind, T?> OrNull<T>(this TokenListParser<TokenKind, T> pT) where T : class
+        {
+            return pT
+                .AsNullable()
+                .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(T?)));
+        }
+
         public static TokenListParser<TokenKind, T?> OrNone<T>(this TokenListParser<TokenKind, T> pT) where T : struct
         {
             return pT

@@ -18,7 +18,7 @@ namespace Thousand.AST
     public record StrokeShorthandAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : StrokeAttribute;
 
     public abstract record RegionAttribute;
-    public record RegionFillAttribute(Colour Colour) : RegionAttribute;
+    public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
     public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
     public record RegionMarginAttribute(int Value) : RegionAttribute;
     public record RegionGutterAttribute(int Value) : RegionAttribute;

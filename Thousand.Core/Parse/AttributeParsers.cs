@@ -231,7 +231,7 @@ namespace Thousand.Parse
         #region region group, used by objects and diagrams
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionFillAttribute { get; } =
             from key in Key(RegionAttributeKind.Fill)
-            from value in ColourValue
+            from value in ColourValue.OrNull()
             select new AST.RegionFillAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutAttribute { get; } =

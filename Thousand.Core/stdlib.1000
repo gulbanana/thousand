@@ -1,6 +1,6 @@
 class object [shape=roundrect]
-class text [shape=none]
 class point [shape=none, label=none]
+class text [stroke=none, fill=none, padding=0]
 
 class line [offsetX=0]
 
