@@ -31,12 +31,12 @@ namespace Thousand.Parse
             Token.EqualTo(TokenKind.Number).Apply(TextParsers.DecimalFloat);
 
         public static TokenListParser<TokenKind, Point> PointValue { get; } =
-            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            (from begin in Token.EqualTo(TokenKind.LeftParenthesis)
             from x in IntegerValue
             from comma in Token.EqualTo(TokenKind.Comma)
             from y in IntegerValue
             from end in Token.EqualTo(TokenKind.RightParenthesis)
-            select new Point(x, y);
+            select new Point(x, y)).Named("point");
 
         public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
@@ -54,17 +54,17 @@ namespace Thousand.Parse
         #region arrow group, used only by edges
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStart)
-            from value in PointValue.Named("point")
+            from value in PointValue
             select new AST.ArrowOffsetStartAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetEnd)
-            from value in PointValue.Named("point")
+            from value in PointValue
             select new AST.ArrowOffsetEndAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetBothAttribute { get; } =
             from key in Key(ArrowAttributeKind.Offset)
-            from value in PointValue.Named("point")
+            from value in PointValue
             select new AST.ArrowOffsetBothAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
