@@ -166,7 +166,7 @@ namespace Thousand
             var column = new int?();
             var width = new int?();
             var height = new int?();            
-            var shape = ShapeKind.RoundRect;
+            var shape = new ShapeKind?(ShapeKind.RoundRect);
             var padding = 15;
             var cornerRadius = 5;
             var stroke = new Stroke();

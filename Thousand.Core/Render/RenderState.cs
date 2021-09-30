@@ -95,39 +95,45 @@ namespace Thousand.Render
         {
             var fromPoint = line.Start.SK();
             var toPoint = line.End.SK();
-            var fromPath = ShapePaths[line.From];
-            var toPath = ShapePaths[line.To];
 
             var stroke = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true, PathEffect = StrokeEffect(line.Stroke.Style) };
             var fill = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true };
 
-            // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = Normalize(toPoint - fromPoint);
-            var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
-            var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
-
-            // draw a thin rectangle using the control points
-            var path = new SKPath();
-            path.MoveTo(fromPoint);
-            path.LineTo(fromPoint + offset1);
-            path.LineTo(toPoint + offset1);
-            path.LineTo(toPoint);
-            path.LineTo(toPoint + offset2);
-            path.LineTo(fromPoint + offset2);
-            path.Close();
-
-            // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
-            var visiblePath = path.Op(fromPath, SKPathOp.Difference).Op(toPath, SKPathOp.Difference);
-            if (visiblePath.PointCount == 0)
+            var start = fromPoint;
+            var end = toPoint;
+            if (line.From != null && line.To != null)
             {
-                return; // XXX warning
+                // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
+                var unitPath = Normalize(toPoint - fromPoint);
+                var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
+                var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
+
+                // draw a thin rectangle using the control points
+                var path = new SKPath();
+                path.MoveTo(fromPoint);
+                path.LineTo(fromPoint + offset1);
+                path.LineTo(toPoint + offset1);
+                path.LineTo(toPoint);
+                path.LineTo(toPoint + offset2);
+                path.LineTo(fromPoint + offset2);
+                path.Close();
+
+                // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
+                var fromPath = ShapePaths[line.From];
+                var toPath = ShapePaths[line.To];
+                var visiblePath = path.Op(fromPath, SKPathOp.Difference).Op(toPath, SKPathOp.Difference);
+                if (visiblePath.PointCount == 0)
+                {
+                    return; // XXX warning
+                }
+
+                // use the intersection of the straight path with the drawable region's bounding box as the first and last points for the real line
+                visiblePath.GetBounds(out var visibleBounds);
+
+                start = PointOnRect(visibleBounds, fromPoint);
+                end = PointOnRect(visibleBounds, toPoint);
             }
 
-            // use the intersection of the straight path with the drawable region's bounding box as the first and last points for the real line
-            visiblePath.GetBounds(out var visibleBounds);
-            var start = PointOnRect(visibleBounds, fromPoint);
-            var end = PointOnRect(visibleBounds, toPoint);
-             
             // draw the main line
             if (line.Stroke.Width is not ZeroWidth)
             {

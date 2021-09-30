@@ -205,7 +205,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
             from key in Key(NodeAttributeKind.Shape)
-            from value in Identifier.Enum<ShapeKind>()
+            from value in Identifier.Enum<ShapeKind>().OrNone()
             select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =

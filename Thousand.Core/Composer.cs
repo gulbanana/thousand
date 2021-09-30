@@ -93,7 +93,7 @@ namespace Thousand
                 var from = shapes[edge.FromTarget];
                 var to = shapes[edge.ToTarget];
 
-                lines.Add(new(from, to, from.Bounds.Center() + edge.FromOffset, to.Bounds.Center() + edge.ToOffset, edge.Stroke));
+                lines.Add(new(from.Kind.HasValue ? from : null, to.Kind.HasValue ? to : null, from.Bounds.Center() + edge.FromOffset, to.Bounds.Center() + edge.ToOffset, edge.Stroke));
             }
 
             diagram = new(
@@ -101,7 +101,7 @@ namespace Thousand
                 totalHeight,
                 ir.Config.Scale,
                 ir.Config.Background,
-                shapes.Values.ToList(), 
+                shapes.Values.Where(s => s.Kind.HasValue).ToList(), 
                 labels, 
                 lines
             );
