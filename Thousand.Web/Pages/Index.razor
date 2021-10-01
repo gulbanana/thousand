@@ -1,13 +1,14 @@
 ﻿@page "/"
 @using System.IO
 @using Microsoft.Extensions.FileProviders
-@inject Render.SkiaDiagramGenerator generator
 @code {
+    DiagramGenerator generator;
     IFileProvider provider;
     string source;
     string sample;
-    SkiaSharp.SKImage img;
+    Layout.Diagram doc;
     string err;
+    RenderMode mode;
 
     string Source
     {
@@ -30,8 +31,15 @@
         }
     }
 
+    string Renderer
+    {
+        get => mode.ToString();
+        set => mode = Enum.Parse<RenderMode>(value);
+    }
+
     protected override void OnInitialized()
     {
+        generator = new DiagramGenerator();
         provider = new EmbeddedFileProvider(typeof(Program).Assembly);
 
         using (var sourceStream = provider.GetDirectoryContents("").First().CreateReadStream())
@@ -61,7 +69,7 @@
 
     private void Parse()
     {
-        var doc = generator.GenerateDiagram(source).Match(result =>
+        doc = generator.GenerateDiagram(source).Match(result =>
         {
             err = result.Warnings.Any() ? result.Warnings.Join() : null;
             return result.Diagram;
@@ -72,8 +80,6 @@
         });
 
         // XXX display the source-position errors in some nice way, maybe in a monaco editor
-
-        img = doc == null ? null : generator.GenerateImage(doc);
 
         StateHasChanged();
     }
@@ -86,7 +92,7 @@
         <textarea @bind="Source" @bind:event="oninput" spellcheck="false">
         </textarea>
 
-        <div class="bottom-bar">
+        <div class="sample-selector">
             <label>Sample diagrams:</label>
             <select @bind="Sample">
                 @foreach (var file in provider.GetDirectoryContents(""))
@@ -98,6 +104,14 @@
     </div>
 
     <div class="preview">
-        <LivePreview Image="@img" Error="@err" />
+        <LivePreview Mode="@mode" Diagram="@doc" Error="@err" />
+
+        <div class="sample-selector">
+            <label>Renderer:</label>
+            <select @bind="Renderer">
+                <option value="SkiaSharp">SkiaSharp</option>
+                <option value="SVG">SVG</option>
+            </select>
+        </div>
     </div>
 </div>

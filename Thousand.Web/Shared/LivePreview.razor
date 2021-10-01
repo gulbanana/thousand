@@ -1,24 +1,50 @@
 ﻿@using System.IO
+@using Thousand.Render
 @code {
-    [Parameter] public SkiaSharp.SKImage Image { get; set; }
+    [Parameter] public RenderMode Mode { get; set; }
+    [Parameter] public Layout.Diagram Diagram { get; set; }
     [Parameter] public string Error { get; set; }
     string dataURL;
+    MarkupString? innerSVG;
     string error;
 
     protected override void OnParametersSet()
     {
         error = Error;
 
-        if (Image != null)
+        if (Diagram != null)
         {
             try
             {
-                using (var stream = new MemoryStream())
+                switch (Mode)
                 {
-                    Image.Encode().SaveTo(stream);
-                    var base64 = Convert.ToBase64String(stream.ToArray());
+                    case RenderMode.SkiaSharp:
+                    { 
+                        innerSVG = null;
 
-                    dataURL = "data:image/png;base64," + base64;
+                        using var renderer = new SkiaRenderer();
+                        var image = renderer.Render(Diagram);
+                        using (var stream = new MemoryStream())
+                        {
+                            image.Encode().SaveTo(stream);
+                            var base64 = Convert.ToBase64String(stream.ToArray());
+
+                            dataURL = "data:image/png;base64," + base64;
+                        }
+
+                        break;
+                    }
+
+                    case RenderMode.SVG:
+                    { 
+                        dataURL = null;
+
+                        using var renderer = new SVGRenderer();
+                        var text = renderer.Render(Diagram);
+                        innerSVG = new(text);
+
+                        break;
+                    }
                 }
             }
             catch (Exception e)
@@ -34,6 +60,11 @@
     {
         <img src="@dataURL" />
     }
+    else if (innerSVG.HasValue)
+    {
+        @innerSVG.Value
+    }
+
     @if (error != null)
     {
         <div class="overlay">@error</div>

@@ -1,0 +1,7 @@
+﻿@code {
+    [Parameter] public string Source { get; set; }
+    [Parameter] public EventCallback<string> SourceChanged { get; set; }
+}
+
+<textarea @bind="Source" @bind:event="oninput" spellcheck="false">
+</textarea>

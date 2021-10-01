@@ -33,22 +33,18 @@
     flex: 1;
     flex-basis: 360px;
     display: grid;
+    grid-template-rows: 1fr auto;
     margin-bottom: 2rem;
     overflow: auto;
 }
 
-.bottom-bar {
+.sample-selector {
     display: grid;
     grid-template-columns: auto 1fr;
 }
 
 label {
     margin-bottom: 0;
-}
-
-textarea {
-    outline: none;
-    min-height: 10em;
 }
 
 .error {
