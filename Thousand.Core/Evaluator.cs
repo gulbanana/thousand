@@ -8,6 +8,27 @@ namespace Thousand
 {
     public class Evaluator
     {
+        public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out IR.Rules? rules)
+        {
+            try
+            {
+                var evaluation = new Evaluator(warnings, errors, documents);
+                foreach (var doc in documents)
+                {
+                    evaluation.AddDocument(doc);
+                }
+                rules = new IR.Rules(evaluation.Config, evaluation.Objects, evaluation.Edges);
+
+                return !errors.Any();
+            }
+            catch (Exception e)
+            {
+                errors.Add(new(e));
+                rules = null;
+                return false;
+            }
+        }
+
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
         private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
@@ -19,26 +40,10 @@ namespace Thousand
         public IReadOnlyList<IR.Object> Objects => objects;
         public IReadOnlyList<IR.Edge> Edges => lines;
 
-        public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> ws, List<GenerationError> es, [NotNullWhen(true)] out IR.Rules? rules)
+        private Evaluator(List<GenerationError> warnings, List<GenerationError> errors, IEnumerable<AST.Document> documents)
         {
-            try
-            {
-                var evaluation = new Evaluator(ws, es, documents);
-                rules = new IR.Rules(evaluation.Config, evaluation.Objects, evaluation.Edges);
-                return !es.Any();
-            }
-            catch (Exception e)
-            {
-                es.Add(new(e));
-                rules = null;
-                return false;
-            }
-        }
-
-        private Evaluator(List<GenerationError> ws, List<GenerationError> es, IEnumerable<AST.Document> documents)
-        {
-            this.ws = ws;
-            this.es = es;
+            ws = warnings;
+            es = errors;
 
             objectClasses = new(StringComparer.OrdinalIgnoreCase);
             lineClasses = new(StringComparer.OrdinalIgnoreCase);
@@ -46,11 +51,6 @@ namespace Thousand
             lines = new();
 
             Config = new IR.Config();
-
-            foreach (var doc in documents)
-            {
-                AddDocument(doc);
-            }
         }
 
         private void AddDocument(AST.Document diagram)
