@@ -6,8 +6,19 @@ using Thousand.Model;
 
 namespace Thousand.Compose
 {
-    internal static class Measure
+    public static class Measure
     {
+        public static Point TextBlock(IR.Text t)
+        {
+            var text = new Topten.RichTextKit.RichString()
+                .FontFamily(SKTypeface.Default.FamilyName)
+                .FontSize(t.FontSize)
+                .Alignment(Topten.RichTextKit.TextAlignment.Center)
+                .Add(t.Label);
+
+            return new((int)MathF.Ceiling(text.MeasuredWidth), (int)MathF.Ceiling(text.MeasuredHeight));
+        }
+
         public static IReadOnlyDictionary<string, Point> TextBlocks(IR.Rules ir)
         {
             var result = new Dictionary<string, Point>();

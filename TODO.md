@@ -8,8 +8,7 @@ TO DO
 * editable end caps
 * attributes for everything feasible
 * catch render failures (shouldn't be any known, just exceptions)
-* SVG: arrowhead colours
 * (medium) recursive, non-grid layouts
-* (medium) SVG: line positions
+* (medium) SVG: line positions and multiline text (https://stackoverflow.com/questions/31469134/how-to-display-multiple-lines-of-text-in-svg)
 * (large) object templates
 * (large) doc generation, at least for attrs. or just handwrite it all?

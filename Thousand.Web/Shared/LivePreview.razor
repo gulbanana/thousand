@@ -41,7 +41,7 @@
 
                         using var renderer = new SVGRenderer();
                         var text = renderer.Render(Diagram);
-                        innerSVG = new(text);
+                        innerSVG = new(text.ToString());
 
                         break;
                     }

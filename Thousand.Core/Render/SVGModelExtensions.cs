@@ -1,21 +1,11 @@
-﻿using Thousand.Model;
+﻿using System.Collections.Generic;
+using System.Xml.Linq;
+using Thousand.Model;
 
 namespace Thousand.Render
 {
-    internal static class ModelExtensions
+    internal static class SVGModelExtensions
     {
-        public static SkiaSharp.SKColor SK(this Colour? self)
-        {
-            if (self == null)
-            {
-                return SkiaSharp.SKColors.Transparent;
-            }
-            else
-            {
-                return new(self.R, self.G, self.B);
-            }            
-        }
-
         public static string SVG(this Colour? self)
         {
             if (self == null)
@@ -38,7 +28,40 @@ namespace Thousand.Render
             };
         }
 
-        public static string SVG(this Stroke self, float scale)
+        public static XAttribute[] SVG(this Stroke self, float scale)
+        {
+            var attributes = new List<XAttribute>();
+
+            attributes.Add(new("stroke", self.Colour.SVG()));
+
+            switch (self.Width)
+            {
+                case ZeroWidth:
+                    attributes.Add(new("stroke-width", 0));
+                    break;
+
+                case HairlineWidth:
+                    attributes.Add(new("stroke-width", 1));
+                    attributes.Add(new("vector-effect", "non-scaling-stroke"));
+                    break;
+
+                case PositiveWidth(var x):
+                    attributes.Add(new("stroke-width", x));
+                    break;
+            };
+
+            switch (self.Style)
+            {
+                case StrokeKind.Dashed:
+                    var dashScale = self.Width is HairlineWidth ? scale : 1f;
+                    attributes.Add(new("stroke-dasharray", $"{3 * dashScale} {2 * dashScale}"));
+                    break;
+            }
+
+            return attributes.ToArray();
+        }
+
+        public static string SVG2(this Stroke self, float scale)
         {
             var width = self.Width switch
             {
@@ -55,8 +78,5 @@ namespace Thousand.Render
                 StrokeKind.Solid or _ => string.Empty                
             };
         }
-
-        public static SkiaSharp.SKPoint SK(this Point self) => new(self.X, self.Y);
-        public static SkiaSharp.SKRect SK(this Rect self) => new(self.Left, self.Top, self.Right, self.Bottom);
     }
 }
