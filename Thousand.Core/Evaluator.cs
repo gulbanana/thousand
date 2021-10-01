@@ -12,7 +12,7 @@ namespace Thousand
         {
             try
             {
-                var evaluation = new Evaluator(warnings, errors, documents);
+                var evaluation = new Evaluator(warnings, errors);
                 foreach (var doc in documents)
                 {
                     evaluation.AddDocument(doc);
@@ -33,21 +33,21 @@ namespace Thousand
         private readonly List<GenerationError> es;
         private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
         private readonly Dictionary<string, AST.LineAttribute[]> lineClasses;
-        private readonly List<IR.Object> objects;
+        private readonly Dictionary<string, IR.Object> objects;
         private readonly List<IR.Edge> lines;
 
         public IR.Config Config { get; private set; }
-        public IReadOnlyList<IR.Object> Objects => objects;
+        public IReadOnlyList<IR.Object> Objects => objects.Values.ToList();
         public IReadOnlyList<IR.Edge> Edges => lines;
 
-        private Evaluator(List<GenerationError> warnings, List<GenerationError> errors, IEnumerable<AST.Document> documents)
+        private Evaluator(List<GenerationError> warnings, List<GenerationError> errors)
         {
             ws = warnings;
             es = errors;
 
             objectClasses = new(StringComparer.OrdinalIgnoreCase);
             lineClasses = new(StringComparer.OrdinalIgnoreCase);
-            objects = new();
+            objects = new(StringComparer.OrdinalIgnoreCase);
             lines = new();
 
             Config = new IR.Config();
@@ -156,9 +156,11 @@ namespace Thousand
 
         private void AddObject(AST.TypedObject node)
         {
-            if (objects.Where(n => n.Name != null && n.Name.Equals(node.Name, StringComparison.OrdinalIgnoreCase)).Any())
+            var name = node.Name ?? Guid.NewGuid().ToString();
+
+            if (objects.ContainsKey(name))
             {
-                es.Add(new GenerationError($"Duplicate object name '{node.Name}'."));
+                es.Add(new GenerationError($"Duplicate object name '{name}'."));
                 return;
             }
 
@@ -280,7 +282,7 @@ namespace Thousand
             }
             else
             {
-                objects.Add(new(node.Name, label == null ? null : new IR.Text(label, fontSize), region, row, column, width, height, shape, padding, cornerRadius, stroke, fill));
+                objects.Add(name, new(label == null ? null : new IR.Text(label, fontSize), region, row, column, width, height, shape, padding, cornerRadius, stroke, fill));
             }
         }
 
@@ -411,24 +413,15 @@ namespace Thousand
             }
         }
 
-        private IR.Object? FindObject(string identifier)
+        private IR.Object? FindObject(string name)
         {
-            var found = objects.Where(n => n.Name != null && n.Name.Equals(identifier, StringComparison.OrdinalIgnoreCase));
-            var n = found.Count();
-            if (n == 0)
+            if (!objects.ContainsKey(name))
             {
-                ws.Add(new($"No object found with name '{identifier}'."));
+                ws.Add(new($"No object found with name '{name}'."));
                 return null;
             }
-            else if (n > 1)
-            {
-                ws.Add(new($"Multiple objects found with name '{identifier}'."));
-                return null;
-            }
-            else
-            {
-                return found.Single();
-            }
+
+            return objects[name];
         }
     }
 }

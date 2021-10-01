@@ -20,7 +20,7 @@ namespace Thousand.Web
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            services.AddSingleton<Render.SKDiagramGenerator>();
+            services.AddSingleton<Render.SkiaDiagramGenerator>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -1,14 +1,11 @@
 ﻿using SkiaSharp;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Thousand.Model;
 
 namespace Thousand.Render
 {
-    public class Renderer : IRenderer<SKImage>, IDisposable
+    public sealed class SkiaRenderer : IRenderer<SKImage>, IDisposable
     {
-        public Renderer()
+        public SkiaRenderer()
         {
             // no shared resources yet, but there probably will be
         }
@@ -18,27 +15,9 @@ namespace Thousand.Render
             // no shared resources yet, but there probably will be
         }
 
-        public IReadOnlyDictionary<string, Point> MeasureTextBlocks(IR.Rules ir)
-        {
-            var result = new Dictionary<string, Point>();
-
-            foreach (var t in ir.Objects.Select(o => o.Text).WhereNotNull())
-            {                
-                var text = new Topten.RichTextKit.RichString()
-                    .FontFamily(SKTypeface.Default.FamilyName)
-                    .FontSize(t.FontSize)
-                    .Alignment(Topten.RichTextKit.TextAlignment.Center)
-                    .Add(t.Label);
-
-                result[t.Label] = new((int)MathF.Ceiling(text.MeasuredWidth), (int)MathF.Ceiling(text.MeasuredHeight));
-            }
-
-            return result;
-        }
-
         public SKImage Render(Layout.Diagram diagram)
         {
-            using var state = new RenderState();
+            var state = new SkiaRenderState();
 
             foreach (var shape in diagram.Shapes)
             {

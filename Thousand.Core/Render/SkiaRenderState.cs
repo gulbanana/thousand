@@ -6,17 +6,13 @@ using Topten.RichTextKit;
 
 namespace Thousand.Render
 {
-    internal class RenderState : IDisposable
+    internal class SkiaRenderState
     {
         public readonly Dictionary<Layout.Shape, SKPath> ShapePaths;
 
-        public RenderState()
+        public SkiaRenderState()
         {
             ShapePaths = new();
-        }
-
-        public void Dispose()
-        {
         }
 
         public void PaintDiagram(SKCanvas canvas, Layout.Diagram diagram)

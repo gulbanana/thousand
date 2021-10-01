@@ -11,7 +11,7 @@ namespace Thousand.CLI
         {
             var graph = File.ReadAllText(args.Single());
 
-            using var generator = new Render.SKDiagramGenerator();
+            using var generator = new Render.SkiaDiagramGenerator();
 
             generator.GenerateImage(graph).Switch(result =>
             {

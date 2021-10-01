@@ -8,7 +8,7 @@ using Thousand.Parse;
 namespace Thousand
 {
     /// <summary>Main high-level entry point</summary>
-    public class DiagramGenerator<T> : IDisposable
+    public class DiagramGenerator
     {
         public static string ReadStdlib()
         {
@@ -20,18 +20,11 @@ namespace Thousand
 
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly TokenListParser<TokenKind, AST.Document> parser;
-        private readonly IRenderer<T> renderer;
 
-        public DiagramGenerator(IRenderer<T> renderer)
+        public DiagramGenerator()
         {
-            this.renderer = renderer;
             tokenizer = Tokenizer.Build();
             parser = Parser.Build();            
-        }
-
-        public void Dispose()
-        {
-            renderer.Dispose();
         }
 
         private OneOf<GenerationResult<AST.Document>, GenerationError[]> Parse(string sourceFile)
@@ -82,14 +75,28 @@ namespace Thousand
                 return errors.ToArray();
             }
 
-            var measuredText = renderer.MeasureTextBlocks(rules);
-
-            if (!Composer.TryCompose(rules, measuredText, warnings, errors, out var diagram))
+            if (!Compose.Composer.TryCompose(rules, warnings, errors, out var diagram))
             {
                 return errors.ToArray();
             }
 
             return new GenerationResult<Layout.Diagram>(diagram, warnings.ToArray());
+        }
+    }
+
+    /// <summary>Main high-level entry point, parameterised by a concrete renderer</summary>
+    public class DiagramGenerator<T> : DiagramGenerator, IDisposable
+    {
+        private readonly Render.IRenderer<T> renderer;
+
+        public DiagramGenerator(Render.IRenderer<T> renderer)
+        {
+            this.renderer = renderer;
+        }
+
+        public void Dispose()
+        {
+            renderer.Dispose();
         }
 
         /// <summary>Create an image from source code.</summary>

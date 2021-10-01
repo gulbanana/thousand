@@ -4,14 +4,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Thousand.Model;
 
-namespace Thousand
+namespace Thousand.Compose
 {
     public class Composer
     {
-        public static bool TryCompose(IR.Rules ir, IReadOnlyDictionary<string, Point> textMeasures, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
+        public static bool TryCompose(IR.Rules ir, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
         {
             try
             {
+                var textMeasures = Measure.TextBlocks(ir);
                 var composition = new Composer(warnings, errors, ir, textMeasures);
                 diagram = composition.Compose();
 
@@ -41,7 +42,7 @@ namespace Thousand
             this.rules = rules;
             this.textMeasures = textMeasures;            
 
-            shapes = new();
+            shapes = new(ReferenceEqualityComparer.Instance);
             labels = new();
             lines = new();
         }
@@ -54,7 +55,7 @@ namespace Thousand
             var currentColumn = 1;
             var maxColumn = 1;
             
-            var sizes = new Dictionary<IR.Object, (int row, int col, Point size)>();
+            var sizes = new Dictionary<IR.Object, (int row, int col, Point size)>(ReferenceEqualityComparer.Instance);
             foreach (var obj in rules.Objects)
             {
                 if (obj.Row.HasValue && currentRow != obj.Row.Value)
@@ -68,7 +69,7 @@ namespace Thousand
                     currentColumn = obj.Column.Value;
                 }
 
-                var size = Measure(textMeasures, obj);
+                var size = MeasureObject(textMeasures, obj);
                 sizes[obj] = (currentRow, currentColumn, size);
 
                 maxRow = Math.Max(currentRow, maxRow);
@@ -110,7 +111,7 @@ namespace Thousand
                 var center = new Point(colCenters[measures.col-1], rowCenters[measures.row-1]);
                 var box = new Rect(measures.size).CenteredAt(center);
                 
-                var shape = new Layout.Shape(obj.Name, obj.Kind, box, obj.CornerRadius, obj.Stroke, obj.Fill);
+                var shape = new Layout.Shape(obj.Kind, box, obj.CornerRadius, obj.Stroke, obj.Fill);
                 shapes[obj] = shape;
 
                 if (obj.Text != null && obj.Text.Label != string.Empty)
@@ -141,7 +142,7 @@ namespace Thousand
             );
         }
 
-        private static Point Measure(IReadOnlyDictionary<string, Point> measures, IR.Object obj)
+        private static Point MeasureObject(IReadOnlyDictionary<string, Point> measures, IR.Object obj)
         {
             Point size;
 

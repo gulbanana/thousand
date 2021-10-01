@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using Thousand.Compose;
 using Thousand.Model;
 using Xunit;
 
 namespace Thousand.Tests
 {
-
     public class Composition : IDisposable
     {
         private readonly List<GenerationError> warnings;
         private List<GenerationError> errors;
-        private IReadOnlyDictionary<string, Point> measures;
 
         public Composition()
         {
             warnings = new List<GenerationError>();
             errors = new List<GenerationError>();
-            measures = new MockMeasures(new Point(10, 10));
         }
 
         public void Dispose()
@@ -31,13 +29,13 @@ namespace Thousand.Tests
                 new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 0) },
                 new IR.Object[]
                 {
-                    new IR.Object("foo") with { Padding = 0 },
-                    new IR.Object("bar") with { Padding = 0 }
+                    new IR.Object { Padding = 0, Width = 10, Height = 10 },
+                    new IR.Object { Padding = 0, Width = 10, Height = 10 }
                 },
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, measures, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(20, layout!.Width);
@@ -51,13 +49,13 @@ namespace Thousand.Tests
                 new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 0) },
                 new IR.Object[]
                 {
-                    new IR.Object("foo") with { Padding = 0 },
-                    new IR.Object("bar") with { Padding = 0, Row = 2 }
+                    new IR.Object { Padding = 0, Width = 10, Height = 10 },
+                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 2 }
                 },
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, measures, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(10, layout!.Width);
@@ -71,14 +69,14 @@ namespace Thousand.Tests
                 new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 0) },
                 new IR.Object[]
                 {
-                    new IR.Object("foo") with { Padding = 0, Row = 1, Column = 1 },
-                    new IR.Object("bar") with { Padding = 0, Row = 2, Column = 2 },
-                    new IR.Object("baz") with { Padding = 0, Row = 3, Column = 3 },
+                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 1, Column = 1 },
+                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 2, Column = 2 },
+                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 3, Column = 3 },
                 },
                 new IR.Edge[] { }
             );
 
-            var result = Composer.TryCompose(rules, measures, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
 
             Assert.True(result, errors.Join());
             Assert.Equal(30, layout!.Width);
