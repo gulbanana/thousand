@@ -1,7 +1,13 @@
 ﻿@code {
     [Parameter] public string Source { get; set; }
     [Parameter] public EventCallback<string> SourceChanged { get; set; }
+
+    private async void OnInput(ChangeEventArgs e)
+    {
+        await SourceChanged.InvokeAsync(e.Value.ToString());
+    }
 }
 
-<textarea @bind="Source" @bind:event="oninput" spellcheck="false">
+<textarea @oninput="OnInput" spellcheck="false">
+    @Source
 </textarea>
