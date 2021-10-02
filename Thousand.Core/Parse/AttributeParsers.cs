@@ -44,6 +44,21 @@ namespace Thousand.Parse
         #endregion
 
         #region arrow group, used only by edges
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorStartAttribute { get; } =
+            from key in Key(ArrowAttributeKind.AnchorStart)
+            from value in Identifier.Enum<AnchorKind>().OrNone()
+            select new AST.ArrowAnchorStartAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorEndAttribute { get; } =
+            from key in Key(ArrowAttributeKind.AnchorEnd)
+            from value in Identifier.Enum<AnchorKind>().OrNone()
+            select new AST.ArrowAnchorEndAttribute(value) as AST.ArrowAttribute;
+
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorAttribute { get; } =
+            from key in Key(ArrowAttributeKind.Anchor)
+            from value in Identifier.Enum<AnchorKind>().OrNone()
+            select new AST.ArrowAnchorAttribute(value) as AST.ArrowAttribute;
+
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStartX)
             from value in IntegerValue
@@ -75,7 +90,10 @@ namespace Thousand.Parse
             select new AST.ArrowOffsetYAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
-            ArrowOffsetStartXAttribute
+            ArrowAnchorStartAttribute
+                .Or(ArrowAnchorEndAttribute)
+                .Or(ArrowAnchorAttribute)
+                .Or(ArrowOffsetStartXAttribute)
                 .Or(ArrowOffsetStartYAttribute)
                 .Or(ArrowOffsetEndXAttribute)
                 .Or(ArrowOffsetEndYAttribute)

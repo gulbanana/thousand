@@ -30,7 +30,7 @@ namespace Thousand.IR
         public Object(string label) : this(new Text(label, 20), new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }
     }
     
-    public record Edge(Object FromTarget, Object ToTarget, Point FromOffset, Point ToOffset, Stroke Stroke);
+    public record Edge(Object FromTarget, Object ToTarget, AnchorKind? FromAnchor, AnchorKind? ToAnchor, Point FromOffset, Point ToOffset, Stroke Stroke);
     
     public record Rules(Config Config, IReadOnlyList<Object> Objects, IReadOnlyList<Edge> Edges);
 }

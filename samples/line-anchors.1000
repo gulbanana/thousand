@@ -1,0 +1,8 @@
+class node [width=100, height=100, label=none]
+
+node a [shape=diamond]
+node b [shape=circle, row=2, col=3]
+node c [shape=square, row=1, col=5]
+
+line a -> b -> c [anchor=none, stroke=red]
+line a -> b -> c [anchor=compass, stroke=blue]

@@ -136,7 +136,41 @@ namespace Thousand.Compose
 
             foreach (var edge in rules.Edges)
             {
-                var (start, end) = Measure.Line(boxes[edge.FromTarget], boxes[edge.ToTarget], edge.FromOffset, edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
+                var fromBox = boxes[edge.FromTarget];
+                var toBox = boxes[edge.ToTarget];
+                var (start, end) = Measure.Line(fromBox, toBox, edge.FromOffset, edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
+
+                if (edge.FromAnchor.HasValue)
+                {
+                    var anchors = edge.FromAnchor.Value switch
+                    {
+                        _ => new Point[]
+                        {
+                            new(fromBox.Center().X, fromBox.Top),                            
+                            new(fromBox.Right, fromBox.Center().Y),                            
+                            new(fromBox.Center().X, fromBox.Bottom),
+                            new(fromBox.Left, fromBox.Center().Y),
+                        }
+                    };
+
+                    start = start.Closest(anchors);
+                }
+
+                if (edge.ToAnchor.HasValue)
+                {
+                    var anchors = edge.ToAnchor.Value switch
+                    {
+                        _ => new Point[]
+                        {
+                            new(toBox.Center().X, toBox.Top),
+                            new(toBox.Right, toBox.Center().Y),                            
+                            new(toBox.Center().X, toBox.Bottom),
+                            new(toBox.Left, toBox.Center().Y),
+                        }
+                    };
+
+                    end = end.Closest(anchors);
+                }
 
                 lines.Add(new(start, end, edge.Stroke));
             }

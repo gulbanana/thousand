@@ -289,6 +289,8 @@ namespace Thousand
         private void AddLine(AST.TypedLine line)
         {
             var stroke = new Stroke();
+            var anchorStart = new AnchorKind?();
+            var anchorEnd = new AnchorKind?();
             var offsetStart = Point.Zero;
             var offsetEnd = Point.Zero;
 
@@ -298,6 +300,19 @@ namespace Thousand
                 {
                     switch (arrow)
                     {
+                        case AST.ArrowAnchorStartAttribute aasa:
+                            anchorStart = aasa.Kind;
+                            break;
+
+                        case AST.ArrowAnchorEndAttribute aaea:
+                            anchorEnd = aaea.Kind;
+                            break;
+
+                        case AST.ArrowAnchorAttribute aaa:
+                            anchorStart = aaa.Kind;
+                            anchorEnd = aaa.Kind;
+                            break;
+
                         case AST.ArrowOffsetStartXAttribute aosa:
                             offsetStart = offsetStart with { X = aosa.Offset };
                             break;
@@ -361,11 +376,11 @@ namespace Thousand
                 {
                     if (from.Direction.Value == ArrowKind.Forward)
                     {
-                        lines.Add(new(fromTarget, toTarget, offsetStart, offsetEnd, stroke));
+                        lines.Add(new(fromTarget, toTarget, anchorStart, anchorEnd, offsetStart, offsetEnd, stroke));
                     }
                     else
                     {
-                        lines.Add(new(toTarget, fromTarget, offsetStart, offsetEnd, stroke));
+                        lines.Add(new(toTarget, fromTarget, anchorStart, anchorEnd, offsetStart, offsetEnd, stroke));
                     }
                 }
             }
