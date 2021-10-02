@@ -1,7 +1,6 @@
 ﻿using Thousand.Layout;
 using Xunit;
 using Thousand.Model;
-using Thousand.Compose;
 using System.Xml.Linq;
 
 namespace Thousand.Tests
@@ -22,7 +21,7 @@ namespace Thousand.Tests
         {
             var diagram = new Diagram(100, 100, 1f, null, new Shape[0], new Label[]
             {
-                new Label(new Rect(Measure.TextBlock(new IR.Text("foo", 20))), "foo", 20)
+                new Label(new Rect(new Point(30, 28)), "foo", new Font())
             },
             new Line[]
             {

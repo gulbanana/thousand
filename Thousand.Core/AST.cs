@@ -9,6 +9,7 @@ namespace Thousand.AST
 
     public abstract record TextAttribute;
     public record TextLabelAttribute(string? Content) : TextAttribute;
+    public record TextFontFamilyAttribute(string Name) : TextAttribute;
     public record TextFontSizeAttribute(int Value) : TextAttribute;
 
     public abstract record StrokeAttribute;

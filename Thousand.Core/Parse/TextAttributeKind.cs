@@ -3,6 +3,7 @@
     public enum TextAttributeKind
     {
         Label,
+        FontFamily,
         FontSize,
     }
 }

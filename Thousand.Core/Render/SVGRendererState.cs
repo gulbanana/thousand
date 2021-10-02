@@ -57,8 +57,8 @@ namespace Thousand.Render
                 new XAttribute("dominant-baseline", "text-before-edge"),
                 new XAttribute("x", label.Bounds.Left),
                 new XAttribute("y", label.Bounds.Top),
-                new XAttribute("font-family", "Segoe UI"),
-                new XAttribute("font-size", label.FontSize + "px"),
+                new XAttribute("font-family", label.Font.Family),
+                new XAttribute("font-size", label.Font.Size + "px"),
                 new XAttribute("fill", "rgb(0,0,0)"),
                 label.Content
             );

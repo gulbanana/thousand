@@ -37,7 +37,7 @@ namespace Thousand.Tests
             Assert.Equal(3, ir.Objects.Count);
             Assert.Equal(2, ir.Edges.Count);
 
-            AssertEx.Sequence(ir.Objects.Select(o => o.Text?.FontSize), 20, 50, 40);
+            AssertEx.Sequence(ir.Objects.Select(o => o.Font.Size), 20, 50, 40);
         }
     }
 }

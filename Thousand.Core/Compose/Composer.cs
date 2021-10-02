@@ -13,9 +13,9 @@ namespace Thousand.Compose
             try
             {
                 var textMeasures = new Dictionary<string, Point>();
-                foreach (var t in ir.Objects.Select(o => o.Text).WhereNotNull())
+                foreach (var o in ir.Objects.Where(o => o.Label is not null))
                 {
-                    textMeasures[t.Label] = Measure.TextBlock(t);
+                    textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font);
                 }
 
                 var composition = new Composer(warnings, errors, ir, textMeasures);
@@ -126,10 +126,10 @@ namespace Thousand.Compose
                     shapes[obj] = shape;
                 }
                 
-                if (obj.Text != null && obj.Text.Label != string.Empty)
+                if (obj.Label != null && obj.Label != string.Empty)
                 {
-                    var textBox = new Rect(textMeasures[obj.Text.Label]).CenteredAt(center);
-                    var label = new Layout.Label(textBox, obj.Text.Label, obj.Text.FontSize);
+                    var textBox = new Rect(textMeasures[obj.Label]).CenteredAt(center);
+                    var label = new Layout.Label(textBox, obj.Label, obj.Font);
                     labels.Add(label);
                 }
             }
@@ -192,9 +192,9 @@ namespace Thousand.Compose
         {
             Point size;
 
-            if (obj.Text != null && obj.Text.Label != string.Empty)
+            if (obj.Label != null && obj.Label != string.Empty)
             {
-                size = textMeasures[obj.Text.Label].Pad(obj.Padding);
+                size = textMeasures[obj.Label].Pad(obj.Padding);
             }
             else
             {

@@ -195,8 +195,14 @@ namespace Thousand.Parse
             from value in CountingNumberValue
             select new AST.TextFontSizeAttribute(value) as AST.TextAttribute;
 
+        public static TokenListParser<TokenKind, AST.TextAttribute> TextFontFamilyAttribute { get; } =
+            from key in Key(TextAttributeKind.FontFamily)
+            from value in Parser.String
+            select new AST.TextFontFamilyAttribute(value) as AST.TextAttribute;
+
         public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } =
             TextLabelAttribute
+                .Or(TextFontFamilyAttribute)
                 .Or(TextFontSizeAttribute);
         #endregion
 

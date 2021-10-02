@@ -1,0 +1,82 @@
+﻿@page "/fonts"
+@using SkiaSharp
+@using Thousand
+@using Thousand.Model
+@using Thousand.Compose
+@code {
+    private static List<Tuple<string, Layout.Diagram>> diagrams; // XXX inject
+
+    private Layout.Diagram CreateDiagram(SKTypeface typeface)
+    {
+        var sample = "The quick brown fox jumps over the lazy dog.";
+
+        if (Composer.TryCompose(new IR.Rules
+        (
+            new IR.Config(),
+            new IR.Object[]
+            {
+                    new IR.Object(sample) with { Shape = null, Font = new Font(typeface.FamilyName, 20) }
+            },
+            new IR.Edge[0]
+        ), new List<GenerationError>(), new List<GenerationError>(), out var diagram))
+        {
+            return diagram;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private IEnumerable<Tuple<string, Layout.Diagram>> CreateDiagrams()
+    {
+        var families = SKFontManager.Default.FontFamilies;
+
+        return from f in families
+               let t = SKFontManager.Default.MatchFamily(f)
+               let d = CreateDiagram(t)
+               where d != null
+               select Tuple.Create(t.FamilyName, d);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (diagrams == null)
+        {
+            diagrams = await Task.Run(() => CreateDiagrams().ToList());
+        }
+    }
+}
+
+<h2>Font Reference</h2>
+
+<p>This is a table of fonts available for rendering diagrams on this website. Server-side fonts can be used to generate PNG images with Skia, and client-side fonts can be used in SVG output.</p>
+
+@if (diagrams != null)
+{
+    <div class="layout">
+        <table>
+            <thead>
+                <tr>
+                    <th>Font Family</th>
+                    <th>SkiaSharp</th>
+                    <th>SVG</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in diagrams)
+                {
+                    <tr>
+                        <th>@row.Item1</th>
+                        <td><LivePreview Mode="RenderMode.SkiaSharp" Diagram="row.Item2" /></td>
+                        <td><LivePreview Mode="RenderMode.SVG" Diagram="row.Item2" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>Loading...</p>
+}

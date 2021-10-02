@@ -24,8 +24,8 @@ namespace Thousand.Render
         public void PaintLabel(SKCanvas canvas, Layout.Label label)
         {
             var text = new RichString()
-                .FontFamily(SKTypeface.Default.FamilyName)
-                .FontSize(label.FontSize)
+                .FontFamily(label.Font.Family)
+                .FontSize(label.Font.Size)
                 .Alignment(TextAlignment.Center)
                 .Add(label.Content);
 

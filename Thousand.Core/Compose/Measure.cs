@@ -6,15 +6,23 @@ using Thousand.Render;
 
 namespace Thousand.Compose
 {
-    public static class Measure
+    /// <summary>
+    /// Calculates intrinsic sizes of text and lines using Skia/HarfBuzz facilities.
+    /// </summary>
+    /// <remarks>
+    /// Used in the composition stage, with the output shared by all renderers; this
+    /// means that Skia is the ground truth for text shaping, but externally-supplied
+    /// shaping is what formats like SVG require of us anyway.
+    /// </remarks>
+    internal static class Measure
     {
-        public static Point TextBlock(IR.Text t)
+        public static Point TextBlock(string label, Font font)
         {
             var text = new Topten.RichTextKit.RichString()
-                .FontFamily(SKTypeface.Default.FamilyName)
-                .FontSize(t.FontSize)
+                .FontFamily(font.Family)
+                .FontSize(font.Size)
                 .Alignment(Topten.RichTextKit.TextAlignment.Center)
-                .Add(t.Label);
+                .Add(label);
 
             var pixelWidth = (decimal)MathF.Ceiling(text.MeasuredWidth);
             var pixelHeight = (decimal)MathF.Ceiling(text.MeasuredHeight);

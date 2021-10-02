@@ -175,7 +175,7 @@ namespace Thousand
             var fill = Colour.White;
             var region = new IR.Region();            
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
-            var fontSize = 20;
+            var font = new Font();
 
             foreach (var attr in node.Classes.SelectMany(FindObjectClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
@@ -257,12 +257,16 @@ namespace Thousand
                 {
                     switch (t)
                     {
-                        case AST.TextLabelAttribute nla:
-                            label = nla.Content;
+                        case AST.TextLabelAttribute tla:
+                            label = tla.Content;
                             break;
 
-                        case AST.TextFontSizeAttribute nfsa:
-                            fontSize = nfsa.Value;
+                        case AST.TextFontFamilyAttribute tffa:
+                            font = font with { Family = tffa.Name };
+                            break;
+
+                        case AST.TextFontSizeAttribute tfsa:
+                            font = font with { Size = tfsa.Value };
                             break;
                     }
                 });
@@ -282,7 +286,7 @@ namespace Thousand
             }
             else
             {
-                objects.Add(name, new(label == null ? null : new IR.Text(label, fontSize), region, row, column, width, height, shape, padding, cornerRadius, stroke, fill));
+                objects.Add(name, new(label, font, region, row, column, width, height, shape, padding, cornerRadius, stroke, fill));
             }
         }
 
