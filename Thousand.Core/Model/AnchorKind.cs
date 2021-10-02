@@ -3,7 +3,9 @@
     public enum AnchorKind
     {
         CompassPoints,
+        Corners,
 
-        Compass = CompassPoints
+        Compass = CompassPoints,
+        Corner = Corners
     }
 }

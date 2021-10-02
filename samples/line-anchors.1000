@@ -6,3 +6,9 @@ node c [shape=square, row=1, col=5]
 
 line a -> b -> c [anchor=none, stroke=red]
 line a -> b -> c [anchor=compass, stroke=blue]
+
+node d [shape=diamond, row=3]
+node e [shape=square, row=2, col=5]
+
+line d <- e [stroke=red]
+line d <- e [stroke=blue, anchorStart=corner, anchorEnd=compass]

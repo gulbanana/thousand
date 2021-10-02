@@ -1,5 +1,6 @@
 ﻿using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using Thousand.Model;
 using Thousand.Render;
 
@@ -18,24 +19,24 @@ namespace Thousand.Compose
             return new((int)MathF.Ceiling(text.MeasuredWidth), (int)MathF.Ceiling(text.MeasuredHeight));
         }
 
-        public static (Point from, Point to) Line(Rect fromBox, Rect toBox, Point fromOffset, Point toOffset, Layout.Shape? fromShape, Layout.Shape? toShape)
+        public static (Point from, Point to) Line(Point fromPoint, Point toPoint, Layout.Shape? fromShape, Layout.Shape? toShape)
         {
-            var fromPoint = (fromBox.Center() + fromOffset).SK();
-            var toPoint = (toBox.Center() + toOffset).SK();
+            var start = fromPoint.SK();
+            var end = toPoint.SK();
 
             // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = (toPoint - fromPoint).Normalize();
+            var unitPath = (end - start).Normalize();
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
             // draw a thin rectangle using the control points
             var path = new SKPath();
-            path.MoveTo(fromPoint);
-            path.LineTo(fromPoint + offset1);
-            path.LineTo(toPoint + offset1);
-            path.LineTo(toPoint);
-            path.LineTo(toPoint + offset2);
-            path.LineTo(fromPoint + offset2);
+            path.MoveTo(start);
+            path.LineTo(start + offset1);
+            path.LineTo(end + offset1);
+            path.LineTo(end);
+            path.LineTo(end + offset2);
+            path.LineTo(start + offset2);
             path.Close();
 
             // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
@@ -53,10 +54,39 @@ namespace Thousand.Compose
             // use the intersection of the straight path with the drawable region's bounding box as the first and last points for the real line
             path.GetTightBounds(out var visibleBounds);
 
-            var start = PointOnRect(visibleBounds, fromPoint);
-            var end = PointOnRect(visibleBounds, toPoint);
+            start = PointOnRect(visibleBounds, start);
+            end = PointOnRect(visibleBounds, end);
 
             return (new((int)start.X, (int)start.Y), new((int)end.X, (int)end.Y));
+        }
+
+        public static IReadOnlyList<Point> Corners(Rect box)
+        {
+            var points = new Point[4];
+
+            points[0] = new Point(box.Left, box.Top);
+            points[1] = new Point(box.Right, box.Top);
+            points[2] = new Point(box.Right, box.Bottom);
+            points[3] = new Point(box.Left, box.Bottom);
+
+            return points;
+        }
+
+        public static IReadOnlyList<Point> Corners(Layout.Shape shape)
+        {
+            var points = new Point[4];
+
+            var nw = new Point(shape.Bounds.Left - 10, shape.Bounds.Top - 10);
+            var ne = new Point(shape.Bounds.Right + 10, shape.Bounds.Top - 10);
+            var se = new Point(shape.Bounds.Right + 10, shape.Bounds.Bottom + 10);
+            var sw = new Point(shape.Bounds.Left - 10, shape.Bounds.Bottom + 10);            
+
+            points[0] = Line(shape.Bounds.Center(), nw, shape, null).from;
+            points[1] = Line(shape.Bounds.Center(), ne, shape, null).from;
+            points[2] = Line(shape.Bounds.Center(), se, shape, null).from;
+            points[3] = Line(shape.Bounds.Center(), sw, shape, null).from;
+
+            return points;
         }
 
         private static SKPoint PointOnRect(SKRect box, SKPoint vectorFromCenter)

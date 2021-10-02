@@ -138,19 +138,20 @@ namespace Thousand.Compose
             {
                 var fromBox = boxes[edge.FromTarget];
                 var toBox = boxes[edge.ToTarget];
-                var (start, end) = Measure.Line(fromBox, toBox, edge.FromOffset, edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
+                var (start, end) = Measure.Line(fromBox.Center() + edge.FromOffset, toBox.Center() + edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
 
                 if (edge.FromAnchor.HasValue)
                 {
                     var anchors = edge.FromAnchor.Value switch
                     {
-                        _ => new Point[]
+                        AnchorKind.CompassPoints => new Point[]
                         {
                             new(fromBox.Center().X, fromBox.Top),                            
                             new(fromBox.Right, fromBox.Center().Y),                            
                             new(fromBox.Center().X, fromBox.Bottom),
                             new(fromBox.Left, fromBox.Center().Y),
-                        }
+                        },
+                        AnchorKind.Corners => shapes.GetValueOrDefault(edge.FromTarget) is Layout.Shape fromShape ? Measure.Corners(fromShape) : Measure.Corners(fromBox)
                     };
 
                     start = start.Closest(anchors);
@@ -160,13 +161,14 @@ namespace Thousand.Compose
                 {
                     var anchors = edge.ToAnchor.Value switch
                     {
-                        _ => new Point[]
+                        AnchorKind.CompassPoints => new Point[]
                         {
                             new(toBox.Center().X, toBox.Top),
                             new(toBox.Right, toBox.Center().Y),                            
                             new(toBox.Center().X, toBox.Bottom),
                             new(toBox.Left, toBox.Center().Y),
-                        }
+                        },
+                        AnchorKind.Corners => shapes.GetValueOrDefault(edge.ToTarget) is Layout.Shape toShape ? Measure.Corners(toShape) : Measure.Corners(toBox)
                     };
 
                     end = end.Closest(anchors);
