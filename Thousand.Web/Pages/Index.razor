@@ -1,7 +1,12 @@
 ﻿@page "/"
+@page "/foo"
+@page "/samples/{name}"
 @using System.IO
 @using Microsoft.Extensions.FileProviders
+@inject NavigationManager Navigation
 @code {
+    [Parameter] public string Name { get; set; }
+
     DiagramGenerator generator;
     IFileProvider provider;
     string source;
@@ -26,8 +31,7 @@
         set
         {
             sample = value;
-            SetSample(sample);
-            Parse();
+            Navigation.NavigateTo("samples/" + sample[8..^5]);
         }
     }
 
@@ -41,30 +45,21 @@
     {
         generator = new DiagramGenerator();
         provider = new EmbeddedFileProvider(typeof(Program).Assembly);
-
-        using (var sourceStream = provider.GetDirectoryContents("").First().CreateReadStream())
-        {
-            using (var reader = new StreamReader(sourceStream))
-            {
-                source = reader.ReadToEnd();
-            }
-        }
     }
 
     protected override void OnParametersSet()
     {
-        Parse();
-    }
-
-    private void SetSample(string name)
-    {
-        using (var sourceStream = provider.GetFileInfo(name).CreateReadStream())
+        sample = $"samples.{Name??"demo"}.1000";
+        var file = provider.GetFileInfo(sample);
+        using (var sourceStream = file.CreateReadStream())
         {
             using (var reader = new StreamReader(sourceStream))
             {
                 source = reader.ReadToEnd();
             }
         }
+
+        Parse();
     }
 
     private void Parse()
@@ -89,8 +84,7 @@
 
 <div class="layout">
     <div class="editor">
-        <textarea @bind="Source" @bind:event="oninput" spellcheck="false">
-        </textarea>
+        <SourceEditor @bind-Source="Source" />
 
         <div class="sample-selector">
             <label>Sample diagrams:</label>
