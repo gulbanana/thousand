@@ -69,7 +69,7 @@ namespace Thousand.Render
             return "arrow-" + Convert.ToHexString(new[] { c.R, c.G, c.B });
         }
 
-        private XElement CreatePath(Layout.Shape shape)
+        private XElement CreatePath(Shape shape)
         {
             var cx = shape.Bounds.SK().MidX;
             var cy = shape.Bounds.SK().MidY;
@@ -83,8 +83,8 @@ namespace Thousand.Render
                 ShapeKind.Ellipse or ShapeKind.Circle => new XElement(xmlns + "ellipse", 
                     new XAttribute("cx", cx), 
                     new XAttribute("cy", cy), 
-                    new XAttribute("rx", shape.Bounds.Width / 2f), 
-                    new XAttribute("ry", shape.Bounds.Height / 2f)
+                    new XAttribute("rx", shape.Bounds.Width / 2m), 
+                    new XAttribute("ry", shape.Bounds.Height / 2m)
                 ),
 
                 ShapeKind.RoundRectangle or ShapeKind.RoundSquare => new XElement(xmlns + "rect",

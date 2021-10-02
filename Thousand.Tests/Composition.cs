@@ -172,7 +172,7 @@ namespace Thousand.Tests
 
             Assert.True(result, errors.Join());
             Assert.Single(layout!.Lines);
-            AssertEx.Eta(new Point(10, 0), layout.Lines.Single().Start);
+            AssertEx.Eta(new Point(10, 10), layout.Lines.Single().Start);
             Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
         }
     }

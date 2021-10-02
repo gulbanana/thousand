@@ -17,9 +17,11 @@ namespace Thousand.Render
             }            
         }
 
-        public static SKPoint SK(this Point self) => new(self.X, self.Y);
+        public static SKPoint SK(this Point self) => new((float)self.X, (float)self.Y);
+        public static Point KS(this SKPoint self) => new((decimal)self.X, (decimal)self.Y);
 
-        public static SKRect SK(this Rect self) => new(self.Left, self.Top, self.Right, self.Bottom);
+        public static SKRect SK(this Rect self) => new((float)self.Left, (float)self.Top, (float)self.Right, (float)self.Bottom);
+        public static Rect KS(this SKRect self) => new((decimal)self.Left, (decimal)self.Top, (decimal)self.Right, (decimal)self.Bottom);
 
         public static SKPoint Normalize(this SKPoint vector, float length = 1.0f)
         {

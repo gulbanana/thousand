@@ -21,8 +21,15 @@ namespace Thousand.Tests
 
         internal static void Eta(Point expected, Point actual)
         {
-            Assert.True(Math.Abs(expected.X - actual.X) < 2);
-            Assert.True(Math.Abs(expected.Y - actual.Y) < 2);
+            if (Math.Abs(expected.X - actual.X) >= 1)
+            {
+                throw new AssertActualExpectedException(expected, actual, "Point was incorrect by at least one pixel");
+            }
+
+            if (Math.Abs(expected.Y - actual.Y) >= 1)
+            {
+                throw new AssertActualExpectedException(expected, actual, "Point was incorrect by at least one pixel");
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ namespace Thousand.Render
                 .Alignment(TextAlignment.Center)
                 .Add(label.Content);
 
-            text.Paint(canvas, label.Bounds.Origin().SK());
+            text.Paint(canvas, label.Bounds.Origin.SK());
         }
 
         public void PaintShape(SKCanvas canvas, Layout.Shape shape)

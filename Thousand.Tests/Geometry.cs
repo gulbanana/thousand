@@ -18,13 +18,13 @@ namespace Thousand.Tests
         [InlineData(2, 3, 3)]
         [InlineData(3, 2, 2)]
         [InlineData(3, 3, 3)]
-        public void PixelBoundaryCenteringStability(int diam, int x, int y)
+        public void PixelBoundaryCenteringStability(decimal diam, decimal x, decimal y)
         {
             var box1 = new Rect(new Point(diam, diam));
             var target = new Point(x, y);
             var box2 = box1.CenteredAt(target);
 
-            Assert.Equal(target, box2.Center());
+            Assert.Equal(target, box2.Center);
         }
     }
 }

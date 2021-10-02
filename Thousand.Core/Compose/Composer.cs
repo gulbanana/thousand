@@ -84,9 +84,9 @@ namespace Thousand.Compose
                 currentColumn++;
             }
 
-            var rowHeights = new int[maxRow];
-            var rowCenters = new int[maxRow];
-            var rowCenter = 0;
+            var rowHeights = new decimal[maxRow];
+            var rowCenters = new decimal[maxRow];
+            var rowCenter = 0m;
             for (var r = 0; r < maxRow; r++)
             {
                 var height = sizes.Values.Where(s => s.row == r + 1).Select(s => s.size.Y).Append(0).Max();
@@ -96,9 +96,9 @@ namespace Thousand.Compose
                 rowCenters[r] = center;
             }
 
-            var colWidths = new int[maxColumn];
-            var colCenters = new int[maxColumn];
-            var colCenter = 0;
+            var colWidths = new decimal[maxColumn];
+            var colCenters = new decimal[maxColumn];
+            var colCenter = 0m;
             for (var c = 0; c < maxColumn; c++)
             {
                 var width = sizes.Values.Where(s => s.col == c + 1).Select(s => s.size.X).Append(0).Max();
@@ -138,7 +138,7 @@ namespace Thousand.Compose
             {
                 var fromBox = boxes[edge.FromTarget];
                 var toBox = boxes[edge.ToTarget];
-                var (start, end) = Measure.Line(fromBox.Center() + edge.FromOffset, toBox.Center() + edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
+                var (start, end) = Measure.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
 
                 if (edge.FromAnchor.HasValue)
                 {
@@ -146,10 +146,10 @@ namespace Thousand.Compose
                     {
                         AnchorKind.CompassPoints => new Point[]
                         {
-                            new(fromBox.Center().X, fromBox.Top),                            
-                            new(fromBox.Right, fromBox.Center().Y),                            
-                            new(fromBox.Center().X, fromBox.Bottom),
-                            new(fromBox.Left, fromBox.Center().Y),
+                            new(fromBox.Center.X, fromBox.Top),                            
+                            new(fromBox.Right, fromBox.Center.Y),                            
+                            new(fromBox.Center.X, fromBox.Bottom),
+                            new(fromBox.Left, fromBox.Center.Y),
                         },
                         AnchorKind.Corners => shapes.GetValueOrDefault(edge.FromTarget) is Layout.Shape fromShape ? Measure.Corners(fromShape) : Measure.Corners(fromBox)
                     };
@@ -163,10 +163,10 @@ namespace Thousand.Compose
                     {
                         AnchorKind.CompassPoints => new Point[]
                         {
-                            new(toBox.Center().X, toBox.Top),
-                            new(toBox.Right, toBox.Center().Y),                            
-                            new(toBox.Center().X, toBox.Bottom),
-                            new(toBox.Left, toBox.Center().Y),
+                            new(toBox.Center.X, toBox.Top),
+                            new(toBox.Right, toBox.Center.Y),                            
+                            new(toBox.Center.X, toBox.Bottom),
+                            new(toBox.Left, toBox.Center.Y),
                         },
                         AnchorKind.Corners => shapes.GetValueOrDefault(edge.ToTarget) is Layout.Shape toShape ? Measure.Corners(toShape) : Measure.Corners(toBox)
                     };
@@ -178,8 +178,8 @@ namespace Thousand.Compose
             }
 
             return new(
-                totalWidth,
-                totalHeight,
+                (int)Math.Ceiling(totalWidth),
+                (int)Math.Ceiling(totalHeight),
                 rules.Config.Scale,
                 rules.Config.Background,
                 shapes.Values.ToList(), 
