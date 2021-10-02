@@ -1,6 +1,7 @@
 TO DO
 -----
 
+* integer centering is causing problems - for example, the line to the diamond in demo.1000 is drawn with integers but the diamond midpoint is a float
 * per-shape (and diagram) margins; the diagram needs a default, 2 or 5px or something
 * generalise shorthand properties (font, etc)
 * IdentifierOrKeyword, hyphen formatting
