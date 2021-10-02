@@ -32,41 +32,6 @@ namespace Thousand.Render
             text.Paint(canvas, label.Bounds.Origin().SK());
         }
 
-        public SKPath MeasureShape(Layout.Shape shape)
-        {
-            var bounds = shape.Bounds.SK();
-
-            var path = new SKPath();
-            switch (shape.Kind)
-            {
-                case ShapeKind.RoundRectangle:
-                case ShapeKind.RoundSquare:
-                    path.AddRoundRect(new SKRoundRect(bounds, shape.CornerRadius));
-                    break;
-
-                case ShapeKind.Rectangle:
-                case ShapeKind.Square:
-                    path.AddRect(bounds);
-                    break;
-
-                case ShapeKind.Ellipse:
-                    path.AddOval(bounds);
-                    break;
-
-                case ShapeKind.Circle:
-                    path.AddCircle(bounds.MidX, bounds.MidY, bounds.Width/2);
-                    break;
-
-                case ShapeKind.Rhombus:
-                case ShapeKind.Diamond:
-                    path.AddPoly(Diamond(bounds));
-                    break;
-            };
-            path.Close();
-
-            return path;
-        }
-
         public void PaintShape(SKCanvas canvas, Layout.Shape shape)
         {
             var path = ShapePaths[shape];
@@ -90,43 +55,11 @@ namespace Thousand.Render
 
         public void PaintLine(SKCanvas canvas, Layout.Line line)
         {
-            var fromPoint = line.Start.SK();
-            var toPoint = line.End.SK();
+            var start = line.Start.SK();
+            var end = line.End.SK();
 
             var stroke = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true, PathEffect = StrokeEffect(line.Stroke.Style) };
             var fill = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true };
-
-            // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = Normalize(toPoint - fromPoint);
-            var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
-            var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
-
-            // draw a thin rectangle using the control points
-            var path = new SKPath();
-            path.MoveTo(fromPoint);
-            path.LineTo(fromPoint + offset1);
-            path.LineTo(toPoint + offset1);
-            path.LineTo(toPoint);
-            path.LineTo(toPoint + offset2);
-            path.LineTo(fromPoint + offset2);
-            path.Close();
-
-            // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
-            if (line.From != null)
-            {
-                var fromPath = ShapePaths[line.From];
-                path = path.Op(fromPath, SKPathOp.Difference);
-            }
-            if (line.To != null)
-            {
-                var toPath = ShapePaths[line.To];
-                path = path.Op(toPath, SKPathOp.Difference);
-            }
-
-            // use the intersection of the straight path with the drawable region's bounding box as the first and last points for the real line
-            path.GetTightBounds(out var visibleBounds);
-            var start = PointOnRect(visibleBounds, fromPoint);
-            var end = PointOnRect(visibleBounds, toPoint);
 
             // draw the main line
             if (line.Stroke.Width is not ZeroWidth)
@@ -143,8 +76,8 @@ namespace Thousand.Render
 
             // draw end cap
             var arrowhead = new SKPath();
-            var arrowLength = Normalize(toPoint - fromPoint, 7f);
-            var arrowWidth = Normalize(toPoint - fromPoint, 4f);
+            var arrowLength = (end - start).Normalize(7f);
+            var arrowWidth = (end - start).Normalize(4f);
             var base1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(arrowWidth);
             var base2 = SKMatrix.CreateRotationDegrees(90).MapPoint(arrowWidth);
 
@@ -155,80 +88,6 @@ namespace Thousand.Render
             arrowhead.Close();
 
             canvas.DrawPath(arrowhead, fill);
-        }
-
-        private static SKPoint Normalize(SKPoint vector, float length = 1.0f)
-        {
-            return new SKPoint(vector.X / vector.Length * length, vector.Y / vector.Length * length);
-        }
-
-        private SKPoint[] Diamond(SKRect box)
-        {
-            return new SKPoint[]
-            {
-                new(box.Left, box.MidY),
-                new(box.MidX, box.Top),
-                new(box.Right, box.MidY),
-                new(box.MidX, box.Bottom),
-            };
-        }
-
-        private static SKPoint PointOnRect(SKRect box, SKPoint vectorFromCenter)
-        {
-            var x = vectorFromCenter.X;
-            var y = vectorFromCenter.Y;
-            var minX = box.Left;
-            var minY = box.Top;
-            var maxX = box.Right;
-            var maxY = box.Bottom;
-
-            // if (midX - x == 0) -> m == ±Inf -> minYx/maxYx == x (because value / ±Inf = ±0)
-            var midX = (minX + maxX) / 2;
-            var midY = (minY + maxY) / 2;
-            var m = (midY - y) / (midX - x);
-
-            if (x <= midX)
-            { 
-                var minXy = m * (minX - x) + y;
-                if (minY <= minXy && minXy <= maxY)
-                {
-                    return new(minX, minXy);
-                }
-            }
-
-            if (x >= midX)
-            { 
-                var maxXy = m * (maxX - x) + y;
-                if (minY <= maxXy && maxXy <= maxY)
-                {
-                    return new(maxX, maxXy);
-                }
-            }
-
-            if (y <= midY)
-            { 
-                var minYx = (minY - y) / m + x;
-                if (minX <= minYx && minYx <= maxX)
-                {
-                    return new(minYx, minY);
-                }
-            }
-
-            if (y >= midY)
-            { 
-                var maxYx = (maxY - y) / m + x;
-                if (minX <= maxYx && maxYx <= maxX)
-                {
-                    return new(maxYx, maxY);
-                }
-            }
-
-            if (x == midX && y == midY)
-            {
-                return new(x, y);
-            }
-
-            throw new Exception("Cannot find intersection");
         }
 
         private static SKPathEffect? StrokeEffect(StrokeKind style) => style switch

@@ -12,7 +12,12 @@ namespace Thousand.Compose
         {
             try
             {
-                var textMeasures = Measure.TextBlocks(ir);
+                var textMeasures = new Dictionary<string, Point>();
+                foreach (var t in ir.Objects.Select(o => o.Text).WhereNotNull())
+                {
+                    textMeasures[t.Label] = Measure.TextBlock(t);
+                }
+
                 var composition = new Composer(warnings, errors, ir, textMeasures);
                 diagram = composition.Compose();
 
@@ -30,6 +35,7 @@ namespace Thousand.Compose
         private readonly List<GenerationError> es;
         private readonly IR.Rules rules;
         private readonly IReadOnlyDictionary<string, Point> textMeasures;        
+        private readonly Dictionary<IR.Object, Rect> boxes;
         private readonly Dictionary<IR.Object, Layout.Shape> shapes;
         private readonly List<Layout.Label> labels;
         private readonly List<Layout.Line> lines;
@@ -40,8 +46,9 @@ namespace Thousand.Compose
             es = errors;
 
             this.rules = rules;
-            this.textMeasures = textMeasures;            
+            this.textMeasures = textMeasures;
 
+            boxes = new(ReferenceEqualityComparer.Instance);
             shapes = new(ReferenceEqualityComparer.Instance);
             labels = new();
             lines = new();
@@ -69,7 +76,7 @@ namespace Thousand.Compose
                     currentColumn = obj.Column.Value;
                 }
 
-                var size = MeasureObject(textMeasures, obj);
+                var size = MeasureIntrinsicSize(obj);
                 sizes[obj] = (currentRow, currentColumn, size);
 
                 maxRow = Math.Max(currentRow, maxRow);
@@ -110,10 +117,15 @@ namespace Thousand.Compose
                 var measures = sizes[obj];
                 var center = new Point(colCenters[measures.col-1], rowCenters[measures.row-1]);
                 var box = new Rect(measures.size).CenteredAt(center);
-                
-                var shape = new Layout.Shape(obj.Kind, box, obj.CornerRadius, obj.Stroke, obj.Fill);
-                shapes[obj] = shape;
 
+                boxes[obj] = box;
+
+                if (obj.Kind.HasValue)
+                {
+                    var shape = new Layout.Shape(box, obj.Kind.Value, obj.CornerRadius, obj.Stroke, obj.Fill);
+                    shapes[obj] = shape;
+                }
+                
                 if (obj.Text != null && obj.Text.Label != string.Empty)
                 {
                     var textBox = new Rect(textMeasures[obj.Text.Label]).CenteredAt(center);
@@ -124,11 +136,9 @@ namespace Thousand.Compose
 
             foreach (var edge in rules.Edges)
             {
-                // XXX this will pose a problem for shape=none
-                var from = shapes[edge.FromTarget];
-                var to = shapes[edge.ToTarget];
+                var (start, end) = Measure.Line(boxes[edge.FromTarget], boxes[edge.ToTarget], edge.FromOffset, edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
 
-                lines.Add(new(from.Kind.HasValue ? from : null, to.Kind.HasValue ? to : null, from.Bounds.Center() + edge.FromOffset, to.Bounds.Center() + edge.ToOffset, edge.Stroke));
+                lines.Add(new(start, end, edge.Stroke));
             }
 
             return new(
@@ -136,19 +146,19 @@ namespace Thousand.Compose
                 totalHeight,
                 rules.Config.Scale,
                 rules.Config.Background,
-                shapes.Values.Where(s => s.Kind.HasValue).ToList(), 
+                shapes.Values.ToList(), 
                 labels, 
                 lines
             );
         }
 
-        private static Point MeasureObject(IReadOnlyDictionary<string, Point> measures, IR.Object obj)
+        private Point MeasureIntrinsicSize(IR.Object obj)
         {
             Point size;
 
             if (obj.Text != null && obj.Text.Label != string.Empty)
             {
-                size = measures[obj.Text.Label].Pad(obj.Padding);
+                size = textMeasures[obj.Text.Label].Pad(obj.Padding);
             }
             else
             {

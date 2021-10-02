@@ -21,7 +21,7 @@ namespace Thousand.Render
 
             foreach (var shape in diagram.Shapes)
             {
-                state.ShapePaths[shape] = state.MeasureShape(shape);
+                state.ShapePaths[shape] = SkiaPath.Create(shape);
             }
 
             var pixelWidth = (int)(diagram.Width * diagram.Scale);

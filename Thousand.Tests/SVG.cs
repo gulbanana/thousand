@@ -26,7 +26,7 @@ namespace Thousand.Tests
             },
             new Line[]
             {
-                new Line(null, null, new Point(0, 0), new Point(100, 100), new Stroke())
+                new Line(new Point(0, 0), new Point(100, 100), new Stroke())
             });
 
             var svg = renderer.Render(diagram);

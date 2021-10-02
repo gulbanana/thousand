@@ -1,14 +1,15 @@
-﻿using Thousand.Model;
+﻿using SkiaSharp;
+using Thousand.Model;
 
 namespace Thousand.Render
 {
     internal static class SkiaModelExtensions
     {
-        public static SkiaSharp.SKColor SK(this Colour? self)
+        public static SKColor SK(this Colour? self)
         {
             if (self == null)
             {
-                return SkiaSharp.SKColors.Transparent;
+                return SKColors.Transparent;
             }
             else
             {
@@ -16,7 +17,13 @@ namespace Thousand.Render
             }            
         }
 
-        public static SkiaSharp.SKPoint SK(this Point self) => new(self.X, self.Y);
-        public static SkiaSharp.SKRect SK(this Rect self) => new(self.Left, self.Top, self.Right, self.Bottom);
+        public static SKPoint SK(this Point self) => new(self.X, self.Y);
+
+        public static SKRect SK(this Rect self) => new(self.Left, self.Top, self.Right, self.Bottom);
+
+        public static SKPoint Normalize(this SKPoint vector, float length = 1.0f)
+        {
+            return new SKPoint(vector.X / vector.Length * length, vector.Y / vector.Length * length);
+        }
     }
 }

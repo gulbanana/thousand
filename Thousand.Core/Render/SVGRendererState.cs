@@ -28,7 +28,7 @@ namespace Thousand.Render
 
         public XElement RenderShape(Shape shape)
         {
-            var tag = CreatePath(shape.Kind.Value, shape.Bounds, shape.CornerRadius);
+            var tag = CreatePath(shape);
 
             tag.Add(new XAttribute("fill", shape.Fill.SVG()));
             tag.Add(shape.Stroke.SVG(scale));
@@ -69,37 +69,37 @@ namespace Thousand.Render
             return "arrow-" + Convert.ToHexString(new[] { c.R, c.G, c.B });
         }
 
-        private XElement CreatePath(ShapeKind kind, Rect bounds, int corner)
+        private XElement CreatePath(Layout.Shape shape)
         {
-            var cx = bounds.SK().MidX;
-            var cy = bounds.SK().MidY;
+            var cx = shape.Bounds.SK().MidX;
+            var cy = shape.Bounds.SK().MidY;
 
-            return kind switch
+            return shape.Kind switch
             {
                 ShapeKind.Rhombus or ShapeKind.Diamond => new XElement(xmlns + "path", 
-                    new XAttribute("d", $"M {cx} {bounds.Top} {bounds.Right} {cy} {cx} {bounds.Bottom} {bounds.Left} {cy} Z")
+                    new XAttribute("d", $"M {cx} {shape.Bounds.Top} {shape.Bounds.Right} {cy} {cx} {shape.Bounds.Bottom} {shape.Bounds.Left} {cy} Z")
                 ),
 
                 ShapeKind.Ellipse or ShapeKind.Circle => new XElement(xmlns + "ellipse", 
                     new XAttribute("cx", cx), 
                     new XAttribute("cy", cy), 
-                    new XAttribute("rx", bounds.Width / 2f), 
-                    new XAttribute("ry", bounds.Height / 2f)
+                    new XAttribute("rx", shape.Bounds.Width / 2f), 
+                    new XAttribute("ry", shape.Bounds.Height / 2f)
                 ),
 
                 ShapeKind.RoundRectangle or ShapeKind.RoundSquare => new XElement(xmlns + "rect",
-                    new XAttribute("x", bounds.Left),
-                    new XAttribute("y", bounds.Top),
-                    new XAttribute("width", bounds.Width),
-                    new XAttribute("height", bounds.Height),
-                    new XAttribute("rx", corner)
+                    new XAttribute("x", shape.Bounds.Left),
+                    new XAttribute("y", shape.Bounds.Top),
+                    new XAttribute("width", shape.Bounds.Width),
+                    new XAttribute("height", shape.Bounds.Height),
+                    new XAttribute("rx", shape.CornerRadius)
                 ),
 
                 _ => new XElement(xmlns + "rect",
-                    new XAttribute("x", bounds.Left),
-                    new XAttribute("y", bounds.Top),
-                    new XAttribute("width", bounds.Width),
-                    new XAttribute("height", bounds.Height)
+                    new XAttribute("x", shape.Bounds.Left),
+                    new XAttribute("y", shape.Bounds.Top),
+                    new XAttribute("width", shape.Bounds.Width),
+                    new XAttribute("height", shape.Bounds.Height)
                 )
             };
         }
