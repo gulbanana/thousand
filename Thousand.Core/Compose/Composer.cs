@@ -160,7 +160,7 @@ namespace Thousand.Compose
                 size = size with { X = obj.Width ?? size.X, Y = obj.Height ?? size.Y };
             }
 
-            if (obj.Kind is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle)
+            if (obj.Kind is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle or ShapeKind.Diamond)
             {
                 var longestSide = Math.Max(size.X, size.Y);
                 size = new Point(longestSide, longestSide);

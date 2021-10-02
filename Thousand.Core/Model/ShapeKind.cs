@@ -8,7 +8,8 @@
         Square,
         Ellipse,
         Circle,
-        Diamond
+        Rhombus,
+        Diamond,
 
         Rect = Rectangle,
         RoundRect = RoundRectangle,

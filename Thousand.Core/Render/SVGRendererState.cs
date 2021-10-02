@@ -76,7 +76,7 @@ namespace Thousand.Render
 
             return kind switch
             {
-                ShapeKind.Diamond => new XElement(xmlns + "path", 
+                ShapeKind.Rhombus or ShapeKind.Diamond => new XElement(xmlns + "path", 
                     new XAttribute("d", $"M {cx} {bounds.Top} {bounds.Right} {cy} {cx} {bounds.Bottom} {bounds.Left} {cy} Z")
                 ),
 

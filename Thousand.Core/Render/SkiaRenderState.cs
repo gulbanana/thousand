@@ -57,6 +57,7 @@ namespace Thousand.Render
                     path.AddCircle(bounds.MidX, bounds.MidY, bounds.Width/2);
                     break;
 
+                case ShapeKind.Rhombus:
                 case ShapeKind.Diamond:
                     path.AddPoly(Diamond(bounds));
                     break;

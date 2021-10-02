@@ -1,5 +1,6 @@
 class object [width=110, fontSize=16]
 
+object rhombus [shape=rhombus]
 object diamond [shape=diamond]
 object oval [shape=oval]
 object circle [shape=circle]
