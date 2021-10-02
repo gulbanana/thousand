@@ -24,6 +24,11 @@ namespace Thousand.Render
             var h = diagram.Height * diagram.Scale;
 
             var svg = new XElement(xmlns + "svg", new XAttribute("width", w), new XAttribute("height", h), new XAttribute("viewBox", $"0 0 {diagram.Width} {diagram.Height}"),
+                // MDN claims that WebKit supports geometricPrecision, which disables hinting, but that in Gecko it is ignored and treated as optimizeLegibility.
+                // However, I observe the opposite: in Firefox, geometricPrecision enables sub-pixel text positioning, and in Chrome it seems to do nothing!
+                // I prefer the Chrome geometricPrecision behaviour, which is consistent with Skia, but I prefer cross-browser compatibility more.
+                new XAttribute("text-rendering", "optimizeLegibility"),
+
                 new XElement(xmlns + "defs",
                     diagram.Lines.Select(l => l.Stroke.Colour).Distinct().Select(state.DefineMarker).ToArray()
                 )

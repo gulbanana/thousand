@@ -16,7 +16,16 @@ namespace Thousand.Compose
                 .Alignment(Topten.RichTextKit.TextAlignment.Center)
                 .Add(t.Label);
 
-            return new((decimal)MathF.Ceiling(text.MeasuredWidth), (decimal)MathF.Ceiling(text.MeasuredHeight));
+            var pixelWidth = (decimal)MathF.Ceiling(text.MeasuredWidth);
+            var pixelHeight = (decimal)MathF.Ceiling(text.MeasuredHeight);
+
+            // subpixel vertical positioning is not consistently supported in SVG
+            if (pixelHeight % 2 != 0)
+            {
+                pixelHeight++;
+            }
+
+            return new(pixelWidth, pixelHeight);
         }
 
         public static (Point from, Point to) Line(Point fromPoint, Point toPoint, Layout.Shape? fromShape, Layout.Shape? toShape)
