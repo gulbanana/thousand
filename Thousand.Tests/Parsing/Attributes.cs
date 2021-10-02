@@ -163,5 +163,18 @@ namespace Thousand.Tests.Parsing
             Assert.Null(lsa.Width);
             Assert.NotNull(lsa.Style);
         }
+
+        [Fact]
+        public void EnumAlias()
+        {
+            var tokens1 = tokenizer.Tokenize(@"shape=rect");
+            var tokens2 = tokenizer.Tokenize(@"shape=rectangle");
+            var result1 = AttributeParsers.NodeShapeAttribute(tokens1);
+            var result2 = AttributeParsers.NodeShapeAttribute(tokens2);
+
+            Assert.True(result1.HasValue, result1.ToString());
+            Assert.True(result2.HasValue, result2.ToString());
+            Assert.Equal(result1.Value, result2.Value);
+        }
     }
 }

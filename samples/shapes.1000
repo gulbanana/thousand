@@ -1,9 +1,13 @@
-class object [width=100]
+class object [width=110, fontSize=16]
 
 object diamond [shape=diamond]
 object oval [shape=oval]
 object circle [shape=circle]
+object rect [shape=rect]
 object square [shape=square]
-object "round\nsquare" [shape=roundsquare]
-object rectangle [shape=rectangle]
-object roundrect [shape=roundrect]
+object roundrect [shape=roundRect]
+object roundsquare [shape=roundSquare]
+
+object ellipse [shape=ellipse, row=2, col=3]
+object rectangle [shape=rectangle, row=2, col=5]
+object roundrectangle [shape=roundRectangle, row=2, col=7]

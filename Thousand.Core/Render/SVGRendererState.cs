@@ -80,14 +80,14 @@ namespace Thousand.Render
                     new XAttribute("d", $"M {cx} {bounds.Top} {bounds.Right} {cy} {cx} {bounds.Bottom} {bounds.Left} {cy} Z")
                 ),
 
-                ShapeKind.Oval or ShapeKind.Circle => new XElement(xmlns + "ellipse", 
+                ShapeKind.Ellipse or ShapeKind.Circle => new XElement(xmlns + "ellipse", 
                     new XAttribute("cx", cx), 
                     new XAttribute("cy", cy), 
                     new XAttribute("rx", bounds.Width / 2f), 
                     new XAttribute("ry", bounds.Height / 2f)
                 ),
 
-                ShapeKind.RoundRect or ShapeKind.RoundSquare => new XElement(xmlns + "rect",
+                ShapeKind.RoundRectangle or ShapeKind.RoundSquare => new XElement(xmlns + "rect",
                     new XAttribute("x", bounds.Left),
                     new XAttribute("y", bounds.Top),
                     new XAttribute("width", bounds.Width),

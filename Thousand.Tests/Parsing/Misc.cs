@@ -32,7 +32,7 @@ namespace Thousand.Tests.Parsing
             var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Oval));
+            AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Ellipse));
         }
 
         [Fact]

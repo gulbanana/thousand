@@ -39,7 +39,7 @@ namespace Thousand.Render
             var path = new SKPath();
             switch (shape.Kind)
             {
-                case ShapeKind.RoundRect:
+                case ShapeKind.RoundRectangle:
                 case ShapeKind.RoundSquare:
                     path.AddRoundRect(new SKRoundRect(bounds, shape.CornerRadius));
                     break;
@@ -49,7 +49,7 @@ namespace Thousand.Render
                     path.AddRect(bounds);
                     break;
 
-                case ShapeKind.Oval:
+                case ShapeKind.Ellipse:
                     path.AddOval(bounds);
                     break;
 

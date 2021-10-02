@@ -10,16 +10,16 @@ namespace Thousand.Parse
     {
         public static TokenListParser<TokenKind, T> Enum<T>() where T : struct, Enum
         {
-            var values = System.Enum.GetValues<T>();
-            if (!values.Any())
+            var names = System.Enum.GetNames<T>();
+            if (!names.Any())
             {
                 throw new Exception($"Enum {typeof(T).Name} has no values.");
             }
 
-            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, values.First().ToString()!).Value(values.First());
-            foreach (var v in values.Skip(1))
+            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, names.First()).Value(System.Enum.Parse<T>(names.First()));
+            foreach (var n in names.Skip(1))
             {
-                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, v.ToString()!).Value(v));
+                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, n).Value(System.Enum.Parse<T>(n)));
             }
             return parser;
         }

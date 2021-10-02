@@ -26,8 +26,8 @@ namespace Thousand.IR
         ShapeKind? Kind, int Padding, int CornerRadius, Stroke Stroke, Colour Fill
     )
     {
-        public Object() : this(null, new Region(), null, null, null, null, ShapeKind.RoundRect, 15, 5, new Stroke(), Colour.White) { }
-        public Object(string label) : this(new Text(label, 20), new Region(), null, null, null, null, ShapeKind.RoundRect, 15, 5, new Stroke(), Colour.White) { }
+        public Object() : this(null, new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }
+        public Object(string label) : this(new Text(label, 20), new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }
     }
     
     public record Edge(Object FromTarget, Object ToTarget, Point FromOffset, Point ToOffset, Stroke Stroke);
