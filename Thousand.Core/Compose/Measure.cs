@@ -25,18 +25,17 @@ namespace Thousand.Compose
             var end = toPoint.SK();
 
             // skia path intersection is area-based. start with a non-hairline, establishing start points +n/2 and -n/2 perpendicular to the line
-            var unitPath = (end - start).Normalize();
+            var unitPath = (end - start).Normalize(0.2f);
             var offset1 = SKMatrix.CreateRotationDegrees(-90).MapPoint(unitPath);
             var offset2 = SKMatrix.CreateRotationDegrees(90).MapPoint(unitPath);
 
             // draw a thin rectangle using the control points
             var path = new SKPath();
-            path.MoveTo(start);
-            path.LineTo(start + offset1);
-            path.LineTo(end + offset1);
-            path.LineTo(end);
-            path.LineTo(end + offset2);
-            path.LineTo(start + offset2);
+            path.MoveTo((start + unitPath) - offset1);
+            path.LineTo((end - unitPath) - offset1);
+            path.LineTo((end - unitPath) - offset2);
+            path.LineTo((start + unitPath) - offset2);
+            //path.LineTo((start + unitPath) - offset1);
             path.Close();
 
             // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
@@ -57,7 +56,7 @@ namespace Thousand.Compose
             start = PointOnRect(visibleBounds, start);
             end = PointOnRect(visibleBounds, end);
 
-            return (new((int)start.X, (int)start.Y), new((int)end.X, (int)end.Y));
+            return (new((int)Math.Round(start.X), (int)Math.Round(start.Y)), new((int)Math.Round(end.X), (int)Math.Round(end.Y)));
         }
 
         public static IReadOnlyList<Point> Corners(Rect box)

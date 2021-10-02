@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Thousand.Compose;
 using Thousand.Model;
 using Xunit;
@@ -81,6 +82,98 @@ namespace Thousand.Tests
             Assert.True(result, errors.Join());
             Assert.Equal(30, layout!.Width);
             Assert.Equal(30, layout.Height);
+        }
+
+        [Fact]
+        public void LinePosition_Horizontal()
+        {
+            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+
+            var rules = new IR.Rules(
+                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
+                new[] { left, right },
+                new[]
+                {
+                    new IR.Edge(left, right, null, null, Point.Zero, Point.Zero, new Stroke())
+                }
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+
+            Assert.True(result, errors.Join());
+            Assert.Single(layout!.Lines);
+            Assert.Equal(new Point(10, 5), layout.Lines.Single().Start);
+            Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
+        }
+
+        [Fact]
+        public void LinePosition_45Degree()
+        {
+            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10, Row = 2, Column = 2 };
+
+            var rules = new IR.Rules(
+                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
+                new[] { left, right },
+                new[]
+                {
+                    new IR.Edge(left, right, null, null, Point.Zero, Point.Zero, new Stroke())
+                }
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+
+            Assert.True(result, errors.Join());
+            Assert.Single(layout!.Lines);
+            AssertEx.Eta(new Point(10, 10), layout.Lines.Single().Start);
+            AssertEx.Eta(new Point(20, 20), layout.Lines.Single().End);
+        }
+
+        [Fact]
+        public void LineOffset()
+        {
+            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+
+            var rules = new IR.Rules(
+                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
+                new[] { left, right },
+                new[]
+                {
+                    new IR.Edge(left, right, null, null, new Point(0, 1), new Point(0, 1), new Stroke())
+                }
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+
+            Assert.True(result, errors.Join());
+            Assert.Single(layout!.Lines);
+            Assert.Equal(new Point(10, 6), layout.Lines.Single().Start);
+            Assert.Equal(new Point(20, 6), layout.Lines.Single().End);
+        }
+
+        [Fact]
+        public void LineAnchor()
+        {
+            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+
+            var rules = new IR.Rules(
+                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
+                new[] { left, right },
+                new[]
+                {
+                    new IR.Edge(left, right, AnchorKind.Corners, null, Point.Zero, Point.Zero, new Stroke())
+                }
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+
+            Assert.True(result, errors.Join());
+            Assert.Single(layout!.Lines);
+            AssertEx.Eta(new Point(10, 0), layout.Lines.Single().Start);
+            Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
         }
     }
 }

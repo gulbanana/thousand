@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Thousand.Model;
 using Xunit;
 using Xunit.Sdk;
 
@@ -15,6 +17,12 @@ namespace Thousand.Tests
         public static void Fail(string message)
         {
             throw new XunitException(message);
+        }
+
+        internal static void Eta(Point expected, Point actual)
+        {
+            Assert.True(Math.Abs(expected.X - actual.X) < 2);
+            Assert.True(Math.Abs(expected.Y - actual.Y) < 2);
         }
     }
 }

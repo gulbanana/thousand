@@ -23,7 +23,7 @@ namespace Thousand.IR
         // layout
         int? Row, int? Column, int? Width, int? Height,
         // shape
-        ShapeKind? Kind, int Padding, int CornerRadius, Stroke Stroke, Colour Fill
+        ShapeKind? Shape, int Padding, int CornerRadius, Stroke Stroke, Colour Fill
     )
     {
         public Object() : this(null, new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }

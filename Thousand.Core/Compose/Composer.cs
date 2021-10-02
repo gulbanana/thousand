@@ -120,9 +120,9 @@ namespace Thousand.Compose
 
                 boxes[obj] = box;
 
-                if (obj.Kind.HasValue)
+                if (obj.Shape.HasValue)
                 {
-                    var shape = new Layout.Shape(box, obj.Kind.Value, obj.CornerRadius, obj.Stroke, obj.Fill);
+                    var shape = new Layout.Shape(box, obj.Shape.Value, obj.CornerRadius, obj.Stroke, obj.Fill);
                     shapes[obj] = shape;
                 }
                 
@@ -206,7 +206,7 @@ namespace Thousand.Compose
                 size = size with { X = obj.Width ?? size.X, Y = obj.Height ?? size.Y };
             }
 
-            if (obj.Kind is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle or ShapeKind.Diamond)
+            if (obj.Shape is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle or ShapeKind.Diamond)
             {
                 var longestSide = Math.Max(size.X, size.Y);
                 size = new Point(longestSide, longestSide);
