@@ -33,13 +33,14 @@ namespace Thousand
         private readonly List<GenerationError> es;
         private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
         private readonly Dictionary<string, AST.SegmentAttribute[]> lineClasses;
-        private readonly Dictionary<string, IR.Object> objects;
-        private readonly List<IR.Edge> lines;
+        private readonly Dictionary<string, IR.Object> allObjects;
+        private readonly List<IR.Object> rootObjects;
+        private readonly List<IR.Edge> rootEdges;
 
         public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
-        public IReadOnlyList<IR.Object> Objects => objects.Values.ToList();
-        public IReadOnlyList<IR.Edge> Edges => lines;
+        public IReadOnlyList<IR.Object> Objects => rootObjects;
+        public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
         private Evaluator(List<GenerationError> warnings, List<GenerationError> errors)
         {
@@ -48,8 +49,9 @@ namespace Thousand
 
             objectClasses = new(StringComparer.OrdinalIgnoreCase);
             lineClasses = new(StringComparer.OrdinalIgnoreCase);
-            objects = new(StringComparer.OrdinalIgnoreCase);
-            lines = new();
+            allObjects = new(StringComparer.OrdinalIgnoreCase);
+            rootObjects = new();
+            rootEdges = new();
 
             Scale = 1m;
             Config = new IR.Config(LayoutKind.Grid, 5, 0, Colour.White);
@@ -129,25 +131,17 @@ namespace Thousand
 
             foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
             {
-                AddObject(node);
+                rootObjects.Add(AddObject(node));
             }
 
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
-                AddLine(chain);
+                AddEdge(chain);
             }
         }
 
-        private void AddObject(AST.TypedObject node)
+        private IR.Object AddObject(AST.TypedObject node)
         {
-            var name = node.Name ?? Guid.NewGuid().ToString();
-
-            if (objects.ContainsKey(name))
-            {
-                es.Add(new GenerationError($"Duplicate object name '{name}'."));
-                return;
-            }
-
             var regionConfig = new IR.Config(LayoutKind.Grid, 15, 0, null);
             
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
@@ -272,25 +266,36 @@ namespace Thousand
                 });
             }
 
+            var children = new List<IR.Object>();
             if (node.Children.Any())
             {
                 foreach (var child in node.Children.Where(d => d.IsT1).Select(d => d.AsT1))
                 {
-                    AddObject(child);
+                    children.Add(AddObject(child));
                 }
 
                 foreach (var chain in node.Children.Where(d => d.IsT2).Select(d => d.AsT2))
                 {
-                    AddLine(chain);
+                    AddEdge(chain);
                 }
+            }
+
+            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, margin, row, column, width, height, shape, cornerRadius, stroke);
+
+            var name = node.Name ?? Guid.NewGuid().ToString();
+            if (allObjects.ContainsKey(name))
+            {
+                es.Add(new GenerationError($"Duplicate object name '{name}'."));
             }
             else
             {
-                objects.Add(name, new IR.Object(new IR.Region(regionConfig, new IR.Object[0]), label, font, margin, row, column, width, height, shape, cornerRadius, stroke));
+                allObjects.Add(name, result);
             }
+
+            return result;
         }
 
-        private void AddLine(AST.TypedLine line)
+        private void AddEdge(AST.TypedLine line)
         {
             var stroke = new Stroke();
             var anchorStart = new AnchorKind?();
@@ -381,19 +386,19 @@ namespace Thousand
                     switch (from.Direction.Value)
                     {
                         case ArrowKind.Backward:
-                            lines.Add(new(stroke, toTarget, fromTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, toTarget, fromTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Forward:
-                            lines.Add(new(stroke, fromTarget, toTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, fromTarget, toTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Neither:
-                            lines.Add(new(stroke, fromTarget, toTarget, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, fromTarget, toTarget, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Both:
-                            lines.Add(new(stroke, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         default:
@@ -448,13 +453,13 @@ namespace Thousand
 
         private IR.Object? FindObject(string name)
         {
-            if (!objects.ContainsKey(name))
+            if (!allObjects.ContainsKey(name))
             {
                 ws.Add(new($"No object found with name '{name}'."));
                 return null;
             }
 
-            return objects[name];
+            return allObjects[name];
         }
     }
 }

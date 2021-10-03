@@ -18,9 +18,14 @@ namespace Thousand.Tests
                 new AST.ObjectClass("object", Array.Empty<string>(), Array.Empty<AST.ObjectAttribute>()),
                 new AST.LineClass("line", Array.Empty<string>(), Array.Empty<AST.SegmentAttribute>()),
                 new AST.ObjectClass("big", Array.Empty<string>(), new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(50) }), // increases font
+                new AST.ObjectClass("group", Array.Empty<string>(), new AST.ObjectAttribute[] { new AST.NodeShapeAttribute(null), new AST.TextLabelAttribute(null) }),
 
-                new AST.TypedObject(new[]{"object"}, "foo", Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.ObjectDeclaration>()),
-                new AST.TypedObject(new[]{"big"}, "bar", Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.ObjectDeclaration>()), //uses larger font
+                new AST.TypedObject(new[]{"group"}, null, Array.Empty<AST.ObjectAttribute>(), new AST.ObjectDeclaration[]
+                {
+                    new AST.TypedObject(new[]{"object"}, "foo", Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.ObjectDeclaration>()),
+                    new AST.TypedObject(new[]{"big"}, "bar", Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.ObjectDeclaration>()), //uses larger font
+                }),
+                
                 new AST.TypedObject(new[]{"big"}, "baz", new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(40) }, Array.Empty<AST.ObjectDeclaration>()), // reduces font again
 
                 // chain containing two edges, both from foo to bar
@@ -34,10 +39,12 @@ namespace Thousand.Tests
             Assert.True(result, errors.Join());
             Assert.Empty(warnings);
             Assert.Equal(Colour.Blue, root!.Region.Config.Fill);
-            Assert.Equal(3, root.Region.Objects.Count);
+            Assert.Equal(4, root.Region.WalkObjects().Count());
+            Assert.Equal(2, root.Region.Objects.Count); // group, big baz
+            Assert.Equal(2, root.Region.Objects[0].Region.Objects.Count); // group { foo, bar }
             Assert.Equal(2, root.Edges.Count);
 
-            AssertEx.Sequence(root.Region.Objects.Select(o => o.Font.Size), 20, 50, 40);
+            AssertEx.Sequence(root.Region.WalkObjects().Where(o => o.Label != null).Select(o => o.Font.Size), 20, 50, 40);
         }
     }
 }
