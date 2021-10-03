@@ -12,7 +12,7 @@ namespace Thousand.Compose
         {
             try
             {
-                var textMeasures = new Dictionary<string, Point>();
+                var textMeasures = new Dictionary<string, BlockMeasurements>();
                 foreach (var o in ir.Objects.Where(o => o.Label is not null))
                 {
                     textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font);
@@ -34,13 +34,13 @@ namespace Thousand.Compose
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
         private readonly IR.Rules rules;
-        private readonly IReadOnlyDictionary<string, Point> textMeasures;        
+        private readonly IReadOnlyDictionary<string, BlockMeasurements> textMeasures;        
         private readonly Dictionary<IR.Object, Rect> boxes;
         private readonly Dictionary<IR.Object, Layout.Shape> shapes;
         private readonly List<Layout.Label> labels;
         private readonly List<Layout.Line> lines;
 
-        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Rules rules, IReadOnlyDictionary<string, Point> textMeasures)
+        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Rules rules, IReadOnlyDictionary<string, BlockMeasurements> textMeasures)
         {
             ws = warnings;
             es = errors;
@@ -128,9 +128,15 @@ namespace Thousand.Compose
                 
                 if (obj.Label != null && obj.Label != string.Empty)
                 {
-                    var textBox = new Rect(textMeasures[obj.Label]).CenteredAt(center);
-                    var label = new Layout.Label(textBox, obj.Label, obj.Font);
-                    labels.Add(label);
+                    var block = textMeasures[obj.Label];
+                    var blockBox = new Rect(block.Size).CenteredAt(center);
+
+                    foreach (var line in block.Lines)
+                    {
+                        var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
+                        var label = new Layout.Label(lineBox, line.Run, obj.Font);
+                        labels.Add(label);
+                    }                    
                 }
             }
 
@@ -194,7 +200,7 @@ namespace Thousand.Compose
 
             if (obj.Label != null && obj.Label != string.Empty)
             {
-                size = textMeasures[obj.Label].Pad(obj.Padding);
+                size = textMeasures[obj.Label].Size.Pad(obj.Padding);
             }
             else
             {

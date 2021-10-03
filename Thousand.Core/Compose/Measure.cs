@@ -1,8 +1,10 @@
-﻿using SkiaSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using SkiaSharp;
+using Topten.RichTextKit;
 using Thousand.Model;
 using Thousand.Render;
+using System.Linq;
 
 namespace Thousand.Compose
 {
@@ -16,16 +18,23 @@ namespace Thousand.Compose
     /// </remarks>
     internal static class Measure
     {
-        public static Point TextBlock(string label, Font font)
+        public static BlockMeasurements TextBlock(string label, Font font)
         {
-            var text = new Topten.RichTextKit.RichString()
-                .FontFamily(font.Family)
-                .FontSize(font.Size)
-                .Alignment(Topten.RichTextKit.TextAlignment.Center)
-                .Add(label);
+            var style = new Style()
+            {
+                FontFamily = font.Family,
+                FontSize = font.Size
+            };
 
-            var pixelWidth = (decimal)MathF.Ceiling(text.MeasuredWidth);
-            var pixelHeight = (decimal)MathF.Ceiling(text.MeasuredHeight);
+            var textBlock = new TextBlock()
+            {
+                Alignment = TextAlignment.Center
+            };
+
+            textBlock.AddText(label, style);
+
+            var pixelWidth = (decimal)MathF.Ceiling(textBlock.MeasuredWidth);
+            var pixelHeight = (decimal)MathF.Ceiling(textBlock.MeasuredHeight);
 
             // subpixel vertical positioning is not consistently supported in SVG
             if (pixelHeight % 2 != 0)
@@ -33,7 +42,14 @@ namespace Thousand.Compose
                 pixelHeight++;
             }
 
-            return new(pixelWidth, pixelHeight);
+            var lines = textBlock.Lines
+                .Select(l => new LineMeasurements(
+                    new Point((decimal)l.Runs[0].XCoord, (decimal)l.YCoord), 
+                    new Point((decimal)l.Width, (decimal)l.Height), 
+                    label.Substring(l.Start, l.Length)))
+                .ToArray();
+
+            return new BlockMeasurements(new Point(pixelWidth, pixelHeight), lines);
         }
 
         public static (Point from, Point to) Line(Point fromPoint, Point toPoint, Layout.Shape? fromShape, Layout.Shape? toShape)
