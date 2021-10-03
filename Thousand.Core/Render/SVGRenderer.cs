@@ -5,7 +5,7 @@ using Thousand.Layout;
 
 namespace Thousand.Render
 {
-    public sealed class SVGRenderer : IRenderer<XElement>, IDisposable
+    public sealed partial class SVGRenderer : IRenderer<XElement>, IDisposable
     {
         private readonly XNamespace xmlns;
 
@@ -21,7 +21,7 @@ namespace Thousand.Render
             var state = new SVGRendererState(diagram.Scale);
 
             var w = diagram.Width * diagram.Scale;
-            var h = diagram.Height * diagram.Scale;
+            var h = diagram.Height * diagram.Scale;            
 
             var svg = new XElement(xmlns + "svg", new XAttribute("width", w), new XAttribute("height", h), new XAttribute("viewBox", $"0 0 {diagram.Width} {diagram.Height}"),
                 // MDN claims that WebKit supports geometricPrecision, which disables hinting, but that in Gecko it is ignored and treated as optimizeLegibility.

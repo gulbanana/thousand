@@ -27,10 +27,12 @@ namespace Thousand.Tests
             },
             new Line[]
             {
-                new Line(new Point(0, 0), new Point(100, 100), new Stroke())
+                new Line(new Stroke(), new Point(0, 0), new Point(100, 100), false, false)
             });
 
             var svg = renderer.Render(diagram);
+
+            Assert.Empty(svg.Elements("marker"));
 
             Assert.Single(svg.Elements(xmlns + "text"));
             Assert.Equal("foo", svg.Element(xmlns + "text")!.Value);

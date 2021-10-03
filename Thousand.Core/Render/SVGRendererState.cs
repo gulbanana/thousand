@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 using Thousand.Layout;
 using Thousand.Model;
@@ -19,7 +20,7 @@ namespace Thousand.Render
         public XElement DefineMarker(Colour c) => new XElement(xmlns + "marker",
             new XAttribute("id", DeclareMarker(c)),
             new XAttribute("fill", c.SVG()),
-            new XAttribute("orient", "auto"),
+            new XAttribute("orient", "auto-start-reverse"),
             new XAttribute("markerUnits", "userSpaceOnUse"),
             new XAttribute("markerWidth", 7), new XAttribute("markerHeight", 8),
             new XAttribute("refX", 7), new XAttribute("refY", 4),
@@ -42,9 +43,18 @@ namespace Thousand.Render
                 new XAttribute("x1", line.Start.X),
                 new XAttribute("y1", line.Start.Y),
                 new XAttribute("x2", line.End.X),
-                new XAttribute("y2", line.End.Y),
-                new XAttribute("marker-end", $"url(#{DeclareMarker(line.Stroke.Colour)})")
+                new XAttribute("y2", line.End.Y)
             );
+
+            if (line.StartMarker)
+            {
+                tag.Add(new XAttribute("marker-start", $"url(#{DeclareMarker(line.Stroke.Colour)})"));
+            }
+
+            if (line.EndMarker)
+            {
+                tag.Add(new XAttribute("marker-end", $"url(#{DeclareMarker(line.Stroke.Colour)})"));
+            }
 
             tag.Add(line.Stroke.SVG(scale));
 
@@ -76,7 +86,7 @@ namespace Thousand.Render
 
         private string DeclareMarker(Colour c)
         {
-            return "arrow-" + Convert.ToHexString(new[] { c.R, c.G, c.B });
+            return $"arrow-{Convert.ToHexString(new[] { c.R, c.G, c.B })}";
         }
 
         private XElement CreatePath(Shape shape)

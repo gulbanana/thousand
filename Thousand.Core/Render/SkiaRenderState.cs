@@ -76,7 +76,22 @@ namespace Thousand.Render
                 canvas.DrawLine(start, end, stroke);
             }
 
-            // draw end cap
+            // draw markers
+            if (line.StartMarker)
+            {
+                var arrowhead = CreateArrowhead(end, start);
+                canvas.DrawPath(arrowhead, fill);
+            }
+
+            if (line.EndMarker)
+            {
+                var arrowhead = CreateArrowhead(start, end);
+                canvas.DrawPath(arrowhead, fill);
+            }
+        }
+
+        private SKPath CreateArrowhead(SKPoint start, SKPoint end)
+        {
             var arrowhead = new SKPath();
             var arrowLength = (end - start).Normalize(7f);
             var arrowWidth = (end - start).Normalize(4f);
@@ -89,7 +104,7 @@ namespace Thousand.Render
             arrowhead.LineTo(end - arrowLength + base2);
             arrowhead.Close();
 
-            canvas.DrawPath(arrowhead, fill);
+            return arrowhead;
         }
 
         private static SKPathEffect? StrokeEffect(StrokeKind style) => style switch

@@ -189,7 +189,7 @@ namespace Thousand.Compose
                     end = end.Closest(anchors);
                 }
 
-                lines.Add(new(start, end, edge.Stroke));
+                lines.Add(new(edge.Stroke, start, end, false, true));
             }
 
             return new(
