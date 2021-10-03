@@ -17,7 +17,7 @@ namespace Thousand.Render
 
         public void PaintDiagram(SKCanvas canvas, Layout.Diagram diagram)
         {
-            canvas.Scale(diagram.Scale);
+            canvas.Scale((float)diagram.Scale);
             canvas.Clear(diagram.Background.SK());
         }
 

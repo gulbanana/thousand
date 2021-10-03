@@ -5,7 +5,7 @@ using Thousand.Model;
 namespace Thousand.AST
 {
     public abstract record DocumentAttribute;
-    public record DocumentScaleAttribute(float Value) : DocumentAttribute;
+    public record DocumentScaleAttribute(decimal Value) : DocumentAttribute;
 
     public abstract record TextAttribute;
     public record TextLabelAttribute(string? Content) : TextAttribute;

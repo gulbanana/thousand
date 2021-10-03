@@ -15,7 +15,7 @@ namespace Thousand.Compose
                 var textMeasures = new Dictionary<string, BlockMeasurements>();
                 foreach (var o in ir.Objects.Where(o => o.Label is not null))
                 {
-                    textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font, ir.Config.Scale);
+                    textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font);
                 }
 
                 var composition = new Composer(warnings, errors, ir, textMeasures);
@@ -130,6 +130,13 @@ namespace Thousand.Compose
                 {
                     var block = textMeasures[obj.Label];
                     var blockBox = new Rect(block.Size).CenteredAt(center);
+
+                    // subpixel vertical positioning is not consistently supported in SVG
+                    var pixelBoundary = blockBox.Top * rules.Config.Scale;
+                    if (Math.Floor(pixelBoundary) != pixelBoundary)
+                    {
+                        blockBox = blockBox.Move(new Point(0, 0.5m));
+                    }
 
                     var lines = new List<Layout.LabelLine>();
                     foreach (var line in block.Lines)

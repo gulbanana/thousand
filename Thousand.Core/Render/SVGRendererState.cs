@@ -8,9 +8,9 @@ namespace Thousand.Render
     internal sealed class SVGRendererState
     {
         private readonly XNamespace xmlns;
-        private readonly float scale;
+        private readonly decimal scale;
 
-        public SVGRendererState(float diagramScale)
+        public SVGRendererState(decimal diagramScale)
         {
             xmlns = "http://www.w3.org/2000/svg";
             scale = diagramScale;

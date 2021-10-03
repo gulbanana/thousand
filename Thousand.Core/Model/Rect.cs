@@ -43,5 +43,10 @@
         {
             return new Rect(0, 0, toWidth, toHeight).CenteredAt(Center);
         }
+
+        public Rect Move(Point point)
+        {
+            return new Rect(Left+point.X, Top+point.Y, Right+point.X, Bottom+point.Y);
+        }
     }
 }

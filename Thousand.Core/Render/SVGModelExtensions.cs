@@ -28,7 +28,7 @@ namespace Thousand.Render
             };
         }
 
-        public static XAttribute[] SVG(this Stroke self, float scale)
+        public static XAttribute[] SVG(this Stroke self, decimal scale)
         {
             var attributes = new List<XAttribute>();
 
@@ -53,7 +53,7 @@ namespace Thousand.Render
             switch (self.Style)
             {
                 case StrokeKind.Dashed:
-                    var dashScale = self.Width is HairlineWidth ? scale : 1f;
+                    var dashScale = self.Width is HairlineWidth ? scale : 1m;
                     attributes.Add(new("stroke-dasharray", $"{3 * dashScale} {2 * dashScale}"));
                     break;
             }

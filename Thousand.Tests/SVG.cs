@@ -21,7 +21,7 @@ namespace Thousand.Tests
         {
             var textBounds = new Rect(new Point(30, 28));
 
-            var diagram = new Diagram(100, 100, 1f, null, new Shape[0], new LabelBlock[]
+            var diagram = new Diagram(100, 100, 1, null, new Shape[0], new LabelBlock[]
             {
                 new LabelBlock(new Font(), textBounds, "foo", new[] { new LabelLine(textBounds, "foo") })
             },
