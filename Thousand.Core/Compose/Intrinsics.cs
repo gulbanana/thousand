@@ -16,7 +16,7 @@ namespace Thousand.Compose
     /// means that Skia is the ground truth for text shaping, but externally-supplied
     /// shaping is what formats like SVG require of us anyway.
     /// </remarks>
-    internal static class Measure
+    internal static class Intrinsics
     {
         public static BlockMeasurements TextBlock(string label, Font font)
         {

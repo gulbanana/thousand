@@ -2,6 +2,8 @@
 {
     public record Rect(decimal Left, decimal Top, decimal Right, decimal Bottom)
     {
+        public static Rect Zero { get; } = new(0, 0, 0, 0);
+
         public decimal Width => Right - Left;
         public decimal Height => Bottom - Top;
         public Point Origin => new Point(Left, Top);
