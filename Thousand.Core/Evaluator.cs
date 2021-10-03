@@ -37,6 +37,7 @@ namespace Thousand
         private readonly List<IR.Object> rootObjects;
         private readonly List<IR.Edge> rootEdges;
 
+        private Font rootFont;
         public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
         public IReadOnlyList<IR.Object> Objects => rootObjects;
@@ -53,6 +54,7 @@ namespace Thousand
             rootObjects = new();
             rootEdges = new();
 
+            rootFont = new Font();
             Scale = 1m;
             Config = new IR.Config(LayoutKind.Grid, 5, 0, Colour.White);
         }
@@ -87,6 +89,31 @@ namespace Thousand
 
                         case AST.RegionGutterAttribute rga:
                             Config = Config with { Gutter = rga.Value };
+                            break;
+                    }
+                }, text =>
+                {
+                    switch (text)
+                    {
+                        case AST.TextFontFamilyAttribute tffa:
+                            rootFont = rootFont with { Family = tffa.Name };
+                            break;
+
+                        case AST.TextFontSizeAttribute tfsa:
+                            rootFont = rootFont with { Size = tfsa.Value };
+                            break;
+
+                        case AST.TextFontColourAttribute tfca:
+                            rootFont = rootFont with { Colour = tfca.Colour };
+                            break;
+
+                        case AST.TextFontAttribute tfa:
+                            rootFont = new Font
+                            {
+                                Family = tfa.Family ?? rootFont.Family,
+                                Size = tfa.Size ?? rootFont.Size,
+                                Colour = tfa.Colour ?? rootFont.Colour
+                            };
                             break;
                     }
                 });
@@ -131,7 +158,7 @@ namespace Thousand
 
             foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
             {
-                rootObjects.Add(AddObject(node));
+                rootObjects.Add(AddObject(node, rootFont));
             }
 
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
@@ -140,12 +167,12 @@ namespace Thousand
             }
         }
 
-        private IR.Object AddObject(AST.TypedObject node)
+        private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
         {
             var regionConfig = new IR.Config(LayoutKind.Grid, 15, 0, null);
             
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
-            var font = new Font();
+            var font = cascadeFont;
 
             var margin = 0;
             var row = new int?();
@@ -164,6 +191,10 @@ namespace Thousand
                 {
                     switch (n)
                     {
+                        case AST.NodeLabelAttribute nla:
+                            label = nla.Content;
+                            break;
+
                         case AST.NodeRowAttribute nra:
                             row = nra.Value;
                             break;
@@ -212,6 +243,31 @@ namespace Thousand
                             regionConfig = regionConfig with { Gutter = rga.Value };
                             break;
                     }
+                }, t =>
+                {
+                    switch (t)
+                    {
+                        case AST.TextFontFamilyAttribute tffa:
+                            font = font with { Family = tffa.Name };
+                            break;
+
+                        case AST.TextFontSizeAttribute tfsa:
+                            font = font with { Size = tfsa.Value };
+                            break;
+
+                        case AST.TextFontColourAttribute tfca:
+                            font = font with { Colour = tfca.Colour };
+                            break;
+
+                        case AST.TextFontAttribute tfa:
+                            font = new Font 
+                            { 
+                                Family = tfa.Family ?? font.Family,
+                                Size = tfa.Size ?? font.Size,
+                                Colour = tfa.Colour ?? font.Colour
+                            };
+                            break;
+                    }
                 }, l =>
                 {
                     switch (l)
@@ -234,35 +290,6 @@ namespace Thousand
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
                             break;
                     }
-                }, t =>
-                {
-                    switch (t)
-                    {
-                        case AST.TextLabelAttribute tla:
-                            label = tla.Content;
-                            break;
-
-                        case AST.TextFontFamilyAttribute tffa:
-                            font = font with { Family = tffa.Name };
-                            break;
-
-                        case AST.TextFontSizeAttribute tfsa:
-                            font = font with { Size = tfsa.Value };
-                            break;
-
-                        case AST.TextFontColourAttribute tfca:
-                            font = font with { Colour = tfca.Colour };
-                            break;
-
-                        case AST.TextFontAttribute tfa:
-                            font = new Font 
-                            { 
-                                Family = tfa.Family ?? font.Family,
-                                Size = tfa.Size ?? font.Size,
-                                Colour = tfa.Colour ?? font.Colour
-                            };
-                            break;
-                    }
                 });
             }
 
@@ -271,7 +298,7 @@ namespace Thousand
             {
                 foreach (var child in node.Children.Where(d => d.IsT1).Select(d => d.AsT1))
                 {
-                    children.Add(AddObject(child));
+                    children.Add(AddObject(child, font));
                 }
 
                 foreach (var chain in node.Children.Where(d => d.IsT2).Select(d => d.AsT2))

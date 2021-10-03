@@ -87,7 +87,7 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name);
-            AssertEx.Sequence(result.Value.Attributes, new AST.TextLabelAttribute("bar"));
+            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
         }
 
         [Fact]

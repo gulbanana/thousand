@@ -168,11 +168,6 @@ namespace Thousand.Parse
         #endregion
 
         #region text group, used only by objects (so far)
-        public static TokenListParser<TokenKind, AST.TextAttribute> TextLabelAttribute { get; } =
-            from key in Key(TextAttributeKind.Label)
-            from value in Value.NullableString
-            select new AST.TextLabelAttribute(value) as AST.TextAttribute;
-
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontSizeAttribute { get; } =
             from key in Key(TextAttributeKind.FontSize)
             from value in Value.CountingNumber
@@ -194,14 +189,18 @@ namespace Thousand.Parse
             select values switch { (var c, var f, var s) => new AST.TextFontAttribute(f, s, c) as AST.TextAttribute };
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } =
-            TextLabelAttribute
-                .Or(TextFontAttribute)
+            TextFontAttribute
                 .Or(TextFontFamilyAttribute)
                 .Or(TextFontSizeAttribute)
                 .Or(TextFontColourAttribute);
         #endregion
 
         #region node group, used only by objects
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
+            from key in Key(NodeAttributeKind.Label)
+            from value in Value.NullableString
+            select new AST.NodeLabelAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeRowAttribute { get; } =
             from key in Key(NodeAttributeKind.Row)
             from value in Value.CountingNumber
@@ -238,7 +237,8 @@ namespace Thousand.Parse
             select new AST.NodeCornerRadiusAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
-            NodeShapeAttribute
+            NodeLabelAttribute
+                .Or(NodeShapeAttribute)
                 .Or(NodePaddingAttribute)
                 .Or(NodeCornerRadiusAttribute)
                 .Or(NodeRowAttribute)

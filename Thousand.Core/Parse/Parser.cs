@@ -76,7 +76,8 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
             AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
-                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x));
+                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
+                .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
 
         public static TokenListParser<TokenKind, AST.Class> ObjectClassBody(string name, string[] bases) =>
             AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.Class);

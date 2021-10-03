@@ -4,4 +4,6 @@ class text [stroke=none, fill=none, padding=0]
 
 class line [offsetX=0]
 
-class row
+class row [shape=none, label=none]
+class column [shape=none, label=none]
+class col : column

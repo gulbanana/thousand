@@ -229,9 +229,9 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Attributes);
-            Assert.True(result.Value.Attributes.Single().IsT2);
+            Assert.True(result.Value.Attributes.Single().IsT3);
 
-            var lsa = (AST.LineStrokeAttribute)result.Value.Attributes.Single().AsT2;
+            var lsa = (AST.LineStrokeAttribute)result.Value.Attributes.Single().AsT3;
             
             Assert.NotNull(lsa.Colour);
             Assert.Null(lsa.Width);

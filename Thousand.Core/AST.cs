@@ -8,7 +8,6 @@ namespace Thousand.AST
     public record DocumentScaleAttribute(decimal Value) : DocumentAttribute;
 
     public abstract record TextAttribute;
-    public record TextLabelAttribute(string? Content) : TextAttribute;
     public record TextFontFamilyAttribute(string Name) : TextAttribute;
     public record TextFontSizeAttribute(int Value) : TextAttribute;
     public record TextFontColourAttribute(Colour Colour) : TextAttribute;
@@ -27,6 +26,7 @@ namespace Thousand.AST
     public record RegionGutterAttribute(int Value) : RegionAttribute;
 
     public abstract record NodeAttribute;
+    public record NodeLabelAttribute(string? Content) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;    
     public record NodeWidthAttribute(int Value) : NodeAttribute;
@@ -46,12 +46,12 @@ namespace Thousand.AST
     public record ArrowOffsetXAttribute(int Start, int End) : ArrowAttribute;
     public record ArrowOffsetYAttribute(int Start, int End) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, LineAttribute, TextAttribute> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
     [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
 
     [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<ArrowAttribute, LineAttribute> { }
     
-    [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute> { }    
+    [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }    
     [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, TypedLine> { }
 
     public abstract record Class(string Name, string[] BaseClasses);
