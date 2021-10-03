@@ -1,5 +1,4 @@
 gutter=25
-margin=10
 
 class vampire [fontsize=16, padding=5, height=96]
 class invictus:vampire [stroke=blue]

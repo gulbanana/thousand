@@ -4,7 +4,7 @@
     {
         Fill,
         Layout,
-        Margin,
+        Padding,
         Gutter
     }
 }

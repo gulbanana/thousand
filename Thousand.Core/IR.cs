@@ -4,33 +4,47 @@ using Thousand.Model;
 // Intermediate representation shared between Canonicalise and Compose stages
 namespace Thousand.IR
 {
-    public record Region(LayoutKind Layout, int Margin, int Gutter)
+    public record Region(Config Config, IReadOnlyList<Object> Objects)
     {
-        public Region() : this(LayoutKind.Grid, 0, 20) { }
+        public IEnumerable<Object> WalkObjects()
+        {
+            foreach (var obj in Objects)
+            {
+                yield return obj;
+                foreach (var child in obj.Region.WalkObjects())
+                {
+                    yield return child;
+                }
+            }
+        }
     }
 
-    public record Config(decimal Scale, Colour? Background, Region Region)
-    {
-        public Config() : this(1, Colour.White, new Region()) { }
-    }
+    public record Config(LayoutKind Layout, int Padding, int Gutter, Colour? Fill);
         
     public record Object
     (
+        Region Region,
+        // text
         string? Label,
         Font Font,
-        Region Region,
         // layout
-        int? Row, int? Column, int? Width, int? Height,
+        int Margin, int? Row, int? Column, int? Width, int? Height,
         // shape
-        ShapeKind? Shape, int Padding, int CornerRadius, Stroke Stroke, Colour Fill
+        ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object() : this(null, new Font(), new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }
-        public Object(string label) : this(label, new Font(), new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }
+        public Object(params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), null, new Font(), 0, null, null, null, null, ShapeKind.RoundRectangle, 5, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), label, new Font(), 0, null, null, null, null, ShapeKind.RoundRectangle, 5, new Stroke()) { }
     }
     
     // there may be many IR.Edge for a single AST.Line
     public record Edge(Stroke Stroke, Object FromTarget, Object ToTarget, MarkerKind? FromMarker, MarkerKind? ToMarker, AnchorKind? FromAnchor, AnchorKind? ToAnchor, Point FromOffset, Point ToOffset);
     
-    public record Rules(Config Config, IReadOnlyList<Object> Objects, IReadOnlyList<Edge> Edges);
+    public record Root(decimal Scale, Region Region, IReadOnlyList<Edge> Edges)
+    {
+        public IEnumerable<Object> WalkObjects()
+        {
+            return Region.WalkObjects();
+        }
+    }
 }

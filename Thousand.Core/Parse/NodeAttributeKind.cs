@@ -8,8 +8,9 @@
         Width,
         Height,
 
+        Margin,
+
         Shape,
-        Padding,
         Corner, CornerRadius,
     }
 }

@@ -228,9 +228,9 @@ namespace Thousand.Parse
             select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
-            from key in Key(NodeAttributeKind.Padding)
+            from key in Key(NodeAttributeKind.Margin)
             from value in Value.WholeNumber
-            select new AST.NodePaddingAttribute(value) as AST.NodeAttribute;
+            select new AST.NodeMarginAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeCornerRadiusAttribute { get; } =
             from key in Keys(NodeAttributeKind.Corner, NodeAttributeKind.CornerRadius)
@@ -259,9 +259,9 @@ namespace Thousand.Parse
             select new AST.RegionLayoutAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionMarginAttribute { get; } =
-            from key in Key(RegionAttributeKind.Margin)
+            from key in Key(RegionAttributeKind.Padding)
             from value in Value.WholeNumber
-            select new AST.RegionMarginAttribute(value) as AST.RegionAttribute;
+            select new AST.RegionPaddingAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionGutterAttribute { get; } =
             from key in Key(RegionAttributeKind.Gutter)

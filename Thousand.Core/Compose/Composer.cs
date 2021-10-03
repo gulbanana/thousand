@@ -8,12 +8,12 @@ namespace Thousand.Compose
 {
     public class Composer
     {
-        public static bool TryCompose(IR.Rules ir, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
+        public static bool TryCompose(IR.Root ir, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
         {
             try
             {
                 var textMeasures = new Dictionary<string, BlockMeasurements>();
-                foreach (var o in ir.Objects.Where(o => o.Label is not null))
+                foreach (var o in ir.WalkObjects().Where(o => o.Label is not null))
                 {
                     textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font);
                 }
@@ -33,19 +33,19 @@ namespace Thousand.Compose
 
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
-        private readonly IR.Rules rules;
+        private readonly IR.Root root;
         private readonly IReadOnlyDictionary<string, BlockMeasurements> textMeasures;        
         private readonly Dictionary<IR.Object, Rect> boxes;
         private readonly Dictionary<IR.Object, Layout.Shape> shapes;
         private readonly List<Layout.LabelBlock> labels;
         private readonly List<Layout.Line> lines;
 
-        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Rules rules, IReadOnlyDictionary<string, BlockMeasurements> textMeasures)
+        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Root root, IReadOnlyDictionary<string, BlockMeasurements> textMeasures)
         {
             ws = warnings;
             es = errors;
 
-            this.rules = rules;
+            this.root = root;
             this.textMeasures = textMeasures;
 
             boxes = new(ReferenceEqualityComparer.Instance);
@@ -62,8 +62,8 @@ namespace Thousand.Compose
             var currentColumn = 1;
             var maxColumn = 1;
             
-            var sizes = new Dictionary<IR.Object, (int row, int col, Point size)>(ReferenceEqualityComparer.Instance);
-            foreach (var obj in rules.Objects)
+            var sizes = new Dictionary<IR.Object, NodeMeasurements>(ReferenceEqualityComparer.Instance);
+            foreach (var obj in root.WalkObjects()) // XXX should be recursive
             {
                 if (obj.Row.HasValue && currentRow != obj.Row.Value)
                 {
@@ -77,7 +77,7 @@ namespace Thousand.Compose
                 }
 
                 var size = MeasureIntrinsicSize(obj);
-                sizes[obj] = (currentRow, currentColumn, size);
+                sizes[obj] = new NodeMeasurements(currentRow, currentColumn, size, obj.Margin);
 
                 maxRow = Math.Max(currentRow, maxRow);
                 maxColumn = Math.Max(currentColumn, maxColumn);
@@ -86,33 +86,33 @@ namespace Thousand.Compose
 
             var rowHeights = new decimal[maxRow];
             var rowCenters = new decimal[maxRow];
-            var rowCenter = 0m;
+            var rowCenter = (decimal)root.Region.Config.Padding;
             for (var r = 0; r < maxRow; r++)
             {
-                var height = sizes.Values.Where(s => s.row == r + 1).Select(s => s.size.Y).Append(0).Max();
-                var center = rowCenter + height / 2 + rules.Config.Region.Margin;
-                rowCenter = rowCenter + height + rules.Config.Region.Margin * 2 + rules.Config.Region.Gutter;
+                var height = sizes.Values.Where(s => s.row == r + 1).Select(s => s.size.Y + s.margin*2).Append(0).Max();
+                var center = rowCenter + height / 2;
+                rowCenter = rowCenter + height + root.Region.Config.Gutter;
                 rowHeights[r] = height;
                 rowCenters[r] = center;
             }
 
             var colWidths = new decimal[maxColumn];
             var colCenters = new decimal[maxColumn];
-            var colCenter = 0m;
+            var colCenter = (decimal)root.Region.Config.Padding;
             for (var c = 0; c < maxColumn; c++)
             {
-                var width = sizes.Values.Where(s => s.col == c + 1).Select(s => s.size.X).Append(0).Max();
-                var center = colCenter + width / 2 + rules.Config.Region.Margin;
-                colCenter = colCenter + width + rules.Config.Region.Margin * 2 + rules.Config.Region.Gutter;
+                var width = sizes.Values.Where(s => s.col == c + 1).Select(s => s.size.X + s.margin*2).Append(0).Max();
+                var center = colCenter + width / 2;
+                colCenter = colCenter + width + root.Region.Config.Gutter;
                 colWidths[c] = width;
                 colCenters[c] = center;
             }
 
-            var totalWidth = colWidths.Sum() + (maxColumn * 2) * rules.Config.Region.Margin + (maxColumn - 1) * rules.Config.Region.Gutter;
-            var totalHeight = rowHeights.Sum() + (maxRow * 2) * rules.Config.Region.Margin + (maxRow - 1) * rules.Config.Region.Gutter;
+            var totalWidth = colWidths.Sum() + (maxColumn - 1) * root.Region.Config.Gutter + 2 * root.Region.Config.Padding;
+            var totalHeight = rowHeights.Sum() + (maxRow - 1) * root.Region.Config.Gutter + 2 * root.Region.Config.Padding;
 
             // pass 2: arrange
-            foreach (var obj in rules.Objects)
+            foreach (var obj in root.WalkObjects()) // XXX should be recursive
             {
                 var measures = sizes[obj];
                 var center = new Point(colCenters[measures.col-1], rowCenters[measures.row-1]);
@@ -122,7 +122,7 @@ namespace Thousand.Compose
 
                 if (obj.Shape.HasValue)
                 {
-                    var shape = new Layout.Shape(box, obj.Shape.Value, obj.CornerRadius, obj.Stroke, obj.Fill);
+                    var shape = new Layout.Shape(box, obj.Shape.Value, obj.CornerRadius, obj.Stroke, obj.Region.Config.Fill);
                     shapes[obj] = shape;
                 }
                 
@@ -132,7 +132,7 @@ namespace Thousand.Compose
                     var blockBox = new Rect(block.Size).CenteredAt(center);
 
                     // subpixel vertical positioning is not consistently supported in SVG
-                    var pixelBoundary = blockBox.Top * rules.Config.Scale;
+                    var pixelBoundary = blockBox.Top * root.Scale;
                     if (Math.Floor(pixelBoundary) != pixelBoundary)
                     {
                         blockBox = blockBox.Move(new Point(0, 0.5m));
@@ -149,7 +149,7 @@ namespace Thousand.Compose
                 }
             }
 
-            foreach (var edge in rules.Edges)
+            foreach (var edge in root.Edges)
             {
                 var fromBox = boxes[edge.FromTarget];
                 var toBox = boxes[edge.ToTarget];
@@ -195,8 +195,8 @@ namespace Thousand.Compose
             return new(
                 (int)Math.Ceiling(totalWidth),
                 (int)Math.Ceiling(totalHeight),
-                rules.Config.Scale,
-                rules.Config.Background,
+                root.Scale,
+                root.Region.Config.Fill,
                 shapes.Values.ToList(), 
                 labels, 
                 lines
@@ -209,7 +209,7 @@ namespace Thousand.Compose
 
             if (obj.Label != null && obj.Label != string.Empty)
             {
-                size = textMeasures[obj.Label].Size.Pad(obj.Padding);
+                size = textMeasures[obj.Label].Size.Pad(obj.Region.Config.Padding);
             }
             else
             {

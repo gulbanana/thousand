@@ -1,4 +1,4 @@
-class node [width=100, height=100, label=none]
+class node [margin=10, width=100, height=100, label=none]
 
 node a [shape=diamond]
 node b [shape=circle, row=2, col=3]

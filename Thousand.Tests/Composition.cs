@@ -26,13 +26,15 @@ namespace Thousand.Tests
         [Fact]
         public void Layout2x1()
         {
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 0) },
-                new IR.Object[]
-                {
-                    new IR.Object { Padding = 0, Width = 10, Height = 10 },
-                    new IR.Object { Padding = 0, Width = 10, Height = 10 }
-                },
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
+                    new IR.Object[]
+                    {
+                        new IR.Object { Width = 10, Height = 10 },
+                        new IR.Object { Width = 10, Height = 10 }
+                    }
+                ),
                 new IR.Edge[] { }
             );
 
@@ -46,13 +48,15 @@ namespace Thousand.Tests
         [Fact]
         public void Layout1x2()
         {
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 0) },
-                new IR.Object[]
-                {
-                    new IR.Object { Padding = 0, Width = 10, Height = 10 },
-                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 2 }
-                },
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
+                    new IR.Object[]
+                    {
+                        new IR.Object { Width = 10, Height = 10 },
+                        new IR.Object { Width = 10, Height = 10, Row = 2 }
+                    }
+                ),
                 new IR.Edge[] { }
             );
 
@@ -66,14 +70,16 @@ namespace Thousand.Tests
         [Fact]
         public void Layout3x3Sparse()
         {
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 0) },
-                new IR.Object[]
-                {
-                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 1, Column = 1 },
-                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 2, Column = 2 },
-                    new IR.Object { Padding = 0, Width = 10, Height = 10, Row = 3, Column = 3 },
-                },
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
+                    new IR.Object[]
+                    {
+                        new IR.Object { Width = 10, Height = 10, Row = 1, Column = 1 },
+                        new IR.Object { Width = 10, Height = 10, Row = 2, Column = 2 },
+                        new IR.Object { Width = 10, Height = 10, Row = 3, Column = 3 }
+                    }
+                ),
                 new IR.Edge[] { }
             );
 
@@ -87,15 +93,17 @@ namespace Thousand.Tests
         [Fact]
         public void LinePosition_Horizontal()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
 
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
-                new[] { left, right },
-                new[]
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Object[] { left, right }
+                ),
+                new IR.Edge[]
                 {
-                    new IR.Edge(left, right, null, null, Point.Zero, Point.Zero, new Stroke())
+                    new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
                 }
             );
 
@@ -110,15 +118,17 @@ namespace Thousand.Tests
         [Fact]
         public void LinePosition_45Degree()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10, Row = 2, Column = 2 };
+            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10, Row = 2, Column = 2 };
 
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
-                new[] { left, right },
-                new[]
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Object[] { left, right }
+                ),
+                new IR.Edge[]
                 {
-                    new IR.Edge(left, right, null, null, Point.Zero, Point.Zero, new Stroke())
+                    new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
                 }
             );
 
@@ -133,15 +143,17 @@ namespace Thousand.Tests
         [Fact]
         public void LineOffset()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
 
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
-                new[] { left, right },
-                new[]
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Object[] { left, right }
+                ),
+                new IR.Edge[]
                 {
-                    new IR.Edge(left, right, null, null, new Point(0, 1), new Point(0, 1), new Stroke())
+                    new IR.Edge(new Stroke(), left, right, null, null, null, null, new Point(0, 1), new Point(0, 1))
                 }
             );
 
@@ -156,17 +168,20 @@ namespace Thousand.Tests
         [Fact]
         public void LineAnchor()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Padding = 0, Width = 10, Height = 10 };
+            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
 
-            var rules = new IR.Rules(
-                new IR.Config() with { Region = new IR.Region(LayoutKind.Grid, Margin: 0, Gutter: 10) },
-                new[] { left, right },
-                new[]
+            var rules = new IR.Root(1,
+                new IR.Region(
+                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Object[] { left, right }
+                ),
+                new IR.Edge[]
                 {
-                    new IR.Edge(left, right, AnchorKind.Corners, null, Point.Zero, Point.Zero, new Stroke())
+                    new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, null, Point.Zero, Point.Zero)
                 }
             );
+
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
 

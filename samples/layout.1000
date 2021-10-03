@@ -1,6 +1,4 @@
-layout=grid
-margin=0
-gutter=20
+layout=grid; padding=0; gutter=20
 
 class box [stroke=red, fill=red, width=100, height=100]
 class w50 [width=50]

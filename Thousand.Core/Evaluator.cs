@@ -8,7 +8,7 @@ namespace Thousand
 {
     public class Evaluator
     {
-        public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out IR.Rules? rules)
+        public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out IR.Root? rules)
         {
             try
             {
@@ -17,7 +17,7 @@ namespace Thousand
                 {
                     evaluation.AddDocument(doc);
                 }
-                rules = new IR.Rules(evaluation.Config, evaluation.Objects, evaluation.Edges);
+                rules = new IR.Root(evaluation.Scale, new IR.Region(evaluation.Config, evaluation.Objects), evaluation.Edges);
 
                 return !errors.Any();
             }
@@ -36,6 +36,7 @@ namespace Thousand
         private readonly Dictionary<string, IR.Object> objects;
         private readonly List<IR.Edge> lines;
 
+        public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
         public IReadOnlyList<IR.Object> Objects => objects.Values.ToList();
         public IReadOnlyList<IR.Edge> Edges => lines;
@@ -50,7 +51,8 @@ namespace Thousand
             objects = new(StringComparer.OrdinalIgnoreCase);
             lines = new();
 
-            Config = new IR.Config();
+            Scale = 1m;
+            Config = new IR.Config(LayoutKind.Grid, 5, 0, Colour.White);
         }
 
         private void AddDocument(AST.Document diagram)
@@ -62,7 +64,7 @@ namespace Thousand
                     switch (doc)
                     {
                         case AST.DocumentScaleAttribute dsa:
-                            Config = Config with { Scale = dsa.Value };
+                            Scale = dsa.Value;
                             break;
                     }
                 }, region =>
@@ -70,37 +72,19 @@ namespace Thousand
                     switch (region)
                     {
                         case AST.RegionFillAttribute rfa:
-                            Config = Config with { Background = rfa.Colour };
+                            Config = Config with { Fill = rfa.Colour };
                             break;
 
                         case AST.RegionLayoutAttribute rla:
-                            Config = Config with 
-                            {
-                                Region = Config.Region with 
-                                {
-                                    Layout = rla.Kind
-                                }
-                            };
+                            Config = Config with  { Layout = rla.Kind };
                             break;
 
-                        case AST.RegionMarginAttribute rma:
-                            Config = Config with
-                            {
-                                Region = Config.Region with
-                                {
-                                    Margin = rma.Value
-                                }
-                            };
+                        case AST.RegionPaddingAttribute rpa:
+                            Config = Config with { Padding = rpa.Value };
                             break;
 
                         case AST.RegionGutterAttribute rga:
-                            Config = Config with
-                            {
-                                Region = Config.Region with
-                                {
-                                    Gutter = rga.Value
-                                }
-                            };
+                            Config = Config with { Gutter = rga.Value };
                             break;
                     }
                 });
@@ -164,18 +148,21 @@ namespace Thousand
                 return;
             }
 
+            var regionConfig = new IR.Config(LayoutKind.Grid, 15, 0, null);
+            
+            var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
+            var font = new Font();
+
+            var margin = 0;
             var row = new int?();
             var column = new int?();
             var width = new int?();
-            var height = new int?();            
+            var height = new int?();
+
             var shape = new ShapeKind?(ShapeKind.RoundRectangle);
-            var padding = 15;
             var cornerRadius = 5;
-            var stroke = new Stroke();
-            var fill = Colour.White;
-            var region = new IR.Region();            
-            var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
-            var font = new Font();
+
+            var stroke = new Stroke();                        
 
             foreach (var attr in node.Classes.SelectMany(FindObjectClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
@@ -203,8 +190,8 @@ namespace Thousand
                             shape = nsa.Kind;
                             break;
 
-                        case AST.NodePaddingAttribute npa:
-                            padding = npa.Value;
+                        case AST.NodeMarginAttribute nma:
+                            margin = nma.Value;
                             break;
 
                         case AST.NodeCornerRadiusAttribute ncra:
@@ -216,19 +203,19 @@ namespace Thousand
                     switch (r)
                     {
                         case AST.RegionFillAttribute rfa:
-                            fill = rfa.Colour;
+                            regionConfig = regionConfig with { Fill = rfa.Colour };
                             break;
 
                         case AST.RegionLayoutAttribute rla:
-                            region = region with { Layout = rla.Kind };
+                            regionConfig = regionConfig with { Layout = rla.Kind };
                             break;
 
-                        case AST.RegionMarginAttribute rma:
-                            region = region with { Margin = rma.Value };
+                        case AST.RegionPaddingAttribute rpa:
+                            regionConfig = regionConfig with { Padding = rpa.Value };
                             break;
 
                         case AST.RegionGutterAttribute rga:
-                            region = region with { Gutter = rga.Value };
+                            regionConfig = regionConfig with { Gutter = rga.Value };
                             break;
                     }
                 }, l =>
@@ -299,7 +286,7 @@ namespace Thousand
             }
             else
             {
-                objects.Add(name, new(label, font, region, row, column, width, height, shape, padding, cornerRadius, stroke, fill));
+                objects.Add(name, new IR.Object(new IR.Region(regionConfig, new IR.Object[0]), label, font, margin, row, column, width, height, shape, cornerRadius, stroke));
             }
         }
 

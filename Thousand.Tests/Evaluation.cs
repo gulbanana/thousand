@@ -29,15 +29,15 @@ namespace Thousand.Tests
 
             var warnings = new List<GenerationError>();
             var errors = new List<GenerationError>();
-            var result = Evaluator.TryEvaluate(new[] { document }, warnings, errors, out var ir);
+            var result = Evaluator.TryEvaluate(new[] { document }, warnings, errors, out var root);
 
             Assert.True(result, errors.Join());
             Assert.Empty(warnings);
-            Assert.Equal(Colour.Blue, ir!.Config.Background);
-            Assert.Equal(3, ir.Objects.Count);
-            Assert.Equal(2, ir.Edges.Count);
+            Assert.Equal(Colour.Blue, root!.Region.Config.Fill);
+            Assert.Equal(3, root.Region.Objects.Count);
+            Assert.Equal(2, root.Edges.Count);
 
-            AssertEx.Sequence(ir.Objects.Select(o => o.Font.Size), 20, 50, 40);
+            AssertEx.Sequence(root.Region.Objects.Select(o => o.Font.Size), 20, 50, 40);
         }
     }
 }

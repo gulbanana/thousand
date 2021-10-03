@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Xml.Linq;
 using Thousand.Layout;
 using Thousand.Model;

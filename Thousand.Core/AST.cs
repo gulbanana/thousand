@@ -23,7 +23,7 @@ namespace Thousand.AST
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
     public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
-    public record RegionMarginAttribute(int Value) : RegionAttribute;
+    public record RegionPaddingAttribute(int Value) : RegionAttribute;
     public record RegionGutterAttribute(int Value) : RegionAttribute;
 
     public abstract record NodeAttribute;
@@ -32,7 +32,7 @@ namespace Thousand.AST
     public record NodeWidthAttribute(int Value) : NodeAttribute;
     public record NodeHeightAttribute(int Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;
-    public record NodePaddingAttribute(int Value) : NodeAttribute;
+    public record NodeMarginAttribute(int Value) : NodeAttribute;
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
     public abstract record ArrowAttribute;
