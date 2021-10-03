@@ -46,7 +46,7 @@ namespace Thousand.Compose
                 .Select(l => new LineMeasurements(
                     new Point((decimal)l.Runs[0].XCoord, (decimal)Math.Ceiling(l.YCoord)), 
                     new Point((decimal)l.Width, (decimal)l.Height), 
-                    label.Substring(l.Start, l.Length)))
+                    label.Substring(l.Start, l.Length).TrimEnd('\n')))
                 .ToArray();
 
             return new BlockMeasurements(new Point(pixelWidth, pixelHeight), lines);
