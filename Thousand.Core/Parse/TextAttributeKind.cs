@@ -5,5 +5,6 @@
         Label,
         FontFamily,
         FontSize,
+        FontColour,
     }
 }

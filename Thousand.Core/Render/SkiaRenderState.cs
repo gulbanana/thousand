@@ -27,6 +27,7 @@ namespace Thousand.Render
             var text = new RichString()
                 .FontFamily(block.Font.Family)
                 .FontSize(block.Font.Size)
+                .TextColor(block.Font.Colour.SK())
                 .Alignment(TextAlignment.Center)
                 .Add(block.Content);
 

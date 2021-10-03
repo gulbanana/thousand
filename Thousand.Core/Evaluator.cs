@@ -268,6 +268,10 @@ namespace Thousand
                         case AST.TextFontSizeAttribute tfsa:
                             font = font with { Size = tfsa.Value };
                             break;
+
+                        case AST.TextFontColourAttribute tfca:
+                            font = font with { Colour = tfca.Colour };
+                            break;
                     }
                 });
             }

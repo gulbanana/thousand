@@ -200,10 +200,16 @@ namespace Thousand.Parse
             from value in Parser.String
             select new AST.TextFontFamilyAttribute(value) as AST.TextAttribute;
 
+        public static TokenListParser<TokenKind, AST.TextAttribute> TextFontColourAttribute { get; } =
+            from key in Key(TextAttributeKind.FontColour)
+            from value in ColourValue
+            select new AST.TextFontColourAttribute(value) as AST.TextAttribute;
+
         public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } =
             TextLabelAttribute
                 .Or(TextFontFamilyAttribute)
-                .Or(TextFontSizeAttribute);
+                .Or(TextFontSizeAttribute)
+                .Or(TextFontColourAttribute);
         #endregion
 
         #region node group, used only by objects

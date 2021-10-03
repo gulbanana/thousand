@@ -59,7 +59,7 @@ namespace Thousand.Render
                 new XAttribute("y", label.Bounds.Top),
                 new XAttribute("font-family", label.Font.Family),
                 new XAttribute("font-size", label.Font.Size + "px"),
-                new XAttribute("fill", "rgb(0,0,0)")
+                new XAttribute("fill", label.Font.Colour.SVG())
             );
 
             foreach (var line in label.Lines)

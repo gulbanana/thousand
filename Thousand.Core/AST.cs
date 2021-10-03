@@ -11,6 +11,7 @@ namespace Thousand.AST
     public record TextLabelAttribute(string? Content) : TextAttribute;
     public record TextFontFamilyAttribute(string Name) : TextAttribute;
     public record TextFontSizeAttribute(int Value) : TextAttribute;
+    public record TextFontColourAttribute(Colour Colour) : TextAttribute;
 
     public abstract record StrokeAttribute;
     public record StrokeColourAttribute(Colour Colour) : StrokeAttribute;
