@@ -18,7 +18,7 @@ namespace Thousand.Tests.Parsing
         public void ValidColour()
         {
             var tokens = tokenizer.Tokenize(@"#ffffff");
-            var result = AttributeParsers.ColourValue(tokens);
+            var result = Value.Colour(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(Colour.White, result.Value);
@@ -28,7 +28,7 @@ namespace Thousand.Tests.Parsing
         public void ValidColour_Short()
         {
             var tokens = tokenizer.Tokenize(@"#fff");
-            var result = AttributeParsers.ColourValue(tokens);
+            var result = Value.Colour(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(Colour.White, result.Value);
@@ -38,40 +38,99 @@ namespace Thousand.Tests.Parsing
         public void InvalidColour()
         {
             var tokens = tokenizer.Tokenize(@"#ffff");
-            var result = AttributeParsers.ColourValue(tokens);
+            var result = Value.Colour(tokens);
 
             Assert.False(result.HasValue);
         }
 
         [Theory]
         [InlineData(1)]
-        [InlineData(100)]
-        [InlineData(10000)]
-        public void ValidInteger(int v)
+        public void CountingNumber_Valid(decimal v)
         {
             var tokens = tokenizer.Tokenize(v.ToString());
-            var result = AttributeParsers.CountingNumberValue(tokens);
+            var result = Value.CountingNumber(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(v, result.Value);
+        }
+
+        [Theory]        
+        [InlineData(-1)]
+        [InlineData(0)]
+        [InlineData(0.1)]
+        public void CountingNumber_Invalid(decimal v)
+        {
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = Value.CountingNumber(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        public void WholeNumber_Valid(decimal v)
+        {
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = Value.WholeNumber(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(v, result.Value);
         }
 
         [Theory]
-        [InlineData("0")]
-        [InlineData("-1")]
-        public void InvalidInteger(string v)
+        [InlineData(0.1)]
+        [InlineData(-1)]
+        public void WholeNumber_Invalid(decimal v)
         {
-            var tokens = tokenizer.Tokenize(v);
-            var result = AttributeParsers.CountingNumberValue(tokens);
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = Value.WholeNumber(tokens);
 
             Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(0)]        
+        [InlineData(-1)]
+        public void Integer_Valid(decimal v)
+        {
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = Value.Integer(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(v, result.Value);
+        }
+
+        [Theory]
+        [InlineData(0.1)]
+        public void Integer_Invalid(decimal v)
+        {
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = Value.Integer(tokens);
+
+            Assert.False(result.HasValue, result.ToString());
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(0.1)]
+        [InlineData(0)]
+        [InlineData(-1)]
+        public void Decimal_Valid(decimal v)
+        {
+            var tokens = tokenizer.Tokenize(v.ToString());
+            var result = Value.Decimal(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(v, result.Value);
         }
 
         [Fact]
         public void StrokeShorthand_InvalidKeyword()
         {
             var tokens = tokenizer.Tokenize(@"stroke=square");
-            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -80,12 +139,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleColour(string c)
         {
             var tokens = tokenizer.Tokenize($"stroke={c}");
-            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.LineStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Black, lsa.Colour);
@@ -95,27 +154,42 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleWidth()
         {
             var tokens = tokenizer.Tokenize($"stroke=none");
-            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.LineStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Width);
             Assert.True(lsa.Width is ZeroWidth);
         }
 
         [Fact]
+        public void StrokeShorthand_SingleStyle()
+        {
+            var tokens = tokenizer.Tokenize($"stroke=dashed");
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
+
+            var lsa = (AST.LineStrokeAttribute)result.Value;
+
+            Assert.NotNull(lsa.Style);
+            Assert.Equal(StrokeKind.Dashed, lsa.Style);
+        }
+
+        [Fact]
         public void StrokeShorthand_Multiple()
         {
             var tokens = tokenizer.Tokenize($"stroke=2 black");
-            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.LineStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Black, lsa.Colour);
@@ -130,12 +204,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_All()
         {
             var tokens = tokenizer.Tokenize($"stroke=solid green hairline");
-            var result = AttributeParsers.StrokeShorthandAttribute(tokens);
+            var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.LineStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.LineStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Green, lsa.Colour);
@@ -157,7 +231,7 @@ namespace Thousand.Tests.Parsing
             Assert.Single(result.Value.Attributes);
             Assert.True(result.Value.Attributes.Single().IsT2);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value.Attributes.Single().AsT2;
+            var lsa = (AST.LineStrokeAttribute)result.Value.Attributes.Single().AsT2;
             
             Assert.NotNull(lsa.Colour);
             Assert.Null(lsa.Width);

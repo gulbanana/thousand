@@ -2,13 +2,13 @@
 class object [fill=#ccc]
 class line [stroke=2]
 
-object "Top Left"
-object mid [shape=rectangle, label="top centre", stroke=#0f0] 
-object "top right" [shape=square]
-object Center [shape=diamond, row=2, column=2]
-object "bottom left" [shape=oval, row=3, stroke=dashed 2]
-object "bottom right" [shape=circle, column=3]
+object "Top Left" [shape=circle, font=red]
+object mid [shape=rectangle, label="Top Centre", font=#0f0 16, stroke=#0f0, fill=#333] 
+object "Top Right" [font=blue, shape=square]
+object Centre [shape=diamond, row=2, column=2, font="Consolas"]
+object "Bottom Left" [shape=oval, row=3, stroke=dashed 2]
+object "Bottom Right" [column=3]
 
 line "top left" -> mid [stroke=red]
 line "top right" -> mid [stroke=blue]
-line mid -> center -> "bottom right"
+line mid -> centre -> "bottom right"  [anchor=none compass]

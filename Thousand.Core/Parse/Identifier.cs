@@ -8,6 +8,9 @@ namespace Thousand.Parse
 {
     public static class Identifier
     {
+        public static TokenListParser<TokenKind, string> Any { get; } =
+            Token.EqualTo(TokenKind.Identifier).Apply(Superpower.Parsers.Identifier.CStyle).Select(s => s.ToStringValue());
+
         public static TokenListParser<TokenKind, T> Enum<T>() where T : struct, Enum
         {
             var names = System.Enum.GetNames<T>();

@@ -18,14 +18,8 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Unit> NewLine { get; } =
             Token.EqualTo(TokenKind.LineSeparator).Value(Unit.Value);
 
-        public static TokenListParser<TokenKind, string> String { get; } =
-            Token.EqualTo(TokenKind.String).Apply(TextParsers.String);
-
-        public static TokenListParser<TokenKind, string> Identifier { get; } =
-            Token.EqualTo(TokenKind.Identifier).Apply(Superpower.Parsers.Identifier.CStyle).Select(s => s.ToStringValue());
-
         public static TokenListParser<TokenKind, string> Target { get; } =
-            String.Or(Identifier);
+            Value.String.Or(Identifier.Any);
 
         public static TokenListParser<TokenKind, TA[]> AttributeList<TA>(TokenListParser<TokenKind, TA> attributeParser) =>
             from begin in Token.EqualTo(TokenKind.LeftBracket)
@@ -34,7 +28,7 @@ namespace Thousand.Parse
             select values;
 
         public static TokenListParser<TokenKind, string[]> ClassList { get; } =
-            Identifier.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+            Identifier.Any.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
         public static TokenListParser<TokenKind, string[]> BaseClasses { get; } =
             Token.EqualTo(TokenKind.Colon)
@@ -49,30 +43,30 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in ClassList
-            from name in Identifier.Or(String).AsNullable().OptionalOrDefault()
+            from name in Identifier.Any.Or(Value.String).AsNullable().OptionalOrDefault()
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Superpower.Parse.Ref(() => Scope!).OptionalOrDefault(Array.Empty<AST.ObjectDeclaration>())
             select new AST.TypedObject(classes, name, attrs, children);
 
-        public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> TerminalEdge { get; } =
+        public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment>> TerminalEdge { get; } =
             from dst in Target
-            select Enumerable.Repeat(new AST.Edge(dst, null), 1);
+            select Enumerable.Repeat(new AST.LineSegment(dst, null), 1);
 
-        public static TokenListParser<TokenKind, IEnumerable<AST.Edge>> Edges { get; } =
+        public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment>> Edges { get; } =
             from src in Target
             from arrow in Token.EqualTo(TokenKind.RightArrow).Value(ArrowKind.Forward)
                           .Or(Token.EqualTo(TokenKind.LeftArrow).Value(ArrowKind.Backward))
             from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
             select next.Prepend(new(src, arrow));
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
-            AttributeParsers.ArrowAttribute.Select(x => (AST.LineAttribute)x)
-                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.LineAttribute)x));
+        public static TokenListParser<TokenKind, AST.SegmentAttribute> LineAttribute { get; } =
+            AttributeParsers.ArrowAttribute.Select(x => (AST.SegmentAttribute)x)
+                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.SegmentAttribute)x));
 
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in ClassList
             from chain in Edges
-            from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
+            from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
             select new AST.TypedLine(classes, chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
@@ -83,10 +77,10 @@ namespace Thousand.Parse
             AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.Class);
 
         public static TokenListParser<TokenKind, AST.Class> LineClassBody(string name, string[] bases) =>
-            AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.Class);
+            AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.Class);
 
         public static TokenListParser<TokenKind, AST.Class> ObjectOrLineClassBody(string name, string[] bases) =>
-            AttributeList(AttributeParsers.StrokeAttribute).OptionalOrDefault(Array.Empty<AST.StrokeAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
+            AttributeList(AttributeParsers.StrokeAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
 
         public static TokenListParser<TokenKind, AST.Class> ClassBody(string name, string[] bases) => input =>
         {
@@ -94,7 +88,7 @@ namespace Thousand.Parse
             if (!begin.HasValue)
             {
                 // XXX process object-class scopes
-                return TokenListParserResult.Value<TokenKind, AST.Class>(new AST.ObjectOrLineClass(name, bases, Array.Empty<AST.StrokeAttribute>()), input, input);
+                return TokenListParserResult.Value<TokenKind, AST.Class>(new AST.ObjectOrLineClass(name, bases, Array.Empty<AST.LineAttribute>()), input, input);
             }
 
             var remainder = begin.Remainder;
@@ -142,7 +136,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.Class> Class { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
-            from name in Identifier
+            from name in Identifier.Any
             from bases in BaseClasses
             from klass in ClassBody(name, bases)
             select klass;

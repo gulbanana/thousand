@@ -32,7 +32,7 @@ namespace Thousand
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
         private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
-        private readonly Dictionary<string, AST.LineAttribute[]> lineClasses;
+        private readonly Dictionary<string, AST.SegmentAttribute[]> lineClasses;
         private readonly Dictionary<string, IR.Object> objects;
         private readonly List<IR.Edge> lines;
 
@@ -130,8 +130,8 @@ namespace Thousand
                     var localAttrs = c switch
                     {
                         AST.LineClass lc => lc.Attributes,
-                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ec => new AST.LineAttribute(ec)),
-                        _ => Enumerable.Empty<AST.LineAttribute>()
+                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ec => new AST.SegmentAttribute(ec)),
+                        _ => Enumerable.Empty<AST.SegmentAttribute>()
                     };
 
                     var allAttrs = c.BaseClasses
@@ -235,19 +235,19 @@ namespace Thousand
                 {
                     switch (l)
                     {
-                        case AST.StrokeColourAttribute lsca:
+                        case AST.LineStrokeColourAttribute lsca:
                             stroke = stroke with { Colour = lsca.Colour };
                             break;
 
-                        case AST.StrokeWidthAttribute lswa:
+                        case AST.LineStrokeWidthAttribute lswa:
                             stroke = stroke with { Width = lswa.Value };
                             break;
 
-                        case AST.StrokeStyleAttribute lssa:
+                        case AST.LineStrokeStyleAttribute lssa:
                             stroke = stroke with { Style = lssa.Kind };
                             break;
 
-                        case AST.StrokeShorthandAttribute lsa:
+                        case AST.LineStrokeAttribute lsa:
                             if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
                             if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
@@ -271,6 +271,15 @@ namespace Thousand
 
                         case AST.TextFontColourAttribute tfca:
                             font = font with { Colour = tfca.Colour };
+                            break;
+
+                        case AST.TextFontAttribute tfa:
+                            font = new Font 
+                            { 
+                                Family = tfa.Family ?? font.Family,
+                                Size = tfa.Size ?? font.Size,
+                                Colour = tfa.Colour ?? font.Colour
+                            };
                             break;
                     }
                 });
@@ -351,19 +360,19 @@ namespace Thousand
                 {
                     switch (line)
                     {
-                        case AST.StrokeColourAttribute lsa:
+                        case AST.LineStrokeColourAttribute lsa:
                             stroke = stroke with { Colour = lsa.Colour };
                             break;
 
-                        case AST.StrokeWidthAttribute lwa:
+                        case AST.LineStrokeWidthAttribute lwa:
                             stroke = stroke with { Width = lwa.Value };
                             break;
 
-                        case AST.StrokeStyleAttribute lsa:
+                        case AST.LineStrokeStyleAttribute lsa:
                             stroke = stroke with { Style = lsa.Kind };
                             break;
 
-                        case AST.StrokeShorthandAttribute lsa:
+                        case AST.LineStrokeAttribute lsa:
                             if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
                             if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
                             if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
@@ -372,10 +381,10 @@ namespace Thousand
                 });
             }
 
-            for (var i = 0; i < line.Elements.Length - 1; i++)
+            for (var i = 0; i < line.Segments.Length - 1; i++)
             {
-                var from = line.Elements[i];
-                var to = line.Elements[i + 1];
+                var from = line.Segments[i];
+                var to = line.Segments[i + 1];
 
                 var fromTarget = FindObject(from.Target);
                 var toTarget = FindObject(to.Target);
@@ -415,7 +424,7 @@ namespace Thousand
             }
         }
 
-        private AST.LineAttribute[] FindLineClass(string name)
+        private AST.SegmentAttribute[] FindLineClass(string name)
         {
             if (!lineClasses.ContainsKey(name))
             {
@@ -428,7 +437,7 @@ namespace Thousand
                     ws.Add(new($"Class '{name}' not defined."));
                 }
 
-                return Array.Empty<AST.LineAttribute>();
+                return Array.Empty<AST.SegmentAttribute>();
             }
             else
             {

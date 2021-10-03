@@ -1,7 +1,6 @@
 ﻿using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
-using System;
 using System.Linq;
 using Thousand.Model;
 
@@ -9,7 +8,7 @@ namespace Thousand.Parse
 {
     public static class AttributeParsers
     {
-        #region utilities and types
+        #region utilities and combinators
         private static TokenListParser<TokenKind, Token<TokenKind>> Key<TK>(TK kind) where TK : struct =>
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, kind.ToString()!)
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
@@ -19,29 +18,54 @@ namespace Thousand.Parse
                  .Aggregate((p1, p2) => p1.Or(p2))
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
-        public static TokenListParser<TokenKind, int> CountingNumberValue { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(TextParsers.CountingNumber);
+        private static TokenListParser<TokenKind, (T1?, T2?, T3?)> Shorthand<T1, T2, T3>(TokenListParser<TokenKind, T1> p1, TokenListParser<TokenKind, T2> p2, TokenListParser<TokenKind, T3> p3)
+            where T1: class
+            where T2 : class
+            where T3: struct
+        => (TokenList<TokenKind> input) =>
+        {
+            var x1 = default(T1?);
+            var x2 = default(T2?);
+            var x3 = default(T3?);
+            
+            var remainder = input;
+            while (!remainder.IsAtEnd && (x1 == null || x2 == null || !x3.HasValue))
+            {
+                var next = remainder.ConsumeToken();
 
-        public static TokenListParser<TokenKind, int> WholeNumberValue { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(TextParsers.WholeNumber);
+                var asT1 = p1.Try()(remainder);
+                var asT2 = p2.Try()(remainder);
+                var asT3 = p3.Try()(remainder);
 
-        public static TokenListParser<TokenKind, int> IntegerValue { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(Numerics.IntegerInt32);
+                if (asT1.HasValue)
+                {
+                    x1 = asT1.Value;
+                }
+                else if (asT2.HasValue)
+                {
+                    x2 = asT2.Value;
+                }
+                else if (asT3.HasValue)
+                {
+                    x3 = asT3.Value;
+                }
+                else
+                {
+                    break;
+                }
 
-        public static TokenListParser<TokenKind, decimal> DecimalValue { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal);
+                remainder = next.Remainder;
+            }
 
-        public static TokenListParser<TokenKind, string?> NullableStringValue { get; } =
-            Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
-                .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));
-
-        public static TokenListParser<TokenKind, Colour> ColourValue { get; } =
-            Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
-                .Or(Identifier.Statics<Colour>());
-
-        public static TokenListParser<TokenKind, Width> WidthValue { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(new HairlineWidth() as Width)
-                .Or(WholeNumberValue.OrNone().Select(x => x.HasValue ? new PositiveWidth(x.Value) : new ZeroWidth() as Width));
+            if (x1 != null || x2 != null || x3.HasValue)
+            {
+                return TokenListParserResult.Value((x1, x2, x3), input, remainder);
+            }
+            else
+            {
+                return TokenListParserResult.Empty<TokenKind, (T1?, T2?, T3?)>(input);
+            }
+        };
         #endregion
 
         #region arrow group, used only by edges
@@ -63,34 +87,34 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStartX)
-            from value in IntegerValue
+            from value in Value.Integer
             select new AST.ArrowOffsetStartXAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartYAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStartY)
-            from value in IntegerValue
+            from value in Value.Integer
             select new AST.ArrowOffsetStartYAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetEndX)
-            from value in IntegerValue
+            from value in Value.Integer
             select new AST.ArrowOffsetEndXAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndYAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetEndY)
-            from value in IntegerValue
+            from value in Value.Integer
             select new AST.ArrowOffsetEndYAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetX)
-            from start in IntegerValue
-            from startAndEnd in IntegerValue.Select(end => (start, end)).OptionalOrDefault((start, start))
+            from start in Value.Integer
+            from startAndEnd in Value.Integer.Select(end => (start, end)).OptionalOrDefault((start, start))
             select new AST.ArrowOffsetXAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetYAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetY)
-            from start in IntegerValue
-            from startAndEnd in IntegerValue.Select(end => (start, end)).OptionalOrDefault((start, start))
+            from start in Value.Integer
+            from startAndEnd in Value.Integer.Select(end => (start, end)).OptionalOrDefault((start, start))
             select new AST.ArrowOffsetYAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
@@ -108,109 +132,70 @@ namespace Thousand.Parse
         #region doc group, used only by diagrams
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentScaleAttribute { get; } =
             from key in Key(DocumentAttributeKind.Scale)
-            from value in DecimalValue
+            from value in Value.Decimal
             select new AST.DocumentScaleAttribute(value) as AST.DocumentAttribute;
 
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
             DocumentScaleAttribute;
         #endregion
 
-        #region stroke group, used by objects and lines
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeColourAttribute { get; } =
+        #region line (drawing) group, used by objects and lines (edges)
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeColourAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeColour)
-            from value in ColourValue
-            select new AST.StrokeColourAttribute(value) as AST.StrokeAttribute;
+            from value in Value.Colour
+            select new AST.LineStrokeColourAttribute(value) as AST.LineAttribute;
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeWidthAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeWidthAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeWidth)
-            from value in WidthValue
-            select new AST.StrokeWidthAttribute(value) as AST.StrokeAttribute;
+            from value in Value.Width
+            select new AST.LineStrokeWidthAttribute(value) as AST.LineAttribute;
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeStyleAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeStyleAttribute { get; } =
             from key in Key(LineAttributeKind.StrokeStyle)
             from value in Identifier.Enum<StrokeKind>()
-            select new AST.StrokeStyleAttribute(value) as AST.StrokeAttribute;
+            select new AST.LineStrokeStyleAttribute(value) as AST.LineAttribute;
 
-        private static TokenListParserResult<TokenKind, AST.StrokeShorthandAttribute> StrokeValues(TokenList<TokenKind> input)
-        {
-            Colour? s1 = null;
-            StrokeKind? s2 = null;
-            Width? s3 = null;
-
-            var remainder = input;
-            while (!remainder.IsAtEnd && (s1 == null || s2 == null || s3 == null))
-            {
-                var next = remainder.ConsumeToken();
-
-                var asColour = ColourValue.Try()(remainder);
-                var asStyle = Identifier.Enum<StrokeKind>().Try()(remainder);
-                var asWidth = WidthValue.Try()(remainder);
-
-                if (asColour.HasValue)
-                {
-                    s1 = asColour.Value;
-                }                               
-                else if (asStyle.HasValue)
-                {
-                    s2 = asStyle.Value;
-                }
-                else if (asWidth.HasValue)
-                {
-                    s3 = asWidth.Value;
-                }
-                else
-                {
-                    break;
-                }
-
-                remainder = next.Remainder;
-            }
-
-            if (s1 != null || s2 != null || s3 != null)
-            {
-                return TokenListParserResult.Value<TokenKind, AST.StrokeShorthandAttribute>(new AST.StrokeShorthandAttribute(s1, s2, s3), input, remainder);
-            }
-            else
-            {
-                return TokenListParserResult.Empty<TokenKind, AST.StrokeShorthandAttribute>(input);
-            }
-        }
-
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeShorthandAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeAttribute { get; } =
             from key in Key(LineAttributeKind.Stroke)
-            from value in new TokenListParser<TokenKind, AST.StrokeShorthandAttribute>(StrokeValues)
-            select value as AST.StrokeAttribute;
+            from values in Shorthand(Value.Colour, Value.Width, Identifier.Enum<StrokeKind>())
+            select values switch { (var c, var w, var s) => new AST.LineStrokeAttribute(c, s, w) as AST.LineAttribute };
 
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeAttribute { get; } =
-            StrokeShorthandAttribute
-                .Or(StrokeColourAttribute)
-                .Or(StrokeWidthAttribute)
-                .Or(StrokeStyleAttribute);
+        public static TokenListParser<TokenKind, AST.LineAttribute> StrokeAttribute { get; } =
+            LineStrokeAttribute
+                .Or(LineStrokeColourAttribute)
+                .Or(LineStrokeWidthAttribute)
+                .Or(LineStrokeStyleAttribute);
         #endregion
 
         #region text group, used only by objects (so far)
         public static TokenListParser<TokenKind, AST.TextAttribute> TextLabelAttribute { get; } =
             from key in Key(TextAttributeKind.Label)
-            from value in NullableStringValue
+            from value in Value.NullableString
             select new AST.TextLabelAttribute(value) as AST.TextAttribute;
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontSizeAttribute { get; } =
             from key in Key(TextAttributeKind.FontSize)
-            from value in CountingNumberValue
+            from value in Value.CountingNumber
             select new AST.TextFontSizeAttribute(value) as AST.TextAttribute;
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontFamilyAttribute { get; } =
             from key in Key(TextAttributeKind.FontFamily)
-            from value in Parser.String
+            from value in Value.String
             select new AST.TextFontFamilyAttribute(value) as AST.TextAttribute;
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontColourAttribute { get; } =
             from key in Key(TextAttributeKind.FontColour)
-            from value in ColourValue
+            from value in Value.Colour
             select new AST.TextFontColourAttribute(value) as AST.TextAttribute;
+
+        public static TokenListParser<TokenKind, AST.TextAttribute> TextFontAttribute { get; } =
+            from key in Key(TextAttributeKind.Font)
+            from values in Shorthand(Value.Colour, Value.String, Value.CountingNumber)
+            select values switch { (var c, var f, var s) => new AST.TextFontAttribute(f, s, c) as AST.TextAttribute };
 
         public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } =
             TextLabelAttribute
+                .Or(TextFontAttribute)
                 .Or(TextFontFamilyAttribute)
                 .Or(TextFontSizeAttribute)
                 .Or(TextFontColourAttribute);
@@ -219,22 +204,22 @@ namespace Thousand.Parse
         #region node group, used only by objects
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeRowAttribute { get; } =
             from key in Key(NodeAttributeKind.Row)
-            from value in CountingNumberValue
+            from value in Value.CountingNumber
             select new AST.NodeRowAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
             from key in Keys(NodeAttributeKind.Col, NodeAttributeKind.Column)
-            from value in CountingNumberValue
+            from value in Value.CountingNumber
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeWidthAttribute { get; } =
             from key in Key(NodeAttributeKind.Width)
-            from value in CountingNumberValue
+            from value in Value.CountingNumber
             select new AST.NodeWidthAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeHeightAttribute { get; } =
             from key in Key(NodeAttributeKind.Height)
-            from value in CountingNumberValue
+            from value in Value.CountingNumber
             select new AST.NodeHeightAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
@@ -244,12 +229,12 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
             from key in Key(NodeAttributeKind.Padding)
-            from value in WholeNumberValue
+            from value in Value.WholeNumber
             select new AST.NodePaddingAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeCornerRadiusAttribute { get; } =
             from key in Keys(NodeAttributeKind.Corner, NodeAttributeKind.CornerRadius)
-            from value in WholeNumberValue
+            from value in Value.WholeNumber
             select new AST.NodeCornerRadiusAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
@@ -265,7 +250,7 @@ namespace Thousand.Parse
         #region region group, used by objects and diagrams
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionFillAttribute { get; } =
             from key in Key(RegionAttributeKind.Fill)
-            from value in ColourValue.OrNull()
+            from value in Value.Colour.OrNull()
             select new AST.RegionFillAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutAttribute { get; } =
@@ -275,12 +260,12 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionMarginAttribute { get; } =
             from key in Key(RegionAttributeKind.Margin)
-            from value in WholeNumberValue
+            from value in Value.WholeNumber
             select new AST.RegionMarginAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionGutterAttribute { get; } =
             from key in Key(RegionAttributeKind.Gutter)
-            from value in WholeNumberValue
+            from value in Value.WholeNumber
             select new AST.RegionGutterAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } =

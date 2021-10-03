@@ -16,7 +16,7 @@ namespace Thousand.Tests
                 new AST.DiagramAttribute(new AST.RegionFillAttribute(Colour.Blue)),
 
                 new AST.ObjectClass("object", Array.Empty<string>(), Array.Empty<AST.ObjectAttribute>()),
-                new AST.LineClass("line", Array.Empty<string>(), Array.Empty<AST.LineAttribute>()),
+                new AST.LineClass("line", Array.Empty<string>(), Array.Empty<AST.SegmentAttribute>()),
                 new AST.ObjectClass("big", Array.Empty<string>(), new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(50) }), // increases font
 
                 new AST.TypedObject(new[]{"object"}, "foo", Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.ObjectDeclaration>()),
@@ -24,7 +24,7 @@ namespace Thousand.Tests
                 new AST.TypedObject(new[]{"big"}, "baz", new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(40) }, Array.Empty<AST.ObjectDeclaration>()), // reduces font again
 
                 // chain containing two edges, both from foo to bar
-                new AST.TypedLine(new[]{"line" }, new AST.Edge[]{ new("foo", ArrowKind.Forward), new("bar", ArrowKind.Backward), new("foo", null) }, new AST.LineAttribute[]{ })
+                new AST.TypedLine(new[]{"line" }, new AST.LineSegment[]{ new("foo", ArrowKind.Forward), new("bar", ArrowKind.Backward), new("foo", null) }, new AST.SegmentAttribute[]{ })
             });
 
             var warnings = new List<GenerationError>();

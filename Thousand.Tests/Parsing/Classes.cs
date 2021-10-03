@@ -112,7 +112,7 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectOrLineClass>(result.Value);
-            AssertEx.Sequence(((AST.ObjectOrLineClass)result.Value).Attributes, new AST.StrokeColourAttribute(Colour.Red));
+            AssertEx.Sequence(((AST.ObjectOrLineClass)result.Value).Attributes, new AST.LineStrokeColourAttribute(Colour.Red));
         }
     }
 }

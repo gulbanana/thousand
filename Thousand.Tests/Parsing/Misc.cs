@@ -140,9 +140,9 @@ bar""");
             var result = Parser.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Elements.First().Target);
-            Assert.Equal("bar", result.Value.Elements.Last().Target);
-            AssertEx.Sequence(result.Value.Attributes, new AST.StrokeColourAttribute(new Colour(0, 0, 0)));
+            Assert.Equal("foo", result.Value.Segments.First().Target);
+            Assert.Equal("bar", result.Value.Segments.Last().Target);
+            AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeColourAttribute(new Colour(0, 0, 0)));
         }
 
         [Fact]
@@ -246,7 +246,7 @@ line foo -> bar");
                 d =>
                 {
                     Assert.True(d.IsT3);
-                    AssertEx.Sequence(d.AsT3.Elements, new AST.Edge("foo", ArrowKind.Forward), new AST.Edge("bar", null));
+                    AssertEx.Sequence(d.AsT3.Segments, new AST.LineSegment("foo", ArrowKind.Forward), new AST.LineSegment("bar", null));
                 });
         }
 
