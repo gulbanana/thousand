@@ -1,7 +1,6 @@
 TO DO
 -----
 
-* can the half-y text hack when we have scale!
 * per-shape (and diagram) margins; the diagram needs a default, 2 or 5px or something
 * generalise shorthand properties (font, etc)
 * text colour

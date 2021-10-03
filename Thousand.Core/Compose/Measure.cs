@@ -18,7 +18,7 @@ namespace Thousand.Compose
     /// </remarks>
     internal static class Measure
     {
-        public static BlockMeasurements TextBlock(string label, Font font)
+        public static BlockMeasurements TextBlock(string label, Font font, float scale)
         {
             var style = new Style()
             {
@@ -37,7 +37,7 @@ namespace Thousand.Compose
             var pixelHeight = (int)MathF.Ceiling(textBlock.MeasuredHeight);
 
             // subpixel vertical positioning is not consistently supported in SVG
-            if (pixelHeight % 2 != 0)
+            if ((pixelHeight * scale) % 2 != 0)
             {
                 pixelHeight++;
             }

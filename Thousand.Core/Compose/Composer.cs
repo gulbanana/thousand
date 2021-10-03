@@ -15,7 +15,7 @@ namespace Thousand.Compose
                 var textMeasures = new Dictionary<string, BlockMeasurements>();
                 foreach (var o in ir.Objects.Where(o => o.Label is not null))
                 {
-                    textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font);
+                    textMeasures[o.Label!] = Measure.TextBlock(o.Label!, o.Font, ir.Config.Scale);
                 }
 
                 var composition = new Composer(warnings, errors, ir, textMeasures);
