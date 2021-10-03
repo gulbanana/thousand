@@ -21,15 +21,16 @@ namespace Thousand.Render
             canvas.Clear(diagram.Background.SK());
         }
 
-        public void PaintLabel(SKCanvas canvas, Layout.Label label)
+        // this could draw line-by-line, but the results seem to be identical
+        public void PaintLabel(SKCanvas canvas, Layout.LabelBlock block)
         {
             var text = new RichString()
-                .FontFamily(label.Font.Family)
-                .FontSize(label.Font.Size)
+                .FontFamily(block.Font.Family)
+                .FontSize(block.Font.Size)
                 .Alignment(TextAlignment.Center)
-                .Add(label.Content);
+                .Add(block.Content);
 
-            text.Paint(canvas, label.Bounds.Origin.SK());
+            text.Paint(canvas, block.Bounds.Origin.SK());
         }
 
         public void PaintShape(SKCanvas canvas, Layout.Shape shape)

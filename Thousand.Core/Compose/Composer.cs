@@ -37,7 +37,7 @@ namespace Thousand.Compose
         private readonly IReadOnlyDictionary<string, BlockMeasurements> textMeasures;        
         private readonly Dictionary<IR.Object, Rect> boxes;
         private readonly Dictionary<IR.Object, Layout.Shape> shapes;
-        private readonly List<Layout.Label> labels;
+        private readonly List<Layout.LabelBlock> labels;
         private readonly List<Layout.Line> lines;
 
         private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Rules rules, IReadOnlyDictionary<string, BlockMeasurements> textMeasures)
@@ -131,12 +131,14 @@ namespace Thousand.Compose
                     var block = textMeasures[obj.Label];
                     var blockBox = new Rect(block.Size).CenteredAt(center);
 
+                    var lines = new List<Layout.LabelLine>();
                     foreach (var line in block.Lines)
                     {
                         var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
-                        var label = new Layout.Label(lineBox, line.Run, obj.Font);
-                        labels.Add(label);
-                    }                    
+                        lines.Add(new Layout.LabelLine(lineBox, line.Run));
+                    }
+                    var label = new Layout.LabelBlock(obj.Font, blockBox, obj.Label, lines);
+                    labels.Add(label);
                 }
             }
 

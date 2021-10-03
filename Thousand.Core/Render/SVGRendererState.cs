@@ -51,17 +51,27 @@ namespace Thousand.Render
             return tag;
         }
 
-        public XElement RenderLabel(Label label)
+        public XElement RenderLabel(LabelBlock label)
         {
-            return new XElement(xmlns + "text",
+            var tag = new XElement(xmlns + "text",
                 new XAttribute("dominant-baseline", "text-before-edge"),
                 new XAttribute("x", label.Bounds.Left),
                 new XAttribute("y", label.Bounds.Top),
                 new XAttribute("font-family", label.Font.Family),
                 new XAttribute("font-size", label.Font.Size + "px"),
-                new XAttribute("fill", "rgb(0,0,0)"),
-                label.Content
+                new XAttribute("fill", "rgb(0,0,0)")
             );
+
+            foreach (var line in label.Lines)
+            {
+                tag.Add(new XElement(xmlns + "tspan",
+                    new XAttribute("x", line.Bounds.Left),
+                    new XAttribute("y", line.Bounds.Top),
+                    line.Content
+                ));
+            }
+
+            return tag;
         }
 
         private string DeclareMarker(Colour c)

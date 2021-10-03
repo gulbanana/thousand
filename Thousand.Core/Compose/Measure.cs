@@ -33,8 +33,8 @@ namespace Thousand.Compose
 
             textBlock.AddText(label, style);
 
-            var pixelWidth = (decimal)MathF.Ceiling(textBlock.MeasuredWidth);
-            var pixelHeight = (decimal)MathF.Ceiling(textBlock.MeasuredHeight);
+            var pixelWidth = (int)MathF.Ceiling(textBlock.MeasuredWidth);
+            var pixelHeight = (int)MathF.Ceiling(textBlock.MeasuredHeight);
 
             // subpixel vertical positioning is not consistently supported in SVG
             if (pixelHeight % 2 != 0)
@@ -44,7 +44,7 @@ namespace Thousand.Compose
 
             var lines = textBlock.Lines
                 .Select(l => new LineMeasurements(
-                    new Point((decimal)l.Runs[0].XCoord, (decimal)l.YCoord), 
+                    new Point((decimal)l.Runs[0].XCoord, (decimal)Math.Ceiling(l.YCoord)), 
                     new Point((decimal)l.Width, (decimal)l.Height), 
                     label.Substring(l.Start, l.Length)))
                 .ToArray();

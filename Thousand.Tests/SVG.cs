@@ -19,9 +19,11 @@ namespace Thousand.Tests
         [Fact]
         public void IntegrationTest()
         {
-            var diagram = new Diagram(100, 100, 1f, null, new Shape[0], new Label[]
+            var textBounds = new Rect(new Point(30, 28));
+
+            var diagram = new Diagram(100, 100, 1f, null, new Shape[0], new LabelBlock[]
             {
-                new Label(new Rect(new Point(30, 28)), "foo", new Font())
+                new LabelBlock(new Font(), textBounds, "foo", new[] { new LabelLine(textBounds, "foo") })
             },
             new Line[]
             {
