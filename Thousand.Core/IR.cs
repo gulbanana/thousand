@@ -29,7 +29,8 @@ namespace Thousand.IR
         public Object(string label) : this(label, new Font(), new Region(), null, null, null, null, ShapeKind.RoundRectangle, 15, 5, new Stroke(), Colour.White) { }
     }
     
-    public record Edge(Object FromTarget, Object ToTarget, AnchorKind? FromAnchor, AnchorKind? ToAnchor, Point FromOffset, Point ToOffset, Stroke Stroke);
+    // there may be many IR.Edge for a single AST.Line
+    public record Edge(Stroke Stroke, Object FromTarget, Object ToTarget, MarkerKind? FromMarker, MarkerKind? ToMarker, AnchorKind? FromAnchor, AnchorKind? ToAnchor, Point FromOffset, Point ToOffset);
     
     public record Rules(Config Config, IReadOnlyList<Object> Objects, IReadOnlyList<Edge> Edges);
 }

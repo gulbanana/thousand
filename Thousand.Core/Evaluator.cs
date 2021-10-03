@@ -391,13 +391,27 @@ namespace Thousand
 
                 if (fromTarget != null && toTarget != null && from.Direction.HasValue)
                 {
-                    if (from.Direction.Value == ArrowKind.Forward)
+                    switch (from.Direction.Value)
                     {
-                        lines.Add(new(fromTarget, toTarget, anchorStart, anchorEnd, offsetStart, offsetEnd, stroke));
-                    }
-                    else
-                    {
-                        lines.Add(new(toTarget, fromTarget, anchorStart, anchorEnd, offsetStart, offsetEnd, stroke));
+                        case ArrowKind.Backward:
+                            lines.Add(new(stroke, toTarget, fromTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            break;
+
+                        case ArrowKind.Forward:
+                            lines.Add(new(stroke, fromTarget, toTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            break;
+
+                        case ArrowKind.Neither:
+                            lines.Add(new(stroke, fromTarget, toTarget, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            break;
+
+                        case ArrowKind.Both:
+                            lines.Add(new(stroke, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            break;
+
+                        default:
+                            es.Add(new GenerationError($"Unknown ArrowKind {from.Direction.Value}"));
+                            break;
                     }
                 }
             }

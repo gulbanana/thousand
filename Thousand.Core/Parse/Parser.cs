@@ -52,10 +52,15 @@ namespace Thousand.Parse
             from dst in Target
             select Enumerable.Repeat(new AST.LineSegment(dst, null), 1);
 
+        public static TokenListParser<TokenKind, ArrowKind> Arrow { get; } =
+            Token.EqualTo(TokenKind.RightArrow).Value(ArrowKind.Forward)
+                .Or(Token.EqualTo(TokenKind.LeftArrow).Value(ArrowKind.Backward))
+                .Or(Token.EqualTo(TokenKind.NoArrow).Value(ArrowKind.Neither))
+                .Or(Token.EqualTo(TokenKind.DoubleArrow).Value(ArrowKind.Both));
+
         public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment>> Edges { get; } =
             from src in Target
-            from arrow in Token.EqualTo(TokenKind.RightArrow).Value(ArrowKind.Forward)
-                          .Or(Token.EqualTo(TokenKind.LeftArrow).Value(ArrowKind.Backward))
+            from arrow in Arrow
             from next in Superpower.Parse.Ref(() => Edges!).Try().Or(TerminalEdge)
             select next.Prepend(new(src, arrow));
 
