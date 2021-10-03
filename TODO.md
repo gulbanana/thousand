@@ -2,7 +2,7 @@ TO DO
 -----
 
 * per-shape (and diagram) margins; the diagram needs a default, 2 or 5px or something
-* generalise shorthand properties (font, etc), as well as optional shorthands like offset
+* generalise shorthand properties (font, etc)
 * drop shadows
 * IdentifierOrKeyword, hyphen formatting
 * bidi/0di edges

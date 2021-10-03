@@ -1,6 +1,7 @@
 ﻿using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
+using System;
 using System.Linq;
 using Thousand.Model;
 
@@ -56,8 +57,9 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorAttribute { get; } =
             from key in Key(ArrowAttributeKind.Anchor)
-            from value in Identifier.Enum<AnchorKind>().OrNone()
-            select new AST.ArrowAnchorAttribute(value) as AST.ArrowAttribute;
+            from start in Identifier.Enum<AnchorKind>().OrNone()
+            from startAndEnd in Identifier.Enum<AnchorKind>().OrNone().Select(end => (start, end)).OptionalOrDefault((start, start))
+            select new AST.ArrowAnchorAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStartX)
@@ -81,13 +83,15 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetX)
-            from value in IntegerValue
-            select new AST.ArrowOffsetXAttribute(value) as AST.ArrowAttribute;
+            from start in IntegerValue
+            from startAndEnd in IntegerValue.Select(end => (start, end)).OptionalOrDefault((start, start))
+            select new AST.ArrowOffsetXAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetYAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetY)
-            from value in IntegerValue
-            select new AST.ArrowOffsetYAttribute(value) as AST.ArrowAttribute;
+            from start in IntegerValue
+            from startAndEnd in IntegerValue.Select(end => (start, end)).OptionalOrDefault((start, start))
+            select new AST.ArrowOffsetYAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
             ArrowAnchorStartAttribute

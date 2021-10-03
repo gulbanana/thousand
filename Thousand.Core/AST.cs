@@ -37,13 +37,13 @@ namespace Thousand.AST
     public abstract record ArrowAttribute;
     public record ArrowAnchorStartAttribute(AnchorKind? Kind) : ArrowAttribute;
     public record ArrowAnchorEndAttribute(AnchorKind? Kind) : ArrowAttribute;
-    public record ArrowAnchorAttribute(AnchorKind? Kind) : ArrowAttribute;
+    public record ArrowAnchorAttribute(AnchorKind? Start, AnchorKind? End) : ArrowAttribute;
     public record ArrowOffsetStartXAttribute(int Offset) : ArrowAttribute;
     public record ArrowOffsetStartYAttribute(int Offset) : ArrowAttribute;
     public record ArrowOffsetEndXAttribute(int Offset) : ArrowAttribute;
     public record ArrowOffsetEndYAttribute(int Offset) : ArrowAttribute;
-    public record ArrowOffsetXAttribute(int Offset) : ArrowAttribute;
-    public record ArrowOffsetYAttribute(int Offset) : ArrowAttribute;
+    public record ArrowOffsetXAttribute(int Start, int End) : ArrowAttribute;
+    public record ArrowOffsetYAttribute(int Start, int End) : ArrowAttribute;
 
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, StrokeAttribute, TextAttribute> { }
     [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }

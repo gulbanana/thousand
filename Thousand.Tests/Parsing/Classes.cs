@@ -101,7 +101,7 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.LineClass>(result.Value);
-            AssertEx.Sequence(((AST.LineClass)result.Value).Attributes, new AST.ArrowOffsetXAttribute(1));
+            AssertEx.Sequence(((AST.LineClass)result.Value).Attributes, new AST.ArrowOffsetXAttribute(1, 1));
         }
 
         [Fact]

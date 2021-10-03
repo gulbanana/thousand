@@ -317,8 +317,8 @@ namespace Thousand
                             break;
 
                         case AST.ArrowAnchorAttribute aaa:
-                            anchorStart = aaa.Kind;
-                            anchorEnd = aaa.Kind;
+                            anchorStart = aaa.Start;
+                            anchorEnd = aaa.End;
                             break;
 
                         case AST.ArrowOffsetStartXAttribute aosa:
@@ -338,13 +338,13 @@ namespace Thousand
                             break;
 
                         case AST.ArrowOffsetXAttribute aoa:
-                            offsetStart = offsetStart with { X = aoa.Offset };
-                            offsetEnd = offsetEnd with { X = aoa.Offset };
+                            offsetStart = offsetStart with { X = aoa.Start };
+                            offsetEnd = offsetEnd with { X = aoa.End };
                             break;
 
                         case AST.ArrowOffsetYAttribute aoa:
-                            offsetStart = offsetStart with { Y = aoa.Offset };
-                            offsetEnd = offsetEnd with { Y = aoa.Offset };
+                            offsetStart = offsetStart with { Y = aoa.Start };
+                            offsetEnd = offsetEnd with { Y = aoa.End };
                             break;
                     }
                 }, line =>
