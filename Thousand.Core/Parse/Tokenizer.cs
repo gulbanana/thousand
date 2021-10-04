@@ -35,6 +35,7 @@ namespace Thousand.Parse
             return new TokenizerBuilder<TokenKind>()
                 .Ignore(parseInLineWhiteSpace)
                 .Ignore(Comment.CPlusPlusStyle)
+                .Match(parseLineSeparator, TokenKind.LineSeparator)
                 .Match(Character.EqualTo('['), TokenKind.LeftBracket)
                 .Match(Character.EqualTo(']'), TokenKind.RightBracket)
                 .Match(Character.EqualTo('{'), TokenKind.LeftBrace)
@@ -47,15 +48,14 @@ namespace Thousand.Parse
                 .Match(Character.EqualTo('.'), TokenKind.Period)
                 .Match(Span.EqualToIgnoreCase("none"), TokenKind.NoneKeyword)
                 .Match(Span.EqualToIgnoreCase("class"), TokenKind.ClassKeyword)
-                .Match(parseLineSeparator, TokenKind.LineSeparator)
-                .Match(Superpower.Parsers.Identifier.CStyle, TokenKind.Identifier)
-                .Match(parseStringToken, TokenKind.String)
-                .Match(Numerics.Decimal, TokenKind.Number)
                 .Match(Character.EqualTo('#').IgnoreThen(Character.HexDigit.AtLeastOnce()), TokenKind.Colour)
                 .Match(Character.EqualTo('<').IgnoreThen(Character.EqualTo('-').Many()).IgnoreThen(Character.EqualTo('>')), TokenKind.DoubleArrow)
                 .Match(Character.EqualTo('<').IgnoreThen(Character.EqualTo('-').AtLeastOnce()), TokenKind.LeftArrow)
                 .Match(Character.EqualTo('-').AtLeastOnce().IgnoreThen(Character.EqualTo('>')), TokenKind.RightArrow)
-                .Match(Character.EqualTo('-').IgnoreThen(Character.EqualTo('-').AtLeastOnce()), TokenKind.NoArrow)                
+                .Match(Character.EqualTo('-').IgnoreThen(Character.EqualTo('-').AtLeastOnce()), TokenKind.NoArrow)
+                .Match(Numerics.Decimal, TokenKind.Number)
+                .Match(parseStringToken, TokenKind.String)
+                .Match(TextParsers.Identifier, TokenKind.Identifier)
                 .Build();
         }
     }

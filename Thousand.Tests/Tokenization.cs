@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Thousand.Parse;
 using Xunit;
@@ -74,6 +75,72 @@ bar""", output.ElementAt(1).ToStringValue());
             var output = sut.Tokenize(@"class foo : [label=""bar""]");
 
             AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.ClassKeyword, TokenKind.Identifier, TokenKind.Colon, TokenKind.LeftBracket, TokenKind.Identifier, TokenKind.EqualsSign, TokenKind.String, TokenKind.RightBracket);
+        }
+
+        [Theory]
+        [InlineData("f")]
+        [InlineData("f2")]
+        [InlineData("f-b")]
+        [InlineData("foo")]
+        [InlineData("FOO")]
+        [InlineData("foo-bar")]
+        [InlineData("FOO-BAR2-BAZ")]
+        [InlineData("foo2")]
+        public void Identifier(string input)
+        {
+            var output = sut.Tokenize(input);
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier);
+        }
+
+        [Theory]
+        [InlineData("2")]
+        [InlineData("f-")]
+        [InlineData("foo-")]        
+        public void NotIdentifier(string input)
+        {
+            try
+            {
+                var output = sut.Tokenize(input);
+                Assert.True(output.Count() != 1 || output.Single().Kind != TokenKind.Identifier);
+            }
+            catch (Exception) 
+            { 
+                // we have successfully failed
+            }
+        }
+
+        [Theory]
+        [InlineData("->")]
+        [InlineData("-->")]
+        [InlineData("---->")]
+        public void RightArrow(string input)
+        {
+            var output = sut.Tokenize(input);
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.RightArrow);
+        }
+
+        [Fact]
+        public void IdentifiersAndArrows()
+        {
+            var output = sut.Tokenize(@"foo -- foo-bar <- f-> b-f b--f b -- f -1f");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), 
+                TokenKind.Identifier, // foo
+                TokenKind.NoArrow,    // --
+                TokenKind.Identifier, // foo-bar
+                TokenKind.LeftArrow,  // <-
+                TokenKind.Identifier, // f
+                TokenKind.RightArrow, // ->
+                TokenKind.Identifier, // b-f
+                TokenKind.Identifier, // b--f
+                TokenKind.Identifier, // b
+                TokenKind.NoArrow,    // --
+                TokenKind.Identifier, // f
+                TokenKind.Number,     // -1
+                TokenKind.Identifier  // f
+            );
         }
     }
 }

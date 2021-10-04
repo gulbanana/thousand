@@ -3,6 +3,7 @@ using Superpower.Model;
 using Superpower.Parsers;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using Thousand.Model;
 
 namespace Thousand.Parse
@@ -13,6 +14,48 @@ namespace Thousand.Parse
         {
             return ch >= '0' && ch <= '9';
         }
+
+        public static TextParser<string> Identifier { get; } = input =>
+        {
+            var first = input.ConsumeChar();
+            if (!first.HasValue || !char.IsLetter(first.Value))
+            {
+                return Result.Empty<string>(input);
+            }
+
+            var builder = new StringBuilder();
+            builder.Append(first.Value);
+
+            var hyphens = 0;
+            var remainder = first.Remainder;
+            var validRemainder = remainder;
+            while (!remainder.IsAtEnd)
+            {
+                var next = remainder.ConsumeChar();
+
+                if (char.IsLetterOrDigit(next.Value))
+                {
+                    for (; hyphens > 0; hyphens--)
+                    {
+                        builder.Append('-');
+                    }
+                    builder.Append(next.Value);
+                    remainder = next.Remainder;
+                    validRemainder = remainder;
+                }
+                else if (next.Value == '-')
+                {
+                    hyphens++;
+                    remainder = next.Remainder;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return Result.Value(builder.ToString(), input, validRemainder);
+        };
 
         public static TextParser<string> String { get; } =
             from open in Character.EqualTo('"')
