@@ -7,8 +7,8 @@
 
         Row,
         Col, Column,
-        Width,
-        Height,
+        MinWidth,
+        MinHeight,
 
         Margin,
 

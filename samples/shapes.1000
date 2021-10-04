@@ -1,4 +1,4 @@
-class object [width=110, font-size=16, margin=10]
+class object [min-width=110, font-size=16, margin=10]
 
 object rhombus [shape=rhombus]
 object diamond [shape=diamond]

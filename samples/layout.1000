@@ -2,11 +2,11 @@ layout=grid; padding=0; gutter=50
 
 class red [fill=red]
 class blue [fill=blue]
-class box [stroke=none, fill=green, width=100, height=100,corner=10]
-class w50 [width=50]
-class h50 [height=50]
+class box [stroke=none, fill=green, min-width=100, min-height=100, corner=10]
+class w50 [min-width=50]
+class h50 [min-height=50]
 
-class grid [padding=0,label=none,stroke=none]
+class grid [padding=0, label=none, stroke=none]
 class body : grid [row=2]
 class header : label [font=32]
 
@@ -36,7 +36,7 @@ grid {
 // shows the need for finer-grained margins
 grid {
 	header "interior margins"
-	body.red [height=250] {
+	body.red [min-height=250] {
 		box.w50
 		box.w50 [margin=2]
 		box.w50

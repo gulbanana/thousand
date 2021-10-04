@@ -1,6 +1,6 @@
 gutter=25
 
-class vampire [font-size=16, padding=5, height=96]
+class vampire [font-size=16, padding=5, min-height=96]
 class invictus:vampire [stroke=blue]
 class carthian:vampire [stroke=green]
 

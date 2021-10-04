@@ -1,7 +1,7 @@
 gutter=25
-class stage [shape=oval, stroke=green, padding=10, height=60]
+class stage [shape=oval, stroke=green, padding=10, min-height=60]
 class platStage : stage [stroke=blue]
-class artefact [shape=square, padding=10, width=60]
+class artefact [shape=square, fill=#eee, padding=10, min-width=70]
 
 stage "Tokenize/Parse" 
 artefact AST 

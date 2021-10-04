@@ -211,15 +211,15 @@ namespace Thousand.Parse
             from value in Value.CountingNumber
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeWidthAttribute { get; } =
-            from key in Key(NodeAttributeKind.Width)
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMinWidthAttribute { get; } =
+            from key in Key(NodeAttributeKind.MinWidth)
             from value in Value.CountingNumber
-            select new AST.NodeWidthAttribute(value) as AST.NodeAttribute;
+            select new AST.NodeMinWidthAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeHeightAttribute { get; } =
-            from key in Key(NodeAttributeKind.Height)
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMinHeightAttribute { get; } =
+            from key in Key(NodeAttributeKind.MinHeight)
             from value in Value.CountingNumber
-            select new AST.NodeHeightAttribute(value) as AST.NodeAttribute;
+            select new AST.NodeMinHeightAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =
             from key in Key(NodeAttributeKind.Shape)
@@ -243,8 +243,8 @@ namespace Thousand.Parse
                 .Or(NodeCornerRadiusAttribute)
                 .Or(NodeRowAttribute)
                 .Or(NodeColumnAttribute)
-                .Or(NodeWidthAttribute)
-                .Or(NodeHeightAttribute);
+                .Or(NodeMinWidthAttribute)
+                .Or(NodeMinHeightAttribute);
         #endregion
 
         #region region group, used by objects and diagrams

@@ -160,15 +160,20 @@ namespace Thousand.Compose
                     string.IsNullOrEmpty(child.Label) ? Point.Zero : textMeasures[child.Label].Size
                 );
 
+                if (child.MinWidth.HasValue)
+                {
+                    desiredSize = desiredSize with { X = Math.Max(child.MinWidth.Value, desiredSize.X) };
+                }
+
+                if (child.MinHeight.HasValue)
+                {
+                    desiredSize = desiredSize with { Y = Math.Max(child.MinHeight.Value, desiredSize.Y) };
+                }
+
                 if (child.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
                 {
                     var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
                     desiredSize = new Point(longestSide, longestSide);
-                }
-
-                if (child.Width.HasValue || child.Height.HasValue)
-                {
-                    desiredSize = new Point(child.Width ?? desiredSize.X, child.Height ?? desiredSize.Y);
                 }
 
                 state.Nodes[child] = new GridMeasurements(desiredSize, child.Margin, currentRow, currentColumn);
@@ -179,8 +184,10 @@ namespace Thousand.Compose
                 currentColumn++;
             }
 
+            var effectivePadding = state.RowCount + state.ColumnCount == 0 ? 0m : region.Config.Padding;
+
             var rowHeights = new decimal[state.RowCount];
-            var rowCenter = (decimal)region.Config.Padding;
+            var rowCenter = effectivePadding;
             for (var r = 0; r < state.RowCount; r++)
             {
                 var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
@@ -190,7 +197,7 @@ namespace Thousand.Compose
             }
 
             var colWidths = new decimal[state.ColumnCount];
-            var colCenter = (decimal)region.Config.Padding;
+            var colCenter = effectivePadding;
             for (var c = 0; c < state.ColumnCount; c++)
             {
                 var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
@@ -199,12 +206,12 @@ namespace Thousand.Compose
                 colWidths[c] = width;
             }
 
-            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter + 2 * region.Config.Padding;
-            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter + 2 * region.Config.Padding;
+            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter + 2 * effectivePadding;
+            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter + 2 * effectivePadding;
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(intrinsicSize.X, regionSize.X), Math.Max(intrinsicSize.Y, regionSize.Y));
-            var boxSize = contentSize + new Point(region.Config.Padding * 2, region.Config.Padding * 2);
+            var boxSize = contentSize + new Point(effectivePadding * 2, effectivePadding * 2);
 
             return boxSize;
         }

@@ -29,8 +29,8 @@ namespace Thousand.AST
     public record NodeLabelAttribute(string? Content) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;    
-    public record NodeWidthAttribute(int Value) : NodeAttribute;
-    public record NodeHeightAttribute(int Value) : NodeAttribute;
+    public record NodeMinWidthAttribute(int Value) : NodeAttribute;
+    public record NodeMinHeightAttribute(int Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;
     public record NodeMarginAttribute(int Value) : NodeAttribute;
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;

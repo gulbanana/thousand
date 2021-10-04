@@ -1,6 +1,6 @@
 gutter=50
 
-class box [width=80,height=80]
+class box [min-width=80,min-height=80]
 box A
 box B
 box C

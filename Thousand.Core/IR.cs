@@ -28,7 +28,7 @@ namespace Thousand.IR
         string? Label,
         Font Font,
         // layout
-        int Margin, int? Row, int? Column, int? Width, int? Height,
+        int Margin, int? Row, int? Column, int? MinWidth, int? MinHeight,
         // shape
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )

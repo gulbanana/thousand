@@ -18,7 +18,7 @@ namespace Thousand.Tests
         [Fact]
         public void ParseStdlib()
         {
-            var source = DiagramGenerator<object>.ReadStdlib();
+            var source = DiagramGenerator.ReadStdlib();
             var tokens = Tokenizer.Build().Tokenize(source);
             var ast = Parser.Build()(tokens);
             Assert.True(ast.HasValue, ast.ToString());

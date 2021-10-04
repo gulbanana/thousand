@@ -31,8 +31,8 @@ namespace Thousand.Tests
                     new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
                     new IR.Object[]
                     {
-                        new IR.Object { Width = 10, Height = 10 },
-                        new IR.Object { Width = 10, Height = 10 }
+                        new IR.Object { MinWidth = 10, MinHeight = 10 },
+                        new IR.Object { MinWidth = 10, MinHeight = 10 }
                     }
                 ),
                 new IR.Edge[] { }
@@ -53,8 +53,8 @@ namespace Thousand.Tests
                     new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
                     new IR.Object[]
                     {
-                        new IR.Object { Width = 10, Height = 10 },
-                        new IR.Object { Width = 10, Height = 10, Row = 2 }
+                        new IR.Object { MinWidth = 10, MinHeight = 10 },
+                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 2 }
                     }
                 ),
                 new IR.Edge[] { }
@@ -75,9 +75,9 @@ namespace Thousand.Tests
                     new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
                     new IR.Object[]
                     {
-                        new IR.Object { Width = 10, Height = 10, Row = 1, Column = 1 },
-                        new IR.Object { Width = 10, Height = 10, Row = 2, Column = 2 },
-                        new IR.Object { Width = 10, Height = 10, Row = 3, Column = 3 }
+                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 1, Column = 1 },
+                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 },
+                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 3, Column = 3 }
                     }
                 ),
                 new IR.Edge[] { }
@@ -93,8 +93,8 @@ namespace Thousand.Tests
         [Fact]
         public void LinePosition_Horizontal()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
 
             var rules = new IR.Root(1,
                 new IR.Region(
@@ -118,8 +118,8 @@ namespace Thousand.Tests
         [Fact]
         public void LinePosition_45Degree()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10, Row = 2, Column = 2 };
+            var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 };
 
             var rules = new IR.Root(1,
                 new IR.Region(
@@ -143,8 +143,8 @@ namespace Thousand.Tests
         [Fact]
         public void LineOffset()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
 
             var rules = new IR.Root(1,
                 new IR.Region(
@@ -168,8 +168,8 @@ namespace Thousand.Tests
         [Fact]
         public void LineAnchor()
         {
-            var left = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
-            var right = new IR.Object { Shape = ShapeKind.Square, Width = 10, Height = 10 };
+            var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
 
             var rules = new IR.Root(1,
                 new IR.Region(

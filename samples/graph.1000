@@ -1,7 +1,8 @@
+// XXX this could be a useful sample for layout=canvas but right now it's just a placeholder
+
 gutter=20
 
-class point [label=none]
-class node [label=none,shape=circle,width=20,height=20,fill=black]
+class node [label=none,shape=circle,min-width=20,min-height=20,fill=black]
 
 node a
 point b

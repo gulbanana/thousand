@@ -203,11 +203,11 @@ namespace Thousand
                             column = nca.Value;
                             break;
 
-                        case AST.NodeWidthAttribute nwa:
+                        case AST.NodeMinWidthAttribute nwa:
                             width = nwa.Value;
                             break;
 
-                        case AST.NodeHeightAttribute nha:
+                        case AST.NodeMinHeightAttribute nha:
                             height = nha.Value;
                             break;
 
