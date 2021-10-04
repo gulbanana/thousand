@@ -9,12 +9,12 @@ namespace Thousand.Parse
     public static class AttributeParsers
     {
         #region utilities and combinators
-        private static TokenListParser<TokenKind, Token<TokenKind>> Key<TK>(TK kind) where TK : struct =>
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, kind.ToString()!)
+        private static TokenListParser<TokenKind, Token<TokenKind>> Key<TK>(TK kind) where TK : struct, System.Enum =>
+            Identifier.EnumValue(kind)
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
-        private static TokenListParser<TokenKind, Token<TokenKind>> Keys<TK>(params TK[] kinds) where TK : struct =>
-            kinds.Select(k => Token.EqualToValueIgnoreCase(TokenKind.Identifier, k.ToString()!))
+        private static TokenListParser<TokenKind, Token<TokenKind>> Keys<TK>(params TK[] kinds) where TK : struct, System.Enum =>
+            kinds.Select(Identifier.EnumValue)
                  .Aggregate((p1, p2) => p1.Or(p2))
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 

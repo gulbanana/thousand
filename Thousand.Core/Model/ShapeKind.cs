@@ -2,9 +2,9 @@
 {
     public enum ShapeKind
     {
-        RoundRectangle,
+        Roundrectangle,
         Rectangle,
-        RoundSquare,
+        Roundsquare,
         Square,
         Ellipse,
         Circle,
@@ -12,7 +12,7 @@
         Diamond,
 
         Rect = Rectangle,
-        RoundRect = RoundRectangle,
+        Roundrect = Roundrectangle,
         Oval = Ellipse
     }
 }

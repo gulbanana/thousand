@@ -3,6 +3,7 @@ using Superpower.Parsers;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Thousand.Parse
 {
@@ -19,12 +20,22 @@ namespace Thousand.Parse
                 throw new Exception($"Enum {typeof(T).Name} has no values.");
             }
 
-            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, names.First()).Value(System.Enum.Parse<T>(names.First()));
-            foreach (var n in names.Skip(1))
+            var namedValues = names
+                .Select(n => UnCamel(n).ToLowerInvariant())
+                .Zip(names.Select(System.Enum.Parse<T>), Tuple.Create);
+
+            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, namedValues.First().Item1).Value(System.Enum.Parse<T>(names.First()));
+            foreach (var t in namedValues.Skip(1))
             {
-                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, n).Value(System.Enum.Parse<T>(n)));
+                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, t.Item1).Value(t.Item2));
             }
             return parser;
+        }
+
+        public static TokenListParser<TokenKind, T> EnumValue<T>(T value) where T : struct, Enum
+        {
+            var name = UnCamel(value.ToString()).ToLowerInvariant();
+            return Token.EqualToValueIgnoreCase(TokenKind.Identifier, name).Value(value);
         }
 
         public static TokenListParser<TokenKind, T> Statics<T>()
@@ -37,13 +48,29 @@ namespace Thousand.Parse
 
             var names = props.Select(p => p.Name);            
             var values = props.Select(p => (T)p.GetValue(null)!);
+            var namedValues = names
+                .Select(n => UnCamel(n).ToLowerInvariant())
+                .Zip(values, Tuple.Create);
 
-            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, names.First()).Value(values.First());
-            foreach (var t in names.Zip(values, Tuple.Create).Skip(1))
+            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, namedValues.First().Item1).Value(values.First());
+            foreach (var t in namedValues.Skip(1))
             {
                 parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, t.Item1).Value(t.Item2));
             }
             return parser;
+        }
+
+        private static readonly Regex uncameller = new("(?<first>[A-Z])(?<second>[A-Z])(?<lower>[a-z])|(?<lEnd>[a-z])(?<uStart>[A-Z])", RegexOptions.Compiled);
+        private static string UnCamel(string val)
+        {
+            // convert lowerCamelCase to UpperCamelCase
+            if (val.Length > 0)
+            {
+                val = (val[0..1].ToUpper() + val[1..]).Trim();
+            }
+
+            // "AAAa" -> "AA-Aa", "aA" -> "a-A"
+            return uncameller.Replace(val, "${first}${lEnd}-${second}${lower}${uStart}");
         }
     }
 }

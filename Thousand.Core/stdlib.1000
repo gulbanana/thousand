@@ -2,7 +2,7 @@ class object [shape=roundrect]
 class point [shape=none, label=none]
 class label [stroke=none, fill=none, padding=0]
 
-class line [offsetX=0]
+class line [offset-x=0]
 
 class row [shape=none, label=none]
 class column [shape=none, label=none]

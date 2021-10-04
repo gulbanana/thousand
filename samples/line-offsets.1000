@@ -6,8 +6,8 @@ box B
 box C
 box D
 
-class top [stroke=red,offsetY=-10]
-class bottom [stroke=blue,offsetY=10]
+class top [stroke=red,offset-y=-10]
+class bottom [stroke=blue,offset-y=10]
 top A -> B -> C -> D
 line A -> B -> C
 bottom A -> B

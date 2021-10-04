@@ -12,8 +12,8 @@ namespace Thousand.Render
             var path = new SKPath();
             switch (shape.Kind)
             {
-                case ShapeKind.RoundRectangle:
-                case ShapeKind.RoundSquare:
+                case ShapeKind.Roundrect:
+                case ShapeKind.Roundsquare:
                     path.AddRoundRect(new SKRoundRect(bounds, shape.CornerRadius));
                     break;
 

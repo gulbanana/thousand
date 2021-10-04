@@ -136,7 +136,7 @@ bar""");
         [Fact]
         public void Line_Attributed()
         {
-            var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [strokeColour=#000000]");
+            var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [stroke-colour=#000000]");
             var result = Parser.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -303,7 +303,7 @@ line foo -> bar");
         [Fact]
         public void Declaration_Line()
         {
-            var tokens = tokenizer.Tokenize(@"line foo->bar [offsetX=0]");
+            var tokens = tokenizer.Tokenize(@"line foo->bar [stroke=none]");
             var result = Parser.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
@@ -316,7 +316,7 @@ line foo -> bar");
             var tokens = tokenizer.Tokenize(@"fill=black
 class foo [stroke=none]
 object foo [shape=square]
-line foo->bar [offsetX=1]");
+line foo->bar [offset-x=1]");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue);

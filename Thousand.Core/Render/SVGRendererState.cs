@@ -106,7 +106,7 @@ namespace Thousand.Render
                     new XAttribute("ry", shape.Bounds.Height / 2m)
                 ),
 
-                ShapeKind.RoundRectangle or ShapeKind.RoundSquare => new XElement(xmlns + "rect",
+                ShapeKind.Roundrect or ShapeKind.Roundsquare => new XElement(xmlns + "rect",
                     new XAttribute("x", shape.Bounds.Left),
                     new XAttribute("y", shape.Bounds.Top),
                     new XAttribute("width", shape.Bounds.Width),

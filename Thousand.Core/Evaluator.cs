@@ -180,7 +180,7 @@ namespace Thousand
             var width = new int?();
             var height = new int?();
 
-            var shape = new ShapeKind?(ShapeKind.RoundRectangle);
+            var shape = new ShapeKind?(ShapeKind.Roundrect);
             var cornerRadius = 5;
 
             var stroke = new Stroke();                        

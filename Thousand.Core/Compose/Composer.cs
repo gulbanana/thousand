@@ -160,7 +160,7 @@ namespace Thousand.Compose
                     string.IsNullOrEmpty(child.Label) ? Point.Zero : textMeasures[child.Label].Size
                 );
 
-                if (child.Shape is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle or ShapeKind.Diamond)
+                if (child.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
                 {
                     var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
                     desiredSize = new Point(longestSide, longestSide);

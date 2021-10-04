@@ -33,8 +33,8 @@ namespace Thousand.IR
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object(params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), null, new Font(), 0, null, null, null, null, ShapeKind.RoundRectangle, 5, new Stroke()) { }
-        public Object(string label, params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), label, new Font(), 0, null, null, null, null, ShapeKind.RoundRectangle, 5, new Stroke()) { }
+        public Object(params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), null, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), label, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
     }
     
     // there may be many IR.Edge for a single AST.Line

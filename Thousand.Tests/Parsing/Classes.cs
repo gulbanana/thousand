@@ -96,7 +96,7 @@ namespace Thousand.Tests.Parsing
         [Fact]
         public void LineClass()
         {
-            var tokens = tokenizer.Tokenize(@"class foo [offsetX=1]");
+            var tokens = tokenizer.Tokenize(@"class foo [offset-x=1]");
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -107,7 +107,7 @@ namespace Thousand.Tests.Parsing
         [Fact]
         public void ObjectOrLineClass()
         {
-            var tokens = tokenizer.Tokenize(@"class foo [strokeColour=red]");
+            var tokens = tokenizer.Tokenize(@"class foo [stroke-colour=red]");
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
