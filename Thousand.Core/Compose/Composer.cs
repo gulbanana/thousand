@@ -34,11 +34,11 @@ namespace Thousand.Compose
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
         private readonly IR.Root root;
-        private readonly IReadOnlyDictionary<string, BlockMeasurements> textMeasures;        
-        private readonly Dictionary<IR.Object, Rect> boxes;
-        private readonly Dictionary<IR.Object, Layout.Shape> shapes;
-        private readonly List<Layout.LabelBlock> labels;
-        private readonly List<Layout.Line> lines;
+        private readonly IReadOnlyDictionary<string, BlockMeasurements> textMeasures;
+        private readonly Dictionary<IR.Region, GridState> gridState;
+        private readonly Dictionary<IR.Object, Layout.Shape> outputShapes;
+        private readonly List<Layout.LabelBlock> outputLabels;
+        private readonly List<Layout.Line> outputLines;
 
         private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Root root, IReadOnlyDictionary<string, BlockMeasurements> textMeasures)
         {
@@ -48,24 +48,29 @@ namespace Thousand.Compose
             this.root = root;
             this.textMeasures = textMeasures;
 
-            boxes = new(ReferenceEqualityComparer.Instance);
-            shapes = new(ReferenceEqualityComparer.Instance);
-            labels = new();
-            lines = new();
+            gridState = new(ReferenceEqualityComparer.Instance);
+            outputShapes = new(ReferenceEqualityComparer.Instance);
+            outputLabels = new();
+            outputLines = new();            
         }
 
+        // XXX consider positioning the label in the region rather than overlaid 
         public Layout.Diagram Compose()
         {
-            var measures = Measure(root.Region, Point.Zero, null, null, false);
-            Arrange(root.Region, measures, Point.Zero);
+            // measure hierarchical regions recursively
+            var totalSize = Measure(root.Region, Point.Zero);
 
+            // create labels and shapes, laid out according to the measurements above and each region's settings
+            var boxes = Arrange(root.Region, Point.Zero);
+
+            // create lines, which are global - all they need from layout is the margin-exclusive laid out bounds of each object 
             foreach (var edge in root.Edges)
             {
                 var fromBox = boxes[edge.FromTarget];
                 var toBox = boxes[edge.ToTarget];
                 try
                 {
-                    var (start, end) = Intrinsics.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, shapes.GetValueOrDefault(edge.FromTarget), shapes.GetValueOrDefault(edge.ToTarget));
+                    var (start, end) = Intrinsics.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, outputShapes.GetValueOrDefault(edge.FromTarget), outputShapes.GetValueOrDefault(edge.ToTarget));
 
                     if (edge.FromAnchor.HasValue)
                     {
@@ -78,7 +83,7 @@ namespace Thousand.Compose
                                 new(fromBox.Center.X, fromBox.Bottom),
                                 new(fromBox.Left, fromBox.Center.Y),
                             },
-                            AnchorKind.Corners => shapes.GetValueOrDefault(edge.FromTarget) is Layout.Shape fromShape ? Intrinsics.Corners(fromShape) : Intrinsics.Corners(fromBox)
+                            AnchorKind.Corners => outputShapes.GetValueOrDefault(edge.FromTarget) is Layout.Shape fromShape ? Intrinsics.Corners(fromShape) : Intrinsics.Corners(fromBox)
                         };
 
                         start = start.Closest(anchors);
@@ -95,13 +100,13 @@ namespace Thousand.Compose
                                 new(toBox.Center.X, toBox.Bottom),
                                 new(toBox.Left, toBox.Center.Y),
                             },
-                            AnchorKind.Corners => shapes.GetValueOrDefault(edge.ToTarget) is Layout.Shape toShape ? Intrinsics.Corners(toShape) : Intrinsics.Corners(toBox)
+                            AnchorKind.Corners => outputShapes.GetValueOrDefault(edge.ToTarget) is Layout.Shape toShape ? Intrinsics.Corners(toShape) : Intrinsics.Corners(toBox)
                         };
 
                         end = end.Closest(anchors);
                     }
 
-                    lines.Add(new(edge.Stroke, start, end, edge.FromMarker.HasValue, edge.ToMarker.HasValue));
+                    outputLines.Add(new(edge.Stroke, start, end, edge.FromMarker.HasValue, edge.ToMarker.HasValue));
                 }
                 catch (Exception ex)
                 { 
@@ -111,25 +116,30 @@ namespace Thousand.Compose
             }
 
             return new(
-                (int)Math.Ceiling(measures.Size.X),
-                (int)Math.Ceiling(measures.Size.Y),
+                (int)Math.Ceiling(totalSize.X),
+                (int)Math.Ceiling(totalSize.Y),
                 root.Scale,
                 root.Region.Config.Fill,
-                shapes.Values.ToList(), 
-                labels, 
-                lines
+                outputShapes.Values.ToList(), 
+                outputLabels, 
+                outputLines
             );
         }
 
-        // XXX assumes LayoutKind.Grid; mixes up measure and arrange passes
-        private RegionMeasurements Measure(IR.Region region, Point intrinsicSize, int? finalWidth, int? finalHeight, bool squareBox)
+        // each object can have 0 or more of the following:
+        // a) text content (a label)
+        // b) child content (other objects)
+        // c) a shape stroked around (and filled behind) the larger of (a) and (b)
+        // all of these, plus padding, contribute to a object's bounding box size; a region (which can be the (b) of some other object, or the root) 
+        // has a size determined by the object bounds, their margins and the region's gutter
+        private Point Measure(IR.Region region, Point intrinsicSize)
         {
-            var currentRow = 1;
-            var maxRow = 0;
-            var currentColumn = 1;
-            var maxColumn = 0;
+            var state = new GridState();
+            gridState[region] = state;
 
-            var measures = new Dictionary<IR.Object, NodeMeasurements>(ReferenceEqualityComparer.Instance);
+            var currentRow = 1;
+            var currentColumn = 1;
+
             foreach (var child in region.Objects)
             {
                 // arrange: pre-measure grid march
@@ -144,104 +154,98 @@ namespace Thousand.Compose
                     currentColumn = child.Column.Value;
                 }
 
-                // measure                
-                var childMeasurements = Measure(
+                // measure child and apply overrides
+                var desiredSize = Measure(
                     child.Region, 
-                    string.IsNullOrEmpty(child.Label) ? Point.Zero : textMeasures[child.Label].Size, 
-                    child.Width, 
-                    child.Height,
-                    child.Shape is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle or ShapeKind.Diamond
+                    string.IsNullOrEmpty(child.Label) ? Point.Zero : textMeasures[child.Label].Size
                 );
 
-                measures[child] = new NodeMeasurements(currentRow, currentColumn, child.Margin, childMeasurements);
+                if (child.Shape is ShapeKind.Square or ShapeKind.RoundSquare or ShapeKind.Circle or ShapeKind.Diamond)
+                {
+                    var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
+                    desiredSize = new Point(longestSide, longestSide);
+                }
+
+                if (child.Width.HasValue || child.Height.HasValue)
+                {
+                    desiredSize = new Point(child.Width ?? desiredSize.X, child.Height ?? desiredSize.Y);
+                }
+
+                state.Nodes[child] = new GridMeasurements(desiredSize, child.Margin, currentRow, currentColumn);
 
                 // arrange: post-measure grid march
-                maxRow = Math.Max(currentRow, maxRow);
-                maxColumn = Math.Max(currentColumn, maxColumn);
+                state.RowCount = Math.Max(currentRow, state.RowCount);
+                state.ColumnCount = Math.Max(currentColumn, state.ColumnCount);
                 currentColumn++;
             }
 
-            var rowHeights = new decimal[maxRow];
-            var rowCenters = new decimal[maxRow]; // XXX not used, and recalculated later. save somewhere, or two-pass?
+            var rowHeights = new decimal[state.RowCount];
             var rowCenter = (decimal)region.Config.Padding;
-            for (var r = 0; r < maxRow; r++)
+            for (var r = 0; r < state.RowCount; r++)
             {
-                var height = measures.Values.Where(s => s.Row == r + 1).Select(s => s.Region.Size.Y + s.Margin * 2).Append(0).Max();
+                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
                 var center = rowCenter + height / 2;
                 rowCenter = rowCenter + height + region.Config.Gutter;
                 rowHeights[r] = height;
-                rowCenters[r] = center;
             }
 
-            var colWidths = new decimal[maxColumn];
-            var colCenters = new decimal[maxColumn];
+            var colWidths = new decimal[state.ColumnCount];
             var colCenter = (decimal)region.Config.Padding;
-            for (var c = 0; c < maxColumn; c++)
+            for (var c = 0; c < state.ColumnCount; c++)
             {
-                var width = measures.Values.Where(s => s.Column == c + 1).Select(s => s.Region.Size.X + s.Margin * 2).Append(0).Max();
+                var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
                 var center = colCenter + width / 2;
                 colCenter = colCenter + width + region.Config.Gutter;
                 colWidths[c] = width;
-                colCenters[c] = center;
             }
 
-            var contentWidth = colWidths.Sum() + (maxColumn - 1) * region.Config.Gutter + 2 * region.Config.Padding;
-            var contentHeight = rowHeights.Sum() + (maxRow - 1) * region.Config.Gutter + 2 * region.Config.Padding;
+            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter + 2 * region.Config.Padding;
+            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter + 2 * region.Config.Padding;
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(intrinsicSize.X, regionSize.X), Math.Max(intrinsicSize.Y, regionSize.Y));
             var boxSize = contentSize + new Point(region.Config.Padding * 2, region.Config.Padding * 2);
-            if (squareBox)
-            {
-                var longestSide = Math.Max(boxSize.X, boxSize.Y);
-                boxSize = new Point(longestSide, longestSide);
-            }
-            var finalSize = new Point(finalWidth ?? boxSize.X, finalHeight ?? boxSize.Y);
 
-            return new(finalSize, measures);
+            return boxSize;
         }
 
-        private void Arrange(IR.Region region, RegionMeasurements measures, Point location)
+        private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Point location)
         {
-            var maxRow = measures.Nodes.Values.Select(m => m.Row).Append(0).Max();
-            var maxColumn = measures.Nodes.Values.Select(m => m.Column).Append(0).Max();
+            var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
+            var state = gridState[region];
 
-            var rowHeights = new decimal[maxRow];
-            var rowCenters = new decimal[maxRow];
+            var rowCenters = new decimal[state.RowCount];
             var rowCenter = location.Y + region.Config.Padding;
-            for (var r = 0; r < maxRow; r++)
+            for (var r = 0; r < state.RowCount; r++)
             {
-                var height = measures.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.Region.Size.Y + s.Margin * 2).Append(0).Max();
+                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
                 var center = rowCenter + height / 2;
                 rowCenter = rowCenter + height + region.Config.Gutter;
-                rowHeights[r] = height;
                 rowCenters[r] = center;
             }
 
-            var colWidths = new decimal[maxColumn];
-            var colCenters = new decimal[maxColumn];
+            var colCenters = new decimal[state.ColumnCount];
             var colCenter = location.X + region.Config.Padding;
-            for (var c = 0; c < maxColumn; c++)
+            for (var c = 0; c < state.ColumnCount; c++)
             {
-                var width = measures.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.Region.Size.X + s.Margin * 2).Append(0).Max();
+                var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
                 var center = colCenter + width / 2;
                 colCenter = colCenter + width + region.Config.Gutter;
-                colWidths[c] = width;
                 colCenters[c] = center;
             }
 
             foreach (var obj in region.Objects)
             {
-                var measure = measures.Nodes[obj];
-                var center = new Point(colCenters[measure.Column - 1], rowCenters[measure.Row - 1]);
-                var bounds = new Rect(measure.Region.Size).CenteredAt(center);
+                var node = state.Nodes[obj];
+                var center = new Point(colCenters[node.Column - 1], rowCenters[node.Row - 1]);
+                var bounds = new Rect(node.DesiredSize).CenteredAt(center);
 
                 boxes[obj] = bounds;
 
                 if (obj.Shape.HasValue)
                 {
                     var shape = new Layout.Shape(bounds, obj.Shape.Value, obj.CornerRadius, obj.Stroke, obj.Region.Config.Fill);
-                    shapes[obj] = shape;
+                    outputShapes[obj] = shape;
                 }
 
                 if (obj.Label != null && obj.Label != string.Empty)
@@ -263,14 +267,19 @@ namespace Thousand.Compose
                         lines.Add(new Layout.LabelLine(lineBox, line.Run));
                     }
                     var label = new Layout.LabelBlock(obj.Font, blockBox, obj.Label, lines);
-                    labels.Add(label);
+                    outputLabels.Add(label);
                 }
 
                 if (obj.Region.Objects.Any())
                 {
-                    Arrange(obj.Region, measure.Region, bounds.Origin);
+                    foreach (var kvp in Arrange(obj.Region, bounds.Origin))
+                    {
+                        boxes.Add(kvp.Key, kvp.Value);
+                    }
                 }
             }
+
+            return boxes;
         }
     }
 }
