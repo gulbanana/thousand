@@ -96,6 +96,7 @@ bar""", output.ElementAt(1).ToStringValue());
         [Theory]
         [InlineData("2")]
         [InlineData("f-")]
+        [InlineData("f--b")]
         [InlineData("foo-")]        
         public void NotIdentifier(string input)
         {
