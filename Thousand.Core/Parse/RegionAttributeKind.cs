@@ -3,10 +3,19 @@
     public enum RegionAttributeKind
     {
         Fill,
-        Layout,
         Padding,
-        Gutter,
-        RowHeight,
-        ColumnWidth
+        Layout,
+
+        Space,
+        SpaceRows,
+        SpaceColumns,
+
+        Pack,
+        PackRows,
+        PackColumns,
+
+        Justify,
+        JustifyRows,
+        JustifyColumns,
     }
 }

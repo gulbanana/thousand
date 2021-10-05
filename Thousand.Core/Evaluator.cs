@@ -56,7 +56,7 @@ namespace Thousand
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(Colour.White, LayoutKind.Grid, 5, 0, new EqualSize(), new EqualSize());
+            Config = new IR.Config(Colour.White, LayoutKind.Grid, 5, new(0), new(new EqualSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.Document diagram)
@@ -126,11 +126,12 @@ namespace Thousand
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
         {
-            var regionConfig = new IR.Config(null, LayoutKind.Grid, 15, 0, new PackedSize(), new PackedSize());
+            var regionConfig = new IR.Config(null, LayoutKind.Grid, 15, new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
 
+            var alignment = default(AlignmentKind?);
             var margin = 0;
             var row = new int?();
             var column = new int?();
@@ -172,6 +173,10 @@ namespace Thousand
                             shape = nsa.Kind;
                             break;
 
+                        case AST.NodeAlignAttribute naa:
+                            alignment = naa.Kind;
+                            break;
+
                         case AST.NodeMarginAttribute nma:
                             margin = nma.Value;
                             break;
@@ -200,7 +205,7 @@ namespace Thousand
                 }
             }
 
-            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, margin, row, column, width, height, shape, cornerRadius, stroke);
+            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, row, column, width, height, shape, cornerRadius, stroke);
 
             var name = node.Name ?? Guid.NewGuid().ToString();
             if (allObjects.ContainsKey(name))
@@ -312,11 +317,17 @@ namespace Thousand
             return attribute switch
             {
                 AST.RegionFillAttribute rfa => config with { Fill = rfa.Colour },
-                AST.RegionLayoutAttribute rla => config with { Layout = rla.Kind },
                 AST.RegionPaddingAttribute rpa => config with { Padding = rpa.Value },
-                AST.RegionGutterAttribute rga => config with { Gutter = rga.Value },
-                AST.RegionColumnWidthAttribute rcwa => config with { ColumnWidth = rcwa.Size },
-                AST.RegionRowHeightAttribute rrha => config with { RowHeight = rrha.Size },
+                AST.RegionLayoutAttribute rla => config with { Layout = rla.Kind },
+                AST.RegionSpaceColumnsAttribute rsca => config with { Gutter = new(rsca.Value, config.Gutter.Rows) },
+                AST.RegionSpaceRowsAttribute rsra => config with { Gutter = new(config.Gutter.Columns, rsra.Value) },
+                AST.RegionSpaceAttribute rsa => config with { Gutter = new(rsa.Columns, rsa.Rows) },
+                AST.RegionPackColumnsAttribute rpca => config with { Size = new(rpca.Size, config.Size.Rows) },
+                AST.RegionPackRowsAttribute rpra => config with { Size = new(config.Size.Columns, rpra.Size) },
+                AST.RegionPackAttribute rpa => config with { Size = new(rpa.Columns, rpa.Rows) },
+                AST.RegionJustifyColumnsAttribute rjca => config with { Alignment = new(rjca.Kind, config.Alignment.Rows) },
+                AST.RegionJustifyRowsAttribute rjra => config with { Alignment = new(config.Alignment.Columns, rjra.Kind) },
+                AST.RegionJustifyAttribute rja => config with { Alignment = new(rja.Columns, rja.Rows) },
                 _ => config
             };
         }

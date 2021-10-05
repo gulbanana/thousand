@@ -20,12 +20,21 @@ namespace Thousand.AST
     public record LineStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : LineAttribute;
 
     public abstract record RegionAttribute;
-    public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
-    public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
+    public record RegionFillAttribute(Colour? Colour) : RegionAttribute;    
     public record RegionPaddingAttribute(int Value) : RegionAttribute;
-    public record RegionGutterAttribute(int Value) : RegionAttribute;
-    public record RegionRowHeightAttribute(TrackSize Size) : RegionAttribute;
-    public record RegionColumnWidthAttribute(TrackSize Size) : RegionAttribute;
+    public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
+
+    public record RegionSpaceColumnsAttribute(int Value) : RegionAttribute;
+    public record RegionSpaceRowsAttribute(int Value) : RegionAttribute;
+    public record RegionSpaceAttribute(int Columns, int Rows) : RegionAttribute;
+
+    public record RegionPackColumnsAttribute(TrackSize Size) : RegionAttribute;
+    public record RegionPackRowsAttribute(TrackSize Size) : RegionAttribute;
+    public record RegionPackAttribute(TrackSize Columns, TrackSize Rows) : RegionAttribute;    
+
+    public record RegionJustifyColumnsAttribute(AlignmentKind Kind) : RegionAttribute;
+    public record RegionJustifyRowsAttribute(AlignmentKind Kind) : RegionAttribute;
+    public record RegionJustifyAttribute(AlignmentKind Columns, AlignmentKind Rows) : RegionAttribute;
 
     public abstract record NodeAttribute;
     public record NodeLabelAttribute(string? Content) : NodeAttribute;
@@ -34,6 +43,7 @@ namespace Thousand.AST
     public record NodeMinWidthAttribute(int Value) : NodeAttribute;
     public record NodeMinHeightAttribute(int Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;
+    public record NodeAlignAttribute(AlignmentKind? Kind) : NodeAttribute;
     public record NodeMarginAttribute(int Value) : NodeAttribute;
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 

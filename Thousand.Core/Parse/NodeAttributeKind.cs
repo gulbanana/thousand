@@ -7,9 +7,11 @@
 
         Row,
         Col, Column,
+        
         MinWidth,
         MinHeight,
 
+        Align,
         Margin,
 
         Shape,

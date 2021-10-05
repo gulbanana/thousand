@@ -1,4 +1,4 @@
-gutter=25
+space=25
 
 class vampire [font-size=16, padding=5, min-height=96]
 class invictus:vampire [stroke=blue]
@@ -6,14 +6,14 @@ class carthian:vampire [stroke=green]
 
 // XXX can we use content templates to name these people more fluently than [label]?
 
-row gardeners [gutter=20] {
+row gardeners [space=20] {
 	invictus ruth [label="Ruth Henning Gardener\nd. 1744"]
 	invictus alex [label="Alex Gardener\nCount Salford\nd. 1742"]
 
 	line ruth <- alex
 }
 
-row [gutter=20, row=2] {
+row [space=20, row=2] {
 	invictus ivan [label="Ivan Bebutov
 	d. 1751 f. 1861"]
 	invictus miles [label="Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"]
@@ -23,7 +23,7 @@ row [gutter=20, row=2] {
 	invictus sylvia [label="Sylvia Hursley-Apple\nBaron Bradford\nd. 1881 f. 1984"]
 }
 
-row [gutter=20, row=3] {
+row [space=20, row=3] {
 	invictus charles [label="Charles Horse\nCourt Harpy\nd. 1861 f. 1984"]
 	carthian barbara [label="Barbara Barrigan\nd. 1920"]
 	carthian anne [label="Anne Conner\nd. 1925 f. 1984"]
@@ -33,7 +33,7 @@ row [gutter=20, row=3] {
 	invictus agatha [label="Agatha Hursley-Apple\nd. 1901"]
 }
 
-row [gutter=20, row=4] {
+row [space=20, row=4] {
 	carthian kyle [label="Kyle Killarney\nd. 1982 f. 1984"]
 	carthian doug [label="Doug Killarney\nd. 1982"]
 	carthian craig [label="Craig Dunlop\nd. 1945"]

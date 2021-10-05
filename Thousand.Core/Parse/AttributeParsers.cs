@@ -81,9 +81,8 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorAttribute { get; } =
             from key in Key(ArrowAttributeKind.Anchor)
-            from start in Identifier.Enum<AnchorKind>().OrNone()
-            from startAndEnd in Identifier.Enum<AnchorKind>().OrNone().Select(end => (start, end)).OptionalOrDefault((start, start))
-            select new AST.ArrowAnchorAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
+            from startAndEnd in Identifier.Enum<AnchorKind>().OrNone().Twice()
+            select new AST.ArrowAnchorAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetStartX)
@@ -107,15 +106,13 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetXAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetX)
-            from start in Value.Integer
-            from startAndEnd in Value.Integer.Select(end => (start, end)).OptionalOrDefault((start, start))
-            select new AST.ArrowOffsetXAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
+            from startAndEnd in Value.Integer.Twice()
+            select new AST.ArrowOffsetXAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetYAttribute { get; } =
             from key in Key(ArrowAttributeKind.OffsetY)
-            from start in Value.Integer
-            from startAndEnd in Value.Integer.Select(end => (start, end)).OptionalOrDefault((start, start))
-            select new AST.ArrowOffsetYAttribute(startAndEnd.Item1, startAndEnd.Item2) as AST.ArrowAttribute;
+            from startAndEnd in Value.Integer.Twice()
+            select new AST.ArrowOffsetYAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
             ArrowAnchorStartAttribute
@@ -226,7 +223,12 @@ namespace Thousand.Parse
             from value in Identifier.Enum<ShapeKind>().OrNone()
             select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodePaddingAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignAttribute { get; } =
+            from key in Key(NodeAttributeKind.Align)
+            from value in Identifier.Enum<AlignmentKind>().OrNone()
+            select new AST.NodeAlignAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMarginAttribute { get; } =
             from key in Key(NodeAttributeKind.Margin)
             from value in Value.WholeNumber
             select new AST.NodeMarginAttribute(value) as AST.NodeAttribute;
@@ -239,7 +241,8 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
             NodeLabelAttribute
                 .Or(NodeShapeAttribute)
-                .Or(NodePaddingAttribute)
+                .Or(NodeAlignAttribute)
+                .Or(NodeMarginAttribute)
                 .Or(NodeCornerRadiusAttribute)
                 .Or(NodeRowAttribute)
                 .Or(NodeColumnAttribute)
@@ -253,38 +256,74 @@ namespace Thousand.Parse
             from value in Value.Colour.OrNull()
             select new AST.RegionFillAttribute(value) as AST.RegionAttribute;
 
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPaddingAttribute { get; } =
+            from key in Key(RegionAttributeKind.Padding)
+            from value in Value.WholeNumber
+            select new AST.RegionPaddingAttribute(value) as AST.RegionAttribute;
+
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutAttribute { get; } =
             from key in Key(RegionAttributeKind.Layout)
             from value in Identifier.Enum<LayoutKind>()
             select new AST.RegionLayoutAttribute(value) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionMarginAttribute { get; } =
-            from key in Key(RegionAttributeKind.Padding)
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionSpaceColumnsAttribute { get; } =
+            from key in Key(RegionAttributeKind.SpaceColumns)
             from value in Value.WholeNumber
-            select new AST.RegionPaddingAttribute(value) as AST.RegionAttribute;
+            select new AST.RegionSpaceColumnsAttribute(value) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionGutterAttribute { get; } =
-            from key in Key(RegionAttributeKind.Gutter)
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionSpaceRowsAttribute { get; } =
+            from key in Key(RegionAttributeKind.SpaceRows)
             from value in Value.WholeNumber
-            select new AST.RegionGutterAttribute(value) as AST.RegionAttribute;
+            select new AST.RegionSpaceRowsAttribute(value) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionRowHeightAttribute { get; } =
-            from key in Key(RegionAttributeKind.RowHeight)
-            from value in Value.TrackSize
-            select new AST.RegionRowHeightAttribute(value) as AST.RegionAttribute;
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionSpaceAttribute { get; } =
+            from key in Key(RegionAttributeKind.Space)
+            from columnsAndRows in Value.WholeNumber.Twice()
+            select new AST.RegionSpaceAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionColumnWidthAttribute { get; } =
-            from key in Key(RegionAttributeKind.ColumnWidth)
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPackColumnsAttribute { get; } =
+            from key in Key(RegionAttributeKind.PackColumns)
             from value in Value.TrackSize
-            select new AST.RegionColumnWidthAttribute(value) as AST.RegionAttribute;
+            select new AST.RegionPackColumnsAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPackRowsAttribute { get; } =
+            from key in Key(RegionAttributeKind.PackRows)
+            from value in Value.TrackSize
+            select new AST.RegionPackRowsAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPackAttribute { get; } =
+            from key in Key(RegionAttributeKind.Pack)
+            from columnsAndRows in Value.TrackSize.Twice()
+            select new AST.RegionPackAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyColumnsAttribute { get; } =
+            from key in Key(RegionAttributeKind.JustifyColumns)
+            from value in Identifier.Enum<AlignmentKind>()
+            select new AST.RegionJustifyColumnsAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyRowsAttribute { get; } =
+            from key in Key(RegionAttributeKind.JustifyRows)
+            from value in Identifier.Enum<AlignmentKind>()
+            select new AST.RegionJustifyRowsAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyAttribute { get; } =
+            from key in Key(RegionAttributeKind.Justify)
+            from columnsAndRows in Identifier.Enum<AlignmentKind>().Twice()
+            select new AST.RegionJustifyAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } =
             RegionFillAttribute
+                .Or(RegionPaddingAttribute)
                 .Or(RegionLayoutAttribute)
-                .Or(RegionMarginAttribute)
-                .Or(RegionGutterAttribute)
-                .Or(RegionRowHeightAttribute)
-                .Or(RegionColumnWidthAttribute);
+                .Or(RegionSpaceColumnsAttribute)
+                .Or(RegionSpaceRowsAttribute)
+                .Or(RegionSpaceAttribute)
+                .Or(RegionPackColumnsAttribute)
+                .Or(RegionPackRowsAttribute)
+                .Or(RegionPackAttribute)
+                .Or(RegionJustifyColumnsAttribute)
+                .Or(RegionJustifyRowsAttribute)
+                .Or(RegionJustifyAttribute);
         #endregion
     }
 }

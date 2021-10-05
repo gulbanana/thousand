@@ -1,4 +1,4 @@
-layout=grid; padding=0; gutter=50
+layout=grid; padding=0; space=50
 
 class red [fill=red]
 class blue [fill=blue]

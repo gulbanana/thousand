@@ -26,6 +26,13 @@ namespace Thousand.Parse
                 .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(new T?()));
         }
 
+        public static TokenListParser<TokenKind, (T first, T second)> Twice<T>(this TokenListParser<TokenKind, T> pT)
+        {
+            return from first in pT
+                   from firstAndSecond in pT.Select(second => (first, second)).OptionalOrDefault((first, first))
+                   select firstAndSecond;
+        }
+
         // produces better error messages than ManyDelimitedBy by making some assumptions
         public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimited<T>(this TokenListParser<TokenKind, T> parser, TokenKind? terminator = null) => originalInput =>
         {

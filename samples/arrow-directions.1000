@@ -1,4 +1,4 @@
-gutter=40; scale=2
+space=40; scale=2
 
 object a1; object b1; object c1; object d1
 object a2 [row=2]; object b2; object c2; object d2

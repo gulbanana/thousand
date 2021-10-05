@@ -1,5 +1,5 @@
 scale = 2.0
-gutter = 40
+space = 40
 
 class node [fill=#ccc,shape=circle,stroke=1]
 class hair [stroke=hairline]

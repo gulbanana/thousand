@@ -1,5 +1,5 @@
 scale=1
-gutter=50
+space=50
 
 class box [fill=#ccc, shape=roundsquare]
 class r1 : box [row=1]

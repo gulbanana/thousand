@@ -4,6 +4,6 @@ class label [stroke=none, fill=none, padding=0]
 
 class line [offset-x=0]
 
-class grid [shape=none, label=none, column-width=equal, row-height=equal]
-class row [shape=none, label=none, column-width=equal]
-class column [shape=none, label=none, row-height=equal]; class col : column
+class grid [shape=none, label=none, padding=0, pack=equal, layout=grid]
+class row [shape=none, label=none, padding=0, pack=equal, layout=row]
+class column [shape=none, label=none, padding=0, pack=equal, layout=column]; class col : column

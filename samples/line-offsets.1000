@@ -1,4 +1,4 @@
-gutter=50
+space=50
 
 class box [min-width=80,min-height=80]
 box A

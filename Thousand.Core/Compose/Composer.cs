@@ -177,28 +177,28 @@ namespace Thousand.Compose
 
             var regionPadding = state.RowCount + state.ColumnCount == 0 ? 0m : region.Config.Padding;
 
-            var rowHeights = new decimal[state.RowCount];
-            var rowCenter = regionPadding;
-            for (var r = 0; r < state.RowCount; r++)
-            {
-                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
-                var center = rowCenter + height / 2;
-                rowCenter = rowCenter + height + region.Config.Gutter;
-                rowHeights[r] = height;
-            }
-
             var colWidths = new decimal[state.ColumnCount];
             var colCenter = regionPadding;
             for (var c = 0; c < state.ColumnCount; c++)
             {
                 var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
                 var center = colCenter + width / 2;
-                colCenter = colCenter + width + region.Config.Gutter;
+                colCenter = colCenter + width + region.Config.Gutter.Columns;
                 colWidths[c] = width;
             }
 
-            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter + 2 * regionPadding;
-            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter + 2 * regionPadding;
+            var rowHeights = new decimal[state.RowCount];
+            var rowCenter = regionPadding;
+            for (var r = 0; r < state.RowCount; r++)
+            {
+                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
+                var center = rowCenter + height / 2;
+                rowCenter = rowCenter + height + region.Config.Gutter.Rows;
+                rowHeights[r] = height;
+            }
+
+            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter.Columns + 2 * regionPadding;
+            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter.Rows + 2 * regionPadding;
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));
@@ -211,24 +211,24 @@ namespace Thousand.Compose
             var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
             var state = gridState[region];
 
-            var rowCenters = new decimal[state.RowCount];
-            var rowCenter = location.Y + region.Config.Padding;
-            for (var r = 0; r < state.RowCount; r++)
-            {
-                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
-                var center = rowCenter + height / 2;
-                rowCenter = rowCenter + height + region.Config.Gutter;
-                rowCenters[r] = center;
-            }
-
             var colCenters = new decimal[state.ColumnCount];
             var colCenter = location.X + region.Config.Padding;
             for (var c = 0; c < state.ColumnCount; c++)
             {
                 var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
                 var center = colCenter + width / 2;
-                colCenter = colCenter + width + region.Config.Gutter;
+                colCenter = colCenter + width + region.Config.Gutter.Columns;
                 colCenters[c] = center;
+            }
+
+            var rowCenters = new decimal[state.RowCount];
+            var rowCenter = location.Y + region.Config.Padding;
+            for (var r = 0; r < state.RowCount; r++)
+            {
+                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
+                var center = rowCenter + height / 2;
+                rowCenter = rowCenter + height + region.Config.Gutter.Rows;
+                rowCenters[r] = center;
             }
 
             foreach (var obj in region.Objects)

@@ -2,6 +2,10 @@
 {
     public enum LayoutKind
     {
-        Grid
+        Grid,
+        Row,
+        Column,
+
+        Col = Column,
     }
 }
