@@ -36,6 +36,7 @@ namespace Thousand.Compose
         private readonly IR.Root root;
         private readonly IReadOnlyDictionary<StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, GridState> gridState;
+        private readonly Dictionary<IR.Region, RowState> rowState;
         private readonly Dictionary<IR.Object, Layout.Shape> outputShapes;
         private readonly List<Layout.LabelBlock> outputLabels;
         private readonly List<Layout.Line> outputLines;
@@ -49,6 +50,8 @@ namespace Thousand.Compose
             this.textMeasures = textMeasures;
 
             gridState = new(ReferenceEqualityComparer.Instance);
+            rowState = new(ReferenceEqualityComparer.Instance);
+
             outputShapes = new(ReferenceEqualityComparer.Instance);
             outputLabels = new();
             outputLines = new();            
@@ -130,16 +133,25 @@ namespace Thousand.Compose
 
             foreach (var child in region.Objects)
             {
-                // arrange: pre-measure grid march
-                if (child.Row.HasValue && currentRow != child.Row.Value)
+                // grid-march: reset to manually specified cell
+                if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, Flow: FlowKind.Row })
                 {
-                    currentRow = child.Row.Value;
-                    currentColumn = 1;
+                    if (child.Row.HasValue && currentRow != child.Row.Value)
+                    {
+                        currentRow = child.Row.Value;
+                        currentColumn = 1;
+                    }
+                    currentColumn = child.Column ?? currentColumn;
                 }
 
-                if (child.Column.HasValue)
+                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, Flow: FlowKind.Column })
                 {
-                    currentColumn = child.Column.Value;
+                    if (child.Column.HasValue && currentColumn != child.Column.Value)
+                    {
+                        currentColumn = child.Column.Value;
+                        currentRow = 1;
+                    }
+                    currentRow = child.Row ?? currentRow;
                 }
 
                 // measure child and apply overrides
@@ -166,10 +178,18 @@ namespace Thousand.Compose
 
                 state.Nodes[child] = new GridMeasurements(desiredSize, child.Margin, currentRow, currentColumn);
 
-                // arrange: post-measure grid march
+                // grid-march: update size and move to the next cell
                 state.RowCount = Math.Max(currentRow, state.RowCount);
                 state.ColumnCount = Math.Max(currentColumn, state.ColumnCount);
-                currentColumn++;
+
+                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, Flow: FlowKind.Row })
+                {
+                    currentColumn++;
+                }
+                else if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, Flow: FlowKind.Column })
+                {
+                    currentRow++;
+                }
             }
 
             var intrinsicPadding = intrinsicSize == Point.Zero ? 0m : region.Config.Padding;
@@ -182,7 +202,6 @@ namespace Thousand.Compose
             for (var c = 0; c < state.ColumnCount; c++)
             {
                 var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
-                var center = colCenter + width / 2;
                 colCenter = colCenter + width + region.Config.Gutter.Columns;
                 colWidths[c] = width;
             }
@@ -192,7 +211,6 @@ namespace Thousand.Compose
             for (var r = 0; r < state.RowCount; r++)
             {
                 var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
-                var center = rowCenter + height / 2;
                 rowCenter = rowCenter + height + region.Config.Gutter.Rows;
                 rowHeights[r] = height;
             }

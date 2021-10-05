@@ -266,6 +266,11 @@ namespace Thousand.Parse
             from value in Identifier.Enum<LayoutKind>()
             select new AST.RegionLayoutAttribute(value) as AST.RegionAttribute;
 
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionGridFlowAttribute { get; } =
+            from key in Key(RegionAttributeKind.GridFlow)
+            from value in Identifier.Enum<FlowKind>()
+            select new AST.RegionGridFlowAttribute(value) as AST.RegionAttribute;
+
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionSpaceColumnsAttribute { get; } =
             from key in Key(RegionAttributeKind.SpaceColumns)
             from value in Value.WholeNumber
@@ -315,6 +320,7 @@ namespace Thousand.Parse
             RegionFillAttribute
                 .Or(RegionPaddingAttribute)
                 .Or(RegionLayoutAttribute)
+                .Or(RegionGridFlowAttribute)
                 .Or(RegionSpaceColumnsAttribute)
                 .Or(RegionSpaceRowsAttribute)
                 .Or(RegionSpaceAttribute)

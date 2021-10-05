@@ -56,7 +56,7 @@ namespace Thousand
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(Colour.White, LayoutKind.Grid, 5, new(0), new(new EqualSize()), new(AlignmentKind.Center));
+            Config = new IR.Config(Colour.White, LayoutKind.Grid, FlowKind.Row, 5, new(0), new(new EqualSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.Document diagram)
@@ -126,7 +126,7 @@ namespace Thousand
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
         {
-            var regionConfig = new IR.Config(null, LayoutKind.Grid, 15, new(0), new(new PackedSize()), new(AlignmentKind.Start));
+            var regionConfig = new IR.Config(null, LayoutKind.Grid, FlowKind.Row, 15, new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
@@ -319,6 +319,7 @@ namespace Thousand
                 AST.RegionFillAttribute rfa => config with { Fill = rfa.Colour },
                 AST.RegionPaddingAttribute rpa => config with { Padding = rpa.Value },
                 AST.RegionLayoutAttribute rla => config with { Layout = rla.Kind },
+                AST.RegionGridFlowAttribute rgfa => config with { Flow = rgfa.Kind },
                 AST.RegionSpaceColumnsAttribute rsca => config with { Gutter = new(rsca.Value, config.Gutter.Rows) },
                 AST.RegionSpaceRowsAttribute rsra => config with { Gutter = new(config.Gutter.Columns, rsra.Value) },
                 AST.RegionSpaceAttribute rsa => config with { Gutter = new(rsa.Columns, rsa.Rows) },

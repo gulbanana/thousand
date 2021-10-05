@@ -28,9 +28,9 @@ namespace Thousand.IR
         }
     }
 
-    public record Config(Colour? Fill, LayoutKind Layout, int Padding, Axes<int> Gutter, Axes<TrackSize> Size, Axes<AlignmentKind> Alignment)
+    public record Config(Colour? Fill, LayoutKind Layout, FlowKind Flow, int Padding, Axes<int> Gutter, Axes<TrackSize> Size, Axes<AlignmentKind> Alignment)
     {
-        public Config() : this(null, LayoutKind.Grid, 0, new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
+        public Config() : this(null, LayoutKind.Grid, FlowKind.Row, 0, new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
     }
         
     public record Object
