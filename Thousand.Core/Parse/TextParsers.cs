@@ -26,7 +26,7 @@ namespace Thousand.Parse
             var builder = new StringBuilder();
             builder.Append(first.Value);
 
-            var hyphens = 0;
+            var hyphen = false;
             var remainder = first.Remainder;
             var validRemainder = remainder;
             while (!remainder.IsAtEnd)
@@ -35,17 +35,19 @@ namespace Thousand.Parse
 
                 if (char.IsLetterOrDigit(next.Value))
                 {
-                    for (; hyphens > 0; hyphens--)
+                    if (hyphen)
                     {
                         builder.Append('-');
+                        hyphen = false;
                     }
+
                     builder.Append(next.Value);
                     remainder = next.Remainder;
                     validRemainder = remainder;
                 }
-                else if (next.Value == '-')
+                else if (!hyphen && next.Value == '-')
                 {
-                    hyphens++;
+                    hyphen = true;
                     remainder = next.Remainder;
                 }
                 else

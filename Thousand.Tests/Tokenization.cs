@@ -135,6 +135,8 @@ bar""", output.ElementAt(1).ToStringValue());
                 TokenKind.RightArrow, // ->
                 TokenKind.Identifier, // b-f
                 TokenKind.Identifier, // b--f
+                TokenKind.NoArrow,    // b--f
+                TokenKind.Identifier, // b--f
                 TokenKind.Identifier, // b
                 TokenKind.NoArrow,    // --
                 TokenKind.Identifier, // f

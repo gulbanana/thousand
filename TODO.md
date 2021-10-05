@@ -1,7 +1,6 @@
 TO DO
 -----
 
-* disallow multidash identifiers to avoid parsing a--b as one instead of a line
 * 4-way thickness
 * align, justify, pack (spacing/sizing)
 * layout algorithms/modes - row, column, etc(?)
