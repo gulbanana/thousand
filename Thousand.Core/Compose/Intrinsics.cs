@@ -18,12 +18,12 @@ namespace Thousand.Compose
     /// </remarks>
     internal static class Intrinsics
     {
-        public static BlockMeasurements TextBlock(string label, Font font)
+        public static BlockMeasurements TextBlock(StyledText text)
         {
             var style = new Style()
             {
-                FontFamily = font.Family,
-                FontSize = font.Size
+                FontFamily = text.Font.Family,
+                FontSize = text.Font.Size
             };
 
             var textBlock = new TextBlock()
@@ -31,7 +31,7 @@ namespace Thousand.Compose
                 Alignment = TextAlignment.Center
             };
 
-            textBlock.AddText(label, style);
+            textBlock.AddText(text.Label, style);
 
             var pixelWidth = (int)MathF.Ceiling(textBlock.MeasuredWidth);
             var pixelHeight = (int)MathF.Ceiling(textBlock.MeasuredHeight);
@@ -39,8 +39,8 @@ namespace Thousand.Compose
             var lines = textBlock.Lines
                 .Select(l => new LineMeasurements(
                     new Point((decimal)l.Runs[0].XCoord, (decimal)Math.Ceiling(l.YCoord)), 
-                    new Point((decimal)l.Width, (decimal)l.Height), 
-                    label.Substring(l.Start, l.Length).TrimEnd('\n')))
+                    new Point((decimal)l.Width, (decimal)l.Height),
+                    text.Label.Substring(l.Start, l.Length).TrimEnd('\n')))
                 .ToArray();
 
             return new BlockMeasurements(new Point(pixelWidth, pixelHeight), lines);
