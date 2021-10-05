@@ -152,7 +152,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, null, Point.Zero, Point.Zero)
+                new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, AnchorKind.Compass, Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -161,6 +161,59 @@ namespace Thousand.Tests
             Assert.Single(layout!.Lines);
             AssertEx.Eta(new Point(10, 10), layout.Lines.Single().Start);
             Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
+        }
+
+        [Fact]
+        public void LineAnchor_DiagonalRectangles()
+        {
+            var left = new IR.Object { Shape = ShapeKind.Rect, MinWidth = 20, MinHeight = 10 };
+            var right = new IR.Object { Shape = ShapeKind.Rect, MinWidth = 20, MinHeight = 10, Row = 2, Column = 2 };
+
+            var rules = new IR.Root(
+                new IR.Region(
+                    new IR.Config() with { Gutter = 10 },
+                    new IR.Object[] { left, right }
+                ),
+                new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, AnchorKind.Corners, Point.Zero, Point.Zero)
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            Assert.True(result, errors.Join());
+
+            var line = layout!.Lines.Single();
+            var shape1 = layout.Shapes[0];
+            var shape2 = layout.Shapes[1];
+            
+            Assert.Equal(new Rect(0, 0, 20, 10), shape1.Bounds);
+            AssertEx.Eta(new Point(20, 10), line.Start);
+
+            Assert.Equal(new Rect(30, 20, 50, 30), shape2.Bounds);
+            AssertEx.Eta(new Point(30, 20), line.End);
+        }
+
+        [Fact]
+        public void LineAnchor_CenterToAnchor()
+        {
+            var left = new IR.Object { Shape = ShapeKind.Diamond, MinWidth = 50, MinHeight = 50 };
+            var right = new IR.Object { Shape = ShapeKind.Rect, MinWidth = 150, MinHeight = 50, Row = 2, Column = 2 };
+
+            var rules = new IR.Root(
+                new IR.Region(
+                    new IR.Config() with { Gutter = 10 },
+                    new IR.Object[] { left, right }
+                ),
+                new IR.Edge(new Stroke(), left, right, null, null, null, AnchorKind.Corners, Point.Zero, Point.Zero)
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            Assert.True(result, errors.Join());
+
+            var line = layout!.Lines.Single();
+            var shape2 = layout.Shapes[1];
+
+            Assert.Equal(new Point(60, 60), shape2.Bounds.Origin);
+            AssertEx.Eta(new Point(60, 60), line.End);
+            AssertEx.Eta(new Point(37, 37), line.Start);
         }
 
         [Fact]

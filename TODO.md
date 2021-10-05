@@ -1,6 +1,7 @@
 TO DO
 -----
 
+* disallow multidash identifiers to avoid parsing a--b as one instead of a line
 * 4-way thickness
 * align, justify, pack (spacing/sizing)
 * layout algorithms/modes - row, column, etc(?)
@@ -8,9 +9,9 @@ TO DO
 * drop shadows
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content?
 * catch render failures (shouldn't be any known, just exceptions)
-* anchors and offsets don't combine correctly
-* investigate anchor=corner roundrects (change demo.1000)
+* anchors and offsets probably don't combine correctly
 * customisable arrowheads
+* (medium) do a defaults pass, picking values which produce a nice appearance without customisation
 * (medium) IdentifierOrKeyword, hyphen formatting
 * (large) object templates - might require two-phase parsing :(
 * (large) image embedding 

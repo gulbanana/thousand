@@ -98,10 +98,10 @@ namespace Thousand.Compose
         {
             var points = new Point[4];
 
-            var nw = new Point(shape.Bounds.Left - 10, shape.Bounds.Top - 10);
-            var ne = new Point(shape.Bounds.Right + 10, shape.Bounds.Top - 10);
-            var se = new Point(shape.Bounds.Right + 10, shape.Bounds.Bottom + 10);
-            var sw = new Point(shape.Bounds.Left - 10, shape.Bounds.Bottom + 10);            
+            var nw = new Point(shape.Bounds.Left - shape.Bounds.Width, shape.Bounds.Top - shape.Bounds.Height);
+            var ne = new Point(shape.Bounds.Right + shape.Bounds.Width, shape.Bounds.Top - shape.Bounds.Height);
+            var se = new Point(shape.Bounds.Right + shape.Bounds.Width, shape.Bounds.Bottom + shape.Bounds.Height);
+            var sw = new Point(shape.Bounds.Left - shape.Bounds.Width, shape.Bounds.Bottom + shape.Bounds.Height);            
 
             points[0] = Line(shape.Bounds.Center, nw, shape, null).from;
             points[1] = Line(shape.Bounds.Center, ne, shape, null).from;

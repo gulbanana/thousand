@@ -4,8 +4,9 @@
     {
         CompassPoints,
         Corners,
+        EightWay,
 
         Compass = CompassPoints,
-        Corner = Corners
+        Corner = Corners,
     }
 }
