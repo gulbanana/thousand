@@ -26,16 +26,11 @@ namespace Thousand.Tests
         [Fact]
         public void Layout2x1()
         {
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
-                    new IR.Config(),
-                    new IR.Object[]
-                    {
-                        new IR.Object { MinWidth = 10, MinHeight = 10 },
-                        new IR.Object { MinWidth = 10, MinHeight = 10 }
-                    }
-                ),
-                new IR.Edge[] { }
+                    new IR.Object { MinWidth = 10, MinHeight = 10 },
+                    new IR.Object { MinWidth = 10, MinHeight = 10 }
+                )
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -48,16 +43,11 @@ namespace Thousand.Tests
         [Fact]
         public void Layout1x2()
         {
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
-                    new IR.Config(),
-                    new IR.Object[]
-                    {
-                        new IR.Object { MinWidth = 10, MinHeight = 10 },
-                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 2 }
-                    }
-                ),
-                new IR.Edge[] { }
+                    new IR.Object { MinWidth = 10, MinHeight = 10 },
+                    new IR.Object { MinWidth = 10, MinHeight = 10, Row = 2 }
+                )
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -70,17 +60,12 @@ namespace Thousand.Tests
         [Fact]
         public void Layout3x3Sparse()
         {
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
-                    new IR.Config(),
-                    new IR.Object[]
-                    {
-                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 1, Column = 1 },
-                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 },
-                        new IR.Object { MinWidth = 10, MinHeight = 10, Row = 3, Column = 3 }
-                    }
-                ),
-                new IR.Edge[] { }
+                    new IR.Object { MinWidth = 10, MinHeight = 10, Row = 1, Column = 1 },
+                    new IR.Object { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 },
+                    new IR.Object { MinWidth = 10, MinHeight = 10, Row = 3, Column = 3 }
+                )
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -96,15 +81,12 @@ namespace Thousand.Tests
             var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
             var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
 
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
                     new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge[]
-                {
-                    new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
-                }
+                new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -121,15 +103,12 @@ namespace Thousand.Tests
             var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
             var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 };
 
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
                     new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge[]
-                {
-                    new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
-                }
+                new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -146,15 +125,12 @@ namespace Thousand.Tests
             var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
             var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
 
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
                     new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge[]
-                {
-                    new IR.Edge(new Stroke(), left, right, null, null, null, null, new Point(0, 1), new Point(0, 1))
-                }
+                new IR.Edge(new Stroke(), left, right, null, null, null, null, new Point(0, 1), new Point(0, 1))
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -171,17 +147,13 @@ namespace Thousand.Tests
             var left = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
             var right = new IR.Object { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
 
-            var rules = new IR.Root(1,
+            var rules = new IR.Root(
                 new IR.Region(
                     new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge[]
-                {
-                    new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, null, Point.Zero, Point.Zero)
-                }
+                new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, null, Point.Zero, Point.Zero)
             );
-
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
 
@@ -189,6 +161,74 @@ namespace Thousand.Tests
             Assert.Single(layout!.Lines);
             AssertEx.Eta(new Point(10, 10), layout.Lines.Single().Start);
             Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
+        }
+
+        [Fact]
+        public void PadText()
+        {
+            var rules = new IR.Root(
+                new IR.Region(
+                    new IR.Object(string.Empty) { Region = new IR.Region(new IR.Config { Padding = 1 }) },
+                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = 0 }) },
+                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = 1 }) },
+                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = 10 }) }
+                )
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            Assert.True(result, errors.Join());
+
+            var textSize = layout!.Labels[0].Bounds.Size;
+            Assert.Equal(Point.Zero, layout.Shapes[0].Bounds.Size);
+            Assert.Equal(textSize, layout.Shapes[1].Bounds.Size);
+            Assert.Equal(textSize + new Point(2, 2), layout.Shapes[2].Bounds.Size);
+            Assert.Equal(textSize + new Point(20, 20), layout.Shapes[3].Bounds.Size);
+        }
+
+        [Fact]
+        public void PadChildren()
+        {
+            var rules = new IR.Root(
+                new IR.Region(
+                    new IR.Object 
+                    (
+                        new IR.Config { Padding = 1 }
+                    ),
+                    new IR.Object
+                    (
+                        new IR.Config { Padding = 0 },
+                        new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    ),
+                    new IR.Object
+                    (
+                        new IR.Config { Padding = 0 },
+                        new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 },
+                        new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    ),
+                    new IR.Object
+                    (
+                        new IR.Config { Padding = 1 },
+                        new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    ),
+                    new IR.Object
+                    (
+                        new IR.Config { Padding = 1 },
+                        new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 },
+                        new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    )
+                )
+            );
+
+            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            Assert.True(result, errors.Join());
+
+            AssertEx.Sequence(layout!.Shapes.Where(s => s.Kind != ShapeKind.Circle).Select(s => s.Bounds.Size), 
+                new Point(0, 0), 
+                new Point(10, 10), 
+                new Point(20, 10), 
+                new Point(12, 12), 
+                new Point(22, 12)
+            );
         }
     }
 }

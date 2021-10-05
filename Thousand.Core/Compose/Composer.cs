@@ -184,10 +184,13 @@ namespace Thousand.Compose
                 currentColumn++;
             }
 
-            var effectivePadding = state.RowCount + state.ColumnCount == 0 ? 0m : region.Config.Padding;
+            var intrinsicPadding = intrinsicSize == Point.Zero ? 0m : region.Config.Padding;
+            var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding * 2, intrinsicSize.Y + intrinsicPadding * 2);
+
+            var regionPadding = state.RowCount + state.ColumnCount == 0 ? 0m : region.Config.Padding;
 
             var rowHeights = new decimal[state.RowCount];
-            var rowCenter = effectivePadding;
+            var rowCenter = regionPadding;
             for (var r = 0; r < state.RowCount; r++)
             {
                 var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
@@ -197,7 +200,7 @@ namespace Thousand.Compose
             }
 
             var colWidths = new decimal[state.ColumnCount];
-            var colCenter = effectivePadding;
+            var colCenter = regionPadding;
             for (var c = 0; c < state.ColumnCount; c++)
             {
                 var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
@@ -206,14 +209,13 @@ namespace Thousand.Compose
                 colWidths[c] = width;
             }
 
-            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter + 2 * effectivePadding;
-            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter + 2 * effectivePadding;
+            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter + 2 * regionPadding;
+            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter + 2 * regionPadding;
 
             var regionSize = new Point(contentWidth, contentHeight);
-            var contentSize = new Point(Math.Max(intrinsicSize.X, regionSize.X), Math.Max(intrinsicSize.Y, regionSize.Y));
-            var boxSize = contentSize + new Point(effectivePadding * 2, effectivePadding * 2);
+            var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));
 
-            return boxSize;
+            return contentSize;
         }
 
         private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Point location)

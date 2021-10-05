@@ -7,6 +7,7 @@
         public decimal Width => Right - Left;
         public decimal Height => Bottom - Top;
         public Point Origin => new Point(Left, Top);
+        public Point Size => new Point(Right - Left, Bottom - Top);
         public Point Center => new Point(Left + (Right - Left) / 2, Top + (Bottom - Top) / 2);
 
         public Rect(Point size) : this(0, 0, size.X, size.Y) { }

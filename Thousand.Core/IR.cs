@@ -6,6 +6,8 @@ namespace Thousand.IR
 {
     public record Region(Config Config, IReadOnlyList<Object> Objects)
     {
+        public Region(Config config, params Object[] objects) : this(config, objects as IReadOnlyList<Object>) { }  
+        public Region(params Object[] objects) : this(new Config(), objects as IReadOnlyList<Object>) { }
         public Region(Config config) : this(config, new Object[0]) { }
 
         public IEnumerable<Object> WalkObjects()
@@ -38,8 +40,9 @@ namespace Thousand.IR
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object(params Object[] children) : this(new Region(new Config(null, LayoutKind.Grid, 15, 0, new PackedSize(), new PackedSize()), children), null, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
-        public Object(string label, params Object[] children) : this(new Region(new Config(null, LayoutKind.Grid, 15, 0, new PackedSize(), new PackedSize()), children), label, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Region(new Config(), children), label, new Font(), 0, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(Config config, params Object[] children) : this(new Region(config, children), null, new Font(), 0, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(params Object[] children) : this(new Config(), children) { }        
     }
     
     // there may be many IR.Edge for a single AST.Line
@@ -47,6 +50,12 @@ namespace Thousand.IR
     
     public record Root(decimal Scale, Region Region, IReadOnlyList<Edge> Edges)
     {
+        public Root(decimal scale, Region region, params Edge[] edges) : this(scale, region, edges as IReadOnlyList<Edge>) { }
+        public Root(decimal scale, Region region) : this(scale, region, new Edge[0]) { }
+        public Root(Region region, IReadOnlyList<Edge> edges) : this(1m, region, edges) { }
+        public Root(Region region, params Edge[] edges) : this(1m, region, edges as IReadOnlyList<Edge>) { }
+        public Root(Region region) : this(1m, region) { }
+
         public IEnumerable<Object> WalkObjects()
         {
             return Region.WalkObjects();
