@@ -268,11 +268,23 @@ namespace Thousand.Parse
             from value in Value.WholeNumber
             select new AST.RegionGutterAttribute(value) as AST.RegionAttribute;
 
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionRowHeightAttribute { get; } =
+            from key in Key(RegionAttributeKind.RowHeight)
+            from value in Value.TrackSize
+            select new AST.RegionRowHeightAttribute(value) as AST.RegionAttribute;
+
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionColumnWidthAttribute { get; } =
+            from key in Key(RegionAttributeKind.ColumnWidth)
+            from value in Value.TrackSize
+            select new AST.RegionColumnWidthAttribute(value) as AST.RegionAttribute;
+
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } =
             RegionFillAttribute
                 .Or(RegionLayoutAttribute)
                 .Or(RegionMarginAttribute)
-                .Or(RegionGutterAttribute);
+                .Or(RegionGutterAttribute)
+                .Or(RegionRowHeightAttribute)
+                .Or(RegionColumnWidthAttribute);
         #endregion
     }
 }

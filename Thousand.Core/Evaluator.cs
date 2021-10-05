@@ -56,7 +56,7 @@ namespace Thousand
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(LayoutKind.Grid, 5, 0, Colour.White);
+            Config = new IR.Config(Colour.White, LayoutKind.Grid, 5, 0, new EqualSize(), new EqualSize());
         }
 
         private void AddDocument(AST.Document diagram)
@@ -71,52 +71,9 @@ namespace Thousand
                             Scale = dsa.Value;
                             break;
                     }
-                }, region =>
-                {
-                    switch (region)
-                    {
-                        case AST.RegionFillAttribute rfa:
-                            Config = Config with { Fill = rfa.Colour };
-                            break;
-
-                        case AST.RegionLayoutAttribute rla:
-                            Config = Config with  { Layout = rla.Kind };
-                            break;
-
-                        case AST.RegionPaddingAttribute rpa:
-                            Config = Config with { Padding = rpa.Value };
-                            break;
-
-                        case AST.RegionGutterAttribute rga:
-                            Config = Config with { Gutter = rga.Value };
-                            break;
-                    }
-                }, text =>
-                {
-                    switch (text)
-                    {
-                        case AST.TextFontFamilyAttribute tffa:
-                            rootFont = rootFont with { Family = tffa.Name };
-                            break;
-
-                        case AST.TextFontSizeAttribute tfsa:
-                            rootFont = rootFont with { Size = tfsa.Value };
-                            break;
-
-                        case AST.TextFontColourAttribute tfca:
-                            rootFont = rootFont with { Colour = tfca.Colour };
-                            break;
-
-                        case AST.TextFontAttribute tfa:
-                            rootFont = new Font
-                            {
-                                Family = tfa.Family ?? rootFont.Family,
-                                Size = tfa.Size ?? rootFont.Size,
-                                Colour = tfa.Colour ?? rootFont.Colour
-                            };
-                            break;
-                    }
-                });
+                }, 
+                region => Config = ApplyRegionAttributes(Config, region), 
+                text => rootFont = ApplyFontAttributes(rootFont, text));
             }
 
             foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
@@ -169,7 +126,7 @@ namespace Thousand
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
         {
-            var regionConfig = new IR.Config(LayoutKind.Grid, 15, 0, null);
+            var regionConfig = new IR.Config(null, LayoutKind.Grid, 15, 0, new PackedSize(), new PackedSize());
             
             var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
@@ -223,74 +180,10 @@ namespace Thousand
                             cornerRadius = ncra.Value;
                             break;
                     }
-                }, r =>
-                {
-                    switch (r)
-                    {
-                        case AST.RegionFillAttribute rfa:
-                            regionConfig = regionConfig with { Fill = rfa.Colour };
-                            break;
-
-                        case AST.RegionLayoutAttribute rla:
-                            regionConfig = regionConfig with { Layout = rla.Kind };
-                            break;
-
-                        case AST.RegionPaddingAttribute rpa:
-                            regionConfig = regionConfig with { Padding = rpa.Value };
-                            break;
-
-                        case AST.RegionGutterAttribute rga:
-                            regionConfig = regionConfig with { Gutter = rga.Value };
-                            break;
-                    }
-                }, t =>
-                {
-                    switch (t)
-                    {
-                        case AST.TextFontFamilyAttribute tffa:
-                            font = font with { Family = tffa.Name };
-                            break;
-
-                        case AST.TextFontSizeAttribute tfsa:
-                            font = font with { Size = tfsa.Value };
-                            break;
-
-                        case AST.TextFontColourAttribute tfca:
-                            font = font with { Colour = tfca.Colour };
-                            break;
-
-                        case AST.TextFontAttribute tfa:
-                            font = new Font 
-                            { 
-                                Family = tfa.Family ?? font.Family,
-                                Size = tfa.Size ?? font.Size,
-                                Colour = tfa.Colour ?? font.Colour
-                            };
-                            break;
-                    }
-                }, l =>
-                {
-                    switch (l)
-                    {
-                        case AST.LineStrokeColourAttribute lsca:
-                            stroke = stroke with { Colour = lsca.Colour };
-                            break;
-
-                        case AST.LineStrokeWidthAttribute lswa:
-                            stroke = stroke with { Width = lswa.Value };
-                            break;
-
-                        case AST.LineStrokeStyleAttribute lssa:
-                            stroke = stroke with { Style = lssa.Kind };
-                            break;
-
-                        case AST.LineStrokeAttribute lsa:
-                            if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
-                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
-                            if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
-                            break;
-                    }
-                });
+                }, 
+                r => regionConfig = ApplyRegionAttributes(regionConfig, r), 
+                t => font = ApplyFontAttributes(font, t), 
+                l => stroke = ApplyStrokeAttributes(stroke, l));
             }
 
             var children = new List<IR.Object>();
@@ -375,29 +268,7 @@ namespace Thousand
                             offsetEnd = offsetEnd with { Y = aoa.End };
                             break;
                     }
-                }, line =>
-                {
-                    switch (line)
-                    {
-                        case AST.LineStrokeColourAttribute lsa:
-                            stroke = stroke with { Colour = lsa.Colour };
-                            break;
-
-                        case AST.LineStrokeWidthAttribute lwa:
-                            stroke = stroke with { Width = lwa.Value };
-                            break;
-
-                        case AST.LineStrokeStyleAttribute lsa:
-                            stroke = stroke with { Style = lsa.Kind };
-                            break;
-
-                        case AST.LineStrokeAttribute lsa:
-                            if (lsa.Colour != null) stroke = stroke with { Colour = lsa.Colour };
-                            if (lsa.Width != null) stroke = stroke with { Width = lsa.Width };
-                            if (lsa.Style != null) stroke = stroke with { Style = lsa.Style.Value };
-                            break;
-                    }
-                });
+                }, line => stroke = ApplyStrokeAttributes(stroke, line));
             }
 
             for (var i = 0; i < line.Segments.Length - 1; i++)
@@ -434,6 +305,54 @@ namespace Thousand
                     }
                 }
             }
+        }
+
+        private IR.Config ApplyRegionAttributes(IR.Config config, AST.RegionAttribute attribute)
+        {
+            return attribute switch
+            {
+                AST.RegionFillAttribute rfa => config with { Fill = rfa.Colour },
+                AST.RegionLayoutAttribute rla => config with { Layout = rla.Kind },
+                AST.RegionPaddingAttribute rpa => config with { Padding = rpa.Value },
+                AST.RegionGutterAttribute rga => config with { Gutter = rga.Value },
+                AST.RegionColumnWidthAttribute rcwa => config with { ColumnWidth = rcwa.Size },
+                AST.RegionRowHeightAttribute rrha => config with { RowHeight = rrha.Size },
+                _ => config
+            };
+        }
+
+        private Font ApplyFontAttributes(Font font, AST.TextAttribute attribute)
+        {
+            return attribute switch
+            {
+                AST.TextFontFamilyAttribute tffa => font with { Family = tffa.Name },
+                AST.TextFontSizeAttribute tfsa => font with { Size = tfsa.Value },
+                AST.TextFontColourAttribute tfca => font with { Colour = tfca.Colour },
+                AST.TextFontAttribute tfa => new Font
+                {
+                    Family = tfa.Family ?? font.Family,
+                    Size = tfa.Size ?? font.Size,
+                    Colour = tfa.Colour ?? font.Colour
+                },
+                _ => font
+            };
+        }
+
+        private Stroke ApplyStrokeAttributes(Stroke stroke, AST.LineAttribute attribute)
+        {
+            return attribute switch
+            {
+                AST.LineStrokeColourAttribute lsca => stroke with { Colour = lsca.Colour },
+                AST.LineStrokeWidthAttribute lswa => stroke with { Width = lswa.Value },
+                AST.LineStrokeStyleAttribute lssa => stroke with { Style = lssa.Kind },
+                AST.LineStrokeAttribute lsa => new Stroke
+                {
+                    Colour = lsa.Colour ?? stroke.Colour,
+                    Width = lsa.Width ?? stroke.Width,
+                    Style = lsa.Style ?? stroke.Style
+                },
+                _ => stroke
+            };
         }
 
         private AST.ObjectAttribute[] FindObjectClass(string name)

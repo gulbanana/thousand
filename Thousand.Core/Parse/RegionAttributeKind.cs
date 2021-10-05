@@ -5,6 +5,8 @@
         Fill,
         Layout,
         Padding,
-        Gutter
+        Gutter,
+        RowHeight,
+        ColumnWidth
     }
 }

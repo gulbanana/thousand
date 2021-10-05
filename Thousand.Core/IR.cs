@@ -6,6 +6,8 @@ namespace Thousand.IR
 {
     public record Region(Config Config, IReadOnlyList<Object> Objects)
     {
+        public Region(Config config) : this(config, new Object[0]) { }
+
         public IEnumerable<Object> WalkObjects()
         {
             foreach (var obj in Objects)
@@ -19,7 +21,10 @@ namespace Thousand.IR
         }
     }
 
-    public record Config(LayoutKind Layout, int Padding, int Gutter, Colour? Fill);
+    public record Config(Colour? Fill, LayoutKind Layout, int Padding, int Gutter, TrackSize RowHeight, TrackSize ColumnWidth)
+    {
+        public Config() : this(null, LayoutKind.Grid, 0, 0, new PackedSize(), new PackedSize()) { }
+    }
         
     public record Object
     (
@@ -33,8 +38,8 @@ namespace Thousand.IR
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object(params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), null, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
-        public Object(string label, params Object[] children) : this(new Region(new Config(LayoutKind.Grid, 20, 0, null), children), label, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
+        public Object(params Object[] children) : this(new Region(new Config(null, LayoutKind.Grid, 15, 0, new PackedSize(), new PackedSize()), children), null, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Region(new Config(null, LayoutKind.Grid, 15, 0, new PackedSize(), new PackedSize()), children), label, new Font(), 0, null, null, null, null, ShapeKind.Roundrect, 5, new Stroke()) { }
     }
     
     // there may be many IR.Edge for a single AST.Line

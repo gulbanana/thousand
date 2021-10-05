@@ -28,7 +28,7 @@ namespace Thousand.Tests
         {
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
+                    new IR.Config(),
                     new IR.Object[]
                     {
                         new IR.Object { MinWidth = 10, MinHeight = 10 },
@@ -50,7 +50,7 @@ namespace Thousand.Tests
         {
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
+                    new IR.Config(),
                     new IR.Object[]
                     {
                         new IR.Object { MinWidth = 10, MinHeight = 10 },
@@ -72,7 +72,7 @@ namespace Thousand.Tests
         {
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 0, Colour.White),
+                    new IR.Config(),
                     new IR.Object[]
                     {
                         new IR.Object { MinWidth = 10, MinHeight = 10, Row = 1, Column = 1 },
@@ -98,7 +98,7 @@ namespace Thousand.Tests
 
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
                 new IR.Edge[]
@@ -123,7 +123,7 @@ namespace Thousand.Tests
 
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
                 new IR.Edge[]
@@ -148,7 +148,7 @@ namespace Thousand.Tests
 
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
                 new IR.Edge[]
@@ -173,7 +173,7 @@ namespace Thousand.Tests
 
             var rules = new IR.Root(1,
                 new IR.Region(
-                    new IR.Config(LayoutKind.Grid, 0, 10, null),
+                    new IR.Config() with { Gutter = 10 },
                     new IR.Object[] { left, right }
                 ),
                 new IR.Edge[]

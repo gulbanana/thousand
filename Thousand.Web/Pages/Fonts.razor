@@ -11,7 +11,7 @@
         var sample = "The quick brown fox jumps over the lazy dog.";
 
         if (Composer.TryCompose(new IR.Root(1, 
-            new IR.Region(new IR.Config(LayoutKind.Grid, 0, 0, null), new IR.Object[]
+            new IR.Region(new IR.Config(), new IR.Object[]
             {
                 new IR.Object(sample) with { Shape = null, Font = new Font(typeface.FamilyName, 20, Colour.Black) }
             }),

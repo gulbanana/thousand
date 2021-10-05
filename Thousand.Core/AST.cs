@@ -24,6 +24,8 @@ namespace Thousand.AST
     public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
     public record RegionPaddingAttribute(int Value) : RegionAttribute;
     public record RegionGutterAttribute(int Value) : RegionAttribute;
+    public record RegionRowHeightAttribute(TrackSize Size) : RegionAttribute;
+    public record RegionColumnWidthAttribute(TrackSize Size) : RegionAttribute;
 
     public abstract record NodeAttribute;
     public record NodeLabelAttribute(string? Content) : NodeAttribute;

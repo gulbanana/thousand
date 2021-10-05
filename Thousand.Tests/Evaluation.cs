@@ -18,7 +18,13 @@ namespace Thousand.Tests
                 new AST.ObjectClass("object", Array.Empty<string>(), Array.Empty<AST.ObjectAttribute>()),
                 new AST.LineClass("line", Array.Empty<string>(), Array.Empty<AST.SegmentAttribute>()),
                 new AST.ObjectClass("big", Array.Empty<string>(), new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(50) }), // increases font
-                new AST.ObjectClass("group", Array.Empty<string>(), new AST.ObjectAttribute[] { new AST.NodeShapeAttribute(null), new AST.NodeLabelAttribute(null) }),
+                new AST.ObjectClass("group", Array.Empty<string>(), new AST.ObjectAttribute[] 
+                { 
+                    new AST.NodeShapeAttribute(null), 
+                    new AST.NodeLabelAttribute(null), 
+                    new AST.RegionColumnWidthAttribute(new EqualSize()),
+                    new AST.RegionRowHeightAttribute(new EqualSize())
+                }),
 
                 new AST.TypedObject(new[]{"big", "group"}, null, Array.Empty<AST.ObjectAttribute>(), new AST.ObjectDeclaration[] //uses larger font
                 {
@@ -46,6 +52,8 @@ namespace Thousand.Tests
             Assert.Equal(2, root.Edges.Count);
 
             AssertEx.Sequence(root.Region.WalkObjects().Where(o => o.Label != null).Select(o => o.Font.Size), 50, 40, 50, 20);
+
+            AssertEx.Sequence(root.Region.Objects.Select(o => o.Region.Config.ColumnWidth), new EqualSize(), new PackedSize(), new PackedSize());
         }
     }
 }
