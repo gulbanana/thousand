@@ -96,7 +96,15 @@ namespace Thousand.Render
             return shape.Kind switch
             {
                 ShapeKind.Rhombus or ShapeKind.Diamond => new XElement(xmlns + "path", 
-                    new XAttribute("d", $"M {cx} {shape.Bounds.Top} {shape.Bounds.Right} {cy} {cx} {shape.Bounds.Bottom} {shape.Bounds.Left} {cy} Z")
+                    new XAttribute("d", Shapes.Diamond(shape.Bounds).SVG())
+                ),
+
+                ShapeKind.Triangle => new XElement(xmlns + "path",
+                    new XAttribute("d", Shapes.Triangle(shape.Bounds).SVG())
+                ),
+
+                ShapeKind.Trapezium => new XElement(xmlns + "path",
+                    new XAttribute("d", Shapes.Trapezium(shape.Bounds, shape.CornerRadius).SVG())
                 ),
 
                 ShapeKind.Ellipse or ShapeKind.Circle => new XElement(xmlns + "ellipse", 

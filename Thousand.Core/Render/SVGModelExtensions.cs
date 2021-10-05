@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using System.Xml.Linq;
 using Thousand.Model;
 
@@ -16,6 +17,20 @@ namespace Thousand.Render
             {
                 return $"rgb({self.R},{self.G},{self.B})";
             }
+        }
+
+        public static string SVG(this Point[] self)
+        {
+            var builder = new StringBuilder();
+            
+            builder.Append("M ");
+            foreach (var p in self)
+            {
+                builder.Append($"{p.X} {p.Y} ");
+            }
+            builder.Append("Z");
+
+            return builder.ToString();
         }
 
         public static string SVG(this Width self)

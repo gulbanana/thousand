@@ -139,7 +139,7 @@ namespace Thousand
             var height = new int?();
 
             var shape = new ShapeKind?(ShapeKind.Roundrect);
-            var cornerRadius = 5;
+            var cornerRadius = 15;
 
             var stroke = new Stroke();                        
 

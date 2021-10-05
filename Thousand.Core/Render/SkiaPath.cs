@@ -32,23 +32,20 @@ namespace Thousand.Render
 
                 case ShapeKind.Rhombus:
                 case ShapeKind.Diamond:
-                    path.AddPoly(Diamond(bounds));
+                    path.AddPoly(Shapes.Diamond(bounds.KS()).SK());
+                    break;
+
+                case ShapeKind.Triangle:
+                    path.AddPoly(Shapes.Triangle(bounds.KS()).SK());
+                    break;
+
+                case ShapeKind.Trapezium:
+                    path.AddPoly(Shapes.Trapezium(bounds.KS(), shape.CornerRadius).SK());
                     break;
             };
             path.Close();
 
             return path;
-        }
-
-        private static SKPoint[] Diamond(SKRect box)
-        {
-            return new SKPoint[]
-            {
-                new(box.Left, box.MidY),
-                new(box.MidX, box.Top),
-                new(box.Right, box.MidY),
-                new(box.MidX, box.Bottom),
-            };
         }
     }
 }

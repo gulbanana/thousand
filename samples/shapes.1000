@@ -1,14 +1,17 @@
-class object [min-width=110, font-size=16, margin=10]
+class object [min-width=110, font-size=16, margin=10, fill=#ccc]
 
-object rhombus [shape=rhombus]
-object diamond [shape=diamond]
-object oval [shape=oval]
-object circle [shape=circle]
-object rect [shape=rect]
-object square [shape=square]
-object roundrect [shape=roundRect]
-object roundsquare [shape=roundSquare]
+row {
+	column { object oval [shape=oval]; object ellipse [shape=ellipse] }
+	object circle [shape=circle]
+	column { object rect [shape=rect]; object rectangle [shape=rectangle] }
+	object square [shape=square]
+	column { object roundrect [shape=roundRect]; object roundrectangle [shape=roundRectangle] }
+	object roundsquare [shape=roundSquare]
+}
 
-object ellipse [shape=ellipse, row=2, col=3]
-object rectangle [shape=rectangle, row=2, col=5]
-object roundrectangle [shape=roundRectangle, row=2, col=7]
+row {
+	object rhombus [shape=rhombus]
+	object diamond [shape=diamond]
+	object triangle [shape=triangle]
+	column { object trapezium [shape=trapezium]; object trapezoid [shape=trapezoid] }
+}

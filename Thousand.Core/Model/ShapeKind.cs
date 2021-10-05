@@ -10,9 +10,12 @@
         Circle,
         Rhombus,
         Diamond,
+        Trapezium,
+        Triangle,
 
         Rect = Rectangle,
         Roundrect = Roundrectangle,
-        Oval = Ellipse
+        Oval = Ellipse,
+        Trapezoid = Trapezium,
     }
 }

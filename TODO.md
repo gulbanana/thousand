@@ -2,10 +2,11 @@ TO DO
 -----
 
 * 4-way thickness
-* implement composition for layout algorithms/modes - row, column, etc(?)
-* implement pack 
+* implement composition for pack 
 * implement composition for justify/align
 * canvas layout with X/Y - and/or support direct X Y in any mode
+* bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text...
+* alternatively, just rename min-width to width and caveat it
 * drop shadows
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content?
 * catch render failures (shouldn't be any known, just exceptions)

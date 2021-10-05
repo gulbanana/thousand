@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using System.Linq;
 using Thousand.Model;
 
 namespace Thousand.Render
@@ -18,6 +19,7 @@ namespace Thousand.Render
         }
 
         public static SKPoint SK(this Point self) => new((float)self.X, (float)self.Y);
+        public static SKPoint[] SK(this Point[] self) => self.Select(SK).ToArray();
         public static Point KS(this SKPoint self) => new((decimal)self.X, (decimal)self.Y);
 
         public static SKRect SK(this Rect self) => new((float)self.Left, (float)self.Top, (float)self.Right, (float)self.Bottom);
