@@ -7,9 +7,9 @@
         Layout,
         GridFlow,
 
-        Space,
-        SpaceRows,
-        SpaceColumns,
+        Space, Gutter=Space,
+        SpaceRows, GutterRows = SpaceRows,
+        SpaceColumns, GutterColumns = SpaceColumns,
 
         Pack,
         PackRows,

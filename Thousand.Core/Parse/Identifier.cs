@@ -34,8 +34,16 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, T> EnumValue<T>(T value) where T : struct, Enum
         {
-            var name = UnCamel(value.ToString()).ToLowerInvariant();
-            return Token.EqualToValueIgnoreCase(TokenKind.Identifier, name).Value(value);
+            var names = System.Enum.GetNames<T>()
+                .Where(n => System.Enum.Parse<T>(n).Equals(value))
+                .Select(n => UnCamel(n).ToLowerInvariant());
+
+            var parser = Token.EqualToValueIgnoreCase(TokenKind.Identifier, names.First());
+            foreach (var n in names.Skip(1))
+            {
+                parser = parser.Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, n));
+            }
+            return parser.Value(value);
         }
 
         public static TokenListParser<TokenKind, T> Statics<T>()

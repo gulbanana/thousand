@@ -6,7 +6,7 @@
         Label,
 
         Row,
-        Col, Column,
+        Col, Column = Col,
         
         MinWidth,
         MinHeight,
@@ -15,6 +15,6 @@
         Margin,
 
         Shape,
-        Corner, CornerRadius,
+        CornerRadius, Corner = CornerRadius,
     }
 }

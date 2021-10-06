@@ -13,11 +13,6 @@ namespace Thousand.Parse
             Identifier.EnumValue(kind)
                  .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
 
-        private static TokenListParser<TokenKind, Token<TokenKind>> Keys<TK>(params TK[] kinds) where TK : struct, System.Enum =>
-            kinds.Select(Identifier.EnumValue)
-                 .Aggregate((p1, p2) => p1.Or(p2))
-                 .IgnoreThen(Token.EqualTo(TokenKind.EqualsSign));
-
         private static TokenListParser<TokenKind, (T1?, T2?, T3?)> Shorthand<T1, T2, T3>(TokenListParser<TokenKind, T1> p1, TokenListParser<TokenKind, T2> p2, TokenListParser<TokenKind, T3> p3)
             where T1: class
             where T2 : class
@@ -204,7 +199,7 @@ namespace Thousand.Parse
             select new AST.NodeRowAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
-            from key in Keys(NodeAttributeKind.Col, NodeAttributeKind.Column)
+            from key in Key(NodeAttributeKind.Col)
             from value in Value.CountingNumber
             select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
 
@@ -234,7 +229,7 @@ namespace Thousand.Parse
             select new AST.NodeMarginAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeCornerRadiusAttribute { get; } =
-            from key in Keys(NodeAttributeKind.Corner, NodeAttributeKind.CornerRadius)
+            from key in Key(NodeAttributeKind.Corner)
             from value in Value.WholeNumber
             select new AST.NodeCornerRadiusAttribute(value) as AST.NodeAttribute;
 

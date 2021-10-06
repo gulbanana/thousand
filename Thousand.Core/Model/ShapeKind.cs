@@ -2,20 +2,15 @@
 {
     public enum ShapeKind
     {
-        Roundrectangle,
-        Rectangle,
+        Roundrectangle, Roundrect = Roundrectangle,
+        Rectangle, Rect = Rectangle,
         Roundsquare,
         Square,
-        Ellipse,
+        Ellipse, Oval = Ellipse,
         Circle,
         Rhombus,
         Diamond,
-        Trapezium,
+        Trapezium, Trapezoid = Trapezium,
         Triangle,
-
-        Rect = Rectangle,
-        Roundrect = Roundrectangle,
-        Oval = Ellipse,
-        Trapezoid = Trapezium,
     }
 }
