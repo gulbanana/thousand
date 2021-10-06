@@ -7,10 +7,12 @@ using System.Text.RegularExpressions;
 
 namespace Thousand.Parse
 {
-    public static class Identifier
+    public record Identifier(string Text) : ILocated
     {
-        public static TokenListParser<TokenKind, string> Any { get; } =
-            Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier);
+        public Superpower.Model.TextSpan Location { get; set; }
+
+        public static TokenListParser<TokenKind, Identifier> Any { get; } =
+            Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Located());
 
         public static TokenListParser<TokenKind, T> Enum<T>() where T : struct, Enum
         {

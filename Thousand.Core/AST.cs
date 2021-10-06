@@ -67,13 +67,13 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }    
     [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, TypedLine> { }
 
-    public abstract record Class(string Name, string[] BaseClasses);
-    public record ObjectClass(string Name, string[] BaseClasses, ObjectAttribute[] Attributes) : Class(Name, BaseClasses);
-    public record LineClass(string Name, string[] BaseClasses, SegmentAttribute[] Attributes) : Class(Name, BaseClasses);
-    public record ObjectOrLineClass(string Name, string[] BaseClasses, LineAttribute[] Attributes) : Class(Name, BaseClasses);
+    public abstract record Class(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
+    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes) : Class(Name, BaseClasses);
+    public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : Class(Name, BaseClasses);
+    public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : Class(Name, BaseClasses);
 
-    public record TypedObject(string[] Classes, string? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
-    public record LineSegment(string Target, ArrowKind? Direction);
-    public record TypedLine(string[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
+    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
+    public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
+    public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
     public record Document(DocumentDeclaration[] Declarations);
 }

@@ -78,7 +78,7 @@ namespace Thousand
 
             foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
-                if (c is AST.ObjectClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => objectClasses.ContainsKey(b)))
+                if (c is AST.ObjectClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => objectClasses.ContainsKey(b.Text)))
                 {
                     var localAttrs = c switch
                     {
@@ -92,10 +92,10 @@ namespace Thousand
                         .Concat(localAttrs)
                         .ToArray();
 
-                    objectClasses[c.Name] = allAttrs;
+                    objectClasses[c.Name.Text] = allAttrs;
                 }
 
-                if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => lineClasses.ContainsKey(b)))
+                if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => lineClasses.ContainsKey(b.Text)))
                 {
                     var localAttrs = c switch
                     {
@@ -109,7 +109,7 @@ namespace Thousand
                         .Concat(localAttrs)
                         .ToArray();
 
-                    lineClasses[c.Name] = allAttrs;
+                    lineClasses[c.Name.Text] = allAttrs;
                 }
             }
 
@@ -128,7 +128,7 @@ namespace Thousand
         {
             var regionConfig = new IR.Config(null, LayoutKind.Grid, FlowKind.Row, 15, new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
-            var label = node.Name; // names are a separate thing, but if a node has one, it is also the default label
+            var label = node.Name?.Text; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
 
             var alignment = default(AlignmentKind?);
@@ -207,7 +207,7 @@ namespace Thousand
 
             var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, row, column, width, height, shape, cornerRadius, stroke);
 
-            var name = node.Name ?? Guid.NewGuid().ToString();
+            var name = node.Name?.Text ?? Guid.NewGuid().ToString();
             if (allObjects.ContainsKey(name))
             {
                 es.Add(new GenerationError($"Duplicate object name '{name}'."));
@@ -281,8 +281,8 @@ namespace Thousand
                 var from = line.Segments[i];
                 var to = line.Segments[i + 1];
 
-                var fromTarget = FindObject(from.Target);
-                var toTarget = FindObject(to.Target);
+                var fromTarget = FindObject(from.Target.Text);
+                var toTarget = FindObject(to.Target.Text);
 
                 if (fromTarget != null && toTarget != null && from.Direction.HasValue)
                 {
@@ -303,7 +303,7 @@ namespace Thousand
                         case ArrowKind.Both:
                             rootEdges.Add(new(stroke, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
-
+                            
                         default:
                             es.Add(new GenerationError($"Unknown ArrowKind {from.Direction.Value}"));
                             break;
@@ -367,45 +367,45 @@ namespace Thousand
             };
         }
 
-        private AST.ObjectAttribute[] FindObjectClass(string name)
+        private AST.ObjectAttribute[] FindObjectClass(Parse.Identifier name)
         {
-            if (!objectClasses.ContainsKey(name))
+            if (!objectClasses.ContainsKey(name.Text))
             {
-                if (lineClasses.ContainsKey(name))
+                if (lineClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new($"Class '{name}' can only be used for lines, not objects."));
+                    ws.Add(new($"Class '{name.Text}' can only be used for lines, not objects."));
                 }
                 else
                 {
-                    ws.Add(new($"Class '{name}' not defined."));
+                    ws.Add(new($"Class '{name.Text}' not defined."));
                 }
                 
                 return Array.Empty<AST.ObjectAttribute>();
             }
             else
             {
-                return objectClasses[name];
+                return objectClasses[name.Text];
             }
         }
 
-        private AST.SegmentAttribute[] FindLineClass(string name)
+        private AST.SegmentAttribute[] FindLineClass(Parse.Identifier name)
         {
-            if (!lineClasses.ContainsKey(name))
+            if (!lineClasses.ContainsKey(name.Text))
             {
-                if (objectClasses.ContainsKey(name))
+                if (objectClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new($"Class '{name}' can only be used for objects, not lines."));
+                    ws.Add(new($"Class '{name.Text}' can only be used for objects, not lines."));
                 }
                 else
                 {
-                    ws.Add(new($"Class '{name}' not defined."));
+                    ws.Add(new($"Class '{name.Text}' not defined."));
                 }
 
                 return Array.Empty<AST.SegmentAttribute>();
             }
             else
             {
-                return lineClasses[name];
+                return lineClasses[name.Text];
             }
         }
 

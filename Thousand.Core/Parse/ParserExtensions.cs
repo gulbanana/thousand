@@ -69,5 +69,15 @@ namespace Thousand.Parse
 
             return TokenListParserResult.Value<TokenKind, IReadOnlyList<T>>(results, originalInput, input);
         };
+
+        public static TextParser<T> Located<T>(this TextParser<T> parser) where T : ILocated
+        {
+            return input => {
+                var inner = parser(input);
+                if (!inner.HasValue) return inner;
+                inner.Value.Location = inner.Location.Until(inner.Remainder);
+                return inner;
+            };
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace Thousand.Parse
                 .Match(Character.EqualTo('-').IgnoreThen(Character.EqualTo('-').AtLeastOnce()), TokenKind.NoArrow)
                 .Match(Numerics.Decimal, TokenKind.Number)
                 .Match(parseStringToken, TokenKind.String)
-                .Match(TextParsers.Identifier, TokenKind.Identifier)
+                .Match(Span.MatchedBy(TextParsers.Identifier), TokenKind.Identifier)
                 .Build();
         }
     }

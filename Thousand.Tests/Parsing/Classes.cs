@@ -1,4 +1,5 @@
-﻿using Thousand.Model;
+﻿using System.Linq;
+using Thousand.Model;
 using Thousand.Parse;
 using Xunit;
 
@@ -20,7 +21,7 @@ namespace Thousand.Tests.Parsing
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name);
+            Assert.Equal("foo", result.Value.Name.Text);
             Assert.Empty(result.Value.BaseClasses);
         }
 
@@ -31,8 +32,8 @@ namespace Thousand.Tests.Parsing
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name);
-            AssertEx.Sequence(result.Value.BaseClasses, "baz");
+            Assert.Equal("foo", result.Value.Name.Text);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "baz");
         }
 
         [Fact]
@@ -42,7 +43,7 @@ namespace Thousand.Tests.Parsing
             var result = Parser.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.BaseClasses, "bar", "baz");
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "bar", "baz");
         }
 
         [Fact]
@@ -61,7 +62,7 @@ namespace Thousand.Tests.Parsing
             var result = Parser.BaseClasses(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value, "bar");
+            AssertEx.Sequence(result.Value.Select(n => n.Text), "bar");
         }
 
         [Fact]

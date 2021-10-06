@@ -52,8 +52,8 @@ namespace Thousand.Tests.Parsing
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "object");
-            Assert.Equal("foo", result.Value.Name);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
+            Assert.Equal("foo", result.Value.Name?.Text);
         }
 
         [Fact]
@@ -63,8 +63,8 @@ namespace Thousand.Tests.Parsing
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "object");
-            Assert.Equal("foo", result.Value.Name);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
+            Assert.Equal("foo", result.Value.Name?.Text);
         }
 
         [Fact]
@@ -75,8 +75,8 @@ bar""");
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "object");
-            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Name);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
+            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Name?.Text);
         }
 
         [Fact]
@@ -86,7 +86,7 @@ bar""");
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name);
+            Assert.Equal("foo", result.Value.Name?.Text);
             AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
         }
 
@@ -97,8 +97,8 @@ bar""");
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "foo");
-            Assert.Equal("bar", result.Value.Name);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo");
+            Assert.Equal("bar", result.Value.Name?.Text);
         }
 
         [Fact]
@@ -108,8 +108,8 @@ bar""");
             var result = Parser.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes, "foo", "bar");
-            Assert.Equal("baz", result.Value.Name);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo", "bar");
+            Assert.Equal("baz", result.Value.Name?.Text);
         }
 
         [Fact]
@@ -118,7 +118,7 @@ bar""");
             var tokens = tokenizer.Tokenize(@"object");
             var result = Parser.Object(tokens);
 
-            AssertEx.Sequence(result.Value.Classes, "object");
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
             Assert.True(result.HasValue, result.ToString());
         }
 
@@ -129,19 +129,27 @@ bar""");
             var result = Parser.Edges(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.First().Target);
-            Assert.Equal("bar", result.Value.Last().Target);
+            Assert.Equal("foo", result.Value.First().Target?.Text);
+            Assert.Equal("bar", result.Value.Last().Target?.Text);
         }
 
         [Fact]
-        public void Line_Attributed()
+        public void Line_Typed()
+        {
+            var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar""");
+            var result = Parser.Line(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("line", result.Value.Classes[0].Text);
+        }
+
+        [Fact]
+        public void Line_Typed_WithAttributes()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [stroke-colour=#000000]");
             var result = Parser.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Segments.First().Target);
-            Assert.Equal("bar", result.Value.Segments.Last().Target);
             AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeColourAttribute(new Colour(0, 0, 0)));
         }
 
@@ -204,7 +212,7 @@ object ""baz""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name), "foo", "bar", "baz");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar", "baz");
         }
 
         [Fact]
@@ -217,7 +225,7 @@ object ""bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
         }
 
         [Fact]
@@ -228,7 +236,7 @@ object ""bar""");
             var result = Parser.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
         }
 
         [Fact]
@@ -243,11 +251,8 @@ line foo -> bar");
             Assert.Collection(result.Value.Declarations,
                 d => Assert.True(d.IsT2),
                 d => Assert.True(d.IsT2),
-                d =>
-                {
-                    Assert.True(d.IsT3);
-                    AssertEx.Sequence(d.AsT3.Segments, new AST.LineSegment("foo", ArrowKind.Forward), new AST.LineSegment("bar", null));
-                });
+                d => Assert.True(d.IsT3)
+            );
         }
 
         [Fact]

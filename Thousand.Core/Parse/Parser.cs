@@ -18,8 +18,8 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Unit> NewLine { get; } =
             Token.EqualTo(TokenKind.LineSeparator).Value(Unit.Value);
 
-        public static TokenListParser<TokenKind, string> Target { get; } =
-            Value.String.Or(Identifier.Any);
+        public static TokenListParser<TokenKind, Identifier> Target { get; } =
+            Value.StringIdentifier.Or(Identifier.Any);
 
         public static TokenListParser<TokenKind, TA[]> AttributeList<TA>(TokenListParser<TokenKind, TA> attributeParser) =>
             from begin in Token.EqualTo(TokenKind.LeftBracket)
@@ -27,13 +27,13 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 
-        public static TokenListParser<TokenKind, string[]> ClassList { get; } =
+        public static TokenListParser<TokenKind, Identifier[]> ClassList { get; } =
             Identifier.Any.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
-        public static TokenListParser<TokenKind, string[]> BaseClasses { get; } =
+        public static TokenListParser<TokenKind, Identifier[]> BaseClasses { get; } =
             Token.EqualTo(TokenKind.Colon)
                  .IgnoreThen(ClassList)
-                 .OptionalOrDefault(Array.Empty<string>());
+                 .OptionalOrDefault(Array.Empty<Identifier>());
 
         public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
             AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
@@ -43,7 +43,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in ClassList
-            from name in Identifier.Any.Or(Value.String).AsNullable().OptionalOrDefault()
+            from name in Target.AsNullable().OptionalOrDefault()
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Superpower.Parse.Ref(() => Scope!).OptionalOrDefault(Array.Empty<AST.ObjectDeclaration>())
             select new AST.TypedObject(classes, name, attrs, children);
@@ -79,16 +79,16 @@ namespace Thousand.Parse
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.Class> ObjectClassBody(string name, string[] bases) =>
+        public static TokenListParser<TokenKind, AST.Class> ObjectClassBody(Identifier name, Identifier[] bases) =>
             AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.Class);
 
-        public static TokenListParser<TokenKind, AST.Class> LineClassBody(string name, string[] bases) =>
+        public static TokenListParser<TokenKind, AST.Class> LineClassBody(Identifier name, Identifier[] bases) =>
             AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.Class);
 
-        public static TokenListParser<TokenKind, AST.Class> ObjectOrLineClassBody(string name, string[] bases) =>
+        public static TokenListParser<TokenKind, AST.Class> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
             AttributeList(AttributeParsers.StrokeAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.Class);
 
-        public static TokenListParser<TokenKind, AST.Class> ClassBody(string name, string[] bases) => input =>
+        public static TokenListParser<TokenKind, AST.Class> ClassBody(Identifier name, Identifier[] bases) => input =>
         {
             var begin = Token.EqualTo(TokenKind.LeftBracket)(input);
             if (!begin.HasValue)
