@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace Thousand.CLI
 {
@@ -9,22 +8,23 @@ namespace Thousand.CLI
     {
         static void Main(string[] args)
         {
-            var graph = File.ReadAllText(args.Single());
+            var input = File.ReadAllText(args[0]);
+            var output = args.Length > 1 ? args[1] : null;
 
             using var generator = new Render.SkiaDiagramGenerator();
 
-            generator.GenerateImage(graph).Switch(result =>
+            generator.GenerateImage(input).Switch(result =>
             {
-                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "thousand-test.png");
+                var outputPath = output ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "thousand-test.png");
 
-                using (var output = File.OpenWrite(path))
+                using (var outputFile = File.OpenWrite(outputPath))
                 {
-                    result.Diagram.Encode().SaveTo(output);
+                    result.Diagram.Encode().SaveTo(outputFile);
                 }
 
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = path,
+                    FileName = outputPath,
                     UseShellExecute = true
                 });
             }, errors =>

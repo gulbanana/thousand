@@ -16,6 +16,7 @@ TO DO
 * customisable arrowheads
 * enable fill for shape=none? what does it even mean then?
 * DISABLE padding for shape=none? stdlib is getting unwieldy
+* we have some throws that could be converted to positioned errors
 * (medium) do a defaults pass, picking values which produce a nice appearance without customisation
 * (medium) IdentifierOrKeyword, hyphen formatting
 * (large) object templates - might require two-phase parsing :(
