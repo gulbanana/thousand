@@ -222,8 +222,8 @@ namespace Thousand
         private void AddEdge(AST.TypedLine line)
         {
             var stroke = new Stroke();
-            var anchorStart = new AnchorKind?();
-            var anchorEnd = new AnchorKind?();
+            var anchorStart = new NoAnchor() as Anchor;
+            var anchorEnd = new NoAnchor() as Anchor;
             var offsetStart = Point.Zero;
             var offsetEnd = Point.Zero;
 
@@ -234,11 +234,11 @@ namespace Thousand
                     switch (arrow)
                     {
                         case AST.ArrowAnchorStartAttribute aasa:
-                            anchorStart = aasa.Kind;
+                            anchorStart = aasa.Anchor;
                             break;
 
                         case AST.ArrowAnchorEndAttribute aaea:
-                            anchorEnd = aaea.Kind;
+                            anchorEnd = aaea.Anchor;
                             break;
 
                         case AST.ArrowAnchorAttribute aaa:

@@ -66,17 +66,17 @@ namespace Thousand.Parse
         #region arrow group, used only by edges
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorStartAttribute { get; } =
             from key in Key(ArrowAttributeKind.AnchorStart)
-            from value in Identifier.Enum<AnchorKind>().OrNone()
+            from value in Value.Anchor
             select new AST.ArrowAnchorStartAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorEndAttribute { get; } =
             from key in Key(ArrowAttributeKind.AnchorEnd)
-            from value in Identifier.Enum<AnchorKind>().OrNone()
+            from value in Value.Anchor
             select new AST.ArrowAnchorEndAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorAttribute { get; } =
             from key in Key(ArrowAttributeKind.Anchor)
-            from startAndEnd in Identifier.Enum<AnchorKind>().OrNone().Twice()
+            from startAndEnd in Value.Anchor.Twice()
             select new AST.ArrowAnchorAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =

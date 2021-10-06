@@ -86,7 +86,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
+                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new NoAnchor(), Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -108,7 +108,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, null, null, Point.Zero, Point.Zero)
+                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new NoAnchor(), Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -130,7 +130,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, null, null, new Point(0, 1), new Point(0, 1))
+                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new NoAnchor(), new Point(0, 1), new Point(0, 1))
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -152,7 +152,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, AnchorKind.Compass, Point.Zero, Point.Zero)
+                new IR.Edge(new Stroke(), left, right, null, null, new ClosestAnchor(AnchorsKind.Corners), new ClosestAnchor(AnchorsKind.Compass), Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -174,7 +174,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, AnchorKind.Corners, AnchorKind.Corners, Point.Zero, Point.Zero)
+                new IR.Edge(new Stroke(), left, right, null, null, new ClosestAnchor(AnchorsKind.Corners), new ClosestAnchor(AnchorsKind.Corners), Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -202,7 +202,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, null, AnchorKind.Corners, Point.Zero, Point.Zero)
+                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new ClosestAnchor(AnchorsKind.Corners), Point.Zero, Point.Zero)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);

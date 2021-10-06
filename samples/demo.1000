@@ -11,4 +11,4 @@ object "Bottom Right" [column=3,corner=15]
 
 line "top left" -> mid [stroke=red]
 line "top right" -> mid [stroke=blue]
-line mid <- centre -- "bottom right" [anchor=none eight-way]
+line mid <- centre -- "bottom right" [anchor=none all]

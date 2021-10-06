@@ -2,11 +2,8 @@
 {
     public enum AnchorKind
     {
-        CompassPoints,
-        Corners,
-        EightWay,
-
-        Compass = CompassPoints,
-        Corner = Corners,
+        NW, N, NE, 
+         W,     E, 
+        SW, S, SE,
     }
 }

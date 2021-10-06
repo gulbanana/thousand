@@ -75,26 +75,34 @@ namespace Thousand.Compose
                 {
                     var (start, end) = Intrinsics.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, outputShapes.GetValueOrDefault(edge.FromTarget), outputShapes.GetValueOrDefault(edge.ToTarget));
 
-                    if (edge.FromAnchor.HasValue)
+                    switch (edge.FromAnchor)
                     {
-                        var anchors = GetAnchors(edge.FromAnchor.Value, edge.FromTarget, fromBox);
-                        start = start.Closest(anchors);
+                        case ClosestAnchor(var kind):
+                            var anchors = GetAnchors(kind, edge.FromTarget, fromBox);
+                            start = start.Closest(anchors);
 
-                        if (!edge.ToAnchor.HasValue)
-                        {
-                            (_, end) = Intrinsics.Line(start, toBox.Center + edge.ToOffset, null, outputShapes.GetValueOrDefault(edge.ToTarget));
-                        }
+                            if (edge.ToAnchor is NoAnchor)
+                            {
+                                (_, end) = Intrinsics.Line(start, toBox.Center + edge.ToOffset, null, outputShapes.GetValueOrDefault(edge.ToTarget));
+                            }
+                            break;
+
+                        // XXX implement SpecificAnchor
                     }
 
-                    if (edge.ToAnchor.HasValue)
+                    switch (edge.ToAnchor)
                     {
-                        var anchors = GetAnchors(edge.ToAnchor.Value, edge.ToTarget, toBox);
-                        end = end.Closest(anchors);
+                        case ClosestAnchor(var kind):
+                            var anchors = GetAnchors(kind, edge.ToTarget, toBox);
+                            end = end.Closest(anchors);
 
-                        if (!edge.FromAnchor.HasValue)
-                        {
-                            (start, _) = Intrinsics.Line(fromBox.Center + edge.FromOffset, end, outputShapes.GetValueOrDefault(edge.FromTarget), null);
-                        }
+                            if (edge.FromAnchor is NoAnchor)
+                            {
+                                (start, _) = Intrinsics.Line(fromBox.Center + edge.FromOffset, end, outputShapes.GetValueOrDefault(edge.FromTarget), null);
+                            }
+                            break;
+
+                            // XXX implement SpecificAnchor
                     }
 
                     outputLines.Add(new(edge.Stroke, start, end, edge.FromMarker.HasValue, edge.ToMarker.HasValue));
@@ -297,9 +305,9 @@ namespace Thousand.Compose
             return boxes;
         }
 
-        private IReadOnlyList<Point> GetAnchors(AnchorKind kind, IR.Object target, Rect bounds) => kind switch
+        private IReadOnlyList<Point> GetAnchors(AnchorsKind kind, IR.Object target, Rect bounds) => kind switch
         {
-            AnchorKind.CompassPoints => new Point[]
+            AnchorsKind.CompassPoints => new Point[]
             {
                 new(bounds.Center.X, bounds.Top),
                 new(bounds.Right, bounds.Center.Y),
@@ -307,12 +315,12 @@ namespace Thousand.Compose
                 new(bounds.Left, bounds.Center.Y),
             },
 
-            AnchorKind.Corners => outputShapes.GetValueOrDefault(target) is Layout.Shape fromShape
+            AnchorsKind.Corners => outputShapes.GetValueOrDefault(target) is Layout.Shape fromShape
                 ? Intrinsics.Corners(fromShape)
                 : Intrinsics.Corners(bounds),
 
-            AnchorKind.EightWay => GetAnchors(AnchorKind.CompassPoints, target, bounds)
-                .Concat(GetAnchors(AnchorKind.Corners, target, bounds))
+            AnchorsKind.All => GetAnchors(AnchorsKind.CompassPoints, target, bounds)
+                .Concat(GetAnchors(AnchorsKind.Corners, target, bounds))
                 .ToArray()
         };
     }

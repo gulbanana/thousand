@@ -13,6 +13,7 @@ TO DO
 * drop shadows
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content?
 * anchors and offsets probably don't combine correctly
+* reevaluate x/y of offset
 * customisable arrowheads
 * enable fill for shape=none? what does it even mean then?
 * DISABLE padding for shape=none? stdlib is getting unwieldy

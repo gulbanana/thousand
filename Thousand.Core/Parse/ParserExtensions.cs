@@ -19,6 +19,12 @@ namespace Thousand.Parse
                 .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(T?)));
         }
 
+        public static TokenListParser<TokenKind, T> OrDefault<T>(this TokenListParser<TokenKind, T> pT, T defaultValue) where T : class
+        {
+            return pT
+                .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(defaultValue));
+        }
+
         public static TokenListParser<TokenKind, T?> OrNone<T>(this TokenListParser<TokenKind, T> pT) where T : struct
         {
             return pT

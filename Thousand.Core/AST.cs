@@ -49,9 +49,9 @@ namespace Thousand.AST
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
     public abstract record ArrowAttribute;
-    public record ArrowAnchorStartAttribute(AnchorKind? Kind) : ArrowAttribute;
-    public record ArrowAnchorEndAttribute(AnchorKind? Kind) : ArrowAttribute;
-    public record ArrowAnchorAttribute(AnchorKind? Start, AnchorKind? End) : ArrowAttribute;
+    public record ArrowAnchorStartAttribute(Anchor Anchor) : ArrowAttribute;
+    public record ArrowAnchorEndAttribute(Anchor Anchor) : ArrowAttribute;
+    public record ArrowAnchorAttribute(Anchor Start, Anchor End) : ArrowAttribute;
     public record ArrowOffsetStartXAttribute(int Offset) : ArrowAttribute;
     public record ArrowOffsetStartYAttribute(int Offset) : ArrowAttribute;
     public record ArrowOffsetEndXAttribute(int Offset) : ArrowAttribute;

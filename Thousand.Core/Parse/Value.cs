@@ -40,5 +40,10 @@ namespace Thousand.Parse
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(new PackedSize() as TrackSize)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal").Value(new EqualSize() as TrackSize))
                 .Or(WholeNumber.Select(x => new FixedSize(x) as TrackSize));
+
+        public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
+            Identifier.Enum<AnchorsKind>().Select(k => new ClosestAnchor(k) as Anchor)
+                .Or(Identifier.Enum<AnchorKind>().Select(k => new SpecificAnchor(k) as Anchor))
+                .OrDefault(new NoAnchor());
     }
 }
