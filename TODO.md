@@ -1,6 +1,9 @@
 TO DO
 -----
 
+* 8 specific anchors (8way = all)
+* text-anchor, text-offset
+* preset shape corners (trapezium needs it)
 * 4-way thickness
 * implement composition for pack 
 * implement composition for justify/align
