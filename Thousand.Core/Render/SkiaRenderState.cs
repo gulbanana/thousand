@@ -48,7 +48,7 @@ namespace Thousand.Render
                 {
                     HairlineWidth => 0,
                     PositiveWidth(var w) => w,
-                    _ => throw new NotSupportedException()
+                    _ => throw new NotSupportedException($"unknown shape `{shape.Kind}`")
                 };
 
                 canvas.DrawPath(path, stroke);
@@ -70,7 +70,7 @@ namespace Thousand.Render
                 {
                     HairlineWidth => 0,
                     PositiveWidth(var w) => w,
-                    _ => throw new NotSupportedException()
+                    _ => throw new NotSupportedException($"unknown width `{line.Stroke.Width}`")
                 };
 
                 canvas.DrawLine(start, end, stroke);

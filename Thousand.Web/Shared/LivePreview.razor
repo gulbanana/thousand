@@ -3,14 +3,14 @@
 @code {
     [Parameter] public RenderMode Mode { get; set; }
     [Parameter] public Layout.Diagram Diagram { get; set; }
-    [Parameter] public string Error { get; set; }
+    [Parameter] public string[] Errors { get; set; }
     string dataURL;
     MarkupString? innerSVG;
-    string error;
+    string[] errors;
 
     protected override void OnParametersSet()
     {
-        error = Error;
+        errors = Errors ?? Array.Empty<string>();
 
         if (Diagram != null)
         {
@@ -49,7 +49,7 @@
             }
             catch (Exception e)
             {
-                error = e.Message;
+                errors = errors.Append(e.Message).ToArray();
             }
         }
     }
@@ -65,8 +65,13 @@
         @innerSVG.Value
     }
 
-    @if (error != null)
+    @if (errors.Any())
     {
-        <div class="overlay">@error</div>
+        <div class="overlay">
+            @foreach (var error in errors)
+            {
+                <p>@error</p>
+            }
+        </div>
     }
 </div>

@@ -12,7 +12,7 @@
     string source;
     string sample;
     Layout.Diagram doc;
-    string err;
+    string[] err;
     RenderMode mode;
 
     string Source
@@ -66,11 +66,11 @@
     {
         doc = generator.GenerateDiagram(source).Match(result =>
         {
-            err = result.Warnings.Any() ? result.Warnings.Join() : null;
+            err = result.Warnings.Select(w => w.ToString()).ToArray();
             return result.Diagram;
         }, errors =>
         {
-            err = errors.Join();
+            err = errors.Select(w => w.ToString()).ToArray();
             return null;
         });
 
@@ -98,7 +98,7 @@
     </div>
 
     <div class="preview">
-        <LivePreview Mode="@mode" Diagram="@doc" Error="@err" />
+        <LivePreview Mode="@mode" Diagram="@doc" Errors="@err" />
 
         <div class="sample-selector">
             <label>Renderer:</label>

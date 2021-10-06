@@ -32,13 +32,13 @@ namespace Thousand
             var tokenized = tokenizer.TryTokenize(sourceFile);
             if (!tokenized.HasValue)
             {
-                return new GenerationError[] { new(tokenized.ToString()) };
+                return new GenerationError[] { new(tokenized.ErrorPosition, ErrorKind.Syntax, tokenized.FormatErrorMessageFragment()) };
             }
 
             var parsed = parser(tokenized.Value);
             if (!parsed.HasValue)
             {
-                return new GenerationError[] { new(parsed.ToString()) };
+                return new GenerationError[] { new(parsed.ErrorPosition, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()) };
             }
 
             return new GenerationResult<AST.Document>(parsed.Value, Array.Empty<GenerationError>());
@@ -104,19 +104,38 @@ namespace Thousand
         /// <returns>Either the generated diagram (as a Skia image) and zero-or-more-warnings, or one-or-more errors.</returns>
         public OneOf<GenerationResult<T>, GenerationError[]> GenerateImage(string source, bool stdlib = true)
         {
-            return GenerateDiagram(source, stdlib).MapT0(result =>
+            var diagram = GenerateDiagram(source, stdlib);
+            if (diagram.IsT1)
             {
-                var image = renderer.Render(result.Diagram);
-                return new GenerationResult<T>(image, result.Warnings);
-            });
+                return diagram.AsT1;
+            }
+            else
+            {
+                var image = GenerateImage(diagram.AsT0.Diagram);
+                if (image.IsT0)
+                {
+                    return new GenerationResult<T>(image.AsT0, diagram.AsT0.Warnings);
+                }
+                else
+                {
+                    return image.AsT1;
+                }
+            }
         }
 
         /// <summary>Create an image from a diagram.</summary>
         /// <param name="diagram">Data structure produced from a .1000 file.</param>
-        /// <returns>Either the generated diagram (as a Skia image) and zero-or-more-warnings, or one-or-more errors.</returns>
-        public T GenerateImage(Layout.Diagram diagram)
+        /// <returns>Either the generated diagram (as a Skia image), or a thrown exception.</returns>
+        public OneOf<T, GenerationError[]> GenerateImage(Layout.Diagram diagram)
         {
-            return renderer.Render(diagram);
+            try
+            {
+                return renderer.Render(diagram);
+            }
+            catch (Exception ex)
+            {
+                return new GenerationError[] { new(ex) };
+            }
         }
     }
 }

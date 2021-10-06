@@ -16,7 +16,7 @@ namespace Thousand
 
         public static string Join(this IEnumerable<GenerationError> errors)
         {
-            return string.Join(Environment.NewLine, errors.Select(e => e.Message));
+            return string.Join(Environment.NewLine, errors.Select(e => e.ToString()));
         }
     }
 }

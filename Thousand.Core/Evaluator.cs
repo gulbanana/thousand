@@ -21,9 +21,9 @@ namespace Thousand
 
                 return !errors.Any();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                errors.Add(new(e));
+                errors.Add(new(ex));
                 rules = null;
                 return false;
             }
@@ -207,14 +207,13 @@ namespace Thousand
 
             var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, row, column, width, height, shape, cornerRadius, stroke);
 
-            var name = node.Name?.Text ?? Guid.NewGuid().ToString();
-            if (allObjects.ContainsKey(name))
+            if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {
-                es.Add(new GenerationError($"Duplicate object name '{name}'."));
+                es.Add(new(node.Name.Location.Position, ErrorKind.Reference, $"object `{name}` has already been defined"));
             }
             else
             {
-                allObjects.Add(name, result);
+                allObjects.Add(node.Name?.Text ?? Guid.NewGuid().ToString(), result);
             }
 
             return result;
@@ -281,8 +280,8 @@ namespace Thousand
                 var from = line.Segments[i];
                 var to = line.Segments[i + 1];
 
-                var fromTarget = FindObject(from.Target.Text);
-                var toTarget = FindObject(to.Target.Text);
+                var fromTarget = FindObject(from.Target);
+                var toTarget = FindObject(to.Target);
 
                 if (fromTarget != null && toTarget != null && from.Direction.HasValue)
                 {
@@ -305,7 +304,7 @@ namespace Thousand
                             break;
                             
                         default:
-                            es.Add(new GenerationError($"Unknown ArrowKind {from.Direction.Value}"));
+                            es.Add(new(from.Target.Location.Position, ErrorKind.Internal, $"unknown ArrowKind {from.Direction.Value} from object `{from.Target.Text}`"));
                             break;
                     }
                 }
@@ -373,11 +372,11 @@ namespace Thousand
             {
                 if (lineClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new($"Class '{name.Text}' can only be used for lines, not objects."));
+                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` can only be used for lines, not objects"));
                 }
                 else
                 {
-                    ws.Add(new($"Class '{name.Text}' not defined."));
+                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` is not defined"));
                 }
                 
                 return Array.Empty<AST.ObjectAttribute>();
@@ -394,11 +393,11 @@ namespace Thousand
             {
                 if (objectClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new($"Class '{name.Text}' can only be used for objects, not lines."));
+                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` can only be used for objects, not lines"));
                 }
                 else
                 {
-                    ws.Add(new($"Class '{name.Text}' not defined."));
+                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` is not defined"));
                 }
 
                 return Array.Empty<AST.SegmentAttribute>();
@@ -409,15 +408,15 @@ namespace Thousand
             }
         }
 
-        private IR.Object? FindObject(string name)
+        private IR.Object? FindObject(Parse.Identifier name)
         {
-            if (!allObjects.ContainsKey(name))
+            if (!allObjects.ContainsKey(name.Text))
             {
-                ws.Add(new($"No object found with name '{name}'."));
+                ws.Add(new(name.Location.Position, ErrorKind.Reference, $"object `{name.Text}` is not defined"));
                 return null;
             }
 
-            return allObjects[name];
+            return allObjects[name.Text];
         }
     }
 }

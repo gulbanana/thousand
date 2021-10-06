@@ -23,9 +23,9 @@ namespace Thousand.Compose
 
                 return !errors.Any();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                errors.Add(new(e));
+                errors.Add(new(ex));
                 diagram = null;
                 return false;
             }
@@ -101,7 +101,7 @@ namespace Thousand.Compose
                 }
                 catch (Exception ex)
                 { 
-                    ws.Add(new GenerationError(ex));
+                    ws.Add(new(ex));
                     continue;
                 }
             }

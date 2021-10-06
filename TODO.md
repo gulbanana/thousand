@@ -12,7 +12,6 @@ TO DO
 * alternatively, just rename min-width to width and caveat it
 * drop shadows
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content?
-* catch render failures (shouldn't be any known, just exceptions)
 * anchors and offsets probably don't combine correctly
 * customisable arrowheads
 * enable fill for shape=none? what does it even mean then?

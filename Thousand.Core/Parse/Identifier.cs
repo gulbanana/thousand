@@ -19,7 +19,7 @@ namespace Thousand.Parse
             var names = System.Enum.GetNames<T>();
             if (!names.Any())
             {
-                throw new Exception($"Enum {typeof(T).Name} has no values.");
+                throw new Exception($"enum `{typeof(T).Name}` has no values");
             }
 
             var namedValues = names
@@ -53,7 +53,7 @@ namespace Thousand.Parse
             var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Static);
             if (!props.Any())
             {
-                throw new Exception($"Type {typeof(T).Name} has no public statics.");
+                throw new Exception($"type `{typeof(T).Name}` has no public statics");
             }
 
             var names = props.Select(p => p.Name);            

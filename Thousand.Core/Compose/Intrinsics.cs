@@ -166,7 +166,7 @@ namespace Thousand.Compose
                 return new(x, y);
             }
 
-            throw new Exception("Cannot find intersection");
+            throw new Exception("cannot find intersection");
         }
     }
 }
