@@ -46,6 +46,7 @@ namespace Thousand.Parse
                 .Match(Character.EqualTo(','), TokenKind.Comma)
                 .Match(Character.EqualTo(':'), TokenKind.Colon)
                 .Match(Character.EqualTo('.'), TokenKind.Period)
+                .Match(Span.EqualTo("$*"), TokenKind.Placeholder)
                 .Match(Span.EqualToIgnoreCase("none"), TokenKind.NoneKeyword)
                 .Match(Span.EqualToIgnoreCase("class"), TokenKind.ClassKeyword)
                 .Match(Character.EqualTo('#').IgnoreThen(Character.HexDigit.AtLeastOnce()), TokenKind.Colour)
