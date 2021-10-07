@@ -18,7 +18,7 @@ namespace Thousand.Tests.Parsing
         public void Empty()
         {
             var tokens = tokenizer.Tokenize(@"class foo");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name.Text);
@@ -29,7 +29,7 @@ namespace Thousand.Tests.Parsing
         public void Subclass()
         {
             var tokens = tokenizer.Tokenize(@"class foo : baz");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name.Text);
@@ -40,7 +40,7 @@ namespace Thousand.Tests.Parsing
         public void Subclass_WithMultipleBases()
         {
             var tokens = tokenizer.Tokenize(@"class foo : bar.baz");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "bar", "baz");
@@ -50,7 +50,7 @@ namespace Thousand.Tests.Parsing
         public void Subclass_NoBase()
         {
             var tokens = tokenizer.Tokenize(@"class foo : [label=""bar""]");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -59,7 +59,7 @@ namespace Thousand.Tests.Parsing
         public void BaseClassList()
         {
             var tokens = tokenizer.Tokenize(@": bar");
-            var result = Parser.BaseClasses(tokens);
+            var result = TokenParsers.BaseClasses(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Select(n => n.Text), "bar");
@@ -69,7 +69,7 @@ namespace Thousand.Tests.Parsing
         public void BaseClassList_NoBases()
         {
             var tokens = tokenizer.Tokenize(@" : ");
-            var result = Parser.BaseClasses(tokens);
+            var result = TokenParsers.BaseClasses(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -78,7 +78,7 @@ namespace Thousand.Tests.Parsing
         public void BaseClassList_NoBasesAndAttributes()
         {
             var tokens = tokenizer.Tokenize(@" : [label=""bar""]");
-            var result = Parser.BaseClasses(tokens);
+            var result = TokenParsers.BaseClasses(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -87,7 +87,7 @@ namespace Thousand.Tests.Parsing
         public void ObjectClass()
         {
             var tokens = tokenizer.Tokenize(@"class foo [shape=square]");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
@@ -98,7 +98,7 @@ namespace Thousand.Tests.Parsing
         public void LineClass()
         {
             var tokens = tokenizer.Tokenize(@"class foo [offset-x=1]");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.LineClass>(result.Value);
@@ -109,7 +109,7 @@ namespace Thousand.Tests.Parsing
         public void ObjectOrLineClass()
         {
             var tokens = tokenizer.Tokenize(@"class foo [stroke-colour=red]");
-            var result = Parser.Class(tokens);
+            var result = TokenParsers.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectOrLineClass>(result.Value);

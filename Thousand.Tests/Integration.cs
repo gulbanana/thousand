@@ -20,7 +20,7 @@ namespace Thousand.Tests
         {
             var source = DiagramGenerator.ReadStdlib();
             var tokens = Tokenizer.Build().Tokenize(source);
-            var ast = Parser.Build()(tokens);
+            var ast = TokenParsers.Document(tokens);
             Assert.True(ast.HasValue, ast.ToString());
         }
 

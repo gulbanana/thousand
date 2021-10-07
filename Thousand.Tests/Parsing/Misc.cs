@@ -19,7 +19,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Single()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square]");
-            var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
+            var result = TokenParsers.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -29,7 +29,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Multiple()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval]");
-            var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
+            var result = TokenParsers.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Ellipse));
@@ -39,7 +39,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Whitespace()
         {
             var tokens = tokenizer.Tokenize(@"[ shape=square,shape = square, shape=square]");
-            var result = Parser.AttributeList(AttributeParsers.NodeAttribute)(tokens);
+            var result = TokenParsers.AttributeList(AttributeParsers.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -49,7 +49,7 @@ namespace Thousand.Tests.Parsing
         public void Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
@@ -60,7 +60,7 @@ namespace Thousand.Tests.Parsing
         public void Object_WhiteSpace()
         {
             var tokens = tokenizer.Tokenize(@"   object     foo    ");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
@@ -72,7 +72,7 @@ namespace Thousand.Tests.Parsing
         {
             var tokens = tokenizer.Tokenize(@"object ""foo
 bar""");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
@@ -83,7 +83,7 @@ bar""");
         public void Object_Attributed()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo"" [label=""bar""]");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name?.Text);
@@ -94,7 +94,7 @@ bar""");
         public void Object_CustomClass()
         {
             var tokens = tokenizer.Tokenize(@"foo bar");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo");
@@ -105,7 +105,7 @@ bar""");
         public void Object_CustomClasses()
         {
             var tokens = tokenizer.Tokenize(@"foo.bar baz");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo", "bar");
@@ -116,7 +116,7 @@ bar""");
         public void Object_Anonymous()
         {
             var tokens = tokenizer.Tokenize(@"object");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
             Assert.True(result.HasValue, result.ToString());
@@ -126,7 +126,7 @@ bar""");
         public void Line_Bare()
         {
             var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar""");
-            var result = Parser.Edges(tokens);
+            var result = TokenParsers.Edges(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.First().Target?.Text);
@@ -137,7 +137,7 @@ bar""");
         public void Line_Typed()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar""");
-            var result = Parser.Line(tokens);
+            var result = TokenParsers.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("line", result.Value.Classes[0].Text);
@@ -147,7 +147,7 @@ bar""");
         public void Line_Typed_WithAttributes()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [stroke-colour=#000000]");
-            var result = Parser.Line(tokens);
+            var result = TokenParsers.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeColourAttribute(new Colour(0, 0, 0)));
@@ -157,7 +157,7 @@ bar""");
         public void Scope_Empty()
         {
             var tokens = tokenizer.Tokenize(@"{}");
-            var result = Parser.Scope(tokens);
+            var result = TokenParsers.Scope(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Empty(result.Value);
@@ -171,7 +171,7 @@ bar""");
     object bar 
     line foo <- bar
 }");
-            var result = Parser.Scope(tokens);
+            var result = TokenParsers.Scope(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Length);
@@ -185,7 +185,7 @@ bar""");
     object bar 
     line foo <- bar
 }");
-            var result = Parser.Object(tokens);
+            var result = TokenParsers.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Children.Length);
@@ -195,7 +195,7 @@ bar""");
         public void Document_SingleNode()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""");
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Declarations);
@@ -209,7 +209,7 @@ bar""");
 object ""bar""
 object ""baz""");
 
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar", "baz");
@@ -222,7 +222,7 @@ object ""baz""");
 
 object ""bar""");
 
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
@@ -233,7 +233,7 @@ object ""bar""");
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""; object ""bar""");
 
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
@@ -245,7 +245,7 @@ object ""bar""");
             var tokens = tokenizer.Tokenize(@"object foo
 object bar
 line foo -> bar");
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Collection(result.Value.Declarations,
@@ -259,7 +259,7 @@ line foo -> bar");
         public void Declaration_Attribute()
         {
             var tokens = tokenizer.Tokenize(@"fill=black");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = TokenParsers.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT0);
@@ -269,7 +269,7 @@ line foo -> bar");
         public void Declaration_Class()
         {
             var tokens = tokenizer.Tokenize(@"class foo [stroke=none]");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = TokenParsers.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT1);
@@ -279,7 +279,7 @@ line foo -> bar");
         public void Declaration_Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo [shape=square]");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = TokenParsers.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT2);
@@ -289,7 +289,7 @@ line foo -> bar");
         public void Declaration_AnonymousObject()
         {
             var tokens = tokenizer.Tokenize(@"object {}");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = TokenParsers.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT2);
@@ -299,7 +299,7 @@ line foo -> bar");
         public void Declaration_WhollyAnonymousObject()
         {
             var tokens = tokenizer.Tokenize(@"object");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = TokenParsers.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT2);
@@ -309,7 +309,7 @@ line foo -> bar");
         public void Declaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [stroke=none]");
-            var result = Parser.DocumentDeclaration(tokens);
+            var result = TokenParsers.DocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT3);
@@ -322,7 +322,7 @@ line foo -> bar");
 class foo [stroke=none]
 object foo [shape=square]
 line foo->bar [offset-x=1]");
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue);
             Assert.Equal(4, result.Value.Declarations.Length);
@@ -339,7 +339,7 @@ line foo->bar [offset-x=1]");
 
 
 class foo [stroke=none]");
-            var result = Parser.Document(tokens);
+            var result = TokenParsers.Document(tokens);
 
             Assert.True(result.HasValue);
             Assert.Equal(2, result.Value.Declarations.Length);

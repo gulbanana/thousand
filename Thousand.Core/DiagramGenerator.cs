@@ -1,5 +1,4 @@
 ﻿using OneOf;
-using Superpower;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,30 +17,19 @@ namespace Thousand
             return reader.ReadToEnd();
         }
 
-        private readonly Tokenizer<TokenKind> tokenizer;
-        private readonly TokenListParser<TokenKind, AST.Document> parser;
-
-        public DiagramGenerator()
-        {
-            tokenizer = Tokenizer.Build();
-            parser = Parser.Build();            
-        }
-
         private OneOf<GenerationResult<AST.Document>, GenerationError[]> Parse(string sourceFile)
         {
-            var tokenized = tokenizer.TryTokenize(sourceFile);
-            if (!tokenized.HasValue)
-            {
-                return new GenerationError[] { new(tokenized.ErrorPosition, ErrorKind.Syntax, tokenized.FormatErrorMessageFragment()) };
-            }
+            var warnings = new List<GenerationError>();
+            var errors = new List<GenerationError>();
 
-            var parsed = parser(tokenized.Value);
-            if (!parsed.HasValue)
+            if (!Parser.TryParse(sourceFile, warnings, errors, out var document))
             {
-                return new GenerationError[] { new(parsed.ErrorPosition, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()) };
+                return errors.ToArray();
             }
-
-            return new GenerationResult<AST.Document>(parsed.Value, Array.Empty<GenerationError>());
+            else
+            {
+                return new GenerationResult<AST.Document>(document, warnings.ToArray());
+            }
         }
 
         /// <summary>Create a diagram from source code.</summary>
