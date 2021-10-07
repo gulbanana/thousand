@@ -2,6 +2,7 @@
 {
     public abstract record Anchor;
     public record NoAnchor() : Anchor;
-    public record SpecificAnchor(AnchorKind Kind) : Anchor;
-    public record ClosestAnchor(AnchorsKind Kind) : Anchor;
+    public record CornerAnchor() : Anchor;
+    public record AnyAnchor() : Anchor;    
+    public record SpecificAnchor(CompassKind Kind) : Anchor;    
 }

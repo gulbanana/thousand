@@ -1,14 +1,43 @@
-class node [margin=10, min-width=100, min-height=100, label=none]
+layout=column; gutter=50
+font-size=16
 
-node a [shape=diamond]
-node b [shape=circle, row=2, col=3]
-node c [shape=square, row=1, col=5]
+class node [min-width=100, min-height=100, label=none, stroke=2]
+class s [min-height=50]
+class spacer100 [shape=none, min-width=100]
+class spacer10 [shape=none, min-width=10]
 
-line a -> b -> c [anchor=none, stroke=red]
-line a -> b -> c [anchor=compass, stroke=blue]
+class sline [stroke=2]
+class aline [anchor=any, stroke=red 2]
+class cline [anchor=corners, stroke=blue 2]
+class gline [stroke=green 2]
 
-node d [shape=diamond, row=3]
-node e [shape=square, row=2, col=5]
+// this could use justification - and simple templates
+column {
+    row { point s1; spacer100; point s2; sline s1 -- s2; spacer10; label "center-to-center" }
+    row { point c1; spacer100; point c2; cline c1 -- c2; spacer10; label "corner-to-corner" }
+    row { point a1; spacer100; point a2; aline a1 -- a2; spacer10; label "anchor-to-anchor" }
+    row { point g1; spacer100; point g2; gline g1 -- g2; spacer10; label "use named anchors" }
+}
 
-line d <- e [stroke=red]
-line d <- e [stroke=blue, anchor=corner compass]
+grid [gutter=50] {
+    node a [shape=diamond]
+    node b [shape=square]
+    node.s c [shape=trapezium]
+    aline a--b--c; cline a--b--c; gline a--b--c [anchor=se sw]
+
+    node d [shape=circle,row=2]
+    node e [shape=triangle]
+    gline d--e [anchor=s]; aline d--e
+
+    node.s f [shape=ellipse]
+    node.s g [shape=roundrect]
+    node.s h [shape=rectangle,row=1,col=4]
+    aline f--h; cline f--h
+    aline h--g; cline h--g
+    gline g--f [anchor-start=nw]
+    gline g--f [anchor-start=w]
+    gline g--f [anchor-start=sw]
+
+    sline a--d [stroke=2]
+    sline c--e [stroke=2]
+}

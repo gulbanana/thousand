@@ -42,8 +42,9 @@ namespace Thousand.Parse
                 .Or(WholeNumber.Select(x => new FixedSize(x) as TrackSize));
 
         public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
-            Identifier.Enum<AnchorsKind>().Select(k => new ClosestAnchor(k) as Anchor)
-                .Or(Identifier.Enum<AnchorKind>().Select(k => new SpecificAnchor(k) as Anchor))
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "any").Value(new AnyAnchor() as Anchor)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corners").Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corner")).Value(new CornerAnchor() as Anchor))
+                .Or(Identifier.Enum<CompassKind>().Select(k => new SpecificAnchor(k) as Anchor))
                 .OrDefault(new NoAnchor());
     }
 }

@@ -3,17 +3,17 @@ TO DO
 
 P1
 --
-* specific anchors (n/ne/e etc)
-* sort out anchors more generally- 8 specific? per-shape? but how to reference the latter? trapezium could get by with the compass, octagon can't
 * implement composition for pack 
 * implement composition for justify/align
 * either text-anchor and text-offset or anchor and offset for objects, taking them out of the normal layout (or both)
+* ArcMidpoint is not correct
 
 P2
 --
 * 4-way thickness (for padding and margins)
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
 * anchors and offsets probably don't combine correctly
+* anchors should be close to each other instead of strictly clockwise
 * canvas layout with X/Y - and/or support direct X Y in any mode (does this take nodes out of the normal layout?)
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content?
 * reevaluate x/y specification in offsets and possibly elsewhere (tedium)
@@ -26,6 +26,7 @@ P2
 * we have some throws that could be converted to positioned errors
 * object templates - might require two-phase parsing :(. we need some way to apply a type system
 * docs - generated for attrs? or just handwrite it all?
+* check out line caps
 
 P3
 --

@@ -29,8 +29,13 @@ namespace Thousand.Model
 
         public Point Pad(decimal padding) => new(X + padding * 2, Y + padding * 2);
 
-        public Point Closest(IEnumerable<Point> points)
+        public Point ClosestTo(IEnumerable<Point> points)
         {
+            if (!points.Any())
+            {
+                return this;
+            }
+
             var closestPoint = points.First();
             var minDistance = (points.First() - this).Length;
 
