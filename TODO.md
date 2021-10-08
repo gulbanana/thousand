@@ -9,10 +9,10 @@ P1
 * ArcMidpoint is not correct
 * anchors and offsets probably don't combine correctly
 * object class contents, with placeholders (need skip-level evaluation here)
-* class contents templating - probably sub-declaration only 
 
 P2
 --
+* class contents templating - probably sub-declaration only 
 * improve shorthand expectations
 * consider macro attrkeys (might actually improve errors)
 * 4-way thickness (for padding and margins)
