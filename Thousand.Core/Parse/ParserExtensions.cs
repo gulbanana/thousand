@@ -2,6 +2,7 @@
 using Superpower.Model;
 using Superpower.Parsers;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Thousand.Parse
 {
@@ -95,6 +96,11 @@ namespace Thousand.Parse
                 inner.Value.Remainder = inner.Remainder;
                 return inner;
             };
+        }
+
+        public static string Dump(this TokenList<TokenKind> list)
+        {
+            return string.Join(" ", list.Select(t => t.ToStringValue()));
         }
     }
 }

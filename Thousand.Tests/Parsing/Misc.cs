@@ -168,7 +168,7 @@ bar""");
         public void Scope_Empty()
         {
             var tokens = tokenizer.Tokenize(@"{}");
-            var result = TokenParsers.Scope(tokens);
+            var result = TokenParsers.TypedScope(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Empty(result.Value);
@@ -182,7 +182,7 @@ bar""");
     object bar 
     line foo <- bar
 }");
-            var result = TokenParsers.Scope(tokens);
+            var result = TokenParsers.TypedScope(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Length);

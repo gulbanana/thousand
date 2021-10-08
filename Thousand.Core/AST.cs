@@ -65,7 +65,8 @@ namespace Thousand.AST
 
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
 
-    [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
+    [GenerateOneOf] public partial class UntypedObjectDeclaration : OneOfBase<ObjectAttribute, UntypedObject, UntypedLine> { }
+    [GenerateOneOf] public partial class TypedObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
     [GenerateOneOf] public partial class UntypedDocumentDeclaration : OneOfBase<DiagramAttribute, UntypedClass, TypedClass /* for better errors */, UntypedObject, UntypedLine> { }
     [GenerateOneOf] public partial class TypedDocumentDeclaration : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
 
@@ -79,8 +80,8 @@ namespace Thousand.AST
 
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments) : Parse.Templated; // XXX it would be nice if inheritance could call classes
 
-    public record UntypedObject(ClassCall[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
-    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
+    public record UntypedObject(ClassCall[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectDeclaration[] Children);
+    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectDeclaration[] Children);
 
     public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
     public record UntypedLine(ClassCall[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);

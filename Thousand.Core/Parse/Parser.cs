@@ -20,6 +20,8 @@ namespace Thousand.Parse
         private readonly List<GenerationError> es;
         private Dictionary<string, AST.UntypedClass> templates;
         private Dictionary<string, List<Token<TokenKind>[]>> instantiations;
+        private List<Splice> splices;
+        public AST.TypedDocument? ParsedDocument;
 
         private Parser(List<GenerationError> warnings, List<GenerationError> errors)
         {
@@ -27,6 +29,7 @@ namespace Thousand.Parse
             es = errors;
             templates = new();
             instantiations = new();
+            splices = new();
         }
 
         private AST.TypedDocument? Parse(string text)
@@ -65,8 +68,6 @@ namespace Thousand.Parse
 
         private TokenList Template(TokenList template, AST.UntypedDocument untypedAST)
         {
-            var splices = new List<Splice>();
-
             var allClasses = new HashSet<string>();
             foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 || d.IsT2))
             {
@@ -86,18 +87,12 @@ namespace Thousand.Parse
 
             foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedObject)d))
             {
-                foreach (var call in o.Classes)
-                {
-                    Invoke(splices, call);
-                }
+                SubstituteObject(o);
             }
 
-            foreach (var o in untypedAST.Declarations.Where(d => d.IsT4).Select(d => (AST.UntypedLine)d))
+            foreach (var l in untypedAST.Declarations.Where(d => d.IsT4).Select(d => (AST.UntypedLine)d))
             {
-                foreach (var call in o.Classes)
-                {
-                    Invoke(splices, call);
-                }
+                SubstituteLine(l);
             }
 
             // remove template declarations
@@ -122,7 +117,33 @@ namespace Thousand.Parse
             return template;
         }
 
-        private void Invoke(List<Splice> splices, AST.ClassCall call)
+        private void SubstituteObject(AST.UntypedObject objekt)
+        {
+            foreach (var call in objekt.Classes)
+            {
+                Invoke(call);
+            }
+
+            foreach (var child in objekt.Children.Where(d => d.IsT1).Select(d => (AST.UntypedObject)d))
+            {
+                SubstituteObject(child);
+            }
+
+            foreach (var child in objekt.Children.Where(d => d.IsT2).Select(d => (AST.UntypedLine)d))
+            {
+                SubstituteLine(child);
+            }
+        }
+
+        private void SubstituteLine(AST.UntypedLine line)
+        {
+            foreach (var call in line.Classes)
+            {
+                Invoke(call);
+            }
+        }
+
+        private void Invoke(AST.ClassCall call)
         {
             if (templates.ContainsKey(call.Name.Text))
             {

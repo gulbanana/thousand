@@ -114,5 +114,33 @@ foo(1).bar(2) bar
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
             // XXX more asserts
         }
+
+        [Fact]
+        public void InstantiateNestedTemplate()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+object { foo(1) }
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
+        }
+
+        [Fact]
+        public void InstantiateDeeplyNestedTemplate()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+object { object { foo(1) } }
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
+        }
     }
 }

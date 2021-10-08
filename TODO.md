@@ -9,6 +9,7 @@ P1
 * ArcMidpoint is not correct
 * anchors and offsets probably don't combine correctly
 * object class contents, including placeholders
+* split the typed and untyped parsers
 
 P2
 --
