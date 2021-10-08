@@ -11,7 +11,7 @@ namespace Thousand.Tests
         [Fact]
         public void IntegrationTest()
         {
-            var document = new AST.TypedDocument(new AST.TypedDocumentDeclaration[]
+            var document = new AST.TypedDocument(new AST.TypedDocumentContent[]
             {
                 new AST.DiagramAttribute(new AST.RegionFillAttribute(Colour.Blue)),
 
@@ -26,14 +26,14 @@ namespace Thousand.Tests
                     new AST.RegionPackRowsAttribute(new EqualSize())
                 }),
 
-                new AST.TypedObject(new Parse.Identifier[]{new("big"), new("group")}, null, Array.Empty<AST.ObjectAttribute>(), new AST.TypedObjectDeclaration[] //uses larger font
+                new AST.TypedObject(new Parse.Identifier[]{new("big"), new("group")}, null, Array.Empty<AST.ObjectAttribute>(), new AST.TypedObjectContent[] //uses larger font
                 {
-                    new AST.TypedObject(new Parse.Identifier[]{new("object")}, new("foo"), Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectDeclaration>()),
-                    new AST.TypedObject(new Parse.Identifier[]{new("object")}, new("bar"), new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(40) }, Array.Empty<AST.TypedObjectDeclaration>()), // reduces font again
+                    new AST.TypedObject(new Parse.Identifier[]{new("object")}, new("foo"), Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectContent>()),
+                    new AST.TypedObject(new Parse.Identifier[]{new("object")}, new("bar"), new AST.ObjectAttribute[] { new AST.TextFontSizeAttribute(40) }, Array.Empty<AST.TypedObjectContent>()), // reduces font again
                 }),
 
-                new AST.TypedObject(new Parse.Identifier[]{new("big")}, new("baz"), Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectDeclaration>()), //uses larger font
-                new AST.TypedObject(new Parse.Identifier[]{new("object")}, new("qux"), Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectDeclaration>()), 
+                new AST.TypedObject(new Parse.Identifier[]{new("big")}, new("baz"), Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectContent>()), //uses larger font
+                new AST.TypedObject(new Parse.Identifier[]{new("object")}, new("qux"), Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectContent>()), 
 
                 // chain containing two edges, both from foo to bar
                 new AST.TypedLine(new Parse.Identifier[]{new("line")}, new AST.LineSegment[]{ new(new("foo"), ArrowKind.Forward), new(new("bar"), ArrowKind.Backward), new(new("foo"), null) }, new AST.SegmentAttribute[]{ })

@@ -1,4 +1,4 @@
-﻿namespace Thousand.Parse
+﻿namespace Thousand.Parse.Attributes
 {
     public enum LineAttributeKind
     {

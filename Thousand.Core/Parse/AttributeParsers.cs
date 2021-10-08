@@ -3,6 +3,7 @@ using Superpower.Model;
 using Superpower.Parsers;
 using System.Linq;
 using Thousand.Model;
+using Thousand.Parse.Attributes;
 
 namespace Thousand.Parse
 {

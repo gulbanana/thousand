@@ -225,7 +225,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_InContext()
         {
             var tokens = tokenizer.Tokenize($"object [stroke=dashed black]");
-            var result = TokenParsers.TypedObject(tokens);
+            var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Attributes);

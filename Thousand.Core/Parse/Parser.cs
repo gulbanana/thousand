@@ -18,9 +18,9 @@ namespace Thousand.Parse
 
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
-        private Dictionary<string, AST.UntypedClass> templates;
-        private Dictionary<string, List<Token<TokenKind>[]>> instantiations;
-        private List<Splice> splices;
+        private readonly Dictionary<string, AST.UntypedClass> templates;
+        private readonly Dictionary<string, List<Token<TokenKind>[]>> instantiations;
+        private readonly List<Splice> splices;
         public AST.TypedDocument? ParsedDocument;
 
         private Parser(List<GenerationError> warnings, List<GenerationError> errors)
@@ -43,7 +43,7 @@ namespace Thousand.Parse
                 return null;
             }
 
-            var untyped = TokenParsers.UntypedDocument(tokenized.Value);
+            var untyped = Untyped.UntypedDocument(tokenized.Value);
             if (!untyped.HasValue)
             {
                 es.Add(new(untyped.ErrorPosition, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
@@ -56,7 +56,7 @@ namespace Thousand.Parse
                 return null;
             }
 
-            var parsed = TokenParsers.TypedDocument(typed);
+            var parsed = Typed.Document(typed);
             if (!parsed.HasValue)
             {
                 es.Add(new(parsed.ErrorPosition, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()));
@@ -170,14 +170,21 @@ namespace Thousand.Parse
             {
                 var klass = templates[call.Name.Text];
 
-                if (call.Arguments.Count() < klass.Arguments.Variables.Where(v => v.Default == null).Count())
+                if (call.Arguments.Length < klass.Arguments.Variables.Where(v => v.Default == null).Count())
                 {
-                    es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Where(v => v.Default == null).Count()}-{klass.Arguments.Variables.Count()} arguments, found {call.Arguments.Count()}"));
+                    if (klass.Arguments.Variables.All(v => v.Default is null))
+                    {
+                        es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
+                    }
+                    else
+                    {
+                        es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Where(v => v.Default == null).Count()} to {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
+                    }
                     return;
                 }
 
                 var suppliedArguments = call.Arguments.Zip(klass.Arguments.Variables, Tuple.Create);
-                var defaultArguments = klass.Arguments.Variables.Skip(call.Arguments.Count()).Select(v => Tuple.Create(v.Default!, v));
+                var defaultArguments = klass.Arguments.Variables.Skip(call.Arguments.Length).Select(v => Tuple.Create(v.Default!, v));
 
                 var substitutions = suppliedArguments.Concat(defaultArguments)
                     .ToDictionary(t => t.Item2.Name.Location.ToStringValue(), t => t.Item1.Sequence().ToArray());

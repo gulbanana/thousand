@@ -4,6 +4,9 @@ using Thousand.Model;
 // Intermediate representation shared between Parse and Canonicalise stages
 namespace Thousand.AST
 {
+    /**********************************
+     * Shared AST - mostly attributes *
+     **********************************/
     public abstract record DocumentAttribute;
     public record DocumentScaleAttribute(decimal Value) : DocumentAttribute;
 
@@ -63,31 +66,32 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<ArrowAttribute, LineAttribute> { } 
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }
 
+    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments) : Parse.Templated; // XXX it would be nice if inheritance could call classes
+    public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
+
+    /*********************************************
+     * Untyped AST, containing unresolved macros *
+     *********************************************/
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
-
-    [GenerateOneOf] public partial class UntypedObjectDeclaration : OneOfBase<ObjectAttribute, UntypedObject, UntypedLine> { }
-    [GenerateOneOf] public partial class TypedObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
-    [GenerateOneOf] public partial class UntypedDocumentDeclaration : OneOfBase<DiagramAttribute, UntypedClass, TypedClass /* for better errors */, UntypedObject, UntypedLine> { }
-    [GenerateOneOf] public partial class TypedDocumentDeclaration : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
-
     public record Argument(Parse.Identifier Name, Parse.Macro? Default);
     public record ArgumentList(Argument[] Variables) : Parse.Templated;
-
     public record UntypedClass(Parse.Identifier Name, ArgumentList Arguments, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes) : Parse.Templated;
+    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedObject, UntypedLine> { }
+    public record UntypedObject(ClassCall[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectContent[] Children);
+    public record UntypedLine(ClassCall[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
+    [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<DiagramAttribute, UntypedClass, TypedClass /* for better errors */, UntypedObject, UntypedLine> { }
+    public record UntypedDocument(UntypedDocumentContent[] Declarations);
+
+    /*************
+     * Typed AST *
+     *************/
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
     public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes) : TypedClass(Name, BaseClasses);
     public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : TypedClass(Name, BaseClasses);
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses);
-
-    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments) : Parse.Templated; // XXX it would be nice if inheritance could call classes
-
-    public record UntypedObject(ClassCall[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectDeclaration[] Children);
-    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectDeclaration[] Children);
-
-    public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
-    public record UntypedLine(ClassCall[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
+    [GenerateOneOf] public partial class TypedObjectContent : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
+    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectContent[] Children);
     public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
-
-    public record UntypedDocument(UntypedDocumentDeclaration[] Declarations);
-    public record TypedDocument(TypedDocumentDeclaration[] Declarations);
+    [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
+    public record TypedDocument(TypedDocumentContent[] Declarations);
 }
