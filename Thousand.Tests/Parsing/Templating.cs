@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Thousand.Model;
 using Thousand.Parse;
@@ -15,7 +16,7 @@ namespace Thousand.Tests.Parsing
         public void RemoveUnreferencedTemplate()
         {
             var source = @"
-class foo() [min-width=$one, min-height=2, corner-radius=$three]
+class foo($w) [min-width=$w]
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -26,25 +27,23 @@ class foo() [min-width=$one, min-height=2, corner-radius=$three]
         public void InstantiateObjectTemplate()
         {
             var source = @"
-class foo() [min-width=$one, min-height=3, corner-radius=$two]
-foo bar
+class foo($x) [min-width=$x]
+foo(1) bar
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
-            Assert.Contains(new AST.NodeMinHeightAttribute(3), klass.Attributes);
-            Assert.Contains(new AST.NodeCornerRadiusAttribute(2), klass.Attributes);
         }
 
         [Fact]
         public void InstantiateLineTemplate()
         {
             var source = @"
-class foo() [stroke=$two, anchor=none]
+class foo($s) [stroke=$s, anchor=none]
 object a; object b
-foo a--b
+foo(2) a--b
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -54,12 +53,12 @@ foo a--b
         }
 
         [Fact]
-        public void InstantiateReferencedTemplateTwice()
+        public void InstantiateTemplateTwice()
         {
             var source = @"
-class foo() [min-width=$one, min-height=3, corner-radius=$two]
-foo bar
-foo baz
+class foo($w) [min-width=$w]
+foo(1) bar
+foo(2) baz
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -70,6 +69,50 @@ foo baz
             var objekts = ast!.Declarations.Where(d => d.IsT2).Select(d => (AST.TypedObject)d).ToList();
             Assert.Equal(2, objekts.Count);
             Assert.NotEqual(objekts[0].Classes[0].Text, objekts[1].Classes[0].Text);
+        }
+
+        [Theory]
+        [InlineData("Rect")]
+        [InlineData("Ellipse")]
+        [InlineData("Rhombus")]
+        public void InstantiateTemplateVaryingArguments(string shape)
+        {
+            var source = @$"
+class foo($shape) [shape=$shape]
+foo({shape}) bar
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeShapeAttribute(Enum.Parse<ShapeKind>(shape)), klass.Attributes);
+        }
+
+        [Fact]
+        public void InstantiateTemplateMultipleArguments()
+        {
+            var source = @"
+class foo($x, $y) [min-width=$x, min-height=$y]
+foo(1, 2) bar
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
+            Assert.Contains(new AST.NodeMinHeightAttribute(2), klass.Attributes);
+        }
+
+        [Fact]
+        public void InstantiateMultipleTemplates()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+class bar($x) [min-height=$x]
+foo(1).bar(2) bar
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            // XXX more asserts
         }
     }
 }

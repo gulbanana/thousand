@@ -14,6 +14,9 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Identifier> Any { get; } =
             Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Located());
 
+        public static TokenListParser<TokenKind, Identifier> Variable { get; } =
+            Token.EqualTo(TokenKind.Variable).Apply(Character.EqualTo('$').IgnoreThen(TextParsers.Identifier).Located());
+
         public static TokenListParser<TokenKind, T> Enum<T>() where T : struct, Enum
         {
             var names = System.Enum.GetNames<T>();

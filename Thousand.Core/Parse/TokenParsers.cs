@@ -25,9 +25,16 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Identifier[]> ClassList { get; } =
             Identifier.Any.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
+        public static TokenListParser<TokenKind, Macro[]> CallArgs { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            from arguments in Value.Macro(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from end in Token.EqualTo(TokenKind.RightParenthesis)
+            select arguments;
+
         public static TokenListParser<TokenKind, AST.ClassCall> ClassCall { get; } =
             from name in Identifier.Any
-            select new AST.ClassCall(name, Array.Empty<Macro>());
+            from arguments in CallArgs.OptionalOrDefault(Array.Empty<Macro>())
+            select new AST.ClassCall(name, arguments);
 
         public static TokenListParser<TokenKind, AST.ClassCall[]> ClassCallList { get; } =
             ClassCall.Templated().AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
@@ -100,23 +107,16 @@ namespace Thousand.Parse
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
 
-        public static TokenListParser<TokenKind, Macro> ArgumentList { get; } = input =>
-        {
-            var emptyList = Token.Sequence(TokenKind.LeftParenthesis, TokenKind.RightParenthesis)(input);
-            if (emptyList.HasValue)
-            {
-                return TokenListParserResult.Value(new Macro(input, emptyList.Remainder), input, emptyList.Remainder);
-            }
-            else
-            {
-                return TokenListParserResult.CastEmpty<TokenKind, Token<TokenKind>[], Macro>(emptyList);
-            }
-        };
+        public static TokenListParser<TokenKind, AST.ArgumentList> ClassArgs { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            from arguments in Identifier.Variable.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from end in Token.EqualTo(TokenKind.RightParenthesis)
+            select new AST.ArgumentList(arguments);
 
         public static TokenListParser<TokenKind, AST.UntypedClass> UntypedClass { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier.Any
-            from arguments in ArgumentList
+            from arguments in ClassArgs.Templated()
             from bases in BaseClasses
             from attrs in AttributeList(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.UntypedClass(name, arguments, bases, attrs);
@@ -277,7 +277,7 @@ namespace Thousand.Parse
                 }
                 else // could still be an object or a line
                 {
-                    var classList = ClassList(input);
+                    var classList = ClassCallList(input);
                     if (classList.HasValue)
                     {
                         var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line

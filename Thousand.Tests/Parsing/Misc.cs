@@ -134,6 +134,17 @@ bar""");
         }
 
         [Fact]
+        public void Line_Untyped()
+        {
+            var tokens = tokenizer.Tokenize(@"line(x) foo--bar");
+            var result = TokenParsers.UntypedLine(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("line", result.Value.Classes[0].Name.Text);
+            Assert.Single(result.Value.Classes[0].Arguments);
+        }
+
+        [Fact]
         public void Line_Typed()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar""");

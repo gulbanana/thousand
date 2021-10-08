@@ -128,6 +128,12 @@ namespace Thousand.Parse
             {
                 var klass = templates[call.Name.Text];
 
+                if (klass.Arguments.Variables.Count() != call.Arguments.Count())
+                {
+                    es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Count()} arguments, found {call.Arguments.Count()}"));
+                }
+                var substitutions = klass.Arguments.Variables.Zip(call.Arguments, Tuple.Create).ToDictionary(t => t.Item1.Location.ToStringValue(), t => t.Item2.Sequence().ToArray());
+
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
@@ -136,11 +142,7 @@ namespace Thousand.Parse
                 };
                 splices.Add(new(call.Range(), uniqueName));
 
-                var instantiation = Instantiate(klass, uniqueName, new Dictionary<string, Token[]>
-                {
-                    { "$one", new[] { new Token(TokenKind.Number, new TextSpan("1")) } },
-                    { "$two", new[] { new Token(TokenKind.Number, new TextSpan("2")) } }
-                });
+                var instantiation = Instantiate(klass, uniqueName, substitutions);
                 instantiations[call.Name.Text].Add(instantiation);
             }
         }
