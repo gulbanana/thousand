@@ -8,7 +8,7 @@ namespace Thousand
 {
     public class Evaluator
     {
-        public static bool TryEvaluate(IEnumerable<AST.Document> documents, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out IR.Root? rules)
+        public static bool TryEvaluate(IEnumerable<AST.TypedDocument> documents, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out IR.Root? rules)
         {
             try
             {
@@ -59,7 +59,7 @@ namespace Thousand
             Config = new IR.Config(Colour.White, LayoutKind.Grid, FlowKind.Row, 5, new(0), new(new EqualSize()), new(AlignmentKind.Center));
         }
 
-        private void AddDocument(AST.Document diagram)
+        private void AddDocument(AST.TypedDocument diagram)
         {
             foreach (var attr in diagram.Declarations.Where(d => d.IsT0).Select(d => d.AsT0))
             {

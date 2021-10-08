@@ -60,20 +60,25 @@ namespace Thousand.AST
     public record ArrowOffsetYAttribute(int Start, int End) : ArrowAttribute;
 
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
+    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<ArrowAttribute, LineAttribute> { } 
+    [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }
+
+    public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
+
     [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
+    [GenerateOneOf] public partial class UntypedDocumentDeclaration : OneOfBase<DiagramAttribute, UntypedClass, TypedObject, TypedLine> { }
+    [GenerateOneOf] public partial class TypedDocumentDeclaration : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
 
-    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<ArrowAttribute, LineAttribute> { }
-    
-    [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }    
-    [GenerateOneOf] public partial class DocumentDeclaration : OneOfBase<DiagramAttribute, Class, TypedObject, TypedLine> { }
-
-    public abstract record Class(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
-    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes) : Class(Name, BaseClasses);
-    public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : Class(Name, BaseClasses);
-    public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : Class(Name, BaseClasses);
+    public record UntypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes);
+    public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
+    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes) : TypedClass(Name, BaseClasses);
+    public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : TypedClass(Name, BaseClasses);
+    public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses);
 
     public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
     public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
     public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
-    public record Document(DocumentDeclaration[] Declarations);
+
+    public record UntypedDocument(UntypedDocumentDeclaration[] Declarations);
+    public record TypedDocument(TypedDocumentDeclaration[] Declarations);
 }

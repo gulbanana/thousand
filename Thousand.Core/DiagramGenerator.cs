@@ -17,7 +17,7 @@ namespace Thousand
             return reader.ReadToEnd();
         }
 
-        private OneOf<GenerationResult<AST.Document>, GenerationError[]> Parse(string sourceFile)
+        private OneOf<GenerationResult<AST.TypedDocument>, GenerationError[]> Parse(string sourceFile)
         {
             var warnings = new List<GenerationError>();
             var errors = new List<GenerationError>();
@@ -28,7 +28,7 @@ namespace Thousand
             }
             else
             {
-                return new GenerationResult<AST.Document>(document, warnings.ToArray());
+                return new GenerationResult<AST.TypedDocument>(document, warnings.ToArray());
             }
         }
 
@@ -41,7 +41,7 @@ namespace Thousand
             if (stdlib) sources.Add(ReadStdlib());
             sources.Add(source);
 
-            var documents = new List<AST.Document>();
+            var documents = new List<AST.TypedDocument>();
             foreach (var s in sources)
             {
                 var result = Parse(s);

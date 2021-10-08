@@ -11,7 +11,7 @@ namespace Thousand.Tests
         [Fact]
         public void IntegrationTest()
         {
-            var document = new AST.Document(new AST.DocumentDeclaration[]
+            var document = new AST.TypedDocument(new AST.TypedDocumentDeclaration[]
             {
                 new AST.DiagramAttribute(new AST.RegionFillAttribute(Colour.Blue)),
 

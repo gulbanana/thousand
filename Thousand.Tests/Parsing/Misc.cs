@@ -195,7 +195,7 @@ bar""");
         public void Document_SingleNode()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""");
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Declarations);
@@ -209,7 +209,7 @@ bar""");
 object ""bar""
 object ""baz""");
 
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar", "baz");
@@ -222,7 +222,7 @@ object ""baz""");
 
 object ""bar""");
 
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
@@ -233,7 +233,7 @@ object ""bar""");
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""; object ""bar""");
 
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
@@ -245,7 +245,7 @@ object ""bar""");
             var tokens = tokenizer.Tokenize(@"object foo
 object bar
 line foo -> bar");
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Collection(result.Value.Declarations,
@@ -259,7 +259,7 @@ line foo -> bar");
         public void Declaration_Attribute()
         {
             var tokens = tokenizer.Tokenize(@"fill=black");
-            var result = TokenParsers.DocumentDeclaration(tokens);
+            var result = TokenParsers.TypedDocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT0);
@@ -269,7 +269,7 @@ line foo -> bar");
         public void Declaration_Class()
         {
             var tokens = tokenizer.Tokenize(@"class foo [stroke=none]");
-            var result = TokenParsers.DocumentDeclaration(tokens);
+            var result = TokenParsers.TypedDocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT1);
@@ -279,7 +279,7 @@ line foo -> bar");
         public void Declaration_Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo [shape=square]");
-            var result = TokenParsers.DocumentDeclaration(tokens);
+            var result = TokenParsers.TypedDocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT2);
@@ -289,7 +289,7 @@ line foo -> bar");
         public void Declaration_AnonymousObject()
         {
             var tokens = tokenizer.Tokenize(@"object {}");
-            var result = TokenParsers.DocumentDeclaration(tokens);
+            var result = TokenParsers.TypedDocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT2);
@@ -299,7 +299,7 @@ line foo -> bar");
         public void Declaration_WhollyAnonymousObject()
         {
             var tokens = tokenizer.Tokenize(@"object");
-            var result = TokenParsers.DocumentDeclaration(tokens);
+            var result = TokenParsers.TypedDocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT2);
@@ -309,7 +309,7 @@ line foo -> bar");
         public void Declaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [stroke=none]");
-            var result = TokenParsers.DocumentDeclaration(tokens);
+            var result = TokenParsers.TypedDocumentDeclaration(tokens);
 
             Assert.True(result.HasValue);
             Assert.True(result.Value.IsT3);
@@ -322,7 +322,7 @@ line foo -> bar");
 class foo [stroke=none]
 object foo [shape=square]
 line foo->bar [offset-x=1]");
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue);
             Assert.Equal(4, result.Value.Declarations.Length);
@@ -339,7 +339,7 @@ line foo->bar [offset-x=1]");
 
 
 class foo [stroke=none]");
-            var result = TokenParsers.Document(tokens);
+            var result = TokenParsers.TypedDocument(tokens);
 
             Assert.True(result.HasValue);
             Assert.Equal(2, result.Value.Declarations.Length);
