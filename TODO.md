@@ -8,8 +8,8 @@ P1
 * either text-anchor and text-offset or anchor and offset for objects, taking them out of the normal layout (or both)
 * ArcMidpoint is not correct
 * anchors and offsets probably don't combine correctly
-* object class contents, including placeholders
-* split the typed and untyped parsers
+* object class contents, with placeholders (need skip-level evaluation here)
+* class contents templating - probably sub-declaration only 
 
 P2
 --
@@ -29,7 +29,7 @@ P2
 * DISABLE padding for shape=none? stdlib is getting unwieldy
 * we have some throws that could be converted to positioned errors
 * docs - generated for attrs? or just handwrite it all?
-* check out line caps
+* consider line caps
 
 P3
 --
