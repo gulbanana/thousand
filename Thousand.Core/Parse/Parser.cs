@@ -10,19 +10,23 @@ namespace Thousand.Parse
 {
     public class Parser
     {
-        private readonly List<GenerationError> ws;
-        private readonly List<GenerationError> es;
-
         public static bool TryParse(string text, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out AST.TypedDocument? document)
         {
             document = new Parser(warnings, errors).Parse(text);
             return !errors.Any();
         }
 
+        private readonly List<GenerationError> ws;
+        private readonly List<GenerationError> es;
+        private Dictionary<string, AST.UntypedClass> templates;
+        private Dictionary<string, List<Token<TokenKind>[]>> instantiations;
+
         private Parser(List<GenerationError> warnings, List<GenerationError> errors)
         {
             ws = warnings;
             es = errors;
+            templates = new();
+            instantiations = new();
         }
 
         private AST.TypedDocument? Parse(string text)
@@ -74,45 +78,25 @@ namespace Thousand.Parse
                 }
             }
 
-            var templates = new Dictionary<string, AST.UntypedClass>();
-            var instantiations = new Dictionary<string, List<Token[]>>();
             foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
                 templates.Add(c.Name.Text, c);
                 instantiations.Add(c.Name.Text, new List<Token[]>());
             }
 
-            foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
+            foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedObject)d))
             {
-                foreach (var name in o.Classes)
+                foreach (var call in o.Classes)
                 {
-                    if (templates.ContainsKey(name.Text))
-                    {
-                        var klass = templates[name.Text];
-                        var instantiation = Instantiate(klass, new Dictionary<string, Token[]>
-                        {
-                            { "$one", new[] { new Token(TokenKind.Number, new TextSpan("1")) } },
-                            { "$two", new[] { new Token(TokenKind.Number, new TextSpan("2")) } }
-                        });
-                        instantiations[name.Text].Add(instantiation);
-                    }
+                    Invoke(splices, call);
                 }
             }
 
-            foreach (var o in untypedAST.Declarations.Where(d => d.IsT4).Select(d => d.AsT4))
+            foreach (var o in untypedAST.Declarations.Where(d => d.IsT4).Select(d => (AST.UntypedLine)d))
             {
-                foreach (var name in o.Classes)
+                foreach (var call in o.Classes)
                 {
-                    if (templates.ContainsKey(name.Text))
-                    {
-                        var klass = templates[name.Text];
-                        var instantiation = Instantiate(klass, new Dictionary<string, Token[]>
-                        {
-                            { "$one", new[] { new Token(TokenKind.Number, new TextSpan("1")) } },
-                            { "$two", new[] { new Token(TokenKind.Number, new TextSpan("2")) } }
-                        });
-                        instantiations[name.Text].Add(instantiation);
-                    }
+                    Invoke(splices, call);
                 }
             }
 
@@ -127,7 +111,7 @@ namespace Thousand.Parse
                     replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
                 }
 
-                splices.Add(new(c.Location.Position..c.Remainder.Position, replacements.ToArray()));
+                splices.Add(new(c.Range(), replacements.ToArray()));
             }
 
             foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
@@ -138,12 +122,38 @@ namespace Thousand.Parse
             return template;
         }
 
-        private Token[] Instantiate(AST.UntypedClass klass, Dictionary<string, Token[]> substitutions)
+        private void Invoke(List<Splice> splices, AST.ClassCall call)
         {
-            var splices = new List<Splice>();
+            if (templates.ContainsKey(call.Name.Text))
+            {
+                var klass = templates[call.Name.Text];
+
+                var uniqueName = new[] {
+                    new Token(
+                        TokenKind.Identifier,
+                        new TextSpan($"{call.Name.Text}-{instantiations[call.Name.Text].Count + 1}")
+                    )
+                };
+                splices.Add(new(call.Range(), uniqueName));
+
+                var instantiation = Instantiate(klass, uniqueName, new Dictionary<string, Token[]>
+                {
+                    { "$one", new[] { new Token(TokenKind.Number, new TextSpan("1")) } },
+                    { "$two", new[] { new Token(TokenKind.Number, new TextSpan("2")) } }
+                });
+                instantiations[call.Name.Text].Add(instantiation);
+            }
+        }
+
+        private Token[] Instantiate(AST.UntypedClass klass, Token[] name, Dictionary<string, Token[]> substitutions)
+        {
+            var relativeSplices = new List<Splice>();
+
+            // replace name
+            relativeSplices.Add(new(1..2, name));
 
             // remove argument list
-            splices.Add(new(klass.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
+            relativeSplices.Add(new(klass.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
 
             // substitute variables into attribute list
             foreach (var a in klass.Attributes)
@@ -171,11 +181,11 @@ namespace Thousand.Parse
                     }
                 }
 
-                splices.Add(new(a.Value.Range(klass.Location.Position), replacements.ToArray()));
+                relativeSplices.Add(new(a.Value.Range(klass.Location.Position), replacements.ToArray()));
             }
 
             var template = new TokenList(klass.Location.Take(klass.Remainder.Position - klass.Location.Position).ToArray());
-            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
+            foreach (var splice in relativeSplices.OrderByDescending(s => s.Location.Start.Value))
             {
                 template = splice.Apply(template);
             }

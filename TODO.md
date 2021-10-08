@@ -3,11 +3,12 @@ TO DO
 
 P1
 --
-* implement composition for pack 
+* implement composition for pack
 * implement composition for justify/align
 * either text-anchor and text-offset or anchor and offset for objects, taking them out of the normal layout (or both)
 * ArcMidpoint is not correct
 * anchors and offsets probably don't combine correctly
+* object class contents, including placeholders
 
 P2
 --
@@ -26,7 +27,6 @@ P2
 * enable fill for shape=none? what does it even mean then?
 * DISABLE padding for shape=none? stdlib is getting unwieldy
 * we have some throws that could be converted to positioned errors
-* object templates, using the macro system and probably a separate contents-placeholder concept
 * docs - generated for attrs? or just handwrite it all?
 * check out line caps
 

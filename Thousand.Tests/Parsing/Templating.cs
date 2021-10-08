@@ -53,7 +53,7 @@ foo a--b
             Assert.Contains(new AST.LineStrokeAttribute(null, null, new PositiveWidth(2)), klass.Attributes);
         }
 
-        [Fact(Skip = "names not yet disambiguated")]
+        [Fact]
         public void InstantiateReferencedTemplateTwice()
         {
             var source = @"
@@ -66,6 +66,10 @@ foo baz
             var klasses = ast!.Declarations.Where(d => d.IsT1).Select(d => (AST.ObjectClass)d).ToList();
             Assert.Equal(2, klasses.Count);
             Assert.NotEqual(klasses[0].Name.Text, klasses[1].Name.Text);
+
+            var objekts = ast!.Declarations.Where(d => d.IsT2).Select(d => (AST.TypedObject)d).ToList();
+            Assert.Equal(2, objekts.Count);
+            Assert.NotEqual(objekts[0].Classes[0].Text, objekts[1].Classes[0].Text);
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Thousand.Tests.Parsing
         public void Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
@@ -60,7 +60,7 @@ namespace Thousand.Tests.Parsing
         public void Object_WhiteSpace()
         {
             var tokens = tokenizer.Tokenize(@"   object     foo    ");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
@@ -72,7 +72,7 @@ namespace Thousand.Tests.Parsing
         {
             var tokens = tokenizer.Tokenize(@"object ""foo
 bar""");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
@@ -83,7 +83,7 @@ bar""");
         public void Object_Attributed()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo"" [label=""bar""]");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name?.Text);
@@ -94,7 +94,7 @@ bar""");
         public void Object_CustomClass()
         {
             var tokens = tokenizer.Tokenize(@"foo bar");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo");
@@ -105,7 +105,7 @@ bar""");
         public void Object_CustomClasses()
         {
             var tokens = tokenizer.Tokenize(@"foo.bar baz");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo", "bar");
@@ -116,7 +116,7 @@ bar""");
         public void Object_Anonymous()
         {
             var tokens = tokenizer.Tokenize(@"object");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
             Assert.True(result.HasValue, result.ToString());
@@ -137,7 +137,7 @@ bar""");
         public void Line_Typed()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar""");
-            var result = TokenParsers.Line(tokens);
+            var result = TokenParsers.TypedLine(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("line", result.Value.Classes[0].Text);
@@ -147,7 +147,7 @@ bar""");
         public void Line_Typed_WithAttributes()
         {
             var tokens = tokenizer.Tokenize(@"line ""foo"" -> ""bar"" [stroke-colour=#000000]");
-            var result = TokenParsers.Line(tokens);
+            var result = TokenParsers.TypedLine(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeColourAttribute(new Colour(0, 0, 0)));
@@ -185,7 +185,7 @@ bar""");
     object bar 
     line foo <- bar
 }");
-            var result = TokenParsers.Object(tokens);
+            var result = TokenParsers.TypedObject(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Children.Length);

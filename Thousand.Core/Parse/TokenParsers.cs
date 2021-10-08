@@ -25,6 +25,13 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Identifier[]> ClassList { get; } =
             Identifier.Any.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
+        public static TokenListParser<TokenKind, AST.ClassCall> ClassCall { get; } =
+            from name in Identifier.Any
+            select new AST.ClassCall(name, Array.Empty<Macro>());
+
+        public static TokenListParser<TokenKind, AST.ClassCall[]> ClassCallList { get; } =
+            ClassCall.Templated().AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+
         public static TokenListParser<TokenKind, Identifier[]> BaseClasses { get; } =
             Token.EqualTo(TokenKind.Colon)
                  .IgnoreThen(ClassList)
@@ -42,7 +49,14 @@ namespace Thousand.Parse
                 .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.ObjectAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
+        public static TokenListParser<TokenKind, AST.UntypedObject> UntypedObject { get; } =
+            from classes in ClassCallList
+            from name in Target.AsNullable().OptionalOrDefault()
+            from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from children in Superpower.Parse.Ref(() => Scope!).OptionalOrDefault(Array.Empty<AST.ObjectDeclaration>())
+            select new AST.UntypedObject(classes, name, attrs, children);
+
+        public static TokenListParser<TokenKind, AST.TypedObject> TypedObject { get; } =
             from classes in ClassList
             from name in Target.AsNullable().OptionalOrDefault()
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
@@ -69,7 +83,13 @@ namespace Thousand.Parse
             AttributeParsers.ArrowAttribute.Select(x => (AST.SegmentAttribute)x)
                 .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.SegmentAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
+        public static TokenListParser<TokenKind, AST.UntypedLine> UntypedLine { get; } =
+            from calls in ClassCallList
+            from chain in Edges
+            from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
+            select new AST.UntypedLine(calls, chain.ToArray(), attrs);
+
+        public static TokenListParser<TokenKind, AST.TypedLine> TypedLine { get; } =
             from classes in ClassList
             from chain in Edges
             from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
@@ -180,7 +200,7 @@ namespace Thousand.Parse
                 
                 if (!second.HasValue) // this is a trivial object!
                 {
-                    return Object.Select(x => (AST.ObjectDeclaration)x)(input);
+                    return TypedObject.Select(x => (AST.ObjectDeclaration)x)(input);
                 }
                 else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
@@ -194,17 +214,17 @@ namespace Thousand.Parse
                         var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
                         if (!identifier.HasValue) // a slightly less trivial object 
                         {
-                            return Object.Select(x => (AST.ObjectDeclaration)x)(input);
+                            return TypedObject.Select(x => (AST.ObjectDeclaration)x)(input);
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
-                            return Line.Select(x => (AST.ObjectDeclaration)x)(input);
+                            return TypedLine.Select(x => (AST.ObjectDeclaration)x)(input);
                         }
                         else
                         {
-                            return Object.Select(x => (AST.ObjectDeclaration)x)(input);
+                            return TypedObject.Select(x => (AST.ObjectDeclaration)x)(input);
                         }
                     }
                     else
@@ -249,7 +269,7 @@ namespace Thousand.Parse
 
                 if (!second.HasValue) // this is a trivial object!
                 {
-                    return Object.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                    return UntypedObject.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
                 }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
@@ -263,17 +283,17 @@ namespace Thousand.Parse
                         var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
                         if (!identifier.HasValue) // a slightly less trivial object 
                         {
-                            return Object.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                            return UntypedObject.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
-                            return Line.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                            return UntypedLine.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
                         }
                         else
                         {
-                            return Object.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                            return UntypedObject.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
                         }
                     }
                     else
@@ -303,7 +323,7 @@ namespace Thousand.Parse
 
                 if (!second.HasValue) // this is a trivial object!
                 {
-                    return Object.Select(x => (AST.TypedDocumentDeclaration)x)(input);
+                    return TypedObject.Select(x => (AST.TypedDocumentDeclaration)x)(input);
                 }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
@@ -317,17 +337,17 @@ namespace Thousand.Parse
                         var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
                         if (!identifier.HasValue) // a slightly less trivial object 
                         {
-                            return Object.Select(x => (AST.TypedDocumentDeclaration)x)(input);
+                            return TypedObject.Select(x => (AST.TypedDocumentDeclaration)x)(input);
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
-                            return Line.Select(x => (AST.TypedDocumentDeclaration)x)(input);
+                            return TypedLine.Select(x => (AST.TypedDocumentDeclaration)x)(input);
                         }
                         else
                         {
-                            return Object.Select(x => (AST.TypedDocumentDeclaration)x)(input);
+                            return TypedObject.Select(x => (AST.TypedDocumentDeclaration)x)(input);
                         }
                     }
                     else

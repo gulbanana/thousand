@@ -66,17 +66,22 @@ namespace Thousand.AST
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
 
     [GenerateOneOf] public partial class ObjectDeclaration : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
-    [GenerateOneOf] public partial class UntypedDocumentDeclaration : OneOfBase<DiagramAttribute, UntypedClass, TypedClass, TypedObject, TypedLine> { }
+    [GenerateOneOf] public partial class UntypedDocumentDeclaration : OneOfBase<DiagramAttribute, UntypedClass, TypedClass /* for better errors */, UntypedObject, UntypedLine> { }
     [GenerateOneOf] public partial class TypedDocumentDeclaration : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
 
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro Arguments, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes) : Parse.Template;
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro Arguments, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes) : Parse.Templated;
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
     public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes) : TypedClass(Name, BaseClasses);
     public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : TypedClass(Name, BaseClasses);
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses);
 
+    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments) : Parse.Templated; // XXX it would be nice if inheritance could call classes
+
+    public record UntypedObject(ClassCall[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
     public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, ObjectDeclaration[] Children);
+
     public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
+    public record UntypedLine(ClassCall[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
     public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
 
     public record UntypedDocument(UntypedDocumentDeclaration[] Declarations);
