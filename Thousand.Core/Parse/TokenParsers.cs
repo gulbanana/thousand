@@ -80,12 +80,26 @@ namespace Thousand.Parse
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
 
+        public static TokenListParser<TokenKind, Macro> ArgumentList { get; } = input =>
+        {
+            var emptyList = Token.Sequence(TokenKind.LeftParenthesis, TokenKind.RightParenthesis)(input);
+            if (emptyList.HasValue)
+            {
+                return TokenListParserResult.Value(new Macro(input, emptyList.Remainder), input, emptyList.Remainder);
+            }
+            else
+            {
+                return TokenListParserResult.CastEmpty<TokenKind, Token<TokenKind>[], Macro>(emptyList);
+            }
+        };
+
         public static TokenListParser<TokenKind, AST.UntypedClass> UntypedClass { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier.Any
+            from arguments in ArgumentList
             from bases in BaseClasses
             from attrs in AttributeList(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
-            select new AST.UntypedClass(name, bases, attrs);
+            select new AST.UntypedClass(name, arguments, bases, attrs);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Identifier name, Identifier[] bases) =>
             AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.TypedClass);
@@ -219,7 +233,15 @@ namespace Thousand.Parse
             var first = input.ConsumeToken();
             if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
             {
-                return UntypedClass.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                var untypedClass = UntypedClass.Templated().Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                if (untypedClass.HasValue)
+                {
+                    return untypedClass;
+                }
+                else
+                {
+                    return TypedClass.Select(x => (AST.UntypedDocumentDeclaration)x)(input);
+                }
             }
             else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {

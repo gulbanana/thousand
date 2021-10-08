@@ -36,3 +36,5 @@ P3
 * image embedding 
 * editor integration - tokenizer, actual language service, live preview...
 * packaging - less trivial CLI (dotnet tool), nuget core, web components (monaco?)
+* import files
+* import templates (not the same as above! applies to the stdlib)

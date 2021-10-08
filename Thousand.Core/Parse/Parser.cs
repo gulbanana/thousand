@@ -3,89 +3,184 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Thousand.AST;
+using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
+using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
 namespace Thousand.Parse
 {
     public class Parser
     {
+        private readonly List<GenerationError> ws;
+        private readonly List<GenerationError> es;
+
         public static bool TryParse(string text, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out AST.TypedDocument? document)
+        {
+            document = new Parser(warnings, errors).Parse(text);
+            return !errors.Any();
+        }
+
+        private Parser(List<GenerationError> warnings, List<GenerationError> errors)
+        {
+            ws = warnings;
+            es = errors;
+        }
+
+        private AST.TypedDocument? Parse(string text)
         {
             var tokenizer = Tokenizer.Build();
 
             var template = tokenizer.TryTokenize(text);
             if (!template.HasValue)
             {
-                errors.Add(new(template.ErrorPosition, ErrorKind.Syntax, template.FormatErrorMessageFragment()));
-                document = null;
-                return false;
+                es.Add(new(template.ErrorPosition, ErrorKind.Syntax, template.FormatErrorMessageFragment()));
+                return null;
             }
 
             var untyped = TokenParsers.UntypedDocument(template.Value);
             if (!untyped.HasValue)
             {
-                errors.Add(new(untyped.ErrorPosition, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
-                document = null;
-                return false;
+                es.Add(new(untyped.ErrorPosition, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
+                return null;
             }
 
-            var instantiation = ApplyMacros(template.Value, untyped.Value);
+            var instantiation = Template(template.Value, untyped.Value);
+            if (es.Any())
+            {
+                return null;
+            }
 
             var typed = TokenParsers.TypedDocument(instantiation);
             if (!typed.HasValue)
             {
-                errors.Add(new(typed.ErrorPosition, ErrorKind.Syntax, typed.FormatErrorMessageFragment()));
-                document = null;
-                return false;
+                es.Add(new(typed.ErrorPosition, ErrorKind.Syntax, typed.FormatErrorMessageFragment()));
+                return null;
             }
 
-            document = typed.Value;
-            return true;
+            return typed.Value;
         }
 
-        private static TokenList<TokenKind> ApplyMacros(TokenList<TokenKind> template, UntypedDocument untypedAST)
+        private TokenList Template(TokenList template, AST.UntypedDocument untypedAST)
         {
-            var splices = new List<(Macro macro, Token<TokenKind>[] list)>();
+            var splices = new List<Splice>();
 
-            var classes = untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1);
-            foreach (var c in classes)
+            var allClasses = new HashSet<string>();
+            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 || d.IsT2))
             {
-                foreach (var a in c.Attributes)
+                var name = c.IsT1 ? c.AsT1.Name : c.AsT2.Name;
+                if (!allClasses.Add(name.Text))
                 {
-                    var replacementList = new List<Token<TokenKind>>();
-                    foreach (var token in a.Value.Sequence())
-                    {
-                        if (token.Kind == TokenKind.Variable)
-                        {
-                            var value = token.ToStringValue() == "$one" ? "1" : "3";
-                            replacementList.Add(new Token<TokenKind>(TokenKind.Number, new TextSpan(value)));
-                        }
-                        else
-                        {
-                            replacementList.Add(token);
-                        }
-                    }
-                    splices.Add((a.Value, replacementList.ToArray()));
+                    es.Add(new(name.Location.Position, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
+                    continue;
                 }
             }
 
-            foreach (var splice in splices.OrderByDescending(s => s.macro.Location.Position))
+            var templates = new Dictionary<string, AST.UntypedClass>();
+            var instantiations = new Dictionary<string, List<Token[]>>();
+            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
-                template = Splice(template, splice.list, splice.macro.Location.Position..splice.macro.Remainder.Position);
+                templates.Add(c.Name.Text, c);
+                instantiations.Add(c.Name.Text, new List<Token[]>());
+            }
+
+            foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
+            {
+                foreach (var name in o.Classes)
+                {
+                    if (templates.ContainsKey(name.Text))
+                    {
+                        var klass = templates[name.Text];
+                        var instantiation = Instantiate(klass, new Dictionary<string, Token[]>
+                        {
+                            { "$one", new[] { new Token(TokenKind.Number, new TextSpan("1")) } },
+                            { "$two", new[] { new Token(TokenKind.Number, new TextSpan("2")) } }
+                        });
+                        instantiations[name.Text].Add(instantiation);
+                    }
+                }
+            }
+
+            foreach (var o in untypedAST.Declarations.Where(d => d.IsT4).Select(d => d.AsT4))
+            {
+                foreach (var name in o.Classes)
+                {
+                    if (templates.ContainsKey(name.Text))
+                    {
+                        var klass = templates[name.Text];
+                        var instantiation = Instantiate(klass, new Dictionary<string, Token[]>
+                        {
+                            { "$one", new[] { new Token(TokenKind.Number, new TextSpan("1")) } },
+                            { "$two", new[] { new Token(TokenKind.Number, new TextSpan("2")) } }
+                        });
+                        instantiations[name.Text].Add(instantiation);
+                    }
+                }
+            }
+
+            // remove template declarations
+            foreach (var c in templates.Values)
+            {
+                var replacements = new List<Token>();
+
+                foreach (var instantiation in instantiations[c.Name.Text])
+                {
+                    replacements.AddRange(instantiation);
+                    replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
+                }
+
+                splices.Add(new(c.Location.Position..c.Remainder.Position, replacements.ToArray()));
+            }
+
+            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
+            {
+                template = splice.Apply(template);
             }
 
             return template;
         }
 
-        private static TokenList<TokenKind> Splice(TokenList<TokenKind> list, Token<TokenKind>[] replacements, Range range)
+        private Token[] Instantiate(AST.UntypedClass klass, Dictionary<string, Token[]> substitutions)
         {
-            var newList = new List<Token<TokenKind>>();
-            
-            newList.AddRange(list.Take(range.Start.Value));
-            newList.AddRange(replacements);
-            newList.AddRange(list.Skip(range.End.Value));
+            var splices = new List<Splice>();
 
-            return new(newList.ToArray());
+            // remove argument list
+            splices.Add(new(klass.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
+
+            // substitute variables into attribute list
+            foreach (var a in klass.Attributes)
+            {
+                var replacements = new List<Token>();
+                foreach (var token in a.Value.Sequence())
+                {
+                    if (token.Kind == TokenKind.Variable)
+                    {
+                        var key = token.ToStringValue();
+                        if (substitutions.ContainsKey(key))
+                        {
+                            var value = substitutions[key];
+                            replacements.AddRange(value);
+                        }
+                        else
+                        {
+                            es.Add(new(token.Position, ErrorKind.Reference, $"variable `{key}` is not defined"));
+                            replacements.Add(token);
+                        }
+                    }
+                    else
+                    {
+                        replacements.Add(token);
+                    }
+                }
+
+                splices.Add(new(a.Value.Range(klass.Location.Position), replacements.ToArray()));
+            }
+
+            var template = new TokenList(klass.Location.Take(klass.Remainder.Position - klass.Location.Position).ToArray());
+            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
+            {
+                template = splice.Apply(template);
+            }
+
+            return template.ToArray();
         }
     }
 }
