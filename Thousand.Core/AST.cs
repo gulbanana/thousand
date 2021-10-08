@@ -70,7 +70,8 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class UntypedDocumentDeclaration : OneOfBase<DiagramAttribute, UntypedClass, TypedClass /* for better errors */, UntypedObject, UntypedLine> { }
     [GenerateOneOf] public partial class TypedDocumentDeclaration : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
 
-    public record ArgumentList(Parse.Identifier[] Variables) : Parse.Templated;
+    public record Argument(Parse.Identifier Name, Parse.Macro? Default);
+    public record ArgumentList(Argument[] Variables) : Parse.Templated;
 
     public record UntypedClass(Parse.Identifier Name, ArgumentList Arguments, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes) : Parse.Templated;
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);

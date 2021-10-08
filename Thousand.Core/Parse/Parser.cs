@@ -36,34 +36,34 @@ namespace Thousand.Parse
         {
             var tokenizer = Tokenizer.Build();
 
-            var template = tokenizer.TryTokenize(text);
-            if (!template.HasValue)
+            var tokenized = tokenizer.TryTokenize(text);
+            if (!tokenized.HasValue)
             {
-                es.Add(new(template.ErrorPosition, ErrorKind.Syntax, template.FormatErrorMessageFragment()));
+                es.Add(new(tokenized.ErrorPosition, ErrorKind.Syntax, tokenized.FormatErrorMessageFragment()));
                 return null;
             }
 
-            var untyped = TokenParsers.UntypedDocument(template.Value);
+            var untyped = TokenParsers.UntypedDocument(tokenized.Value);
             if (!untyped.HasValue)
             {
                 es.Add(new(untyped.ErrorPosition, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
                 return null;
             }
 
-            var instantiation = Template(template.Value, untyped.Value);
+            var typed = Template(tokenized.Value, untyped.Value);
             if (es.Any())
             {
                 return null;
             }
 
-            var typed = TokenParsers.TypedDocument(instantiation);
-            if (!typed.HasValue)
+            var parsed = TokenParsers.TypedDocument(typed);
+            if (!parsed.HasValue)
             {
-                es.Add(new(typed.ErrorPosition, ErrorKind.Syntax, typed.FormatErrorMessageFragment()));
+                es.Add(new(parsed.ErrorPosition, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()));
                 return null;
             }
 
-            return typed.Value;
+            return parsed.Value;
         }
 
         private TokenList Template(TokenList template, AST.UntypedDocument untypedAST)
@@ -81,6 +81,27 @@ namespace Thousand.Parse
 
             foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
+                var names = new HashSet<string>();
+                var hasDefault = false;
+                foreach (var v in c.Arguments.Variables)
+                {
+                    if (!names.Add(v.Name.Text))
+                    {
+                        es.Add(new(c.Name.Location.Position, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
+                        continue;
+                    }
+
+                    if (v.Default != null)
+                    {
+                        hasDefault = true;
+                    }
+                    else if (hasDefault)
+                    {
+                        es.Add(new(c.Name.Location.Position, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
+                        continue;
+                    }
+                }
+
                 templates.Add(c.Name.Text, c);
                 instantiations.Add(c.Name.Text, new List<Token[]>());
             }
@@ -149,11 +170,17 @@ namespace Thousand.Parse
             {
                 var klass = templates[call.Name.Text];
 
-                if (klass.Arguments.Variables.Count() != call.Arguments.Count())
+                if (call.Arguments.Count() < klass.Arguments.Variables.Where(v => v.Default == null).Count())
                 {
-                    es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Count()} arguments, found {call.Arguments.Count()}"));
+                    es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Where(v => v.Default == null).Count()}-{klass.Arguments.Variables.Count()} arguments, found {call.Arguments.Count()}"));
+                    return;
                 }
-                var substitutions = klass.Arguments.Variables.Zip(call.Arguments, Tuple.Create).ToDictionary(t => t.Item1.Location.ToStringValue(), t => t.Item2.Sequence().ToArray());
+
+                var suppliedArguments = call.Arguments.Zip(klass.Arguments.Variables, Tuple.Create);
+                var defaultArguments = klass.Arguments.Variables.Skip(call.Arguments.Count()).Select(v => Tuple.Create(v.Default!, v));
+
+                var substitutions = suppliedArguments.Concat(defaultArguments)
+                    .ToDictionary(t => t.Item2.Name.Location.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
                 var uniqueName = new[] {
                     new Token(

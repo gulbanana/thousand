@@ -107,9 +107,14 @@ namespace Thousand.Parse
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
 
+        public static TokenListParser<TokenKind, AST.Argument> ClassArg { get; } =
+            from name in Identifier.Variable
+            from @default in Token.EqualTo(TokenKind.EqualsSign).IgnoreThen(Value.Macro(TokenKind.Comma, TokenKind.RightParenthesis)).AsNullable().OptionalOrDefault()
+            select new AST.Argument(name, @default);
+
         public static TokenListParser<TokenKind, AST.ArgumentList> ClassArgs { get; } =
             from begin in Token.EqualTo(TokenKind.LeftParenthesis)
-            from arguments in Identifier.Variable.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from arguments in ClassArg.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select new AST.ArgumentList(arguments);
 
@@ -188,7 +193,6 @@ namespace Thousand.Parse
             from bases in BaseClasses
             from klass in TypedClassBody(name, bases)
             select klass;
-
 
         public static TokenListParser<TokenKind, AST.UntypedObjectDeclaration> UntypedObjectDeclaration { get; } = input =>
         {
