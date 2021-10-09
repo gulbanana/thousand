@@ -68,7 +68,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, TrackSize> TrackSize { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(new PackedSize() as TrackSize)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal").Value(new EqualSize() as TrackSize))
-                .Or(WholeNumber.Select(x => new FixedSize(x) as TrackSize));
+                .Or(WholeNumber.Select(x => new MinimumSize(x) as TrackSize));
 
         public static TokenListParser<TokenKind, Width> Width { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(new HairlineWidth() as Width)

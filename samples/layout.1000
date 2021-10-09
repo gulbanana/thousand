@@ -1,5 +1,4 @@
-class red [fill=red]
-class blue [fill=blue]
+class red [fill=red]; class blue [fill=blue]; class yellow [fill=yellow]
 class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10, padding=0]
 class m3 [margin=3]
 
@@ -9,7 +8,7 @@ class body : area [row=2]
 class header : label [font=32]
 
 group {
-	header "packed grid"
+	header "pack=pack (default)"
 	body.red {
 		box; box(50); box
 		box(100,50) [row=2,col=3]
@@ -18,24 +17,21 @@ group {
 }
 
 group {
-	header "uniform margins"
-	body.red [min-height=250] {
-		box(44).m3
-		box(44).m3
-		box(44).m3
-		box(44).m3
-		box(44).m3
+	header "pack=equal"
+	body.red [pack=equal] {
+		box(50,50)
+		box(25,50) [row=3,col=2]
+		box(50,25) [row=4,col=5]
+		box(50,50) [row=5,col=4]
 	}
 }
 
 group {
-	header "uniform padding"
-	body.red [min-height=250,padding=5] {
-		box(48)
-		box(48)
-		box(48)
-		box(48)
-		box(48)
+	header "pack=fixed(125)"
+	body.red [pack=125] {
+		box
+		box
+		box [row=2,align=end]
 	}
 }
 
@@ -71,5 +67,37 @@ group {
 		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]
 		box(50,50) [row=2, label="s/e"]; box ; box(50,50) [label="s"]
 		box(50,50) [row=3, label="e"]; box(50,50) [label="e"]; box(50,50)
+	}
+}
+
+group [row=3] {
+	header "uniform margins"
+	body.yellow [min-height=250] {
+		box(44).m3
+		box(44).m3
+		box(44).m3
+		box(44).m3
+		box(44).m3
+	}
+}
+
+group {
+	header "uniform padding"
+	body.yellow [min-height=250,padding=5] {
+		box(48)
+		box(48)
+		box(48)
+		box(48)
+		box(48)
+	}
+}
+
+group [row=3] {
+	header "variable margins"
+	body.yellow [min-width=250] {
+		box(50,250) [margin=0 0 5 0]
+		box(50,230) [margin=0 10 10 10]
+		box(50,210) [margin=0 20 20 20]
+		box(50,190) [margin=0 30]
 	}
 }

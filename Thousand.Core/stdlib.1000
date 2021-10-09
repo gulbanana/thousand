@@ -4,7 +4,7 @@ class label [stroke=none, fill=none, padding=0]
 
 class line [offset-x=0] // attr only to enforce line-identity
 
-class group [shape=rect, stroke=none, label=none, padding=0, pack=equal]
+class group [shape=rect, stroke=none, label=none, padding=0]
 class grid : group [layout=grid]
 class row : group [layout=row]
 class column : group [layout=column]; class col : column

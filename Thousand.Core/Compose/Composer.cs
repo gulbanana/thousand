@@ -36,7 +36,6 @@ namespace Thousand.Compose
         private readonly IR.Root root;
         private readonly IReadOnlyDictionary<StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, GridState> gridState;
-        private readonly Dictionary<IR.Region, RowState> rowState;
         private readonly Dictionary<IR.Object, Layout.Shape> outputShapes;
         private readonly List<Layout.LabelBlock> outputLabels;
         private readonly List<Layout.Line> outputLines;
@@ -50,7 +49,6 @@ namespace Thousand.Compose
             this.textMeasures = textMeasures;
 
             gridState = new(ReferenceEqualityComparer.Instance);
-            rowState = new(ReferenceEqualityComparer.Instance);
 
             outputShapes = new(ReferenceEqualityComparer.Instance);
             outputLabels = new();
@@ -158,6 +156,8 @@ namespace Thousand.Compose
 
             var currentRow = 1;
             var currentColumn = 1;
+            var rowCount = 0;
+            var columnCount = 0;
 
             foreach (var child in region.Objects)
             {
@@ -207,8 +207,8 @@ namespace Thousand.Compose
                 state.Nodes[child] = new GridMeasurements(desiredSize, child.Margin, currentRow, currentColumn);
 
                 // grid-march: update size and move to the next cell
-                state.RowCount = Math.Max(currentRow, state.RowCount);
-                state.ColumnCount = Math.Max(currentColumn, state.ColumnCount);
+                rowCount = Math.Max(currentRow, rowCount);
+                columnCount = Math.Max(currentColumn, columnCount);
 
                 if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, Flow: FlowKind.Row })
                 {
@@ -220,31 +220,40 @@ namespace Thousand.Compose
                 }
             }
 
+            // calculate track sizes
+            var maxWidth = state.Nodes.Values.Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
+            for (var c = 0; c < columnCount; c++)
+            {
+                var intrinsicWidth = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
+                var trackWidth = region.Config.Size.Columns switch
+                {
+                    EqualSize => maxWidth,
+                    MinimumSize(var minWidth) => Math.Max(minWidth, intrinsicWidth),
+                    PackedSize or _ => intrinsicWidth
+                };
+                state.Columns.Add(trackWidth);
+            }
+
+            var maxHeight = state.Nodes.Values.Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
+            for (var r = 0; r < rowCount; r++)
+            {
+                var intrinsicHeight = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
+                var trackHeight = region.Config.Size.Rows switch
+                {
+                    EqualSize => maxHeight,
+                    MinimumSize(var minHeight) => Math.Max(minHeight, intrinsicHeight),
+                    PackedSize or _ => intrinsicHeight
+                };
+                state.Rows.Add(trackHeight);
+            }
+
+            // calculate own size
             var intrinsicPadding = intrinsicSize == Point.Zero ? new Border(0) : region.Config.Padding;
             var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding.X, intrinsicSize.Y + intrinsicPadding.Y);
+            var regionPadding = rowCount + columnCount == 0 ? new Border(0) : region.Config.Padding;
 
-            var regionPadding = state.RowCount + state.ColumnCount == 0 ? new Border(0) : region.Config.Padding;
-
-            var colWidths = new decimal[state.ColumnCount];
-            var colCenter = regionPadding.Left;
-            for (var c = 0; c < state.ColumnCount; c++)
-            {
-                var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
-                colCenter = colCenter + width + region.Config.Gutter.Columns;
-                colWidths[c] = width;
-            }
-
-            var rowHeights = new decimal[state.RowCount];
-            var rowCenter = regionPadding.Top;
-            for (var r = 0; r < state.RowCount; r++)
-            {
-                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
-                rowCenter = rowCenter + height + region.Config.Gutter.Rows;
-                rowHeights[r] = height;
-            }
-
-            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter.Columns + regionPadding.X;
-            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter.Rows + regionPadding.Y;
+            var contentWidth = state.Columns.Sum() + (columnCount - 1) * region.Config.Gutter.Columns + regionPadding.X;
+            var contentHeight = state.Rows.Sum() + (rowCount - 1) * region.Config.Gutter.Rows + regionPadding.Y;
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));
@@ -259,11 +268,11 @@ namespace Thousand.Compose
             var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
             var state = gridState[region];
 
-            var columns = new Track[state.ColumnCount];
+            var columns = new Track[state.Columns.Count];
             var colMarker = location.X + region.Config.Padding.Left;
-            for (var c = 0; c < state.ColumnCount; c++)
+            for (var c = 0; c < state.Columns.Count; c++)
             {
-                var width = state.Nodes.Values.Where(n => n.Column == c + 1).Select(n => n.DesiredSize.X + n.Margin.X).Append(0).Max();
+                var width = state.Columns[c];
                 
                 var start = colMarker;
                 var center = colMarker + width / 2;
@@ -273,11 +282,11 @@ namespace Thousand.Compose
                 columns[c] = new(start, center, end);
             }
 
-            var rows = new Track[state.RowCount];
+            var rows = new Track[state.Rows.Count];
             var rowMarker = location.Y + region.Config.Padding.Top;
-            for (var r = 0; r < state.RowCount; r++)
+            for (var r = 0; r < state.Rows.Count; r++)
             {
-                var height = state.Nodes.Values.Where(n => n.Row == r + 1).Select(n => n.DesiredSize.Y + n.Margin.Y).Append(0).Max();
+                var height = state.Rows[r];
                 
                 var start = rowMarker;
                 var center = rowMarker + height / 2;
