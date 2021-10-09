@@ -131,7 +131,7 @@ namespace Thousand
             var label = node.Name?.Text; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
 
-            var alignment = default(AlignmentKind?);
+            var alignment = new IR.Axes<AlignmentKind?>(null, null);
             var margin = 0;
             var row = new int?();
             var column = new int?();
@@ -173,10 +173,18 @@ namespace Thousand
                             shape = nsa.Kind;
                             break;
 
-                        case AST.NodeAlignAttribute naa:
-                            alignment = naa.Kind;
+                        case AST.NodeAlignColumnAttribute naca:
+                            alignment = alignment with { Columns = naca.Kind };
                             break;
 
+                        case AST.NodeAlignRowAttribute nara:
+                            alignment = alignment with { Rows = nara.Kind };
+                            break;
+
+                        case AST.NodeAlignAttribute naa:
+                            alignment = new(naa.Columns, naa.Rows);
+                            break;
+                            
                         case AST.NodeMarginAttribute nma:
                             margin = nma.Value;
                             break;

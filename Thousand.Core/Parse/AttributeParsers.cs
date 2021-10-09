@@ -219,10 +219,20 @@ namespace Thousand.Parse
             from value in Identifier.Enum<ShapeKind>().OrNone()
             select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignRowAttribute { get; } =
+            from key in Key(NodeAttributeKind.AlignVertical)
+            from value in Identifier.Enum<AlignmentKind>().OrNone()
+            select new AST.NodeAlignRowAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignColumnAttribute { get; } =
+            from key in Key(NodeAttributeKind.AlignHorizontal)
+            from value in Identifier.Enum<AlignmentKind>().OrNone()
+            select new AST.NodeAlignColumnAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignAttribute { get; } =
             from key in Key(NodeAttributeKind.Align)
-            from value in Identifier.Enum<AlignmentKind>().OrNone()
-            select new AST.NodeAlignAttribute(value) as AST.NodeAttribute;
+            from value in Identifier.Enum<AlignmentKind>().OrNone().Twice()
+            select new AST.NodeAlignAttribute(value.first, value.second) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMarginAttribute { get; } =
             from key in Key(NodeAttributeKind.Margin)
@@ -237,11 +247,13 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
             NodeLabelAttribute
                 .Or(NodeShapeAttribute)
+                .Or(NodeAlignColumnAttribute)
+                .Or(NodeAlignRowAttribute)
                 .Or(NodeAlignAttribute)
                 .Or(NodeMarginAttribute)
                 .Or(NodeCornerRadiusAttribute)
-                .Or(NodeRowAttribute)
                 .Or(NodeColumnAttribute)
+                .Or(NodeRowAttribute)                
                 .Or(NodeMinWidthAttribute)
                 .Or(NodeMinHeightAttribute);
         #endregion

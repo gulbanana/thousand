@@ -5,16 +5,18 @@
     {
         Label,
 
-        Row,
-        Col, Column = Col,
-        
+        Shape,
+        CornerRadius, Corner = CornerRadius,
+
+        Margin,
+        AlignVertical, 
+        AlignHorizontal,
+        Align,        
+
         MinWidth,
         MinHeight,
 
-        Align,
-        Margin,
-
-        Shape,
-        CornerRadius, Corner = CornerRadius,
+        Row,
+        Col, Column = Col,               
     }
 }

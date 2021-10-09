@@ -1,10 +1,10 @@
 class red [fill=red]
 class blue [fill=blue]
-class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10]
+class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10, padding=0]
 class m3 [margin=3]
 
 class area [padding=0, label=none, stroke=none]
-class group : area [margin=5]
+class group : area [margin=5,justify=center]
 class body : area [row=2]
 class header : label [font=32]
 
@@ -62,5 +62,14 @@ group {
 			box(50)
 		}
 		box "a=e" [align=end]
+	}
+}
+
+group {
+	header "axial alignment"
+	body.blue [justify-rows=start, justify-columns=end] {
+		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]
+		box(50,50) [row=2, label="s/e"]; box ; box(50,50) [label="s"]
+		box(50,50) [row=3, label="e"]; box(50,50) [label="e"]; box(50,50)
 	}
 }
