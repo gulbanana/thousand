@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Thousand.Model
 {
-    internal static class Shapes
+    public static class Shapes
     {
-        public static IReadOnlyDictionary<CompassKind, Connector> Anchors(ShapeKind shape, int corner, Rect bounds) => shape switch
+        public static IReadOnlyDictionary<CompassKind, Connector> Anchors(ShapeKind shape, int cornerRadius, Rect bounds) => shape switch
         {
             ShapeKind.Square or ShapeKind.Rect => new Dictionary<CompassKind, Connector>
             {
@@ -23,10 +21,10 @@ namespace Thousand.Model
             
             ShapeKind.Roundsquare or ShapeKind.Roundrect => new Dictionary<CompassKind, Connector>
             {
-                { CompassKind.NW, new(ArcMidpoint(new(bounds.Left, bounds.Top+corner), new(bounds.Left+corner, bounds.Top)), true) },
-                { CompassKind.NE, new(ArcMidpoint(new(bounds.Right-corner, bounds.Top), new(bounds.Right, bounds.Top+corner)), true) },
-                { CompassKind.SE, new(ArcMidpoint(new(bounds.Right, bounds.Bottom-corner), new(bounds.Right-corner, bounds.Bottom)), true) },
-                { CompassKind.SW, new(ArcMidpoint(new(bounds.Left+corner, bounds.Bottom), new(bounds.Left, bounds.Bottom-corner)), true) },
+                { CompassKind.NW, new(Point.ArcMidpoint(new(bounds.Left, bounds.Top+cornerRadius), new(bounds.Left+cornerRadius, bounds.Top)), true) },
+                { CompassKind.NE, new(Point.ArcMidpoint(new(bounds.Right-cornerRadius, bounds.Top), new(bounds.Right, bounds.Top+cornerRadius)), true) },
+                { CompassKind.SE, new(Point.ArcMidpoint(new(bounds.Right, bounds.Bottom-cornerRadius), new(bounds.Right-cornerRadius, bounds.Bottom)), true) },
+                { CompassKind.SW, new(Point.ArcMidpoint(new(bounds.Left+cornerRadius, bounds.Bottom), new(bounds.Left, bounds.Bottom-cornerRadius)), true) },
 
                 { CompassKind.N, new(bounds.Center.X, bounds.Top, false) },
                 { CompassKind.E, new(bounds.Right, bounds.Center.Y, false) },
@@ -57,8 +55,8 @@ namespace Thousand.Model
 
             ShapeKind.Trapezium => new Dictionary<CompassKind, Connector>
             {
-                { CompassKind.NW, new(bounds.Left + corner, bounds.Top, true) },
-                { CompassKind.NE, new(bounds.Right - corner, bounds.Top, true) },
+                { CompassKind.NW, new(bounds.Left + cornerRadius, bounds.Top, true) },
+                { CompassKind.NE, new(bounds.Right - cornerRadius, bounds.Top, true) },
                 { CompassKind.SE, new(bounds.Right, bounds.Bottom, true) },
                 { CompassKind.SW, new(bounds.Left, bounds.Bottom, true) },
 
@@ -101,65 +99,5 @@ namespace Thousand.Model
             new(box.Right-corner, box.Top),
             new(box.Right, box.Bottom)
         };
-
-        // assumes clockwise quarter-circles 
-        // y = +- sqrt(r^2 - (x-h)^2) + k
-        private static Point ArcMidpoint(Point start, Point end)
-        {
-            if (start == end) return start;
-
-            if (end.X > start.X && end.Y > start.Y)
-            {
-                var r = end.X - start.X;
-                var cx = start.X;
-                var cy = end.Y;
-
-                var x = new[] { start.X, end.X }.Average();
-                var radical = (r * r) - (x - cx) * (x - cx);
-                var y = cy - (decimal)Math.Sqrt((double)radical);
-
-                return new Point(x, y);
-            }
-            else if (end.X < start.X && end.Y > start.Y)
-            {
-                var r = start.X - end.X;
-                var cx = end.X;
-                var cy = start.Y;
-
-                var x = new[] { start.X, end.X }.Average();
-                var radical = (r * r) - (x - cx) * (x - cx);
-                var y = cy + (decimal)Math.Sqrt((double)radical);
-
-                return new Point(x, y);
-            }
-            else if (end.X > start.X && end.Y < start.Y)
-            {
-                var r = end.X - start.X;
-                var cx = start.X;
-                var cy = start.Y;
-
-                var x = new[] { start.X, end.X }.Average();
-                var radical = (r * r) - (x - cx) * (x - cx);
-                var y = cy - (decimal)Math.Sqrt((double)radical);
-
-                return new Point(x, y);
-            }
-            else if (end.X < start.X && end.Y < start.Y)
-            {
-                var r = start.X - end.X;
-                var cx = end.X;
-                var cy = end.Y;
-
-                var x = new[] { start.X, end.X }.Average();
-                var radical = (r * r) - (x - cx) * (x - cx);
-                var y = cy + (decimal)Math.Sqrt((double)radical);
-
-                return new Point(x, y);
-            }
-            else
-            {
-                return Point.Zero;
-            }
-        }
     }
 }

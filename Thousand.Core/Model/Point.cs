@@ -51,5 +51,57 @@ namespace Thousand.Model
 
             return closestPoint;
         }
+
+        // assumes clockwise quarter-circles 
+        public static Point ArcMidpoint(Point start, Point end)
+        {
+            if (start == end) return start;
+
+            if (end.X > start.X && end.Y > start.Y)
+            {
+                var r = end.X - start.X;
+                var cx = start.X;
+                var cy = end.Y;
+
+                return ArcMidpoint(start, end, new Point(cx, cy), r);
+            }
+            else if (end.X < start.X && end.Y > start.Y)
+            {
+                var r = start.X - end.X;
+                var cx = end.X;
+                var cy = start.Y;
+
+                return ArcMidpoint(start, end, new Point(cx, cy), r);
+            }
+            else if (end.X > start.X && end.Y < start.Y)
+            {
+                var r = end.X - start.X;
+                var cx = end.X;
+                var cy = start.Y;
+
+                return ArcMidpoint(end, start, new Point(cx, cy), r);
+            }
+            else if (end.X < start.X && end.Y < start.Y)
+            {
+                var r = start.X - end.X;
+                var cx = start.X;
+                var cy = end.Y;
+
+                return ArcMidpoint(end, start, new Point(cx, cy), r);
+            }
+            else
+            {
+                return Point.Zero;
+            }
+        }
+
+        public static Point ArcMidpoint(Point start, Point end, Point center, decimal radius)
+        {
+            var startVector = start - center;
+            var endVector = end - center;
+            var combinedVector = startVector + endVector;
+            var midpoint = combinedVector.Normalize(radius);
+            return midpoint + center;
+        }
     }
 }

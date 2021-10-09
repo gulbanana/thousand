@@ -5,12 +5,11 @@ P1
 --
 * implement composition for pack
 * either text-anchor and text-offset or anchor and offset for objects, taking them out of the normal layout (or both)
-* ArcMidpoint is not correct
-* anchors and offsets probably don't combine correctly
 * object class contents, with placeholders (need skip-level evaluation here)
 
 P2
 --
+* anchors and offsets probably don't combine correctly
 * row/col axial justification is weird when packed
 * class contents templating - probably sub-declaration only 
 * improve shorthand expectations
