@@ -5,6 +5,7 @@ P1
 --
 * implement composition for pack
 * implement composition for justify/align
+* it seems objects need x/y align
 * either text-anchor and text-offset or anchor and offset for objects, taking them out of the normal layout (or both)
 * ArcMidpoint is not correct
 * anchors and offsets probably don't combine correctly

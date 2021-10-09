@@ -252,37 +252,61 @@ namespace Thousand.Compose
             return contentSize;
         }
 
+        // lays out a region's contents at a given point - size is known to parents, so it's just a matter of dividing up the space
+        // paint back-to-front: shape, then intrinsic content, then children
         private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Point location)
         {
             var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
             var state = gridState[region];
 
-            var colCenters = new decimal[state.ColumnCount];
-            var colCenter = location.X + region.Config.Padding;
+            var columns = new Track[state.ColumnCount];
+            var colMarker = location.X + region.Config.Padding;
             for (var c = 0; c < state.ColumnCount; c++)
             {
-                var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
-                var center = colCenter + width / 2;
-                colCenter = colCenter + width + region.Config.Gutter.Columns;
-                colCenters[c] = center;
+                var width = state.Nodes.Values.Where(n => n.Column == c + 1).Select(n => n.DesiredSize.X + n.Margin * 2).Append(0).Max();
+                
+                var start = colMarker;
+                var center = colMarker + width / 2;
+                colMarker = colMarker + width + region.Config.Gutter.Columns;
+                var end = colMarker;
+
+                columns[c] = new(start, center, end);
             }
 
-            var rowCenters = new decimal[state.RowCount];
-            var rowCenter = location.Y + region.Config.Padding;
+            var rows = new Track[state.RowCount];
+            var rowMarker = location.Y + region.Config.Padding;
             for (var r = 0; r < state.RowCount; r++)
             {
-                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
-                var center = rowCenter + height / 2;
-                rowCenter = rowCenter + height + region.Config.Gutter.Rows;
-                rowCenters[r] = center;
+                var height = state.Nodes.Values.Where(n => n.Row == r + 1).Select(n => n.DesiredSize.Y + n.Margin * 2).Append(0).Max();
+                
+                var start = rowMarker;
+                var center = rowMarker + height / 2;
+                rowMarker = rowMarker + height + region.Config.Gutter.Rows;
+                var end = rowMarker;
+
+                rows[r] = new(start, center, end);
             }
 
             foreach (var obj in region.Objects)
             {
                 var node = state.Nodes[obj];
-                var center = new Point(colCenters[node.Column - 1], rowCenters[node.Row - 1]);
-                var bounds = new Rect(node.DesiredSize).CenteredAt(center);
 
+                var xOrigin = (obj.Alignment ?? region.Config.Alignment.Columns) switch
+                {
+                    AlignmentKind.Start => columns[node.Column - 1].Start + node.Margin,
+                    AlignmentKind.Center => columns[node.Column - 1].Center - (node.DesiredSize.X + node.Margin) / 2,
+                    AlignmentKind.End => columns[node.Column - 1].End - (node.DesiredSize.X + node.Margin),
+                };
+
+                var yOrigin = (obj.Alignment ?? region.Config.Alignment.Rows) switch
+                {
+                    AlignmentKind.Start => rows[node.Row - 1].Start + node.Margin,
+                    AlignmentKind.Center => rows[node.Row - 1].Center - (node.DesiredSize.Y + node.Margin) / 2,
+                    AlignmentKind.End => rows[node.Row - 1].End - (node.DesiredSize.Y + node.Margin),
+                };
+
+                var origin = new Point(xOrigin, yOrigin);
+                var bounds = new Rect(origin, node.DesiredSize);
                 boxes[obj] = bounds;
 
                 if (obj.Shape.HasValue)

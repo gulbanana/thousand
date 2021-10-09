@@ -75,7 +75,7 @@ namespace Thousand.Parse
                 if (!allClasses.Add(name.Text))
                 {
                     es.Add(new(name.Location.Position, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
-                    continue;
+                    return template;
                 }
             }
 
@@ -88,7 +88,7 @@ namespace Thousand.Parse
                     if (!names.Add(v.Name.Text))
                     {
                         es.Add(new(c.Name.Location.Position, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
-                        continue;
+                        return template;
                     }
 
                     if (v.Default != null)
@@ -98,7 +98,7 @@ namespace Thousand.Parse
                     else if (hasDefault)
                     {
                         es.Add(new(c.Name.Location.Position, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
-                        continue;
+                        return template;
                     }
                 }
 

@@ -1,46 +1,66 @@
-layout=grid; padding=0; space=50
-
 class red [fill=red]
 class blue [fill=blue]
-class box [stroke=none, fill=green, min-width=100, min-height=100, corner=10]
-class w50 [min-width=50]
-class h50 [min-height=50]
+class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10]
+class m3 [margin=3]
 
-class grid [padding=0, label=none, stroke=none]
-class body : grid [row=2]
+class area [padding=0, label=none, stroke=none]
+class group : area [margin=5]
+class body : area [row=2]
 class header : label [font=32]
 
-grid {
+group {
 	header "packed grid"
 	body.red {
-		box;	box.w50;	box
-							box.h50 [row=2,col=3]
-							box [row=3,col=3]
+		box; box(50); box
+		box(100,50) [row=2,col=3]
+		box [row=3,col=3]
 	}
 }
 
-// what we want is for the central column here to be at the top
-grid {
-	header "justify=start (WIP)"
-	body.blue {
-		box
-		grid.red {
-			box.w50
-			box.h50.w50 [row=2]
-			box.w50 [row=3]
-		}
-		box
-	}
-}
-
-// shows the need for finer-grained margins
-grid {
-	header "interior margins"
+group {
+	header "uniform margins"
 	body.red [min-height=250] {
-		box.w50
-		box.w50 [margin=2]
-		box.w50
-		box.w50
-		box.w50
+		box(44).m3
+		box(44).m3
+		box(44).m3
+		box(44).m3
+		box(44).m3
+	}
+}
+
+group {
+	header "uniform padding"
+	body.red [min-height=250,padding=5] {
+		box(48)
+		box(48)
+		box(48)
+		box(48)
+		box(48)
+	}
+}
+
+group [row=2] {
+	header "justify=center"
+	body.blue [justify=center] {
+		box [label="j"]
+		column.red {
+			box(50)
+			box(50,50) [label="j"]
+			box(50)
+		}
+		box [label="j"]
+	}
+}
+
+group {
+	header "align=center/end"
+	body.blue {
+		box "a=c" [align=center]
+		column.red {
+			box(50)
+			box(50,50)
+			box(50)
+		}
+		box "a=e" [align=end]
 	}
 }
