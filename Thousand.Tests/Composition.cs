@@ -221,10 +221,10 @@ namespace Thousand.Tests
         {
             var rules = new IR.Root(
                 new IR.Region(
-                    new IR.Object(string.Empty) { Region = new IR.Region(new IR.Config { Padding = 1 }) },
-                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = 0 }) },
-                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = 1 }) },
-                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = 10 }) }
+                    new IR.Object(string.Empty) { Region = new IR.Region(new IR.Config { Padding = new(1) }) },
+                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = new(0) }) },
+                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = new(1) }) },
+                    new IR.Object("caption") { Region = new IR.Region(new IR.Config { Padding = new(10) }) }
                 )
             );
 
@@ -243,29 +243,30 @@ namespace Thousand.Tests
         {
             var rules = new IR.Root(
                 new IR.Region(
+                    new IR.Config { Padding = new(0, 0, 0, 1) },
                     new IR.Object 
                     (
-                        new IR.Config { Padding = 1 }
+                        new IR.Config { Padding = new(1) }
                     ),
                     new IR.Object
                     (
-                        new IR.Config { Padding = 0 },
+                        new IR.Config { Padding = new(0, 0, 0, 1) },
                         new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
                     ),
                     new IR.Object
                     (
-                        new IR.Config { Padding = 0 },
+                        new IR.Config { Padding = new(0) },
                         new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 },
                         new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
                     ),
                     new IR.Object
                     (
-                        new IR.Config { Padding = 1 },
+                        new IR.Config { Padding = new(1) },
                         new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
                     ),
                     new IR.Object
                     (
-                        new IR.Config { Padding = 1 },
+                        new IR.Config { Padding = new(0, 1) },
                         new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 },
                         new IR.Object { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
                     )
@@ -275,12 +276,13 @@ namespace Thousand.Tests
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
             Assert.True(result, errors.Join());
 
+            Assert.Equal(new Point(62, 13), new Point(layout!.Width, layout.Height));
             AssertEx.Sequence(layout!.Shapes.Where(s => s.Kind != ShapeKind.Circle).Select(s => s.Bounds.Size), 
                 new Point(0, 0), 
-                new Point(10, 10), 
+                new Point(10, 11), 
                 new Point(20, 10), 
                 new Point(12, 12), 
-                new Point(22, 12)
+                new Point(20, 12)
             );
         }
     }

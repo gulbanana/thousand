@@ -56,7 +56,7 @@ namespace Thousand
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(Colour.White, LayoutKind.Grid, FlowKind.Row, 5, new(0), new(new EqualSize()), new(AlignmentKind.Center));
+            Config = new IR.Config(Colour.White, LayoutKind.Grid, FlowKind.Row, new(5), new(0), new(new EqualSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.TypedDocument diagram)
@@ -126,13 +126,13 @@ namespace Thousand
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
         {
-            var regionConfig = new IR.Config(null, LayoutKind.Grid, FlowKind.Row, 15, new(0), new(new PackedSize()), new(AlignmentKind.Start));
+            var regionConfig = new IR.Config(null, LayoutKind.Grid, FlowKind.Row, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
             var label = node.Name?.Text; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
 
             var alignment = new IR.Axes<AlignmentKind?>(null, null);
-            var margin = 0;
+            var margin = new Border(0);
             var row = new int?();
             var column = new int?();
             var width = new int?();

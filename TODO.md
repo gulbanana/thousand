@@ -14,7 +14,6 @@ P2
 * class contents templating - probably sub-declaration only 
 * improve shorthand expectations
 * consider macro attrkeys (might actually improve errors)
-* 4-way thickness (for padding and margins)
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
 * anchors should be close to each other instead of strictly clockwise
 * canvas layout with X/Y - and/or support direct X Y in any mode (does this take nodes out of the normal layout?)

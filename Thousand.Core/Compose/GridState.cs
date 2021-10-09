@@ -3,7 +3,7 @@ using Thousand.Model;
 
 namespace Thousand.Compose
 {
-    internal record GridMeasurements(Point DesiredSize, int Margin, int Row, int Column) : NodeMeasurements(DesiredSize, Margin);
+    internal record GridMeasurements(Point DesiredSize, Border Margin, int Row, int Column) : NodeMeasurements(DesiredSize, Margin);
 
     internal sealed class GridState
     {

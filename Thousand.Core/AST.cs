@@ -24,7 +24,7 @@ namespace Thousand.AST
 
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;    
-    public record RegionPaddingAttribute(int Value) : RegionAttribute;
+    public record RegionPaddingAttribute(Border Value) : RegionAttribute;
     public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
     public record RegionGridFlowAttribute(FlowKind Kind) : RegionAttribute;
 
@@ -50,7 +50,7 @@ namespace Thousand.AST
     public record NodeAlignColumnAttribute(AlignmentKind? Kind) : NodeAttribute;
     public record NodeAlignRowAttribute(AlignmentKind? Kind) : NodeAttribute;
     public record NodeAlignAttribute(AlignmentKind? Columns, AlignmentKind? Rows) : NodeAttribute;
-    public record NodeMarginAttribute(int Value) : NodeAttribute;
+    public record NodeMarginAttribute(Border Value) : NodeAttribute;
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
     public abstract record ArrowAttribute;

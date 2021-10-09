@@ -47,23 +47,31 @@ namespace Thousand.Parse
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
                 .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));
 
+        public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "any").Value(new AnyAnchor() as Anchor)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corners").Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corner")).Value(new CornerAnchor() as Anchor))
+                .Or(Identifier.Enum<CompassKind>().Select(k => new SpecificAnchor(k) as Anchor))
+                .OrDefault(new NoAnchor());
+
+        public static TokenListParser<TokenKind, Border> Border { get; } =
+            from first in WholeNumber
+            from second in WholeNumber.Optional()
+            from thirdAndFourth in WholeNumber.Then(a => WholeNumber.Select(b => (third: a, fourth: b))).Optional()
+            select thirdAndFourth.HasValue ? new Border(first, second.Value, thirdAndFourth.Value.third, thirdAndFourth.Value.fourth) :
+                   second.HasValue ? new Border(first, second.Value) :
+                   new Border(first);
+
         public static TokenListParser<TokenKind, Colour> Colour { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
                 .Or(Identifier.Statics<Colour>());
-
-        public static TokenListParser<TokenKind, Width> Width { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(new HairlineWidth() as Width)
-                .Or(WholeNumber.OrNone().Select(x => x.HasValue ? new PositiveWidth(x.Value) : new ZeroWidth() as Width));
 
         public static TokenListParser<TokenKind, TrackSize> TrackSize { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(new PackedSize() as TrackSize)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal").Value(new EqualSize() as TrackSize))
                 .Or(WholeNumber.Select(x => new FixedSize(x) as TrackSize));
 
-        public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "any").Value(new AnyAnchor() as Anchor)
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corners").Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corner")).Value(new CornerAnchor() as Anchor))
-                .Or(Identifier.Enum<CompassKind>().Select(k => new SpecificAnchor(k) as Anchor))
-                .OrDefault(new NoAnchor());
+        public static TokenListParser<TokenKind, Width> Width { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(new HairlineWidth() as Width)
+                .Or(WholeNumber.OrNone().Select(x => x.HasValue ? new PositiveWidth(x.Value) : new ZeroWidth() as Width));
     }
 }

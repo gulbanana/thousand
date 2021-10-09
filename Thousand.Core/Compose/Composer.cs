@@ -220,31 +220,31 @@ namespace Thousand.Compose
                 }
             }
 
-            var intrinsicPadding = intrinsicSize == Point.Zero ? 0m : region.Config.Padding;
-            var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding * 2, intrinsicSize.Y + intrinsicPadding * 2);
+            var intrinsicPadding = intrinsicSize == Point.Zero ? new Border(0) : region.Config.Padding;
+            var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding.X, intrinsicSize.Y + intrinsicPadding.Y);
 
-            var regionPadding = state.RowCount + state.ColumnCount == 0 ? 0m : region.Config.Padding;
+            var regionPadding = state.RowCount + state.ColumnCount == 0 ? new Border(0) : region.Config.Padding;
 
             var colWidths = new decimal[state.ColumnCount];
-            var colCenter = regionPadding;
+            var colCenter = regionPadding.Left;
             for (var c = 0; c < state.ColumnCount; c++)
             {
-                var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin * 2).Append(0).Max();
+                var width = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
                 colCenter = colCenter + width + region.Config.Gutter.Columns;
                 colWidths[c] = width;
             }
 
             var rowHeights = new decimal[state.RowCount];
-            var rowCenter = regionPadding;
+            var rowCenter = regionPadding.Top;
             for (var r = 0; r < state.RowCount; r++)
             {
-                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin * 2).Append(0).Max();
+                var height = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
                 rowCenter = rowCenter + height + region.Config.Gutter.Rows;
                 rowHeights[r] = height;
             }
 
-            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter.Columns + 2 * regionPadding;
-            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter.Rows + 2 * regionPadding;
+            var contentWidth = colWidths.Sum() + (state.ColumnCount - 1) * region.Config.Gutter.Columns + regionPadding.X;
+            var contentHeight = rowHeights.Sum() + (state.RowCount - 1) * region.Config.Gutter.Rows + regionPadding.Y;
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));
@@ -260,10 +260,10 @@ namespace Thousand.Compose
             var state = gridState[region];
 
             var columns = new Track[state.ColumnCount];
-            var colMarker = location.X + region.Config.Padding;
+            var colMarker = location.X + region.Config.Padding.Left;
             for (var c = 0; c < state.ColumnCount; c++)
             {
-                var width = state.Nodes.Values.Where(n => n.Column == c + 1).Select(n => n.DesiredSize.X + n.Margin * 2).Append(0).Max();
+                var width = state.Nodes.Values.Where(n => n.Column == c + 1).Select(n => n.DesiredSize.X + n.Margin.X).Append(0).Max();
                 
                 var start = colMarker;
                 var center = colMarker + width / 2;
@@ -274,10 +274,10 @@ namespace Thousand.Compose
             }
 
             var rows = new Track[state.RowCount];
-            var rowMarker = location.Y + region.Config.Padding;
+            var rowMarker = location.Y + region.Config.Padding.Top;
             for (var r = 0; r < state.RowCount; r++)
             {
-                var height = state.Nodes.Values.Where(n => n.Row == r + 1).Select(n => n.DesiredSize.Y + n.Margin * 2).Append(0).Max();
+                var height = state.Nodes.Values.Where(n => n.Row == r + 1).Select(n => n.DesiredSize.Y + n.Margin.Y).Append(0).Max();
                 
                 var start = rowMarker;
                 var center = rowMarker + height / 2;
@@ -293,16 +293,16 @@ namespace Thousand.Compose
 
                 var xOrigin = (obj.Alignment.Columns ?? region.Config.Alignment.Columns) switch
                 {
-                    AlignmentKind.Start => columns[node.Column - 1].Start + node.Margin,
-                    AlignmentKind.Center => columns[node.Column - 1].Center - (node.DesiredSize.X + node.Margin) / 2,
-                    AlignmentKind.End => columns[node.Column - 1].End - (node.DesiredSize.X + node.Margin),
+                    AlignmentKind.Start => columns[node.Column - 1].Start + node.Margin.Left,
+                    AlignmentKind.Center => columns[node.Column - 1].Center - (node.DesiredSize.X + node.Margin.X) / 2,
+                    AlignmentKind.End => columns[node.Column - 1].End - (node.DesiredSize.X + node.Margin.Right),
                 };
 
                 var yOrigin = (obj.Alignment.Rows ?? region.Config.Alignment.Rows) switch
                 {
-                    AlignmentKind.Start => rows[node.Row - 1].Start + node.Margin,
-                    AlignmentKind.Center => rows[node.Row - 1].Center - (node.DesiredSize.Y + node.Margin) / 2,
-                    AlignmentKind.End => rows[node.Row - 1].End - (node.DesiredSize.Y + node.Margin),
+                    AlignmentKind.Start => rows[node.Row - 1].Start + node.Margin.Top,
+                    AlignmentKind.Center => rows[node.Row - 1].Center - (node.DesiredSize.Y + node.Margin.Y) / 2,
+                    AlignmentKind.End => rows[node.Row - 1].End - (node.DesiredSize.Y + node.Margin.Bottom),
                 };
 
                 var origin = new Point(xOrigin, yOrigin);
