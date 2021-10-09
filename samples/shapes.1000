@@ -1,17 +1,20 @@
-class object [min-width=110, font-size=16, margin=10, fill=#ccc]
+layout=column
+class object [min-width=150, font-size=16, margin=10, fill=#ccc,stroke=2]
 
-row {
+label "Catalogue of shapes" [font-size=32]
+
+row [justify=center]{
 	column { object oval [shape=oval]; object ellipse [shape=ellipse] }
 	object circle [shape=circle]
-	column { object rect [shape=rect]; object rectangle [shape=rectangle] }
-	object square [shape=square]
 	column { object roundrect [shape=roundRect]; object roundrectangle [shape=roundRectangle] }
 	object roundsquare [shape=roundSquare]
+	object triangle [shape=triangle]
 }
 
-row {
-	object rhombus [shape=rhombus]
-	object diamond [shape=diamond]
-	object triangle [shape=triangle]
+row [justify=center] {
+	column { object rect [shape=rect]; object rectangle [shape=rectangle] }
+	object square [shape=square]
 	column { object trapezium [shape=trapezium]; object trapezoid [shape=trapezoid] }
+	object diamond [shape=diamond]
+	object rhombus [shape=rhombus]
 }

@@ -11,6 +11,7 @@ P1
 
 P2
 --
+* row/col axial justification is weird when packed
 * class contents templating - probably sub-declaration only 
 * improve shorthand expectations
 * consider macro attrkeys (might actually improve errors)

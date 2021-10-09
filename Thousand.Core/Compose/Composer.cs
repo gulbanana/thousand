@@ -294,14 +294,14 @@ namespace Thousand.Compose
                 var xOrigin = (obj.Alignment.Columns ?? region.Config.Alignment.Columns) switch
                 {
                     AlignmentKind.Start => columns[node.Column - 1].Start + node.Margin.Left,
-                    AlignmentKind.Center => columns[node.Column - 1].Center - (node.DesiredSize.X + node.Margin.X) / 2,
+                    AlignmentKind.Center => columns[node.Column - 1].Center - (node.DesiredSize.X) / 2,
                     AlignmentKind.End => columns[node.Column - 1].End - (node.DesiredSize.X + node.Margin.Right),
                 };
 
                 var yOrigin = (obj.Alignment.Rows ?? region.Config.Alignment.Rows) switch
                 {
                     AlignmentKind.Start => rows[node.Row - 1].Start + node.Margin.Top,
-                    AlignmentKind.Center => rows[node.Row - 1].Center - (node.DesiredSize.Y + node.Margin.Y) / 2,
+                    AlignmentKind.Center => rows[node.Row - 1].Center - (node.DesiredSize.Y) / 2,
                     AlignmentKind.End => rows[node.Row - 1].End - (node.DesiredSize.Y + node.Margin.Bottom),
                 };
 
