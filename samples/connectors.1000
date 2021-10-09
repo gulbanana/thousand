@@ -1,0 +1,71 @@
+font-size=16
+
+class c [justify=center]
+class box($w=100, $h=100) [min-width=$w, min-height=$h, label=none, stroke=2]
+class spacer($x) [shape=none, min-width=$x]
+class title : label [font=20]
+class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
+class tline [stroke=red,offset-y=-20]; class bline [stroke=blue,offset-y=20]
+
+column [space=20]  {
+    title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
+will draw arrowheads at the corresponding ends.                                  "
+grid [space=40] {
+
+box a-1; box b-1; box c-1; box d-1
+box a-2 [row=2]; box b-2; box c-2; box d-2
+
+line a-1 -> b-1 <- c-1 -- d-1
+line a-2 --- b-2 --> c-2 <-- d-2
+
+line a-1 <> a-2
+line d-1 <-> d-2
+}
+
+    title "Lines can be attached to anchors - explicitly, or based on relative position."
+
+    grid [space-columns=20] {
+        row.c { point s1; spacer(100); point s2; sline s1 -- s2; spacer(10); label "center-to-center" }
+        row.c { point g1; spacer(100); point g2; gline g1 -- g2; spacer(10); label "named anchors" }
+        row.c [row=2] { point al1; spacer(100); point al2; aline al1 -- al2; spacer(10); label "anchor-to-anchor" }
+        row.c { point c1; spacer(100); point c2; cline c1 -- c2; spacer(10); label "corner-to-corner" }
+    }
+
+    grid.c [gutter=50] {
+        box a1 [shape=diamond]
+        box a2 [shape=square]
+        box(100,50) a3 [shape=trapezium]
+        aline a1--a2--a3; cline a1--a2--a3; gline a1--a2--a3 [anchor=se sw]
+
+        box a4 [shape=circle,row=2]
+        box a5 [shape=triangle]
+        gline a4--a5 [anchor=s]; aline a4--a5
+
+        box(100,50) f [shape=ellipse]
+        box(100,50) g [shape=roundrect]
+        box(100,50) h [shape=rectangle,row=1,col=4]
+        aline f--h; cline f--h
+        aline h--g; cline h--g
+        gline g--f [anchor-start=nw]
+        gline g--f [anchor-start=w]
+        gline g--f [anchor-start=sw]
+
+        sline a1--a4 [stroke=2]
+        sline a3--a5 [stroke=2]
+    }
+
+    title "Line ends can be offset, together or separately."
+
+    row [space=50] {
+        box b1
+        box b2
+        box b3
+        box b4
+
+        tline b1 -> b2 -> b3 -> b4
+        line b1 -> b2 -> b3
+        bline b1 -> b2
+        bline b3 -> b4
+        line b3 -> b4 [offset-y=-20 20, stroke=green]
+    }
+}

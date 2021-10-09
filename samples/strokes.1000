@@ -1,0 +1,56 @@
+scale = 2.0
+justify=start
+space-columns=40
+font-size=16
+
+class node [fill=#ccc,shape=circle,stroke=1]
+class hair [stroke=hairline]
+class scale [stroke=1]
+class thin : node.hair
+class dash [stroke=dashed]
+class box [fill=#ccc, shape=roundsquare]
+class noline [stroke=none]
+class hairline [stroke=hairline]
+class thickline [stroke=1]
+class title : label [font=10]
+
+column {
+	grid [space = 40] {
+		thin a1
+		thin.dash a2
+		node.dash a3
+		thin a4 [row=2]
+		node a5
+		node a6
+
+		hair.dash a1-> a2
+		hair a1-> a5
+		hair a1-> a4
+
+		scale.dash a2-> a3
+		scale a2-> a5
+		scale a2-> a6
+	}
+
+	title "Line and shape strokes can be solid or styled." [margin=10]
+	title "Line and shape strokes can either be zero width,
+	hairline width (which doesn't scale), or any fixed
+	value, which increases with document scale.       " [margin=10 15]
+}
+
+grid [space=40] {
+	// no lines (still includes an arrow, because you will be able to turn that off separately!
+	box.noline b1
+	box.noline b2
+	noline b1 -> b2 -> b1
+
+	// the default - aligned to real pixels at any scale
+	box.hairline b3 [row=2]
+	box.hairline b4
+	hairline b3 -> b4 -> b3
+
+	// lines with a vector-scaling width
+	box.thickline b5 [row=3]
+	box.thickline b6
+	thickline b5 -> b6 -> b5
+}
