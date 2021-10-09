@@ -10,17 +10,16 @@ class tline [stroke=red,offset-y=-20]; class bline [stroke=blue,offset-y=20]
 column [space=20]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
 will draw arrowheads at the corresponding ends.                                  "
-grid [space=40] {
+    grid [space=40] {
+        box a-1; box b-1; box c-1; box d-1
+        box a-2 [row=2]; box b-2; box c-2; box d-2
 
-box a-1; box b-1; box c-1; box d-1
-box a-2 [row=2]; box b-2; box c-2; box d-2
+        line a-1 -> b-1 <- c-1 -- d-1
+        line a-2 --- b-2 --> c-2 <-- d-2
 
-line a-1 -> b-1 <- c-1 -- d-1
-line a-2 --- b-2 --> c-2 <-- d-2
-
-line a-1 <> a-2
-line d-1 <-> d-2
-}
+        line a-1 <> a-2
+        line d-1 <-> d-2
+    }
 
     title "Lines can be attached to anchors - explicitly, or based on relative position."
 

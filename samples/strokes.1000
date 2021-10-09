@@ -34,8 +34,8 @@ column {
 
 	title "Line and shape strokes can be solid or styled." [margin=10]
 	title "Line and shape strokes can either be zero width,
-	hairline width (which doesn't scale), or any fixed
-	value, which increases with document scale.       " [margin=10 15]
+hairline width (which doesn't scale), or any fixed
+value, which increases with document scale.       " [margin=10 15]
 }
 
 grid [space=40] {
