@@ -2,42 +2,57 @@
     monaco.languages.register({ id: 'thousand' });
 
 	monaco.languages.setMonarchTokensProvider('thousand', {
-		keywords: ['class', 'none'],
+		keywords: ['$*', 'class', 'none'],
+
 		escapes: /\\(?:[rn\\"']|u[0-9A-Fa-f]{4})/,
+
+		identifier: /[a-z][\w\-]*/,
+
 		tokenizer: {
 			root: [
-				// types
-				[/^[a-z][\w\-]*/, {
+				// special quasisemantic case: identifier/keywords at the start of a line 
+				[/^\s*@identifier\s*=/, 'identifier'],
+				[/^\s*@identifier/, {
 					cases: {
 						'@keywords': 'keyword',
 						'@default': 'type'
-                    }
-				}],
-
-				// identifiers
-				[/[a-z][\w\-]*/, {
-					cases: {
-						'@keywords': 'keyword',
-						'@default': 'identifier'
 					}
 				}],
 
 				// whitespace and comments
 				{ include: '@whitespace' },
 
-				// colours
-				[/#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?/, 'number'],
+				// symbols
+				[/[\[\]{}()]/, '@brackets'],
+				[/[=,:\.]/, ''],
 
-				// numbers
-				[/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
-				[/\d+/, 'number'],
+				// non-identifier keywords
+				[/$\*/, 'keyword'],
+
+				// colours
+				[/#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?/, 'number.hex'],
+
+				// arrows
+				[/--*-|<-*-|--*>|<-*>/, 'keyword'],
 
 				// strings
 				[/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-teminated string
 				[/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
 
-				// arrows
-				[/--|<-|->|<>/, 'keyword'],
+				// variables
+				[/$@identifier/, 'variable'],
+
+				// identifiers and keywords
+				[/@identifier/, {
+					cases: {
+						'@keywords': 'keyword',
+						'@default': 'identifier'
+					}
+				}],
+
+				// numbers
+				[/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
+				[/\d+/, 'number'],
 			],
 
 			comment: [
