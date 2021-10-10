@@ -107,6 +107,10 @@ namespace Thousand.Render
                     new XAttribute("d", Shapes.Trapezium(shape.Bounds, shape.CornerRadius).SVG())
                 ),
 
+                ShapeKind.Octagon => new XElement(xmlns + "path",
+                    new XAttribute("d", Shapes.Octagon(shape.Bounds).SVG())
+                ),
+
                 ShapeKind.Ellipse or ShapeKind.Circle => new XElement(xmlns + "ellipse", 
                     new XAttribute("cx", cx), 
                     new XAttribute("cy", cy), 

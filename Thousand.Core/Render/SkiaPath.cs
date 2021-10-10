@@ -42,6 +42,10 @@ namespace Thousand.Render
                 case ShapeKind.Trapezium:
                     path.AddPoly(Shapes.Trapezium(bounds.KS(), shape.CornerRadius).SK());
                     break;
+
+                case ShapeKind.Octagon:
+                    path.AddPoly(Shapes.Octagon(bounds.KS()).SK());
+                    break;
             };
             path.Close();
 

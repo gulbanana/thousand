@@ -12,5 +12,6 @@
         Diamond,
         Trapezium, Trapezoid = Trapezium,
         Triangle,
+        Octagon,
     }
 }

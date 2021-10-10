@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Thousand.Model;
 
-namespace Thousand.Model
+namespace Thousand
 {
     public static class Shapes
     {
@@ -74,6 +77,10 @@ namespace Thousand.Model
                 { CompassKind.S, new(bounds.Center.X, bounds.Bottom, false) },
             },
 
+            ShapeKind.Octagon => new[] { CompassKind.NNW, CompassKind.NNE, CompassKind.ENE, CompassKind.ESE, CompassKind.SSE, CompassKind.SSW, CompassKind.WSW, CompassKind.WNW }
+                .Zip(Octagon(bounds), Tuple.Create)
+                .ToDictionary(t => t.Item1, t => new Connector(t.Item2, true)),
+
             _ => new Dictionary<CompassKind, Connector>()
         };
 
@@ -99,5 +106,26 @@ namespace Thousand.Model
             new(box.Right-corner, box.Top),
             new(box.Right, box.Bottom)
         };
+
+        // w = x + sqrt(2x^2)
+        // x = -(1 - sqrt(2))w
+        public static Point[] Octagon(Rect box)
+        {
+            var side = Math.Min(box.Width, box.Height);
+            var third = -(1m - (decimal)Math.Sqrt(2.0)) * side;
+            var c = (side - third) / 2m;
+
+            return new Point[]
+            {
+                new(box.Left+c, box.Top),
+                new(box.Right-c, box.Top),
+                new(box.Right, box.Top+c),
+                new(box.Right, box.Bottom-c),
+                new(box.Right-c, box.Bottom),
+                new(box.Left+c, box.Bottom),
+                new(box.Left, box.Bottom-c),
+                new(box.Left, box.Top+c)
+            };
+        }
     }
 }
