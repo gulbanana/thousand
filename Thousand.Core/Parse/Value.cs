@@ -63,7 +63,8 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, Colour> Colour { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
-                .Or(Identifier.Statics<Colour>());
+                .Or(Identifier.Statics<Colour>())
+                .Named("colour");
 
         public static TokenListParser<TokenKind, Point> Point { get; } =
             from x in Integer

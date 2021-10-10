@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Thousand.Model;
@@ -65,33 +66,18 @@ namespace Thousand.Render
                     break;
             };
 
+            var dashScale = self.Width is HairlineWidth ? scale : 1m;
             switch (self.Style)
             {
-                case StrokeKind.Dashed:
-                    var dashScale = self.Width is HairlineWidth ? scale : 1m;
-                    attributes.Add(new("stroke-dasharray", $"{3 * dashScale} {2 * dashScale}"));
+                case StrokeKind.Solid:
+                    break;
+
+                default:
+                    attributes.Add(new("stroke-dasharray", string.Join(' ', Shapes.Dashes(self.Style).Select(x => (x * dashScale).ToString()))));
                     break;
             }
 
             return attributes.ToArray();
-        }
-
-        public static string SVG2(this Stroke self, float scale)
-        {
-            var width = self.Width switch
-            {
-                HairlineWidth => @"stroke-width=""1"" vector-effect=""non-scaling-stroke""",
-                PositiveWidth(var x) => $@"stroke-width=""{x}""",
-                ZeroWidth or _ => @"stroke-width=""0""",
-            };
-
-            var dashScale = self.Width is HairlineWidth ? scale : 1f;
-
-            return $@"stroke=""{self.Colour.SVG()}"" {self.Width.SVG()}" + self.Style switch
-            {
-                StrokeKind.Dashed => $@" stroke-dasharray=""{3 * dashScale} {2 * dashScale}""",
-                StrokeKind.Solid or _ => string.Empty                
-            };
         }
     }
 }

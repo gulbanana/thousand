@@ -168,7 +168,7 @@ namespace Thousand.Tests.Parsing
         [Fact]
         public void StrokeShorthand_SingleStyle()
         {
-            var tokens = tokenizer.Tokenize($"stroke=dashed");
+            var tokens = tokenizer.Tokenize($"stroke=short-dash");
             var result = AttributeParsers.LineStrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -177,7 +177,7 @@ namespace Thousand.Tests.Parsing
             var lsa = (AST.LineStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Style);
-            Assert.Equal(StrokeKind.Dashed, lsa.Style);
+            Assert.Equal(StrokeKind.ShortDash, lsa.Style);
         }
 
         [Fact]
@@ -224,7 +224,7 @@ namespace Thousand.Tests.Parsing
         [Fact]
         public void StrokeShorthand_InContext()
         {
-            var tokens = tokenizer.Tokenize($"object [stroke=dashed black]");
+            var tokens = tokenizer.Tokenize($"object [stroke=long-dash black]");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());

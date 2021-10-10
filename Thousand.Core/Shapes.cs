@@ -86,6 +86,14 @@ namespace Thousand
             _ => new Dictionary<CompassKind, Connector>()
         };
 
+        public static decimal[] Dashes(StrokeKind style) => style switch
+        {
+            StrokeKind.ShortDash => new decimal[] { 3, 2 },
+            StrokeKind.LongDash => new decimal[] { 6, 4 },
+            StrokeKind.Dot => new decimal[] { 1, 2 },
+            _ => throw new NotImplementedException($"unknown dash style {style}")
+        };
+
         public static Point[] Diamond(Rect box) => new Point[]
         {
             new(box.Left, box.Center.Y),

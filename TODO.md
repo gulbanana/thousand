@@ -8,12 +8,10 @@ P1
 
 P2
 --
-* custom dash patterns
 * allow min- to influence justification?
 * anchors and offsets probably don't combine correctly
 * row/col axial justification is weird when packed
 * class contents templating - probably sub-declaration only 
-* improve shorthand expectations
 * consider macro attrkeys (might actually improve errors)
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
 * anchors should be close to each other instead of strictly clockwise
@@ -30,7 +28,7 @@ P3
 --
 * do a defaults pass, picking values which produce a nice appearance without customisation
 * image embedding 
-* editor integration - tokenizer, actual language service, live preview...
-* packaging - less trivial CLI (dotnet tool), nuget core, web components (monaco?)
+* editor integration - plugin with the tokenizer from the website, actual completion provider/language service, live preview...
+* packaging - less trivial CLI (dotnet tool), nuget core, web components
 * import files
 * import templates (not the same as above! applies to the stdlib)

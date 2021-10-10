@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Thousand.Model;
 using Topten.RichTextKit;
 
@@ -109,8 +110,8 @@ namespace Thousand.Render
 
         private static SKPathEffect? StrokeEffect(StrokeKind style) => style switch
         {
-            StrokeKind.Dashed => SKPathEffect.CreateDash(new[] { 3f, 2f }, 0f),
-            _ => null
+            StrokeKind.Solid => null,
+            _ => SKPathEffect.CreateDash(Shapes.Dashes(style).Select(x => (float)x).ToArray(), 0f)
         };
     }
 }

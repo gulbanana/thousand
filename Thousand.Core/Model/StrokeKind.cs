@@ -3,6 +3,8 @@
     public enum StrokeKind
     {
         Solid,
-        Dashed
+        Dot,
+        ShortDash,        
+        LongDash
     }
 }

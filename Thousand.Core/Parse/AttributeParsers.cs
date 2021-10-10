@@ -59,7 +59,8 @@ namespace Thousand.Parse
             }
             else
             {
-                return TokenListParserResult.Empty<TokenKind, (T1?, T2?, T3?)>(input);
+                var singleResult = p1.Value(Unit.Value).Or(p2.Value(Unit.Value)).Or(p3.Value(Unit.Value))(input);
+                return TokenListParserResult.CastEmpty<TokenKind, Unit, (T1?, T2?, T3?)>(singleResult);
             }
         };
         #endregion
