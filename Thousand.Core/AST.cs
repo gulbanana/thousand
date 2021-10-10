@@ -42,8 +42,11 @@ namespace Thousand.AST
 
     public abstract record NodeAttribute;
     public record NodeLabelAttribute(string? Content) : NodeAttribute;
-    public record NodeRowAttribute(int Value) : NodeAttribute;
-    public record NodeColumnAttribute(int Value) : NodeAttribute;    
+    public record NodeColumnAttribute(int Value) : NodeAttribute;
+    public record NodeRowAttribute(int Value) : NodeAttribute;    
+    public record NodeXAttribute(int Value) : NodeAttribute;
+    public record NodeYAttribute(int Value) : NodeAttribute;
+    public record NodePlaceAttribute(CompassKind Kind) : NodeAttribute;
     public record NodeMinWidthAttribute(int Value) : NodeAttribute;
     public record NodeMinHeightAttribute(int Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;

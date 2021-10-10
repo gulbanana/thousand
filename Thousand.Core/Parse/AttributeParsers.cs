@@ -177,15 +177,30 @@ namespace Thousand.Parse
             from value in Value.NullableString
             select new AST.NodeLabelAttribute(value) as AST.NodeAttribute;
 
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
+            from key in Key(NodeAttributeKind.Col)
+            from value in Value.CountingNumber
+            select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeRowAttribute { get; } =
             from key in Key(NodeAttributeKind.Row)
             from value in Value.CountingNumber
             select new AST.NodeRowAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
-            from key in Key(NodeAttributeKind.Col)
-            from value in Value.CountingNumber
-            select new AST.NodeColumnAttribute(value) as AST.NodeAttribute;
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeXAttribute { get; } =
+            from key in Key(NodeAttributeKind.X)
+            from value in Value.Integer
+            select new AST.NodeXAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeYAttribute { get; } =
+            from key in Key(NodeAttributeKind.X)
+            from value in Value.Integer
+            select new AST.NodeYAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodePlaceAttribute { get; } =
+            from key in Key(NodeAttributeKind.X)
+            from value in Identifier.Enum<CompassKind>()
+            select new AST.NodePlaceAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMinWidthAttribute { get; } =
             from key in Key(NodeAttributeKind.MinWidth)
@@ -236,7 +251,10 @@ namespace Thousand.Parse
                 .Or(NodeMarginAttribute)
                 .Or(NodeCornerRadiusAttribute)
                 .Or(NodeColumnAttribute)
-                .Or(NodeRowAttribute)                
+                .Or(NodeRowAttribute)
+                .Or(NodeXAttribute)
+                .Or(NodeYAttribute)
+                .Or(NodePlaceAttribute)
                 .Or(NodeMinWidthAttribute)
                 .Or(NodeMinHeightAttribute);
         #endregion

@@ -17,6 +17,9 @@
         MinHeight,
 
         Row,
-        Col, Column = Col,               
+        Col, Column = Col,
+        X,
+        Y,
+        Place
     }
 }

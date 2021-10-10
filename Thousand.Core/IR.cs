@@ -40,13 +40,14 @@ namespace Thousand.IR
         string? Label,
         Font Font,
         // layout
-        Axes<AlignmentKind?> Alignment, Border Margin, int? Row, int? Column, int? MinWidth, int? MinHeight,
+        Axes<AlignmentKind?> Alignment, Border Margin, int? MinWidth, int? MinHeight,
+        int? Row, int? Column, int? X, int? Y, CompassKind? Place,
         // shape
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object(string label, params Object[] children) : this(new Region(new Config(), children), label, new Font(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
-        public Object(Config config, params Object[] children) : this(new Region(config, children), null, new Font(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Region(new Config(), children), label, new Font(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(Config config, params Object[] children) : this(new Region(config, children), null, new Font(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
         public Object(params Object[] children) : this(new Config(), children) { }        
     }
     

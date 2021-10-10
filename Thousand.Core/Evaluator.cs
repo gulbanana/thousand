@@ -133,10 +133,14 @@ namespace Thousand
 
             var alignment = new IR.Axes<AlignmentKind?>(null, null);
             var margin = new Border(0);
-            var row = new int?();
-            var column = new int?();
             var width = new int?();
             var height = new int?();
+
+            var column = new int?();
+            var row = new int?();           
+            var x = new int?();
+            var y = new int?();
+            var place = new CompassKind?();
 
             var shape = new ShapeKind?(ShapeKind.Roundrect);
             var cornerRadius = 15;
@@ -153,12 +157,24 @@ namespace Thousand
                             label = nla.Content;
                             break;
 
+                        case AST.NodeColumnAttribute nca:
+                            column = nca.Value;
+                            break;
+
                         case AST.NodeRowAttribute nra:
                             row = nra.Value;
                             break;
 
-                        case AST.NodeColumnAttribute nca:
-                            column = nca.Value;
+                        case AST.NodeXAttribute nxa:
+                            x = nxa.Value;
+                            break;
+
+                        case AST.NodeYAttribute nya:
+                            y = nya.Value;
+                            break;
+
+                        case AST.NodePlaceAttribute npa:
+                            place = npa.Kind;
                             break;
 
                         case AST.NodeMinWidthAttribute nwa:
@@ -213,7 +229,7 @@ namespace Thousand
                 }
             }
 
-            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, row, column, width, height, shape, cornerRadius, stroke);
+            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, width, height, row, column, x, y, place, shape, cornerRadius, stroke);
 
             if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {
