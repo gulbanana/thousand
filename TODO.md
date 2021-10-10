@@ -19,7 +19,6 @@ P2
 * anchors should be close to each other instead of strictly clockwise
 * canvas layout with X/Y - and/or support direct X Y in any mode (does this take nodes out of the normal layout?)
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content? we could disable padding for shape=none instead
-* octagon shape
 * regularity control (a square is a regular rectangle)
 * drop shadows
 * customisable arrowheads

@@ -1,0 +1,30 @@
+gutter=10; font=16
+
+class o [shape=circle]
+class c [anchor=none, stroke=red]
+class l($x) [anchor=none $x,stroke=blue]
+
+o nw; o nnw; o n; o nne; o ne
+o wnw [row=2]; o ene [col=5]
+o w [row=3]
+object x [col=3,shape=circle,label="OCTAGON!", min-width=110]
+o e [col=5]
+o wsw [row=4]; o ese [col=5]
+o sw [row=5]; o ssw; o s; o sse; o se
+
+c nw--x;  l(nw)  nw--x
+c nnw--x; l(nnw) nnw--x
+c n--x;   l(n)   n--x
+c nne--x; l(nne) nne--x
+c ne--x;  l(ne)  ne--x
+c ene--x; l(ene) ene--x
+c e--x;   l(e)   e--x
+c ese--x; l(ese) ese--x
+c se--x;  l(se)  se--x
+c sse--x; l(sse) sse--x
+c s--x;   l(s)   s--x
+c ssw--x; l(ssw) ssw--x
+c sw--x;  l(sw)  sw--x
+c wsw--x; l(wsw) wsw--x
+c w--x;   l(w)   w--x
+c wnw--x; l(wnw) wnw--x

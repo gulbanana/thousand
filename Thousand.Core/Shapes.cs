@@ -35,13 +35,15 @@ namespace Thousand
                 { CompassKind.W, new(bounds.Left, bounds.Center.Y, false) },
             },
 
-            ShapeKind.Ellipse or ShapeKind.Circle => new Dictionary<CompassKind, Connector>
+            ShapeKind.Ellipse => new Dictionary<CompassKind, Connector>
             {
                 { CompassKind.N, new(bounds.Center.X, bounds.Top, false) },
                 { CompassKind.E, new(bounds.Right, bounds.Center.Y, false) },
                 { CompassKind.S, new(bounds.Center.X, bounds.Bottom, false) },
                 { CompassKind.W, new(bounds.Left, bounds.Center.Y, false) },
             },
+
+            ShapeKind.Circle => CircleAnchors(bounds),
 
             ShapeKind.Diamond or ShapeKind.Rhombus => new Dictionary<CompassKind, Connector>
             {
@@ -125,6 +127,50 @@ namespace Thousand
                 new(box.Left+c, box.Bottom),
                 new(box.Left, box.Bottom-c),
                 new(box.Left, box.Top+c)
+            };
+        }
+
+        private static Dictionary<CompassKind, Connector> CircleAnchors(Rect bounds)
+        {
+            var n = new Point(bounds.Center.X, bounds.Top);
+            var e = new Point(bounds.Right, bounds.Center.Y);
+            var s = new Point(bounds.Center.X, bounds.Bottom);
+            var w = new Point(bounds.Left, bounds.Center.Y);
+
+            var ne = Point.ArcMidpoint(n, e, bounds.Center, bounds.Width/2);
+            var nne = Point.ArcMidpoint(n, ne, bounds.Center, bounds.Width / 2);
+            var ene = Point.ArcMidpoint(ne, e, bounds.Center, bounds.Width / 2);
+
+            var se = Point.ArcMidpoint(e, s, bounds.Center, bounds.Width / 2);
+            var ese = Point.ArcMidpoint(e, se, bounds.Center, bounds.Width / 2);
+            var sse = Point.ArcMidpoint(se, s, bounds.Center, bounds.Width / 2);
+
+            var sw = Point.ArcMidpoint(s, w, bounds.Center, bounds.Width / 2);
+            var ssw = Point.ArcMidpoint(s, sw, bounds.Center, bounds.Width / 2);
+            var wsw = Point.ArcMidpoint(sw, w, bounds.Center, bounds.Width / 2);
+
+            var nw = Point.ArcMidpoint(w, n, bounds.Center, bounds.Width / 2);
+            var wnw = Point.ArcMidpoint(w, nw, bounds.Center, bounds.Width / 2);
+            var nnw = Point.ArcMidpoint(nw, n, bounds.Center, bounds.Width / 2);            
+
+            return new()
+            {
+                { CompassKind.N, new(n, false) },
+                { CompassKind.NNE, new(nne, false) },
+                { CompassKind.NE, new(ne, false) },
+                { CompassKind.ENE, new(ene, false) },
+                { CompassKind.E, new(e, false) },
+                { CompassKind.ESE, new(ese, false) },
+                { CompassKind.SE, new(se, false) },
+                { CompassKind.SSE, new(sse, false) },
+                { CompassKind.S, new(s, false) },
+                { CompassKind.SSW, new(ssw, false) },
+                { CompassKind.SW, new(sw, false) },
+                { CompassKind.WSW, new(wsw, false) },
+                { CompassKind.W, new(w, false) },
+                { CompassKind.WNW, new(wnw, false) },
+                { CompassKind.NW, new(nw, false) },
+                { CompassKind.NNW, new(nnw, false) },
             };
         }
     }
