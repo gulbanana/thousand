@@ -12,4 +12,8 @@
   <ItemGroup>
     <EmbeddedResource Include="..\samples\*.1000" Link="samples\%(Filename).1000" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\site.js" />
+  </ItemGroup>
 </Project>

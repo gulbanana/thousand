@@ -1,17 +1,27 @@
 ﻿@using BlazorMonaco
+@inject IJSRuntime JS
 @code {
     [Parameter] public string Source { get; set; }
     [Parameter] public EventCallback<string> SourceChanged { get; set; }
     private MonacoEditor editor;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("registerLanguage");
+        }
+    }
 
     private StandaloneEditorConstructionOptions CreateOptions(MonacoEditor editor)
     {
         this.editor = editor;
         return new StandaloneEditorConstructionOptions
         {
-            AutomaticLayout = true,
+            Language = "thousand",
             Value = Source,
-            ScrollBeyondLastLine = false,
+            AutomaticLayout = true,
+            ScrollBeyondLastLine = false,            
             Minimap = new EditorMinimapOptions
             {
                 Enabled = false
