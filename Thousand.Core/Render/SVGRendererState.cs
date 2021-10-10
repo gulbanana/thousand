@@ -126,6 +126,14 @@ namespace Thousand.Render
                     new XAttribute("rx", shape.CornerRadius)
                 ),
 
+                ShapeKind.Pill => new XElement(xmlns + "rect",
+                    new XAttribute("x", shape.Bounds.Left),
+                    new XAttribute("y", shape.Bounds.Top),
+                    new XAttribute("width", shape.Bounds.Width),
+                    new XAttribute("height", shape.Bounds.Height),
+                    new XAttribute("rx", shape.Bounds.Height/2)
+                ),
+
                 _ => new XElement(xmlns + "rect",
                     new XAttribute("x", shape.Bounds.Left),
                     new XAttribute("y", shape.Bounds.Top),

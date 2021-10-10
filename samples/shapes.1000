@@ -8,7 +8,7 @@ column [justify=center] {
 		object circle [shape=circle]
 		column { object roundrect [shape=roundRect]; object roundrectangle [shape=roundRectangle] }
 		object roundsquare [shape=roundSquare]
-		column { object triangle [shape=triangle]; object octagon [shape=octagon] }
+		column { object pill [shape=pill]; object octagon [shape=octagon] }
 	}
 
 	row [justify=center] {
@@ -16,6 +16,6 @@ column [justify=center] {
 		object square [shape=square]
 		column { object trapezium [shape=trapezium]; object trapezoid [shape=trapezoid] }
 		object diamond [shape=diamond]
-		object rhombus [shape=rhombus]
+		column { object rhombus [shape=rhombus]; object triangle [shape=triangle] }
 	}
 }

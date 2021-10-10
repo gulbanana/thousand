@@ -8,6 +8,7 @@
         Square,
         Ellipse, Oval = Ellipse,
         Circle,
+        Pill,
         Rhombus,
         Diamond,
         Trapezium, Trapezoid = Trapezium,

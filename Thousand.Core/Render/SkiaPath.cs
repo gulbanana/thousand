@@ -17,6 +17,10 @@ namespace Thousand.Render
                     path.AddRoundRect(new SKRoundRect(bounds, shape.CornerRadius));
                     break;
 
+                case ShapeKind.Pill:
+                    path.AddRoundRect(new SKRoundRect(bounds, bounds.Height/2));
+                    break;
+
                 case ShapeKind.Rectangle:
                 case ShapeKind.Square:
                     path.AddRect(bounds);

@@ -35,7 +35,7 @@ namespace Thousand
                 { CompassKind.W, new(bounds.Left, bounds.Center.Y, false) },
             },
 
-            ShapeKind.Ellipse => new Dictionary<CompassKind, Connector>
+            ShapeKind.Ellipse or ShapeKind.Pill => new Dictionary<CompassKind, Connector>
             {
                 { CompassKind.N, new(bounds.Center.X, bounds.Top, false) },
                 { CompassKind.E, new(bounds.Right, bounds.Center.Y, false) },
