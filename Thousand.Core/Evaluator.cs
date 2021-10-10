@@ -217,7 +217,7 @@ namespace Thousand
 
             if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {
-                es.Add(new(node.Name.Location.Position, ErrorKind.Reference, $"object `{name}` has already been defined"));
+                es.Add(new(node.Name.Location, ErrorKind.Reference, $"object `{name}` has already been defined"));
             }
             else
             {
@@ -299,7 +299,7 @@ namespace Thousand
                             break;
                             
                         default:
-                            es.Add(new(from.Target.Location.Position, ErrorKind.Internal, $"unknown ArrowKind {from.Direction.Value} from object `{from.Target.Text}`"));
+                            es.Add(new(from.Target.Location, ErrorKind.Internal, $"unknown ArrowKind {from.Direction.Value} from object `{from.Target.Text}`"));
                             break;
                     }
                 }
@@ -367,11 +367,11 @@ namespace Thousand
             {
                 if (lineClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` can only be used for lines, not objects"));
+                    ws.Add(new(name.Location, ErrorKind.Type, $"class `{name.Text}` can only be used for lines, not objects"));
                 }
                 else
                 {
-                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` is not defined"));
+                    ws.Add(new(name.Location, ErrorKind.Type, $"class `{name.Text}` is not defined"));
                 }
                 
                 return Array.Empty<AST.ObjectAttribute>();
@@ -388,11 +388,11 @@ namespace Thousand
             {
                 if (objectClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` can only be used for objects, not lines"));
+                    ws.Add(new(name.Location, ErrorKind.Type, $"class `{name.Text}` can only be used for objects, not lines"));
                 }
                 else
                 {
-                    ws.Add(new(name.Location.Position, ErrorKind.Type, $"class `{name.Text}` is not defined"));
+                    ws.Add(new(name.Location, ErrorKind.Type, $"class `{name.Text}` is not defined"));
                 }
 
                 return Array.Empty<AST.SegmentAttribute>();
@@ -407,7 +407,7 @@ namespace Thousand
         {
             if (!allObjects.ContainsKey(name.Text))
             {
-                ws.Add(new(name.Location.Position, ErrorKind.Reference, $"object `{name.Text}` is not defined"));
+                ws.Add(new(name.Location, ErrorKind.Reference, $"object `{name.Text}` is not defined"));
                 return null;
             }
 

@@ -39,14 +39,15 @@ namespace Thousand.Parse
             var tokenized = tokenizer.TryTokenize(text);
             if (!tokenized.HasValue)
             {
-                es.Add(new(tokenized.ErrorPosition, ErrorKind.Syntax, tokenized.FormatErrorMessageFragment()));
+                es.Add(new(tokenized.Location, ErrorKind.Syntax, tokenized.FormatErrorMessageFragment()));
                 return null;
             }
 
             var untyped = Untyped.UntypedDocument(tokenized.Value);
             if (!untyped.HasValue)
             {
-                es.Add(new(untyped.ErrorPosition, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
+                var badToken = untyped.Location.IsAtEnd ? tokenized.Value.Last() : untyped.Location.First();
+                es.Add(new(badToken.Span, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
                 return null;
             }
 
@@ -59,7 +60,8 @@ namespace Thousand.Parse
             var parsed = Typed.Document(typed);
             if (!parsed.HasValue)
             {
-                es.Add(new(parsed.ErrorPosition, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()));
+                var badToken = parsed.Location.IsAtEnd ? typed.Last() : parsed.Location.First();
+                es.Add(new(badToken.Span, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()));
                 return null;
             }
 
@@ -74,7 +76,7 @@ namespace Thousand.Parse
                 var name = c.IsT1 ? c.AsT1.Name : c.AsT2.Name;
                 if (!allClasses.Add(name.Text))
                 {
-                    es.Add(new(name.Location.Position, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
+                    es.Add(new(name.Location, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
                     return template;
                 }
             }
@@ -87,7 +89,7 @@ namespace Thousand.Parse
                 {
                     if (!names.Add(v.Name.Text))
                     {
-                        es.Add(new(c.Name.Location.Position, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
+                        es.Add(new(c.Name.Location, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
                         return template;
                     }
 
@@ -97,7 +99,7 @@ namespace Thousand.Parse
                     }
                     else if (hasDefault)
                     {
-                        es.Add(new(c.Name.Location.Position, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
+                        es.Add(new(c.Name.Location, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
                         return template;
                     }
                 }
@@ -174,11 +176,11 @@ namespace Thousand.Parse
                 {
                     if (klass.Arguments.Variables.All(v => v.Default is null))
                     {
-                        es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
+                        es.Add(new(call.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
                     }
                     else
                     {
-                        es.Add(new(call.Location.First().Position, ErrorKind.Type, $"expected {klass.Arguments.Variables.Where(v => v.Default == null).Count()} to {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
+                        es.Add(new(call.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Variables.Where(v => v.Default == null).Count()} to {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
                     }
                     return;
                 }
@@ -228,7 +230,7 @@ namespace Thousand.Parse
                         }
                         else
                         {
-                            es.Add(new(token.Position, ErrorKind.Reference, $"variable `{key}` is not defined"));
+                            es.Add(new(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined"));
                             replacements.Add(token);
                         }
                     }

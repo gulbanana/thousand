@@ -3,9 +3,11 @@ using System;
 
 namespace Thousand
 {
-    public record GenerationError(Position Position, ErrorKind Kind, string Message, string? Details = null)
+    public record GenerationError(Position Position, int Length, ErrorKind Kind, string Message, string? Details = null)
     {
-        public GenerationError(Exception e) : this(Position.Empty, ErrorKind.Internal, e.Message, e.ToString()) { }
+        public GenerationError(TextSpan span, ErrorKind Kind, string Message, string? Details = null) : this(span.Position, span.Length, Kind, Message, Details) { }
+
+        public GenerationError(Exception e) : this(Position.Empty, 0, ErrorKind.Internal, e.Message, e.ToString()) { }
 
         public override string ToString()
         {

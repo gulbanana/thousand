@@ -12,7 +12,7 @@
     string source;
     string sample;
     Layout.Diagram doc;
-    string[] err;
+    GenerationError[] err;
     RenderMode mode;
 
     string Source
@@ -66,11 +66,11 @@
     {
         doc = generator.GenerateDiagram(source).Match(result =>
         {
-            err = result.Warnings.Select(w => w.ToString()).ToArray();
+            err = result.Warnings;
             return result.Diagram;
         }, errors =>
         {
-            err = errors.Select(w => w.ToString()).ToArray();
+            err = errors;
             return null;
         });
 
@@ -84,7 +84,7 @@
 
 <div class="layout">
     <div class="editor">
-        <SourceEditor @key="sample" @bind-Source="Source" />
+        <SourceEditor @key="sample" @bind-Source="Source" Errors="@err" />
 
         <div class="sample-selector">
             <label>Sample diagrams:</label>

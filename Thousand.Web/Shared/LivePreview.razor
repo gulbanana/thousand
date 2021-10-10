@@ -3,14 +3,14 @@
 @code {
     [Parameter] public RenderMode Mode { get; set; }
     [Parameter] public Layout.Diagram Diagram { get; set; }
-    [Parameter] public string[] Errors { get; set; }
+    [Parameter] public GenerationError[] Errors { get; set; }
     string dataURL;
     MarkupString? innerSVG;
     string[] errors;
 
     protected override void OnParametersSet()
     {
-        errors = Errors ?? Array.Empty<string>();
+        errors = Errors?.Select(e => e.ToString())?.ToArray() ?? Array.Empty<string>();
 
         if (Diagram != null)
         {

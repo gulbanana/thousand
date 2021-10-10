@@ -3,7 +3,28 @@
 @code {
     [Parameter] public string Source { get; set; }
     [Parameter] public EventCallback<string> SourceChanged { get; set; }
+    [Parameter] public GenerationError[] Errors { get; set; }
+
     private MonacoEditor editor;
+    private string[] decorations = Array.Empty<string>();
+
+    private StandaloneEditorConstructionOptions CreateOptions(MonacoEditor editor)
+    {
+        this.editor = editor;
+
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "thousand",
+            Theme = "vs",
+            Value = Source,
+            AutomaticLayout = true,
+            ScrollBeyondLastLine = false,
+            Minimap = new EditorMinimapOptions
+            {
+                Enabled = false
+            },
+        };
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -13,21 +34,26 @@
         }
     }
 
-    private StandaloneEditorConstructionOptions CreateOptions(MonacoEditor editor)
+    private bool decorating;
+    protected override async Task OnParametersSetAsync()
     {
-        this.editor = editor;
-        return new StandaloneEditorConstructionOptions
+        if (editor != null && !decorating)
         {
-            Language = "thousand",
-            Theme = "vs",
-            Value = Source,
-            AutomaticLayout = true,
-            ScrollBeyondLastLine = false,            
-            Minimap = new EditorMinimapOptions
+            decorating = true;
+            var newDecorations = Errors.Select(ge => new ModelDeltaDecoration
             {
-                Enabled = false
-            },
-        };
+                Range = ge.Position.HasValue ? new BlazorMonaco.Range(ge.Position.Line, ge.Position.Column, ge.Position.Line, ge.Position.Column + ge.Length) : new BlazorMonaco.Range(1, 1, 1, 1),
+                Options = new ModelDecorationOptions
+                {
+                    IsWholeLine = !ge.Position.HasValue,
+                    InlineClassName = "source-error",
+                    HoverMessage = new MarkdownString[] { new() { IsTrusted = true, Value = $"{ge.Kind} error: {ge.Message}" } }
+                }
+            }).ToArray();
+
+            decorations = await editor.DeltaDecorations(decorations, newDecorations);
+            decorating = false;
+        }
     }
 
     private async Task ModelContentChanged(ModelContentChangedEvent e)
@@ -37,4 +63,4 @@
     }
 }
 
-<MonacoEditor ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />
+<MonacoEditor Id="monaco-editor" ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />
