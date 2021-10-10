@@ -4,9 +4,9 @@
     {
         AnchorStart, 
         AnchorEnd,
-        Anchor,
-        OffsetX, OffsetY,
-        OffsetStartX, OffsetStartY,
-        OffsetEndX, OffsetEndY
+        Anchor,        
+        OffsetStart,
+        OffsetEnd,
+        Offset,
     }
 }

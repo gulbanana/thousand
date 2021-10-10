@@ -57,12 +57,9 @@ namespace Thousand.AST
     public record ArrowAnchorStartAttribute(Anchor Anchor) : ArrowAttribute;
     public record ArrowAnchorEndAttribute(Anchor Anchor) : ArrowAttribute;
     public record ArrowAnchorAttribute(Anchor Start, Anchor End) : ArrowAttribute;
-    public record ArrowOffsetStartXAttribute(int Offset) : ArrowAttribute;
-    public record ArrowOffsetStartYAttribute(int Offset) : ArrowAttribute;
-    public record ArrowOffsetEndXAttribute(int Offset) : ArrowAttribute;
-    public record ArrowOffsetEndYAttribute(int Offset) : ArrowAttribute;
-    public record ArrowOffsetXAttribute(int Start, int End) : ArrowAttribute;
-    public record ArrowOffsetYAttribute(int Start, int End) : ArrowAttribute;
+    public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
+    public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
+    public record ArrowOffsetAttribute(Point Start, Point End) : ArrowAttribute;
 
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
     [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<ArrowAttribute, LineAttribute> { } 

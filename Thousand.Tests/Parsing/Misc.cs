@@ -332,7 +332,7 @@ line foo -> bar");
             var tokens = tokenizer.Tokenize(@"fill=black
 class foo [stroke=none]
 object foo [shape=square]
-line foo->bar [offset-x=1]");
+line foo->bar [offset=1 1]");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue);

@@ -8,6 +8,7 @@ P1
 
 P2
 --
+* custom dash patterns
 * allow min- to influence justification?
 * anchors and offsets probably don't combine correctly
 * row/col axial justification is weird when packed
@@ -17,14 +18,11 @@ P2
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
 * anchors should be close to each other instead of strictly clockwise
 * canvas layout with X/Y - and/or support direct X Y in any mode (does this take nodes out of the normal layout?)
-* reevaluate padding algorithm - is it correct to ignore padding when there is no content?
-* reevaluate x/y specification in offsets and possibly elsewhere (tedium)
+* reevaluate padding algorithm - is it correct to ignore padding when there is no content? we could disable padding for shape=none instead
 * octagon shape
 * regularity control (a square is a regular rectangle)
 * drop shadows
 * customisable arrowheads
-* enable fill for shape=none? what does it even mean then?
-* DISABLE padding for shape=none? stdlib is getting unwieldy
 * we have some throws that could be converted to positioned errors
 * docs - generated for attrs? or just handwrite it all?
 * consider line caps

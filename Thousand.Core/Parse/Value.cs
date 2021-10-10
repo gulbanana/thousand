@@ -65,6 +65,11 @@ namespace Thousand.Parse
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
                 .Or(Identifier.Statics<Colour>());
 
+        public static TokenListParser<TokenKind, Point> Point { get; } =
+            from x in Integer
+            from y in Integer
+            select new Point(x, y);
+
         public static TokenListParser<TokenKind, TrackSize> TrackSize { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(new PackedSize() as TrackSize)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal").Value(new EqualSize() as TrackSize))

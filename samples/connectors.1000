@@ -5,7 +5,7 @@ class box($w=100, $h=100) [min-width=$w, min-height=$h, label=none, stroke=2]
 class spacer($x) [shape=none, min-width=$x]
 class title : label [font=20]
 class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
-class tline [stroke=red,offset-y=-20]; class bline [stroke=blue,offset-y=20]
+class tline [stroke=red, offset=0 -20]; class bline [stroke=blue, offset=0 20]
 
 column [space=20]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
@@ -65,6 +65,6 @@ will draw arrowheads at the corresponding ends.                                 
         line b1 -> b2 -> b3
         bline b1 -> b2
         bline b3 -> b4
-        line b3 -> b4 [offset-y=-20 20, stroke=green]
+        line b3 -> b4 [offset=0 -20 0 20, stroke=green]
     }
 }

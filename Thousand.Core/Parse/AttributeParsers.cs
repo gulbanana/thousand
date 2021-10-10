@@ -80,46 +80,28 @@ namespace Thousand.Parse
             from startAndEnd in Value.Anchor.Twice()
             select new AST.ArrowAnchorAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
 
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartXAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetStartX)
-            from value in Value.Integer
-            select new AST.ArrowOffsetStartXAttribute(value) as AST.ArrowAttribute;
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetStart)
+            from value in Value.Point
+            select new AST.ArrowOffsetStartAttribute(value) as AST.ArrowAttribute;
 
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartYAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetStartY)
-            from value in Value.Integer
-            select new AST.ArrowOffsetStartYAttribute(value) as AST.ArrowAttribute;
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndAttribute { get; } =
+            from key in Key(ArrowAttributeKind.OffsetEnd)
+            from value in Value.Point
+            select new AST.ArrowOffsetEndAttribute(value) as AST.ArrowAttribute;
 
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndXAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetEndX)
-            from value in Value.Integer
-            select new AST.ArrowOffsetEndXAttribute(value) as AST.ArrowAttribute;
-
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndYAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetEndY)
-            from value in Value.Integer
-            select new AST.ArrowOffsetEndYAttribute(value) as AST.ArrowAttribute;
-
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetXAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetX)
-            from startAndEnd in Value.Integer.Twice()
-            select new AST.ArrowOffsetXAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
-
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetYAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetY)
-            from startAndEnd in Value.Integer.Twice()
-            select new AST.ArrowOffsetYAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetAttribute { get; } =
+            from key in Key(ArrowAttributeKind.Offset)
+            from startAndEnd in Value.Point.Twice()
+            select new AST.ArrowOffsetAttribute(startAndEnd.first, startAndEnd.second) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
             ArrowAnchorStartAttribute
                 .Or(ArrowAnchorEndAttribute)
                 .Or(ArrowAnchorAttribute)
-                .Or(ArrowOffsetStartXAttribute)
-                .Or(ArrowOffsetStartYAttribute)
-                .Or(ArrowOffsetEndXAttribute)
-                .Or(ArrowOffsetEndYAttribute)
-                .Or(ArrowOffsetXAttribute)
-                .Or(ArrowOffsetYAttribute);
+                .Or(ArrowOffsetStartAttribute)
+                .Or(ArrowOffsetEndAttribute)
+                .Or(ArrowOffsetAttribute);
         #endregion
 
         #region doc group, used only by diagrams

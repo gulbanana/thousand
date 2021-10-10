@@ -2,7 +2,7 @@ class object [shape=roundrect] // attr only to enforce object-identity
 class point [shape=none, label=none]
 class label [stroke=none, fill=none, padding=0]
 
-class line [offset-x=0] // attr only to enforce line-identity
+class line [offset=0 0] // attr only to enforce line-identity
 
 class group [shape=rect, stroke=none, label=none, padding=0]
 class grid : group [layout=grid]

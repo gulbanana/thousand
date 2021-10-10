@@ -254,30 +254,17 @@ namespace Thousand
                             anchorEnd = aaa.End;
                             break;
 
-                        case AST.ArrowOffsetStartXAttribute aosa:
-                            offsetStart = offsetStart with { X = aosa.Offset };
+                        case AST.ArrowOffsetStartAttribute aosa:
+                            offsetStart = aosa.Offset;
                             break;
 
-                        case AST.ArrowOffsetStartYAttribute aosa:
-                            offsetStart = offsetStart with { Y = aosa.Offset };
+                        case AST.ArrowOffsetEndAttribute aoea:
+                            offsetEnd = aoea.Offset; ;
                             break;
 
-                        case AST.ArrowOffsetEndXAttribute aoea:
-                            offsetEnd = offsetEnd with { X = aoea.Offset };
-                            break;
-
-                        case AST.ArrowOffsetEndYAttribute aoea:
-                            offsetEnd = offsetEnd with { Y = aoea.Offset };
-                            break;
-
-                        case AST.ArrowOffsetXAttribute aoa:
-                            offsetStart = offsetStart with { X = aoa.Start };
-                            offsetEnd = offsetEnd with { X = aoa.End };
-                            break;
-
-                        case AST.ArrowOffsetYAttribute aoa:
-                            offsetStart = offsetStart with { Y = aoa.Start };
-                            offsetEnd = offsetEnd with { Y = aoa.End };
+                        case AST.ArrowOffsetAttribute aoa:
+                            offsetStart = aoa.Start;
+                            offsetEnd = aoa.End;
                             break;
                     }
                 }, line => stroke = ApplyStrokeAttributes(stroke, line));
