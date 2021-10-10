@@ -3,7 +3,7 @@
     public enum LineAttributeKind
     {
         Stroke,
-        StrokeColour,
+        StrokeColour, StrokeColor = StrokeColour,
         StrokeWidth,
         StrokeStyle,
     }

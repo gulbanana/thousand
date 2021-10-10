@@ -5,6 +5,6 @@
         Font,
         FontFamily,
         FontSize,
-        FontColour,
+        FontColour, FontColor = FontColour,
     }
 }
