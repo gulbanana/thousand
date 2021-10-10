@@ -1,13 +1,29 @@
-﻿@code {
+﻿@using BlazorMonaco
+@code {
     [Parameter] public string Source { get; set; }
     [Parameter] public EventCallback<string> SourceChanged { get; set; }
+    private MonacoEditor editor;
 
-    private async void OnInput(ChangeEventArgs e)
+    private StandaloneEditorConstructionOptions CreateOptions(MonacoEditor editor)
     {
-        await SourceChanged.InvokeAsync(e.Value.ToString());
+        this.editor = editor;
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Value = Source,
+            ScrollBeyondLastLine = false,
+            Minimap = new EditorMinimapOptions
+            {
+                Enabled = false
+            },
+        };
+    }
+
+    private async Task ModelContentChanged(ModelContentChangedEvent e)
+    {
+        var value = await editor.GetValue();
+        await SourceChanged.InvokeAsync(value.ToString());
     }
 }
 
-<textarea @oninput="OnInput" spellcheck="false">
-    @Source
-</textarea>
+<MonacoEditor ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />

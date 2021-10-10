@@ -7,8 +7,8 @@
 .layout {
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }
 
 .layout > * {
@@ -16,8 +16,6 @@
 }
 
 .editor {
-    flex-grow: 1;
-    min-width: 360px;
     display: grid;
     grid-template-rows: 1fr auto;
     margin-bottom: 2rem;
