@@ -20,7 +20,6 @@ P2
 * regularity control (a square is a regular rectangle)
 * drop shadows
 * customisable arrowheads
-* we have some throws that could be converted to positioned errors
 * docs - generated for attrs? or just handwrite it all?
 * consider line caps
 

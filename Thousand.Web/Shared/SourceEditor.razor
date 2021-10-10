@@ -47,7 +47,7 @@
                 {
                     IsWholeLine = !ge.Position.HasValue,
                     InlineClassName = "source-error",
-                    HoverMessage = new MarkdownString[] { new() { IsTrusted = true, Value = $"{ge.Kind} error: {ge.Message}" } }
+                    HoverMessage = new MarkdownString[] { new() { IsTrusted = true, Value = $"{ge.Kind} error: {ge.Message}." } }
                 }
             }).ToArray();
 

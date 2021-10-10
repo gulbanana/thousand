@@ -19,14 +19,14 @@ namespace Thousand.Tests
             throw new XunitException(message);
         }
 
-        internal static void Eta(Point expected, Point actual)
+        internal static void Eta(Point expected, Point actual, decimal margin = 1m)
         {
-            if (Math.Abs(expected.X - actual.X) >= 1)
+            if (Math.Abs(expected.X - actual.X) >= margin)
             {
                 throw new AssertActualExpectedException(expected, actual, "Point was incorrect by at least one pixel");
             }
 
-            if (Math.Abs(expected.Y - actual.Y) >= 1)
+            if (Math.Abs(expected.Y - actual.Y) >= margin)
             {
                 throw new AssertActualExpectedException(expected, actual, "Point was incorrect by at least one pixel");
             }

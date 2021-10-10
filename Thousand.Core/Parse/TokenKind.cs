@@ -39,13 +39,13 @@ namespace Thousand.Parse
 
         LineSeparator,
 
-        [Token(Description = "arrow")]
+        [Token(Category = "arrow")]
         LeftArrow,
-        [Token(Description = "arrow")]
+        [Token(Category = "arrow")]
         RightArrow,
-        [Token(Description = "arrow")]
+        [Token(Category = "arrow")]
         NoArrow,
-        [Token(Description = "arrow")]
+        [Token(Category = "arrow")]
         DoubleArrow,
 
         [Token(Example = "none")]
@@ -53,7 +53,7 @@ namespace Thousand.Parse
 
         [Token(Example = "class")]
         ClassKeyword,
-
+            
         Variable,
 
         Identifier,

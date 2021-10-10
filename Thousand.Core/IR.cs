@@ -51,7 +51,10 @@ namespace Thousand.IR
     }
     
     // there may be many IR.Edge for a single AST.Line
-    public record Edge(Stroke Stroke, Object FromTarget, Object ToTarget, MarkerKind? FromMarker, MarkerKind? ToMarker, Anchor FromAnchor, Anchor ToAnchor, Point FromOffset, Point ToOffset);
+    public record Edge(Stroke Stroke, Parse.Identifier FromName, Parse.Identifier ToName, Object FromTarget, Object ToTarget, MarkerKind? FromMarker, MarkerKind? ToMarker, Anchor FromAnchor, Anchor ToAnchor, Point FromOffset, Point ToOffset)
+    {
+        public Edge(Object FromTarget, Object ToTarget) : this(new Stroke(), new Parse.Identifier("from"), new Parse.Identifier("to"), FromTarget, ToTarget, null, null, new NoAnchor(), new NoAnchor(), Point.Zero, Point.Zero) { }
+    }
     
     public record Root(decimal Scale, Region Region, IReadOnlyList<Edge> Edges)
     {

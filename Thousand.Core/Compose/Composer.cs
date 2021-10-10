@@ -73,6 +73,21 @@ namespace Thousand.Compose
                 {
                     var (start, end) = Intrinsics.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, outputShapes.GetValueOrDefault(edge.FromTarget), outputShapes.GetValueOrDefault(edge.ToTarget));
 
+                    if (start == null)
+                    {
+                        ws.Add(new(edge.FromName.Location, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
+                    }
+
+                    if (end == null)
+                    {
+                        ws.Add(new(edge.ToName.Location, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
+                    }
+
+                    if (start == null || end == null)
+                    {
+                        continue;
+                    }
+
                     if (edge.FromTarget.Shape.HasValue)
                     {
                         var anchors = Shapes.Anchors(edge.FromTarget.Shape.Value, edge.FromTarget.CornerRadius, fromBox);
@@ -95,6 +110,11 @@ namespace Thousand.Compose
                         if (edge.FromAnchor is not NoAnchor && edge.ToAnchor is NoAnchor)
                         {
                             (_, end) = Intrinsics.Line(start, toBox.Center + edge.ToOffset, null, outputShapes.GetValueOrDefault(edge.ToTarget));
+                            if (end == null)
+                            {
+                                ws.Add(new(edge.FromName.Location, ErrorKind.Layout, $"after anchoring start, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
+                                continue;
+                            }
                         }
                     }
 
@@ -120,6 +140,11 @@ namespace Thousand.Compose
                         if (edge.ToAnchor is not NoAnchor && edge.FromAnchor is NoAnchor)
                         {
                             (start, _) = Intrinsics.Line(fromBox.Center + edge.FromOffset, end, outputShapes.GetValueOrDefault(edge.FromTarget), null);
+                            if (start == null)
+                            {
+                                ws.Add(new(edge.FromName.Location, ErrorKind.Layout, $"after anchoring end, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
+                                continue;
+                            }
                         }
                     }
 

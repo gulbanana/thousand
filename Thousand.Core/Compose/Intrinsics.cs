@@ -46,7 +46,7 @@ namespace Thousand.Compose
             return new BlockMeasurements(new Point(pixelWidth, pixelHeight), lines);
         }
 
-        public static (Point from, Point to) Line(Point fromPoint, Point toPoint, Layout.Shape? fromShape, Layout.Shape? toShape)
+        public static (Point? from, Point? to) Line(Point fromPoint, Point toPoint, Layout.Shape? fromShape, Layout.Shape? toShape)
         {
             var start = fromPoint.SK();
             var end = toPoint.SK();
@@ -82,36 +82,7 @@ namespace Thousand.Compose
             return (PointOnRect(visibleBounds.KS(), fromPoint), PointOnRect(visibleBounds.KS(), toPoint));
         }
 
-        public static IReadOnlyList<Point> Corners(Rect box)
-        {
-            var points = new Point[4];
-
-            points[0] = new Point(box.Left, box.Top);
-            points[1] = new Point(box.Right, box.Top);
-            points[2] = new Point(box.Right, box.Bottom);
-            points[3] = new Point(box.Left, box.Bottom);
-
-            return points;
-        }
-
-        public static IReadOnlyList<Point> Corners(Layout.Shape shape)
-        {
-            var points = new Point[4];
-
-            var nw = new Point(shape.Bounds.Left - shape.Bounds.Width, shape.Bounds.Top - shape.Bounds.Height);
-            var ne = new Point(shape.Bounds.Right + shape.Bounds.Width, shape.Bounds.Top - shape.Bounds.Height);
-            var se = new Point(shape.Bounds.Right + shape.Bounds.Width, shape.Bounds.Bottom + shape.Bounds.Height);
-            var sw = new Point(shape.Bounds.Left - shape.Bounds.Width, shape.Bounds.Bottom + shape.Bounds.Height);            
-
-            points[0] = Line(shape.Bounds.Center, nw, shape, null).from;
-            points[1] = Line(shape.Bounds.Center, ne, shape, null).from;
-            points[2] = Line(shape.Bounds.Center, se, shape, null).from;
-            points[3] = Line(shape.Bounds.Center, sw, shape, null).from;
-
-            return points;
-        }
-
-        private static Point PointOnRect(Rect box, Point vectorFromCenter)
+        private static Point? PointOnRect(Rect box, Point vectorFromCenter)
         {
             var x = vectorFromCenter.X;
             var y = vectorFromCenter.Y;
@@ -166,7 +137,7 @@ namespace Thousand.Compose
                 return new(x, y);
             }
 
-            throw new Exception("cannot find intersection");
+            return null;
         }
     }
 }

@@ -24,7 +24,14 @@ namespace Thousand.Model
 
         public Point Normalize(decimal length = 1m)
         {
-            return new Point(X / (decimal)Length * length, Y / (decimal)Length * length);
+            if (Length == 0)
+            {
+                return Zero;
+            }
+            else
+            {
+                return new Point(X / (decimal)Length * length, Y / (decimal)Length * length);
+            }
         }
 
         public Point Pad(decimal padding) => new(X + padding * 2, Y + padding * 2);

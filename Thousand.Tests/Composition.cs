@@ -86,7 +86,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new NoAnchor(), Point.Zero, Point.Zero)
+                new IR.Edge(left, right)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -108,7 +108,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new NoAnchor(), Point.Zero, Point.Zero)
+                new IR.Edge(left, right)
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -130,7 +130,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new NoAnchor(), new Point(0, 1), new Point(0, 1))
+                new IR.Edge(left, right) with { FromOffset = new Point(0, 1), ToOffset = new Point(0, 1) }
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -152,7 +152,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, new CornerAnchor(), new AnyAnchor(), Point.Zero, Point.Zero)
+                new IR.Edge(left, right) with { FromAnchor = new CornerAnchor(), ToAnchor = new AnyAnchor() }
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -174,7 +174,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, new CornerAnchor(), new CornerAnchor(), Point.Zero, Point.Zero)
+                new IR.Edge(left, right) with { FromAnchor = new CornerAnchor(), ToAnchor = new CornerAnchor() }
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);
@@ -202,7 +202,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(new Stroke(), left, right, null, null, new NoAnchor(), new CornerAnchor(), Point.Zero, Point.Zero)
+                new IR.Edge(left, right) with { FromAnchor = new NoAnchor(), ToAnchor = new CornerAnchor() }
             );
 
             var result = Composer.TryCompose(rules, warnings, errors, out var layout);

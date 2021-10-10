@@ -283,19 +283,19 @@ namespace Thousand
                     switch (from.Direction.Value)
                     {
                         case ArrowKind.Backward:
-                            rootEdges.Add(new(stroke, toTarget, fromTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, to.Target, from.Target, toTarget, fromTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Forward:
-                            rootEdges.Add(new(stroke, fromTarget, toTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, from.Target, to.Target, fromTarget, toTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Neither:
-                            rootEdges.Add(new(stroke, fromTarget, toTarget, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, from.Target, to.Target, fromTarget, toTarget, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Both:
-                            rootEdges.Add(new(stroke, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, from.Target, to.Target, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
                             
                         default:
