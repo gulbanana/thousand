@@ -6,11 +6,13 @@
     [Parameter] public GenerationError[] Errors { get; set; }
 
     private MonacoEditor editor;
+    private string source;
     private string[] decorations = Array.Empty<string>();
 
     private StandaloneEditorConstructionOptions CreateOptions(MonacoEditor editor)
     {
         this.editor = editor;
+        this.source = Source;
 
         return new StandaloneEditorConstructionOptions
         {
@@ -37,7 +39,13 @@
     private bool decorating;
     protected override async Task OnParametersSetAsync()
     {
-        if (editor != null && !decorating)
+        if (!Source.Equals(source) && editor != null)
+        {
+            await editor.SetValue(Source);
+            source = Source;
+        }
+
+        if (!decorating && editor != null)
         {
             decorating = true;
             var newDecorations = Errors.Select(ge => new ModelDeltaDecoration
@@ -58,9 +66,9 @@
 
     private async Task ModelContentChanged(ModelContentChangedEvent e)
     {
-        var value = await editor.GetValue();
-        await SourceChanged.InvokeAsync(value.ToString());
+        source = await editor.GetValue();
+        await SourceChanged.InvokeAsync(source);
     }
 }
 
-<MonacoEditor Id="monaco-editor" ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />
+<MonacoEditor ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />
