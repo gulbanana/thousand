@@ -8,6 +8,8 @@ P1
 
 P2
 --
+* line labels
+* offsets for objects (this could involve some extremely annoying parsing)
 * allow min- to influence justification?
 * anchors and offsets probably don't combine correctly
 * row/col axial justification is weird when packed
