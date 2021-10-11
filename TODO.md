@@ -9,8 +9,9 @@ P1
 P2
 --
 * line labels
+* text alignment
 * object offset (already parsed/styled)
-* canvas layout with X/Y (also parsed/styled) - and/or support direct X Y in any mode (does this take nodes out of the normal layout?)
+* direct layout with X/Y - relative to region, can increase bounds
 * X/Y for line start/end? maybe not, we have points and X-start is ugly
 * allow min- to influence justification?
 * (line) anchors and offsets probably don't combine correctly

@@ -5,6 +5,5 @@ class label [stroke=none, fill=none, padding=0]
 class line [offset=0 0] // attr only to enforce line-identity
 
 class group [shape=rect, stroke=none, label=none, padding=0]
-class grid : group [layout=grid]
-class row : group [layout=row]
-class column : group [layout=column]; class col : column
+class row : group [grid-flow=columns]
+class column : group [grid-flow=rows]; class col : column

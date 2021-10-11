@@ -187,7 +187,7 @@ namespace Thousand.Compose
             foreach (var child in region.Objects)
             {
                 // grid-march: reset to manually specified cell
-                if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Row })
+                if (region.Config.GridFlow == FlowKind.Columns)
                 {
                     if (child.Row.HasValue && currentRow != child.Row.Value)
                     {
@@ -196,8 +196,7 @@ namespace Thousand.Compose
                     }
                     currentColumn = child.Column ?? currentColumn;
                 }
-
-                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Column })
+                else if (region.Config.GridFlow == FlowKind.Rows)
                 {
                     if (child.Column.HasValue && currentColumn != child.Column.Value)
                     {
@@ -235,13 +234,23 @@ namespace Thousand.Compose
                 rowCount = Math.Max(currentRow, rowCount);
                 columnCount = Math.Max(currentColumn, columnCount);
 
-                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Row })
+                if (region.Config.GridFlow == FlowKind.Columns)
                 {
                     currentColumn++;
+                    if (region.Config.GridMax != 0 && currentColumn > region.Config.GridMax)
+                    {
+                        currentRow++;
+                        currentColumn = 1;
+                    }
                 }
-                else if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Column })
+                else if (region.Config.GridFlow == FlowKind.Rows)
                 {
                     currentRow++;
+                    if (region.Config.GridMax != 0 && currentRow > region.Config.GridMax)
+                    {
+                        currentColumn++;
+                        currentRow = 1;
+                    }
                 }
             }
 

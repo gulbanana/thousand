@@ -9,10 +9,10 @@ class header : label [font=32]
 
 group {
 	header "pack=pack (default)"
-	body.red {
+	body.red [grid=3] {
 		box; box(50); box
-		box(100,50) [row=2,col=3]
-		box [row=3,col=3]
+		box(100,50) [col=3]
+		box [col=3]
 	}
 }
 
@@ -28,10 +28,10 @@ group {
 
 group {
 	header "pack=fixed(125)"
-	body.red [pack=125] {
+	body.red [grid=2,pack=125] {
 		box
 		box
-		box [row=2,align=end]
+		box [align=end]
 	}
 }
 
@@ -63,10 +63,10 @@ group {
 
 group {
 	header "axial alignment"
-	body.blue [justify-rows=start, justify-columns=end] {
+	body.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
 		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]
-		box(50,50) [row=2, label="s/e"]; box ; box(50,50) [label="s"]
-		box(50,50) [row=3, label="e"]; box(50,50) [label="e"]; box(50,50)
+		box(50,50) [label="s/e"]; box ; box(50,50) [label="s"]
+		box(50,50) [label="e"]; box(50,50) [label="e"]; box(50,50)
 	}
 }
 

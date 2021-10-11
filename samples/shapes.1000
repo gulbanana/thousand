@@ -3,15 +3,13 @@ class object [min-width=150, font-size=16, margin=10, fill=#ccc, stroke=2]
 column [justify=center] {
 	label "Catalogue of shapes" [font-size=32]
 
-	row [justify=center] {
+	group [justify=center, grid=5 columns] {	
 		column { object oval [shape=oval]; object ellipse [shape=ellipse] }
 		object circle [shape=circle]
 		column { object roundrect [shape=roundRect]; object roundrectangle [shape=roundRectangle] }
 		object roundsquare [shape=roundSquare]
 		column { object pill [shape=pill]; object octagon [shape=octagon] }
-	}
-
-	row [justify=center] {
+	
 		column { object rect [shape=rect]; object rectangle [shape=rectangle] }
 		object square [shape=square]
 		column { object trapezium [shape=trapezium]; object trapezoid [shape=trapezoid] }

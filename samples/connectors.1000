@@ -10,9 +10,9 @@ class tline [stroke=red, offset=0 -20]; class bline [stroke=blue, offset=0 20]
 column [space=20]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
 will draw arrowheads at the corresponding ends.                                  "
-    grid [space=40] {
+    group [space=40, grid=4 columns] {
         box a-1; box b-1; box c-1; box d-1
-        box a-2 [row=2]; box b-2; box c-2; box d-2
+        box a-2; box b-2; box c-2; box d-2
 
         line a-1 -> b-1 <- c-1 -- d-1
         line a-2 --- b-2 --> c-2 <-- d-2
@@ -23,14 +23,14 @@ will draw arrowheads at the corresponding ends.                                 
 
     title "Lines can be attached to anchors - explicitly, or based on relative position."
 
-    grid [space-columns=20] {
+    group [space-columns=20, grid=2 columns] {
         row.c { point s1; spacer(100); point s2; sline s1 -- s2; spacer(10); label "center-to-center" }
         row.c { point g1; spacer(100); point g2; gline g1 -- g2; spacer(10); label "named anchors" }
-        row.c [row=2] { point al1; spacer(100); point al2; aline al1 -- al2; spacer(10); label "anchor-to-anchor" }
+        row.c { point al1; spacer(100); point al2; aline al1 -- al2; spacer(10); label "anchor-to-anchor" }
         row.c { point c1; spacer(100); point c2; cline c1 -- c2; spacer(10); label "corner-to-corner" }
     }
 
-    grid.c [gutter=50] {
+    group.c [gutter=50] {
         box a1 [shape=diamond]
         box a2 [shape=square]
         box(100,50) a3 [shape=trapezium]

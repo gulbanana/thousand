@@ -2,7 +2,7 @@
 {
     public enum FlowKind
     {
-        Row,
-        Column
+        Rows,
+        Columns
     }
 }
