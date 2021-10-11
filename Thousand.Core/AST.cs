@@ -40,13 +40,16 @@ namespace Thousand.AST
     public record RegionJustifyRowsAttribute(AlignmentKind Kind) : RegionAttribute;
     public record RegionJustifyAttribute(AlignmentKind Columns, AlignmentKind Rows) : RegionAttribute;
 
+    public abstract record PositionAttribute;
+    public record PositionAnchorAttribute(CompassKind Placement) : PositionAttribute;
+    public record PositionOffsetAttribute(Point Offset) : PositionAttribute;
+
     public abstract record NodeAttribute;
     public record NodeLabelAttribute(string? Content) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;    
     public record NodeXAttribute(int Value) : NodeAttribute;
     public record NodeYAttribute(int Value) : NodeAttribute;
-    public record NodePlaceAttribute(CompassKind Kind) : NodeAttribute;
     public record NodeMinWidthAttribute(int Value) : NodeAttribute;
     public record NodeMinHeightAttribute(int Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;
@@ -64,8 +67,9 @@ namespace Thousand.AST
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetAttribute(Point Start, Point End) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
-    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<ArrowAttribute, LineAttribute> { } 
+    [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, LineAttribute> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
+    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<PositionAttribute, ArrowAttribute, LineAttribute> { } 
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }
 
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments) : Parse.Templated; // XXX it would be nice if inheritance could call classes
@@ -90,7 +94,7 @@ namespace Thousand.AST
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
     public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes) : TypedClass(Name, BaseClasses);
     public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : TypedClass(Name, BaseClasses);
-    public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses);
+    public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
     [GenerateOneOf] public partial class TypedObjectContent : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
     public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectContent[] Children);
     public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);

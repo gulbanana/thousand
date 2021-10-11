@@ -20,10 +20,10 @@ namespace Thousand.Parse
             Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(Shared.LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
+            Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(AttributeParsers.StrokeAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
+            Shared.List(AttributeParsers.EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ClassBody(Identifier name, Identifier[] bases) => input =>
         {
@@ -31,14 +31,15 @@ namespace Thousand.Parse
             if (!begin.HasValue)
             {
                 // XXX process object-class scopes
-                return TokenListParserResult.Value<TokenKind, AST.TypedClass>(new AST.ObjectOrLineClass(name, bases, Array.Empty<AST.LineAttribute>()), input, input);
+                return TokenListParserResult.Value<TokenKind, AST.TypedClass>(new AST.ObjectOrLineClass(name, bases, Array.Empty<AST.EntityAttribute>()), input, input);
             }
 
             var remainder = begin.Remainder;
             while (true)
             {
-                var eitherAttr = AttributeParsers.StrokeAttribute(remainder);
-                if (eitherAttr.HasValue)
+                var lineOnlyAttr = AttributeParsers.ArrowOnlyAttribute(remainder);
+                var eitherAttr = AttributeParsers.EntityAttribute(remainder);
+                if (eitherAttr.HasValue && !lineOnlyAttr.HasValue)
                 {
                     remainder = eitherAttr.Remainder;
                     var next = remainder.ConsumeToken();
@@ -58,19 +59,19 @@ namespace Thousand.Parse
                     }
                 }
 
+                var lineAttr = Shared.SegmentAttribute(remainder);
+                if (lineAttr.HasValue)
+                {
+                    return LineClassBody(name, bases)(input);
+                }
+
                 var objectAttr = Shared.ObjectAttribute(remainder);
                 if (objectAttr.HasValue)
                 {
                     return ObjectClassBody(name, bases)(input);
                 }
 
-                var lineAttr = Shared.LineAttribute(remainder);
-                if (lineAttr.HasValue)
-                {
-                    return LineClassBody(name, bases)(input);
-                }
-
-                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(Shared.ObjectAttribute.Value(Unit.Value).Or(Shared.LineAttribute.Value(Unit.Value))(remainder));
+                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(Shared.ObjectAttribute.Value(Unit.Value).Or(Shared.SegmentAttribute.Value(Unit.Value))(remainder));
             }
 
             // XXX process object-class scopes
@@ -152,7 +153,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
             from chain in Shared.Edges
-            from attrs in Shared.List(Shared.LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
+            from attrs in Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
             select new AST.TypedLine(classes, chain.ToArray(), attrs);
 
         /***************************************************************************

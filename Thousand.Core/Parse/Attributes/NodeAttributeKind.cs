@@ -20,6 +20,5 @@
         Col, Column = Col,
         X,
         Y,
-        Place
     }
 }

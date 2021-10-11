@@ -63,7 +63,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
             from calls in ClassCallList
             from chain in Shared.Edges
-            from attrs in Shared.List(Shared.LineAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
+            from attrs in Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
             select new AST.UntypedLine(calls, chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.UntypedObjectContent> ObjectContent { get; } = input =>

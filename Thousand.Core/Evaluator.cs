@@ -83,7 +83,7 @@ namespace Thousand
                     var localAttrs = c switch
                     {
                         AST.ObjectClass oc => oc.Attributes,
-                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ec => new AST.ObjectAttribute(ec)),
+                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.ObjectAttribute(ea.AsT0) : new AST.ObjectAttribute(ea.AsT1)),
                         _ => Enumerable.Empty<AST.ObjectAttribute>()
                     };
 
@@ -100,7 +100,7 @@ namespace Thousand
                     var localAttrs = c switch
                     {
                         AST.LineClass lc => lc.Attributes,
-                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ec => new AST.SegmentAttribute(ec)),
+                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.SegmentAttribute(ea.AsT0) : new AST.SegmentAttribute(ea.AsT1)),
                         _ => Enumerable.Empty<AST.SegmentAttribute>()
                     };
 
@@ -140,7 +140,8 @@ namespace Thousand
             var row = new int?();           
             var x = new int?();
             var y = new int?();
-            var place = new CompassKind?();
+            var anchor = default(CompassKind?);
+            var offset = default(Point?);
 
             var shape = new ShapeKind?(ShapeKind.Roundrect);
             var cornerRadius = 15;
@@ -149,7 +150,19 @@ namespace Thousand
 
             foreach (var attr in node.Classes.SelectMany(FindObjectClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
-                attr.Switch(n =>
+                attr.Switch(e =>
+                {
+                    switch (e)
+                    {
+                        case AST.PositionAnchorAttribute eaa:
+                            anchor = eaa.Placement;
+                            break;
+
+                        case AST.PositionOffsetAttribute eoa:
+                            offset = eoa.Offset;
+                            break;
+                    }
+                }, n =>
                 {
                     switch (n)
                     {
@@ -171,10 +184,6 @@ namespace Thousand
 
                         case AST.NodeYAttribute nya:
                             y = nya.Value;
-                            break;
-
-                        case AST.NodePlaceAttribute npa:
-                            place = npa.Kind;
                             break;
 
                         case AST.NodeMinWidthAttribute nwa:
@@ -229,7 +238,7 @@ namespace Thousand
                 }
             }
 
-            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, width, height, row, column, x, y, place, shape, cornerRadius, stroke);
+            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, width, height, row, column, x, y, anchor, offset, shape, cornerRadius, stroke);
 
             if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {
@@ -253,7 +262,22 @@ namespace Thousand
 
             foreach (var attr in line.Classes.SelectMany(FindLineClass).Concat(line.Attributes))
             {
-                attr.Switch(arrow =>
+                attr.Switch(entity =>
+                {
+                    switch (entity)
+                    {
+                        case AST.PositionAnchorAttribute eaa:
+                            var anchor = new SpecificAnchor(eaa.Placement);
+                            anchorStart = anchor;
+                            anchorEnd = anchor;
+                            break;
+
+                        case AST.PositionOffsetAttribute eoa:
+                            offsetStart = eoa.Offset;
+                            offsetEnd = eoa.Offset;
+                            break;
+                    }
+                }, arrow =>
                 {
                     switch (arrow)
                     {

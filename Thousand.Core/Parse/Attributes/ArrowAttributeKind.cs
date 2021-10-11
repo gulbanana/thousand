@@ -4,9 +4,7 @@
     {
         AnchorStart, 
         AnchorEnd,
-        Anchor,        
         OffsetStart,
         OffsetEnd,
-        Offset,
     }
 }
