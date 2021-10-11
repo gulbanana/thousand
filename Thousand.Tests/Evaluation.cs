@@ -22,8 +22,8 @@ namespace Thousand.Tests
                 { 
                     new AST.NodeShapeAttribute(null), 
                     new AST.NodeLabelAttribute(null), 
-                    new AST.RegionPackColumnsAttribute(new EqualSize()),
-                    new AST.RegionPackRowsAttribute(new EqualSize())
+                    new AST.RegionLayoutColumnsAttribute(new EqualSize()),
+                    new AST.RegionLayoutRowsAttribute(new EqualSize())
                 }),
 
                 new AST.TypedObject(new Parse.Identifier[]{new("big"), new("group")}, null, Array.Empty<AST.ObjectAttribute>(), new AST.TypedObjectContent[] //uses larger font
@@ -53,7 +53,7 @@ namespace Thousand.Tests
 
             AssertEx.Sequence(root.Region.WalkObjects().Where(o => o.Label != null).Select(o => o.Font.Size), 50, 40, 50, 20);
 
-            AssertEx.Sequence(root.Region.Objects.Select(o => o.Region.Config.Size.Columns), new EqualSize(), new PackedSize(), new PackedSize());
+            AssertEx.Sequence(root.Region.Objects.Select(o => o.Region.Config.Layout.Columns), new EqualSize(), new PackedSize(), new PackedSize());
         }
     }
 }

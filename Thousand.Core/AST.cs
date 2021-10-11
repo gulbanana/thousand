@@ -33,9 +33,9 @@ namespace Thousand.AST
     public record RegionSpaceRowsAttribute(int Value) : RegionAttribute;
     public record RegionSpaceAttribute(int Columns, int Rows) : RegionAttribute;
 
-    public record RegionPackColumnsAttribute(TrackSize Size) : RegionAttribute;
-    public record RegionPackRowsAttribute(TrackSize Size) : RegionAttribute;
-    public record RegionPackAttribute(TrackSize Columns, TrackSize Rows) : RegionAttribute;    
+    public record RegionLayoutColumnsAttribute(TrackSize Size) : RegionAttribute;
+    public record RegionLayoutRowsAttribute(TrackSize Size) : RegionAttribute;
+    public record RegionLayoutAttribute(TrackSize Columns, TrackSize Rows) : RegionAttribute;    
 
     public record RegionJustifyColumnsAttribute(AlignmentKind Kind) : RegionAttribute;
     public record RegionJustifyRowsAttribute(AlignmentKind Kind) : RegionAttribute;

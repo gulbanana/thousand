@@ -379,20 +379,20 @@ namespace Thousand.Parse
             from columnsAndRows in Value.WholeNumber.Twice()
             select new AST.RegionSpaceAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPackColumnsAttribute { get; } =
-            from key in Key(RegionAttributeKind.PackColumns)
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutColumnsAttribute { get; } =
+            from key in Key(RegionAttributeKind.LayoutColumns)
             from value in Value.TrackSize
-            select new AST.RegionPackColumnsAttribute(value) as AST.RegionAttribute;
+            select new AST.RegionLayoutColumnsAttribute(value) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPackRowsAttribute { get; } =
-            from key in Key(RegionAttributeKind.PackRows)
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutRowsAttribute { get; } =
+            from key in Key(RegionAttributeKind.LayoutRows)
             from value in Value.TrackSize
-            select new AST.RegionPackRowsAttribute(value) as AST.RegionAttribute;
+            select new AST.RegionLayoutRowsAttribute(value) as AST.RegionAttribute;
 
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionPackAttribute { get; } =
-            from key in Key(RegionAttributeKind.Pack)
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionLayoutAttribute { get; } =
+            from key in Key(RegionAttributeKind.Layout)
             from columnsAndRows in Value.TrackSize.Twice()
-            select new AST.RegionPackAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
+            select new AST.RegionLayoutAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyColumnsAttribute { get; } =
             from key in Key(RegionAttributeKind.JustifyColumns)
@@ -418,9 +418,9 @@ namespace Thousand.Parse
                 .Or(RegionSpaceColumnsAttribute)
                 .Or(RegionSpaceRowsAttribute)
                 .Or(RegionSpaceAttribute)
-                .Or(RegionPackColumnsAttribute)
-                .Or(RegionPackRowsAttribute)
-                .Or(RegionPackAttribute)
+                .Or(RegionLayoutColumnsAttribute)
+                .Or(RegionLayoutRowsAttribute)
+                .Or(RegionLayoutAttribute)
                 .Or(RegionJustifyColumnsAttribute)
                 .Or(RegionJustifyRowsAttribute)
                 .Or(RegionJustifyAttribute);

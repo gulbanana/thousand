@@ -8,7 +8,7 @@ class body : area [row=2]
 class header : label [font=32]
 
 group {
-	header "pack=pack (default)"
+	header "layout=pack"
 	body.red [grid=3] {
 		box; box(50); box
 		box(100,50) [col=3]
@@ -17,8 +17,8 @@ group {
 }
 
 group {
-	header "pack=equal"
-	body.red [pack=equal] {
+	header "layout=equal"
+	body.red [layout=equal] {
 		box(50,50)
 		box(25,50) [row=3,col=2]
 		box(50,25) [row=4,col=5]
@@ -27,8 +27,8 @@ group {
 }
 
 group {
-	header "pack=fixed(125)"
-	body.red [grid=2,pack=125] {
+	header "layout=fixed(125)"
+	body.red [grid=2, layout=125] {
 		box
 		box
 		box [align=end]

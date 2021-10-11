@@ -4,7 +4,6 @@
     {
         Fill,
         Padding,
-        Layout,
 
         Grid,
         GridFlow,
@@ -14,9 +13,9 @@
         SpaceRows, GutterRows = SpaceRows,
         SpaceColumns, GutterColumns = SpaceColumns,
 
-        Pack,
-        PackRows,
-        PackColumns,
+        Layout,
+        LayoutRows,
+        LayoutColumns,
 
         Justify,
         JustifyRows,

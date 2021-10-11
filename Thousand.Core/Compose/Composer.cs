@@ -259,7 +259,7 @@ namespace Thousand.Compose
             for (var c = 0; c < columnCount; c++)
             {
                 var intrinsicWidth = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
-                var trackWidth = region.Config.Size.Columns switch
+                var trackWidth = region.Config.Layout.Columns switch
                 {
                     EqualSize => maxWidth,
                     MinimumSize(var minWidth) => Math.Max(minWidth, intrinsicWidth),
@@ -272,7 +272,7 @@ namespace Thousand.Compose
             for (var r = 0; r < rowCount; r++)
             {
                 var intrinsicHeight = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
-                var trackHeight = region.Config.Size.Rows switch
+                var trackHeight = region.Config.Layout.Rows switch
                 {
                     EqualSize => maxHeight,
                     MinimumSize(var minHeight) => Math.Max(minHeight, intrinsicHeight),

@@ -1,5 +1,5 @@
 // XXX rewrite this
-pack=pack; space=25
+layout=pack; space=25
 
 class stage [shape=oval, stroke=green, padding=10, min-height=60]
 class platStage : stage [stroke=blue]

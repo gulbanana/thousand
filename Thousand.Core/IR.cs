@@ -9,7 +9,7 @@ namespace Thousand.IR
         public Axes(T both) : this(both, both) { }
     }
 
-    public record Config(Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Size, Axes<AlignmentKind> Alignment)
+    public record Config(Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
         public Config() : this(null, FlowKind.Columns, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
     }
