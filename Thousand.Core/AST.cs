@@ -27,6 +27,8 @@ namespace Thousand.AST
     public record RegionPaddingAttribute(Border Value) : RegionAttribute;
     public record RegionLayoutAttribute(LayoutKind Kind) : RegionAttribute;
     public record RegionGridFlowAttribute(FlowKind Kind) : RegionAttribute;
+    public record RegionGridMaxAttribute(int Value) : RegionAttribute;
+    public record RegionGridAttribute(FlowKind? Flow, int? Max) : RegionAttribute;
 
     public record RegionSpaceColumnsAttribute(int Value) : RegionAttribute;
     public record RegionSpaceRowsAttribute(int Value) : RegionAttribute;

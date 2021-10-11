@@ -5,7 +5,10 @@
         Fill,
         Padding,
         Layout,
+
+        Grid,
         GridFlow,
+        GridMax,
 
         Space, Gutter=Space,
         SpaceRows, GutterRows = SpaceRows,

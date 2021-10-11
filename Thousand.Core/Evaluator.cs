@@ -56,7 +56,7 @@ namespace Thousand
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(Colour.White, LayoutKind.Grid, FlowKind.Row, new(5), new(0), new(new EqualSize()), new(AlignmentKind.Center));
+            Config = new IR.Config(Colour.White, LayoutKind.Grid, FlowKind.Row, 0, new(5), new(0), new(new EqualSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.TypedDocument diagram)
@@ -126,7 +126,7 @@ namespace Thousand
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
         {
-            var regionConfig = new IR.Config(null, LayoutKind.Grid, FlowKind.Row, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
+            var regionConfig = new IR.Config(null, LayoutKind.Grid, FlowKind.Row, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
             var label = node.Name?.Text; // names are a separate thing, but if a node has one, it is also the default label
             var font = cascadeFont;
@@ -353,7 +353,9 @@ namespace Thousand
                 AST.RegionFillAttribute rfa => config with { Fill = rfa.Colour },
                 AST.RegionPaddingAttribute rpa => config with { Padding = rpa.Value },
                 AST.RegionLayoutAttribute rla => config with { Layout = rla.Kind },
-                AST.RegionGridFlowAttribute rgfa => config with { Flow = rgfa.Kind },
+                AST.RegionGridFlowAttribute rgfa => config with { GridFlow = rgfa.Kind },
+                AST.RegionGridMaxAttribute rgma => config with { GridMax = rgma.Value },
+                AST.RegionGridAttribute rga => config with { GridFlow = rga.Flow ?? config.GridFlow, GridMax = rga.Max ?? config.GridMax },
                 AST.RegionSpaceColumnsAttribute rsca => config with { Gutter = new(rsca.Value, config.Gutter.Rows) },
                 AST.RegionSpaceRowsAttribute rsra => config with { Gutter = new(config.Gutter.Columns, rsra.Value) },
                 AST.RegionSpaceAttribute rsa => config with { Gutter = new(rsa.Columns, rsa.Rows) },

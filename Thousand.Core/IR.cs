@@ -9,9 +9,9 @@ namespace Thousand.IR
         public Axes(T both) : this(both, both) { }
     }
 
-    public record Config(Colour? Fill, LayoutKind Layout, FlowKind Flow, Border Padding, Axes<int> Gutter, Axes<TrackSize> Size, Axes<AlignmentKind> Alignment)
+    public record Config(Colour? Fill, LayoutKind Layout, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Size, Axes<AlignmentKind> Alignment)
     {
-        public Config() : this(null, LayoutKind.Grid, FlowKind.Row, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
+        public Config() : this(null, LayoutKind.Grid, FlowKind.Row, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
     }
 
     public record Region(Config Config, IReadOnlyList<Object> Objects)

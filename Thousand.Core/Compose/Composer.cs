@@ -187,7 +187,7 @@ namespace Thousand.Compose
             foreach (var child in region.Objects)
             {
                 // grid-march: reset to manually specified cell
-                if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, Flow: FlowKind.Row })
+                if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Row })
                 {
                     if (child.Row.HasValue && currentRow != child.Row.Value)
                     {
@@ -197,7 +197,7 @@ namespace Thousand.Compose
                     currentColumn = child.Column ?? currentColumn;
                 }
 
-                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, Flow: FlowKind.Column })
+                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Column })
                 {
                     if (child.Column.HasValue && currentColumn != child.Column.Value)
                     {
@@ -235,11 +235,11 @@ namespace Thousand.Compose
                 rowCount = Math.Max(currentRow, rowCount);
                 columnCount = Math.Max(currentColumn, columnCount);
 
-                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, Flow: FlowKind.Row })
+                if (region.Config is { Layout: LayoutKind.Row } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Row })
                 {
                     currentColumn++;
                 }
-                else if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, Flow: FlowKind.Column })
+                else if (region.Config is { Layout: LayoutKind.Column } or { Layout: LayoutKind.Grid, GridFlow: FlowKind.Column })
                 {
                     currentRow++;
                 }
