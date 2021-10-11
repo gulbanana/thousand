@@ -47,6 +47,10 @@ namespace Thousand.Parse
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
                 .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));
 
+        public static TokenListParser<TokenKind, string?> IdentifierNullableString { get; } =
+            Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Select(i => i.Text)).AsNullable()
+                .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));
+
         public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "any").Value(new AnyAnchor() as Anchor)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corners").Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corner")).Value(new CornerAnchor() as Anchor))

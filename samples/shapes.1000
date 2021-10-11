@@ -1,19 +1,19 @@
-class object [min-width=150, font-size=16, margin=10, fill=#ccc, stroke=2]
+class named($x) [min-width=150, font-size=16, margin=10, fill=#ccc, stroke=2, shape=$x, label=$x]
 
 column [justify=center] {
 	label "Catalogue of shapes" [font-size=32]
 
 	group [justify=center, grid=5 columns] {	
-		column { object oval [shape=oval]; object ellipse [shape=ellipse] }
-		object circle [shape=circle]
-		column { object roundrect [shape=roundRect]; object roundrectangle [shape=roundRectangle] }
-		object roundsquare [shape=roundSquare]
-		column { object pill [shape=pill]; object octagon [shape=octagon] }
+		column { named(oval); named(ellipse) }
+		named(circle)
+		column { named(roundrect); named(roundrectangle) }
+		named(roundsquare)
+		column { named(pill); named(octagon) }
 	
-		column { object rect [shape=rect]; object rectangle [shape=rectangle] }
-		object square [shape=square]
-		column { object trapezium [shape=trapezium]; object trapezoid [shape=trapezoid] }
-		object diamond [shape=diamond]
-		column { object rhombus [shape=rhombus]; object triangle [shape=triangle] }
+		column { named(rect); named(rectangle) }
+		named(square)
+		column { named(trapezium); named(trapezoid) }
+		named(diamond)
+		column { named(rhombus); named(triangle) }
 	}
 }

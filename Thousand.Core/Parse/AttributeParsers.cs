@@ -258,7 +258,7 @@ namespace Thousand.Parse
         #region node group, used only by objects
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
             from key in Key(NodeAttributeKind.Label)
-            from value in Value.NullableString
+            from value in Value.NullableString.Or(Value.IdentifierNullableString)
             select new AST.NodeLabelAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
