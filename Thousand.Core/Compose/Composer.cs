@@ -35,7 +35,7 @@ namespace Thousand.Compose
         private readonly List<GenerationError> es;
         private readonly IR.Root root;
         private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
-        private readonly Dictionary<IR.Region, GridState> gridState;
+        private readonly Dictionary<IR.Region, LayoutState> layouts;
         private readonly Dictionary<IR.Object, Layout.Shape> outputShapes;
         private readonly List<Layout.LabelBlock> outputLabels;
         private readonly List<Layout.Line> outputLines;
@@ -48,7 +48,7 @@ namespace Thousand.Compose
             this.root = root;
             this.textMeasures = textMeasures;
 
-            gridState = new(ReferenceEqualityComparer.Instance);
+            layouts = new(ReferenceEqualityComparer.Instance);
 
             outputShapes = new(ReferenceEqualityComparer.Instance);
             outputLabels = new();
@@ -176,8 +176,8 @@ namespace Thousand.Compose
         // has a size determined by the object bounds, their margins and the region's gutter
         private Point Measure(IR.Region region, Point intrinsicSize)
         {
-            var state = new GridState();
-            gridState[region] = state;
+            var state = new LayoutState();
+            layouts[region] = state;
 
             var currentRow = 1;
             var currentColumn = 1;
@@ -186,6 +186,35 @@ namespace Thousand.Compose
 
             foreach (var child in region.Objects)
             {
+                // measure child and apply overrides
+                var desiredSize = Measure(
+                    child.Region,
+                    child.Label == null ? Point.Zero : textMeasures[child.Label].Size
+                );
+
+                if (child.MinWidth.HasValue)
+                {
+                    desiredSize = desiredSize with { X = Math.Max(child.MinWidth.Value, desiredSize.X) };
+                }
+
+                if (child.MinHeight.HasValue)
+                {
+                    desiredSize = desiredSize with { Y = Math.Max(child.MinHeight.Value, desiredSize.Y) };
+                }
+
+                if (child.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
+                {
+                    var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
+                    desiredSize = new Point(longestSide, longestSide);
+                }
+                
+                // extract positioned children from the grid flow
+                if (child.Anchor.HasValue)
+                {
+                    state.AllNodes[child] = new AnchorLayoutNode(desiredSize, child.Margin, child.Anchor.Value);
+                    continue;
+                }
+
                 // grid-march: reset to manually specified cell
                 if (region.Config.GridFlow == FlowKind.Columns)
                 {
@@ -206,29 +235,9 @@ namespace Thousand.Compose
                     currentRow = child.Row ?? currentRow;
                 }
 
-                // measure child and apply overrides
-                var desiredSize = Measure(
-                    child.Region, 
-                    child.Label == null ? Point.Zero : textMeasures[child.Label].Size
-                );
-
-                if (child.MinWidth.HasValue)
-                {
-                    desiredSize = desiredSize with { X = Math.Max(child.MinWidth.Value, desiredSize.X) };
-                }
-
-                if (child.MinHeight.HasValue)
-                {
-                    desiredSize = desiredSize with { Y = Math.Max(child.MinHeight.Value, desiredSize.Y) };
-                }
-
-                if (child.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
-                {
-                    var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
-                    desiredSize = new Point(longestSide, longestSide);
-                }
-
-                state.Nodes[child] = new GridMeasurements(desiredSize, child.Margin, currentRow, currentColumn);
+                var measurements = new GridLayoutNode(desiredSize, child.Margin, currentRow, currentColumn); 
+                state.GridNodes[child] = measurements;
+                state.AllNodes[child] = measurements;
 
                 // grid-march: update size and move to the next cell
                 rowCount = Math.Max(currentRow, rowCount);
@@ -255,10 +264,10 @@ namespace Thousand.Compose
             }
 
             // calculate track sizes
-            var maxWidth = state.Nodes.Values.Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
+            var maxWidth = state.GridNodes.Values.Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
             for (var c = 0; c < columnCount; c++)
             {
-                var intrinsicWidth = state.Nodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
+                var intrinsicWidth = state.GridNodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
                 var trackWidth = region.Config.Layout.Columns switch
                 {
                     EqualSize => maxWidth,
@@ -268,10 +277,10 @@ namespace Thousand.Compose
                 state.Columns.Add(trackWidth);
             }
 
-            var maxHeight = state.Nodes.Values.Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
+            var maxHeight = state.GridNodes.Values.Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
             for (var r = 0; r < rowCount; r++)
             {
-                var intrinsicHeight = state.Nodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
+                var intrinsicHeight = state.GridNodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
                 var trackHeight = region.Config.Layout.Rows switch
                 {
                     EqualSize => maxHeight,
@@ -300,8 +309,9 @@ namespace Thousand.Compose
         private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Point location)
         {
             var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
-            var state = gridState[region];
+            var state = layouts[region];
 
+            // calculate tracks based on flow children
             var columns = new Track[state.Columns.Count];
             var colMarker = location.X + region.Config.Padding.Left;
             for (var c = 0; c < state.Columns.Count; c++)
@@ -330,37 +340,49 @@ namespace Thousand.Compose
                 rows[r] = new(start, center, end);
             }
 
-            foreach (var obj in region.Objects)
+            // arrange each child in the tracks recursively
+            foreach (var child in region.Objects)
             {
-                var node = state.Nodes[obj];
+                var node = state.AllNodes[child];
 
-                var xOrigin = (obj.Alignment.Columns ?? region.Config.Alignment.Columns) switch
+                var origin = node switch
                 {
-                    AlignmentKind.Start => columns[node.Column - 1].Start + node.Margin.Left,
-                    AlignmentKind.Center => columns[node.Column - 1].Center - (node.DesiredSize.X) / 2,
-                    AlignmentKind.End => columns[node.Column - 1].End - (node.DesiredSize.X + node.Margin.Right),
+                    GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
+                    {
+                        AlignmentKind.Start => columns[gln.Column - 1].Start + gln.Margin.Left,
+                        AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.DesiredSize.X) / 2,
+                        AlignmentKind.End => columns[gln.Column - 1].End - (gln.DesiredSize.X + gln.Margin.Right),
+                    }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
+                    {
+                        AlignmentKind.Start => rows[gln.Row - 1].Start + gln.Margin.Top,
+                        AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.DesiredSize.Y) / 2,
+                        AlignmentKind.End => rows[gln.Row - 1].End - (gln.DesiredSize.Y + gln.Margin.Bottom),
+                    }),
+
+                    AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => state.Anchors[aln.Anchor] - node.DesiredSize/2,
+                    
+                    _ => Point.Zero
                 };
 
-                var yOrigin = (obj.Alignment.Rows ?? region.Config.Alignment.Rows) switch
-                {
-                    AlignmentKind.Start => rows[node.Row - 1].Start + node.Margin.Top,
-                    AlignmentKind.Center => rows[node.Row - 1].Center - (node.DesiredSize.Y) / 2,
-                    AlignmentKind.End => rows[node.Row - 1].End - (node.DesiredSize.Y + node.Margin.Bottom),
-                };
-
-                var origin = new Point(xOrigin, yOrigin);
                 var bounds = new Rect(origin, node.DesiredSize);
-                boxes[obj] = bounds;
+                boxes[child] = bounds;
 
-                if (obj.Shape.HasValue)
+                // paint shape and determine its anchors for its own children to use
+                if (child.Shape.HasValue)
                 {
-                    var shape = new Layout.Shape(bounds, obj.Shape.Value, obj.CornerRadius, obj.Stroke, obj.Region.Config.Fill);
-                    outputShapes[obj] = shape;
+                    var shape = new Layout.Shape(bounds, child.Shape.Value, child.CornerRadius, child.Stroke, child.Region.Config.Fill);
+                    outputShapes[child] = shape;
+
+                    foreach (var kvp in Shapes.Anchors(child.Shape.Value, child.CornerRadius, bounds))
+                    {
+                        layouts[child.Region].Anchors.Add(kvp.Key, kvp.Value.Location);
+                    }
                 }
 
-                if (obj.Label != null && obj.Label.Content != string.Empty)
+                // paint intrinsic (text) content 
+                if (child.Label != null && child.Label.Content != string.Empty)
                 {
-                    var block = textMeasures[obj.Label];
+                    var block = textMeasures[child.Label];
                     var blockBox = new Rect(block.Size).CenteredAt(bounds.Center);
 
                     // subpixel vertical positioning is not consistently supported in SVG
@@ -376,13 +398,13 @@ namespace Thousand.Compose
                         var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
                         lines.Add(new Layout.LabelLine(lineBox, line.Run));
                     }
-                    var label = new Layout.LabelBlock(obj.Label.Font, blockBox, obj.Label.Content, lines);
+                    var label = new Layout.LabelBlock(child.Label.Font, blockBox, child.Label.Content, lines);
                     outputLabels.Add(label);
                 }
 
-                if (obj.Region.Objects.Any())
+                if (child.Region.Objects.Any())
                 {
-                    foreach (var kvp in Arrange(obj.Region, bounds.Origin))
+                    foreach (var kvp in Arrange(child.Region, bounds.Origin))
                     {
                         boxes.Add(kvp.Key, kvp.Value);
                     }

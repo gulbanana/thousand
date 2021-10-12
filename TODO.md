@@ -3,7 +3,6 @@ TO DO
 
 P1
 --
-* object anchor (already parsed/styled)
 * object class contents, with placeholders (need skip-level evaluation here)
 
 P2
@@ -13,6 +12,7 @@ P2
 * object offset (already parsed/styled)
 * direct layout with X/Y - relative to region, can increase bounds
 * allow min- to influence justification? (i have forgotten what this means)
+* possibly related: using diamond as a container seems to be broken
 * (line) anchors and offsets probably don't combine correctly
 * anchors should be close to each other instead of strictly clockwise
 * row/col axial justification is weird when packed
