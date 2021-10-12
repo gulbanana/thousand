@@ -4,6 +4,6 @@
     {
         Start,
         Center,
-        End
+        End,
     }
 }

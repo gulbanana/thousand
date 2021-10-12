@@ -247,8 +247,7 @@ namespace Thousand
                     AddEdge(chain);
                 }
             }
-
-            var result = new IR.Object(new IR.Region(regionConfig, children), label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), alignment, margin, width, height, row, column, x, y, anchor, offset, shape, cornerRadius, stroke);
+            var result = new IR.Object(node.Name??node.Classes.First() /* XXX */, new IR.Region(regionConfig, children), label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), alignment, margin, width, height, row, column, x, y, anchor, offset, shape, cornerRadius, stroke);
 
             if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {

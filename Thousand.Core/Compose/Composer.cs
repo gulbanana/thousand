@@ -220,61 +220,70 @@ namespace Thousand.Compose
             {
                 // measure child and apply overrides
                 var (desiredSize, desiredMargin) = Measure(child);
-                
-                // XXX make row/column, anchor, x/y mutually exclusive
-                // extract positioned children from the grid flow
+
+                // anchor layout: extract positioned children from the flow and stick them to a point on the containing shape
                 if (child.Anchor.HasValue)
                 {
-                    var node = new AnchorLayoutNode(desiredSize, desiredMargin, child.Anchor.Value);
+                    if (child.Row.HasValue || child.Column.HasValue)
+                    {
+                        es.Add(new(child.Name.Location, ErrorKind.Layout, $"object `{child.Name.Text}` has both anchor and grid row/column"));
+                        return Point.Zero;
+                    }
+
+                    var node = new AnchorLayoutNode(desiredSize, desiredMargin, child.Anchor.Value, child.Alignment.Select(k => k ?? AlignmentKind.Center));
                     state.AllNodes[child] = node;
                     state.AnchorNodes[child] = node;
                     continue;
                 }
 
-                // grid-march: reset to manually specified cell
-                if (region.Config.GridFlow == FlowKind.Columns)
+                // default (grid) layout: place object in row/column tracks according to flow
+                else
                 {
-                    if (child.Row.HasValue && currentRow != child.Row.Value)
+                    // grid-march: reset to manually specified cell
+                    if (region.Config.GridFlow == FlowKind.Columns)
                     {
-                        currentRow = child.Row.Value;
-                        currentColumn = 1;
+                        if (child.Row.HasValue && currentRow != child.Row.Value)
+                        {
+                            currentRow = child.Row.Value;
+                            currentColumn = 1;
+                        }
+                        currentColumn = child.Column ?? currentColumn;
                     }
-                    currentColumn = child.Column ?? currentColumn;
-                }
-                else if (region.Config.GridFlow == FlowKind.Rows)
-                {
-                    if (child.Column.HasValue && currentColumn != child.Column.Value)
+                    else if (region.Config.GridFlow == FlowKind.Rows)
                     {
-                        currentColumn = child.Column.Value;
-                        currentRow = 1;
-                    }
-                    currentRow = child.Row ?? currentRow;
-                }
+                        if (child.Column.HasValue && currentColumn != child.Column.Value)
+                        {
+                            currentColumn = child.Column.Value;
+                            currentRow = 1;
+                        }
+                        currentRow = child.Row ?? currentRow;
+                    } 
 
-                var measurements = new GridLayoutNode(desiredSize, desiredMargin, currentRow, currentColumn); 
-                state.GridNodes[child] = measurements;
-                state.AllNodes[child] = measurements;
+                    var measurements = new GridLayoutNode(desiredSize, desiredMargin, currentRow, currentColumn);
+                    state.GridNodes[child] = measurements;
+                    state.AllNodes[child] = measurements;
 
-                // grid-march: update size and move to the next cell
-                rowCount = Math.Max(currentRow, rowCount);
-                columnCount = Math.Max(currentColumn, columnCount);
+                    // grid-march: update size and move to the next cell
+                    rowCount = Math.Max(currentRow, rowCount);
+                    columnCount = Math.Max(currentColumn, columnCount);
 
-                if (region.Config.GridFlow == FlowKind.Columns)
-                {
-                    currentColumn++;
-                    if (region.Config.GridMax != 0 && currentColumn > region.Config.GridMax)
-                    {
-                        currentRow++;
-                        currentColumn = 1;
-                    }
-                }
-                else if (region.Config.GridFlow == FlowKind.Rows)
-                {
-                    currentRow++;
-                    if (region.Config.GridMax != 0 && currentRow > region.Config.GridMax)
+                    if (region.Config.GridFlow == FlowKind.Columns)
                     {
                         currentColumn++;
-                        currentRow = 1;
+                        if (region.Config.GridMax != 0 && currentColumn > region.Config.GridMax)
+                        {
+                            currentRow++;
+                            currentColumn = 1;
+                        }
+                    }
+                    else if (region.Config.GridFlow == FlowKind.Rows)
+                    {
+                        currentRow++;
+                        if (region.Config.GridMax != 0 && currentRow > region.Config.GridMax)
+                        {
+                            currentColumn++;
+                            currentRow = 1;
+                        }
                     }
                 }
             }
@@ -375,7 +384,18 @@ namespace Thousand.Compose
                         AlignmentKind.End => rows[gln.Row - 1].End - (gln.Size.Y + gln.Margin.Bottom),
                     }),
 
-                    AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => state.Anchors[aln.Anchor] - node.Size / 2,
+                    // *after* anchor = anchor is shape's *origin*
+                    AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => new Point((child.Alignment.Columns ?? AlignmentKind.Center) switch
+                    {
+                        AlignmentKind.Start => (state.Anchors[aln.Anchor] - node.Size).X,
+                        AlignmentKind.Center => (state.Anchors[aln.Anchor] - node.Size / 2).X,
+                        AlignmentKind.End => state.Anchors[aln.Anchor].X,
+                    }, (child.Alignment.Rows ?? AlignmentKind.Center) switch
+                    {
+                        AlignmentKind.Start => (state.Anchors[aln.Anchor] - node.Size).Y,
+                        AlignmentKind.Center => (state.Anchors[aln.Anchor] - node.Size / 2).Y,
+                        AlignmentKind.End => state.Anchors[aln.Anchor].Y,
+                    }),
                     
                     _ => Point.Zero
                 };
@@ -445,8 +465,20 @@ namespace Thousand.Compose
                 return Border.Zero;
             }
 
+            var childBox = node.Size;
             var childAnchor = parentAnchors[node.Anchor].Location;
-            var childBounds = new Rect(node.Size + node.Margin).CenteredAt(childAnchor);
+            var childOrigin = new Point(node.Alignment.Columns switch
+            {
+                AlignmentKind.Start => (childAnchor - childBox).X,
+                AlignmentKind.Center => (childAnchor - childBox / 2).X,
+                AlignmentKind.End => childAnchor.X,
+            }, node.Alignment.Rows switch
+            {
+                AlignmentKind.Start => (childAnchor - childBox).Y,
+                AlignmentKind.Center => (childAnchor - childBox / 2).Y,
+                AlignmentKind.End => childAnchor.Y,
+            });
+            var childBounds = new Rect(childOrigin, childBox) + node.Margin;
 
             return new Border(
                 Math.Max(0, parentBounds.Left - childBounds.Left),
