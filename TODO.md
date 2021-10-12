@@ -9,11 +9,10 @@ P1
 P2
 --
 * line labels
-* text alignment
+* investigate span - possibly doable, definitely useful
 * object offset (already parsed/styled)
 * direct layout with X/Y - relative to region, can increase bounds
-* X/Y for line start/end? maybe not, we have points and X-start is ugly
-* allow min- to influence justification?
+* allow min- to influence justification? (i have forgotten what this means)
 * (line) anchors and offsets probably don't combine correctly
 * anchors should be close to each other instead of strictly clockwise
 * row/col axial justification is weird when packed
@@ -23,12 +22,12 @@ P2
 * reevaluate padding algorithm - is it correct to ignore padding when there is no content? we could disable padding for shape=none instead
 * drop shadows
 * customisable arrowheads
-* docs - generated for attrs? or just handwrite it all?
-* consider line caps
 * triangle text placement is bad visually. special case to move either the text or the shape?
 
 P3
 --
+* consider line caps
+* docs - generated for attrs? or just handwrite it all?
 * regularity control (a square is a regular rectangle) (not so sure about this, it makes the code simpler but the api more complex...)
 * do a defaults pass, picking values which produce a nice appearance without customisation
 * image embedding 

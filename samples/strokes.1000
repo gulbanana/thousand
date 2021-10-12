@@ -13,7 +13,7 @@ class box [fill=#ccc, shape=roundsquare]
 class noline [stroke=none]
 class hairline [stroke=hairline]
 class thickline [stroke=1]
-class title : label [font=10, margin=10]
+class title : label [font=10, margin=10, label=start]
 
 column {
 	group [space=40, grid=3] {
@@ -35,7 +35,7 @@ column {
 	}
 
 	title "Line and shape strokes can be solid or styled
-with patterns of gaps and dashes.                 "
+with patterns of gaps and dashes."
 }
 
 column {
@@ -58,5 +58,5 @@ column {
 
 	title "Line and shape strokes can either be zero width,
 hairline width (which doesn't scale), or any fixed
-value, which increases with document scale.       "
+value, which increases with document scale."
 }

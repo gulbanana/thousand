@@ -128,7 +128,8 @@ namespace Thousand
         {
             var regionConfig = new IR.Config(null, FlowKind.Columns, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
-            var label = node.Name?.Text; // names are a separate thing, but if a node has one, it is also the default label
+            var label = new Text(node.Name?.Text); // names are a separate thing, but if a node has one, it is also the default label
+            var justifyText = AlignmentKind.Center;
             var font = cascadeFont;
 
             var alignment = new IR.Axes<AlignmentKind?>(null, null);
@@ -166,8 +167,17 @@ namespace Thousand
                 {
                     switch (n)
                     {
+                        case AST.NodeLabelContentAttribute nlca:
+                            label = nlca.Text;
+                            break;
+
+                        case AST.NodeLabelJustifyAttribute nlja:
+                            justifyText = nlja.Kind;
+                            break;
+
                         case AST.NodeLabelAttribute nla:
-                            label = nla.Content;
+                            label = nla.Content ?? label;
+                            justifyText = nla.Justify ?? justifyText;
                             break;
 
                         case AST.NodeColumnAttribute nca:
@@ -238,7 +248,7 @@ namespace Thousand
                 }
             }
 
-            var result = new IR.Object(new IR.Region(regionConfig, children), label, font, alignment, margin, width, height, row, column, x, y, anchor, offset, shape, cornerRadius, stroke);
+            var result = new IR.Object(new IR.Region(regionConfig, children), label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), alignment, margin, width, height, row, column, x, y, anchor, offset, shape, cornerRadius, stroke);
 
             if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {

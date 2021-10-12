@@ -21,7 +21,7 @@ namespace Thousand.Tests
                 new AST.ObjectClass(new("group"), Array.Empty<Parse.Identifier>(), new AST.ObjectAttribute[] 
                 { 
                     new AST.NodeShapeAttribute(null), 
-                    new AST.NodeLabelAttribute(null), 
+                    new AST.NodeLabelContentAttribute(new Text()), 
                     new AST.RegionLayoutColumnsAttribute(new EqualSize()),
                     new AST.RegionLayoutRowsAttribute(new EqualSize())
                 }),
@@ -51,7 +51,7 @@ namespace Thousand.Tests
             Assert.Equal(2, root.Region.Objects[0].Region.Objects.Count); // group { foo, bar }
             Assert.Equal(2, root.Edges.Count);
 
-            AssertEx.Sequence(root.Region.WalkObjects().Where(o => o.Label != null).Select(o => o.Font.Size), 50, 40, 50, 20);
+            AssertEx.Sequence(root.Region.WalkObjects().Select(o => o.Label).WhereNotNull().Select(l => l.Font.Size), 50, 40, 50, 20);
 
             AssertEx.Sequence(root.Region.Objects.Select(o => o.Region.Config.Layout.Columns), new EqualSize(), new PackedSize(), new PackedSize());
         }

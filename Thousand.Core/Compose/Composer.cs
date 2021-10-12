@@ -12,8 +12,8 @@ namespace Thousand.Compose
         {
             try
             {
-                var textMeasures = new Dictionary<StyledText, BlockMeasurements>();
-                foreach (var t in from o in ir.WalkObjects() where o.Label is not null select new StyledText(o.Font, o.Label!))
+                var textMeasures = new Dictionary<IR.StyledText, BlockMeasurements>();
+                foreach (var t in ir.WalkObjects().Select(o => o.Label).WhereNotNull())
                 {
                     textMeasures[t] = Intrinsics.TextBlock(t);
                 }
@@ -34,13 +34,13 @@ namespace Thousand.Compose
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
         private readonly IR.Root root;
-        private readonly IReadOnlyDictionary<StyledText, BlockMeasurements> textMeasures;
+        private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, GridState> gridState;
         private readonly Dictionary<IR.Object, Layout.Shape> outputShapes;
         private readonly List<Layout.LabelBlock> outputLabels;
         private readonly List<Layout.Line> outputLines;
 
-        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Root root, IReadOnlyDictionary<StyledText, BlockMeasurements> textMeasures)
+        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Root root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures)
         {
             ws = warnings;
             es = errors;
@@ -209,7 +209,7 @@ namespace Thousand.Compose
                 // measure child and apply overrides
                 var desiredSize = Measure(
                     child.Region, 
-                    string.IsNullOrEmpty(child.Label) ? Point.Zero : textMeasures[new(child.Font, child.Label)].Size
+                    child.Label == null ? Point.Zero : textMeasures[child.Label].Size
                 );
 
                 if (child.MinWidth.HasValue)
@@ -358,9 +358,9 @@ namespace Thousand.Compose
                     outputShapes[obj] = shape;
                 }
 
-                if (obj.Label != null && obj.Label != string.Empty)
+                if (obj.Label != null && obj.Label.Content != string.Empty)
                 {
-                    var block = textMeasures[new(obj.Font, obj.Label)];
+                    var block = textMeasures[obj.Label];
                     var blockBox = new Rect(block.Size).CenteredAt(bounds.Center);
 
                     // subpixel vertical positioning is not consistently supported in SVG
@@ -376,7 +376,7 @@ namespace Thousand.Compose
                         var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
                         lines.Add(new Layout.LabelLine(lineBox, line.Run));
                     }
-                    var label = new Layout.LabelBlock(obj.Font, blockBox, obj.Label, lines);
+                    var label = new Layout.LabelBlock(obj.Label.Font, blockBox, obj.Label.Content, lines);
                     outputLabels.Add(label);
                 }
 

@@ -15,7 +15,7 @@ row gardeners [space=20] {
 
 row [space=20, row=2] {
 	invictus ivan [label="Ivan Bebutov
-	d. 1751 f. 1861"]
+d. 1751 f. 1861"]
 	invictus miles [label="Miles McRoss\nBaron Piccadilly\nd. 1862 f. 1984"]
 	invictus taragos [label="Taragos Heron\nd. 1890 f. 1984"]
 	carthian sancho [label="\"Sancho\"\naka \"Watson\"\naka \"Samwise\"\nd. 1811"]

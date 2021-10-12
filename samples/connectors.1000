@@ -3,13 +3,13 @@ font-size=16
 class c [justify=center]
 class box($w=100, $h=100) [min-width=$w, min-height=$h, label=none, stroke=2]
 class spacer($x) [shape=none, min-width=$x]
-class title : label [font=20]
+class title : label [font=20, label-justify=start]
 class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
 class tline [stroke=red, offset=0 -20]; class bline [stroke=blue, offset=0 20]
 
 column [space=20]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
-will draw arrowheads at the corresponding ends.                                  "
+will draw arrowheads at the corresponding ends."
     group [space=40, grid=4 columns] {
         box a-1; box b-1; box c-1; box d-1
         box a-2; box b-2; box c-2; box d-2

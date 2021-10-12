@@ -82,12 +82,12 @@ bar""");
         [Fact]
         public void Object_Attributed()
         {
-            var tokens = tokenizer.Tokenize(@"object ""foo"" [label=""bar""]");
+            var tokens = tokenizer.Tokenize(@"object ""foo"" [label-content=""bar""]");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name?.Text);
-            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelAttribute("bar"));
+            AssertEx.Sequence(result.Value.Attributes, new AST.NodeLabelContentAttribute(new Text("bar")));
         }
 
         [Fact]

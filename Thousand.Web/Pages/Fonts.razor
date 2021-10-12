@@ -13,7 +13,11 @@
         if (Composer.TryCompose(new IR.Root(1, 
             new IR.Region(new IR.Config(), new IR.Object[]
             {
-                new IR.Object(sample) with { Shape = null, Font = new Font(typeface.FamilyName, 20, Colour.Black) }
+                new IR.Object() with
+                { 
+                    Shape = null, 
+                    Label = new IR.StyledText(new Font(typeface.FamilyName, 20, Colour.Black), sample, AlignmentKind.Center) 
+                }
             }),
             new IR.Edge[0]
         ), new List<GenerationError>(), new List<GenerationError>(), out var diagram))
@@ -31,7 +35,7 @@
         var families = SKFontManager.Default.FontFamilies;
 
         return from f in families
-               let t = SKFontManager.Default.MatchFamily(f)
+               let t = SKFontManager.Default.MatchFamily(f) ?? SKTypeface.Default
                let d = CreateDiagram(t)
                where d != null
                select Tuple.Create(t.FamilyName, d);

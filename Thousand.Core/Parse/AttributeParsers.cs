@@ -256,10 +256,20 @@ namespace Thousand.Parse
         #endregion
 
         #region node group, used only by objects
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelContentAttribute { get; } =
+            from key in Key(NodeAttributeKind.LabelContent)
+            from value in Value.Text
+            select new AST.NodeLabelContentAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelJustifyAttribute { get; } =
+            from key in Key(NodeAttributeKind.LabelJustify)
+            from value in Identifier.Enum<AlignmentKind>()
+            select new AST.NodeLabelJustifyAttribute(value) as AST.NodeAttribute;
+
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
             from key in Key(NodeAttributeKind.Label)
-            from value in Value.NullableString.Or(Value.IdentifierNullableString)
-            select new AST.NodeLabelAttribute(value) as AST.NodeAttribute;
+            from values in Shorthand(Identifier.Enum<AlignmentKind>(), Value.Text)
+            select values switch { (var a, var t) => new AST.NodeLabelAttribute(t, a) as AST.NodeAttribute };
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeColumnAttribute { get; } =
             from key in Key(NodeAttributeKind.Col)
@@ -322,7 +332,9 @@ namespace Thousand.Parse
             select new AST.NodeCornerRadiusAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } =
-            NodeLabelAttribute
+            NodeLabelContentAttribute
+                .Or(NodeLabelJustifyAttribute)
+                .Or(NodeLabelAttribute)
                 .Or(NodeShapeAttribute)
                 .Or(NodeAlignColumnAttribute)
                 .Or(NodeAlignRowAttribute)

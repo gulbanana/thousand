@@ -46,7 +46,9 @@ namespace Thousand.AST
     public record PositionOffsetAttribute(Point Offset) : PositionAttribute;
 
     public abstract record NodeAttribute;
-    public record NodeLabelAttribute(string? Content) : NodeAttribute;
+    public record NodeLabelContentAttribute(Text Text) : NodeAttribute;
+    public record NodeLabelJustifyAttribute(AlignmentKind Kind) : NodeAttribute;
+    public record NodeLabelAttribute(Text? Content, AlignmentKind? Justify) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;    
     public record NodeXAttribute(int Value) : NodeAttribute;

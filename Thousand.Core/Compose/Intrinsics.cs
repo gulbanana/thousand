@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using SkiaSharp;
 using Topten.RichTextKit;
 using Thousand.Model;
@@ -18,7 +17,7 @@ namespace Thousand.Compose
     /// </remarks>
     internal static class Intrinsics
     {
-        public static BlockMeasurements TextBlock(StyledText text)
+        public static BlockMeasurements TextBlock(IR.StyledText text)
         {
             var style = new Style()
             {
@@ -28,19 +27,23 @@ namespace Thousand.Compose
 
             var textBlock = new TextBlock()
             {
-                Alignment = TextAlignment.Center
+                Alignment = text.Justification switch {
+                    AlignmentKind.Center => TextAlignment.Center,
+                    AlignmentKind.Start => TextAlignment.Left,
+                    AlignmentKind.End => TextAlignment.Right
+                }
             };
 
-            textBlock.AddText(text.Label, style);
+            textBlock.AddText(text.Content, style);
 
-            var pixelWidth = (int)MathF.Ceiling(textBlock.MeasuredWidth);
-            var pixelHeight = (int)MathF.Ceiling(textBlock.MeasuredHeight);
+            var pixelWidth = (decimal)textBlock.MeasuredWidth;
+            var pixelHeight = (decimal)textBlock.MeasuredHeight;
 
             var lines = textBlock.Lines
                 .Select(l => new LineMeasurements(
-                    new Point((decimal)l.Runs[0].XCoord, (decimal)Math.Ceiling(l.YCoord)), 
+                    new Point((decimal)l.Runs[0].XCoord, (decimal)l.YCoord),
                     new Point((decimal)l.Width, (decimal)l.Height),
-                    text.Label.Substring(l.Start, l.Length).TrimEnd('\n')))
+                    text.Content.Substring(l.Start, l.Length).TrimEnd('\n')))
                 .ToArray();
 
             return new BlockMeasurements(new Point(pixelWidth, pixelHeight), lines);

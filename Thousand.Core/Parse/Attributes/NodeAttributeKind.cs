@@ -4,6 +4,8 @@
     public enum NodeAttributeKind
     {
         Label,
+        LabelContent,
+        LabelJustify,
 
         Shape,
         CornerRadius, Corner = CornerRadius,

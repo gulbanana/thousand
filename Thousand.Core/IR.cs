@@ -9,6 +9,11 @@ namespace Thousand.IR
         public Axes(T both) : this(both, both) { }
     }
 
+    public record StyledText(Font Font, string Content, AlignmentKind Justification)
+    {
+        public StyledText(string content) : this(new Font(), content, AlignmentKind.Center) {  }
+    }
+
     public record Config(Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
         public Config() : this(null, FlowKind.Columns, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
@@ -36,9 +41,7 @@ namespace Thousand.IR
     public record Object
     (
         Region Region,
-        // text
-        string? Label,
-        Font Font,
+        StyledText? Label,
         // layout
         Axes<AlignmentKind?> Alignment, Border Margin, int? MinWidth, int? MinHeight,
         int? Row, int? Column, int? X, int? Y, CompassKind? Anchor, Point? Offset,
@@ -46,8 +49,8 @@ namespace Thousand.IR
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object(string label, params Object[] children) : this(new Region(new Config(), children), label, new Font(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
-        public Object(Config config, params Object[] children) : this(new Region(config, children), null, new Font(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Region(new Config(), children), new StyledText(label), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(Config config, params Object[] children) : this(new Region(config, children), null, new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
         public Object(params Object[] children) : this(new Config(), children) { }        
     }
     
