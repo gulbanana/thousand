@@ -4,7 +4,6 @@ TO DO
 P1
 --
 * object class contents, with placeholders (need skip-level evaluation here)
-* anchor + align
 
 P2
 --
