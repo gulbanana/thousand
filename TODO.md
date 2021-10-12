@@ -4,13 +4,14 @@ TO DO
 P1
 --
 * object class contents, with placeholders (need skip-level evaluation here)
+* anchor + align
 
 P2
 --
 * line labels
 * investigate span - possibly doable, definitely useful
 * object offset (already parsed/styled)
-* direct layout with X/Y - relative to region, can increase bounds
+* direct layout with X/Y - relative to region, can increase bounds (rename to position? perhaps does not support align?)
 * allow min- to influence justification? (i have forgotten what this means)
 * possibly related: using diamond as a container seems to be broken
 * (line) anchors and offsets probably don't combine correctly

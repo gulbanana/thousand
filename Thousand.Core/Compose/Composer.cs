@@ -59,7 +59,7 @@ namespace Thousand.Compose
         public Layout.Diagram Compose()
         {
             // measure hierarchical regions recursively
-            var totalSize = Measure(root.Region, Point.Zero);
+            var rootSize = Measure(root.Region, Point.Zero);
 
             // create labels and shapes, laid out according to the measurements above and each region's settings
             var boxes = Arrange(root.Region, Point.Zero);
@@ -157,9 +157,10 @@ namespace Thousand.Compose
                 }
             }
 
+            var outerSize = rootSize; //.DesiredSize + rootSize.DesiredMargin;
             return new(
-                (int)Math.Ceiling(totalSize.X),
-                (int)Math.Ceiling(totalSize.Y),
+                (int)Math.Ceiling(outerSize.X),
+                (int)Math.Ceiling(outerSize.Y),
                 root.Scale,
                 root.Region.Config.Fill,
                 outputShapes.Values.ToList(), 
@@ -169,11 +170,42 @@ namespace Thousand.Compose
         }
 
         // each object can have 0 or more of the following:
-        // a) text content (a label)
-        // b) child content (other objects)
+        // a) child content (other objects)
+        // b) intrinsic content (a label)
         // c) a shape stroked around (and filled behind) the larger of (a) and (b)
-        // all of these, plus padding, contribute to a object's bounding box size; a region (which can be the (b) of some other object, or the root) 
-        // has a size determined by the object bounds, their margins and the region's gutter
+        // all of these, plus padding, contribute to a object's bounding box size
+        private RegionMeasurements Measure(IR.Object objekt)
+        {
+            var desiredSize = Measure(
+                objekt.Region,
+                objekt.Label == null ? Point.Zero : textMeasures[objekt.Label].Size
+            );
+
+            if (objekt.MinWidth.HasValue)
+            {
+                desiredSize = desiredSize with { X = Math.Max(objekt.MinWidth.Value, desiredSize.X) };
+            }
+
+            if (objekt.MinHeight.HasValue)
+            {
+                desiredSize = desiredSize with { Y = Math.Max(objekt.MinHeight.Value, desiredSize.Y) };
+            }
+
+            if (objekt.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
+            {
+                var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
+                desiredSize = new Point(longestSide, longestSide);
+            }
+
+            var desiredMargin = layouts[objekt.Region].AnchorNodes.Values
+                .Select(aln => GetAnchorBorder(aln, objekt, desiredSize))
+                .Aggregate(objekt.Margin, (b1, b2) => b1.Combine(b2));
+
+            return new RegionMeasurements(desiredSize, desiredMargin);
+        }
+
+        // a region (which can be the children of some other object, or the root) has
+        // a size determined by the object bounds, their margins and the region's gutter
         private Point Measure(IR.Region region, Point intrinsicSize)
         {
             var state = new LayoutState();
@@ -187,31 +219,15 @@ namespace Thousand.Compose
             foreach (var child in region.Objects)
             {
                 // measure child and apply overrides
-                var desiredSize = Measure(
-                    child.Region,
-                    child.Label == null ? Point.Zero : textMeasures[child.Label].Size
-                );
-
-                if (child.MinWidth.HasValue)
-                {
-                    desiredSize = desiredSize with { X = Math.Max(child.MinWidth.Value, desiredSize.X) };
-                }
-
-                if (child.MinHeight.HasValue)
-                {
-                    desiredSize = desiredSize with { Y = Math.Max(child.MinHeight.Value, desiredSize.Y) };
-                }
-
-                if (child.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
-                {
-                    var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
-                    desiredSize = new Point(longestSide, longestSide);
-                }
+                var (desiredSize, desiredMargin) = Measure(child);
                 
+                // XXX make row/column, anchor, x/y mutually exclusive
                 // extract positioned children from the grid flow
                 if (child.Anchor.HasValue)
                 {
-                    state.AllNodes[child] = new AnchorLayoutNode(desiredSize, child.Margin, child.Anchor.Value);
+                    var node = new AnchorLayoutNode(desiredSize, desiredMargin, child.Anchor.Value);
+                    state.AllNodes[child] = node;
+                    state.AnchorNodes[child] = node;
                     continue;
                 }
 
@@ -235,7 +251,7 @@ namespace Thousand.Compose
                     currentRow = child.Row ?? currentRow;
                 }
 
-                var measurements = new GridLayoutNode(desiredSize, child.Margin, currentRow, currentColumn); 
+                var measurements = new GridLayoutNode(desiredSize, desiredMargin, currentRow, currentColumn); 
                 state.GridNodes[child] = measurements;
                 state.AllNodes[child] = measurements;
 
@@ -264,10 +280,10 @@ namespace Thousand.Compose
             }
 
             // calculate track sizes
-            var maxWidth = state.GridNodes.Values.Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
+            var maxWidth = state.GridNodes.Values.Select(s => s.Size.X + s.Margin.X).Append(0).Max();
             for (var c = 0; c < columnCount; c++)
             {
-                var intrinsicWidth = state.GridNodes.Values.Where(s => s.Column == c + 1).Select(s => s.DesiredSize.X + s.Margin.X).Append(0).Max();
+                var intrinsicWidth = state.GridNodes.Values.Where(s => s.Column == c + 1).Select(s => s.Size.X + s.Margin.X).Append(0).Max();
                 var trackWidth = region.Config.Layout.Columns switch
                 {
                     EqualSize => maxWidth,
@@ -277,10 +293,10 @@ namespace Thousand.Compose
                 state.Columns.Add(trackWidth);
             }
 
-            var maxHeight = state.GridNodes.Values.Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
+            var maxHeight = state.GridNodes.Values.Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
             for (var r = 0; r < rowCount; r++)
             {
-                var intrinsicHeight = state.GridNodes.Values.Where(s => s.Row == r + 1).Select(s => s.DesiredSize.Y + s.Margin.Y).Append(0).Max();
+                var intrinsicHeight = state.GridNodes.Values.Where(s => s.Row == r + 1).Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
                 var trackHeight = region.Config.Layout.Rows switch
                 {
                     EqualSize => maxHeight,
@@ -300,12 +316,12 @@ namespace Thousand.Compose
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));
-
+            
             return contentSize;
         }
 
         // lays out a region's contents at a given point - size is known to parents, so it's just a matter of dividing up the space
-        // paint back-to-front: shape, then intrinsic content, then children
+        // paint back-to-front: shape, then intrinsic content, then c hildren
         private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Point location)
         {
             var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
@@ -350,21 +366,21 @@ namespace Thousand.Compose
                     GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
                     {
                         AlignmentKind.Start => columns[gln.Column - 1].Start + gln.Margin.Left,
-                        AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.DesiredSize.X) / 2,
-                        AlignmentKind.End => columns[gln.Column - 1].End - (gln.DesiredSize.X + gln.Margin.Right),
+                        AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2,
+                        AlignmentKind.End => columns[gln.Column - 1].End - (gln.Size.X + gln.Margin.Right),
                     }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
                     {
                         AlignmentKind.Start => rows[gln.Row - 1].Start + gln.Margin.Top,
-                        AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.DesiredSize.Y) / 2,
-                        AlignmentKind.End => rows[gln.Row - 1].End - (gln.DesiredSize.Y + gln.Margin.Bottom),
+                        AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.Size.Y) / 2,
+                        AlignmentKind.End => rows[gln.Row - 1].End - (gln.Size.Y + gln.Margin.Bottom),
                     }),
 
-                    AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => state.Anchors[aln.Anchor] - node.DesiredSize/2,
+                    AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => state.Anchors[aln.Anchor] - node.Size / 2,
                     
                     _ => Point.Zero
                 };
 
-                var bounds = new Rect(origin, node.DesiredSize);
+                var bounds = new Rect(origin, node.Size);
                 boxes[child] = bounds;
 
                 // paint shape and determine its anchors for its own children to use
@@ -412,6 +428,32 @@ namespace Thousand.Compose
             }
 
             return boxes;
+        }
+
+        private static Border GetAnchorBorder(AnchorLayoutNode node, IR.Object parent, Point parentSize)
+        {
+            if (!parent.Shape.HasValue)
+            {
+                return Border.Zero;
+            }
+
+            var parentBounds = new Rect(parentSize);
+            var parentAnchors = Shapes.Anchors(parent.Shape.Value, parent.CornerRadius, parentBounds);
+
+            if (!parentAnchors.ContainsKey(node.Anchor))
+            {
+                return Border.Zero;
+            }
+
+            var childAnchor = parentAnchors[node.Anchor].Location;
+            var childBounds = new Rect(node.Size + node.Margin).CenteredAt(childAnchor);
+
+            return new Border(
+                Math.Max(0, parentBounds.Left - childBounds.Left),
+                Math.Max(0, parentBounds.Top - childBounds.Top),
+                Math.Max(0, childBounds.Right - parentBounds.Right),
+                Math.Max(0, childBounds.Bottom - parentBounds.Bottom)
+            );
         }
     }
 }
