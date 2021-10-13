@@ -4,6 +4,6 @@ namespace Thousand.Parse
 {
     internal interface ILocated
     {
-        TextSpan Location { get; set; }
+        TextSpan Span { get; set; }
     }
 }

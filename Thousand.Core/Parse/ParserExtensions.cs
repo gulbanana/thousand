@@ -82,7 +82,7 @@ namespace Thousand.Parse
             return input => {
                 var inner = parser(input);
                 if (!inner.HasValue) return inner;
-                inner.Value.Location = inner.Location.Until(inner.Remainder);
+                inner.Value.Span = inner.Location.Until(inner.Remainder);
                 return inner;
             };
         }

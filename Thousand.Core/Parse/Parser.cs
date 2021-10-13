@@ -36,36 +36,36 @@ namespace Thousand.Parse
         {
             var tokenizer = Tokenizer.Build();
 
-            var tokenized = tokenizer.TryTokenize(text);
-            if (!tokenized.HasValue)
+            var untypedTokens = tokenizer.TryTokenize(text);
+            if (!untypedTokens.HasValue)
             {
-                es.Add(new(tokenized.Location, ErrorKind.Syntax, tokenized.FormatErrorMessageFragment()));
+                es.Add(new(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment()));
                 return null;
             }
 
-            var untyped = Untyped.UntypedDocument(tokenized.Value);
-            if (!untyped.HasValue)
+            var untypedAST = Untyped.UntypedDocument(untypedTokens.Value);
+            if (!untypedAST.HasValue)
             {
-                var badToken = untyped.Location.IsAtEnd ? tokenized.Value.Last() : untyped.Location.First();
-                es.Add(new(badToken.Span, ErrorKind.Syntax, untyped.FormatErrorMessageFragment()));
+                var badToken = untypedAST.Location.IsAtEnd ? untypedTokens.Value.Last() : untypedAST.Location.First();
+                es.Add(new(badToken.Span, ErrorKind.Syntax, untypedAST.FormatErrorMessageFragment()));
                 return null;
             }
 
-            var typed = Template(tokenized.Value, untyped.Value);
+            var typedTokens = Template(untypedTokens.Value, untypedAST.Value);
             if (es.Any())
             {
                 return null;
             }
 
-            var parsed = Typed.Document(typed);
-            if (!parsed.HasValue)
+            var typedAST = Typed.Document(typedTokens);
+            if (!typedAST.HasValue)
             {
-                var badToken = parsed.Location.IsAtEnd ? typed.Last() : parsed.Location.First();
-                es.Add(new(badToken.Span, ErrorKind.Syntax, parsed.FormatErrorMessageFragment()));
+                var badToken = typedAST.Location.IsAtEnd ? typedTokens.Last() : typedAST.Location.First();
+                es.Add(new(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment()));
                 return null;
             }
 
-            return parsed.Value;
+            return typedAST.Value;
         }
 
         private TokenList Template(TokenList template, AST.UntypedDocument untypedAST)
@@ -76,7 +76,7 @@ namespace Thousand.Parse
                 var name = c.IsT1 ? c.AsT1.Name : c.AsT2.Name;
                 if (!allClasses.Add(name.Text))
                 {
-                    es.Add(new(name.Location, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
+                    es.Add(new(name.Span, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
                     return template;
                 }
             }
@@ -89,7 +89,7 @@ namespace Thousand.Parse
                 {
                     if (!names.Add(v.Name.Text))
                     {
-                        es.Add(new(c.Name.Location, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
+                        es.Add(new(c.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
                         return template;
                     }
 
@@ -99,7 +99,7 @@ namespace Thousand.Parse
                     }
                     else if (hasDefault)
                     {
-                        es.Add(new(c.Name.Location, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
+                        es.Add(new(c.Name.Span, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
                         return template;
                     }
                 }
@@ -189,7 +189,7 @@ namespace Thousand.Parse
                 var defaultArguments = klass.Arguments.Variables.Skip(call.Arguments.Length).Select(v => Tuple.Create(v.Default!, v));
 
                 var substitutions = suppliedArguments.Concat(defaultArguments)
-                    .ToDictionary(t => t.Item2.Name.Location.ToStringValue(), t => t.Item1.Sequence().ToArray());
+                    .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
                 var uniqueName = new[] {
                     new Token(

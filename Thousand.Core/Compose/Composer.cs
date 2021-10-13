@@ -75,12 +75,12 @@ namespace Thousand.Compose
 
                     if (start == null)
                     {
-                        ws.Add(new(edge.FromName.Location, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
+                        ws.Add(new(edge.FromName.Span, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
                     }
 
                     if (end == null)
                     {
-                        ws.Add(new(edge.ToName.Location, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
+                        ws.Add(new(edge.ToName.Span, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
                     }
 
                     if (start == null || end == null)
@@ -112,7 +112,7 @@ namespace Thousand.Compose
                             (_, end) = Intrinsics.Line(start, toBox.Center + edge.ToOffset, null, outputShapes.GetValueOrDefault(edge.ToTarget));
                             if (end == null)
                             {
-                                ws.Add(new(edge.FromName.Location, ErrorKind.Layout, $"after anchoring start, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
+                                ws.Add(new(edge.FromName.Span, ErrorKind.Layout, $"after anchoring start, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
                                 continue;
                             }
                         }
@@ -142,7 +142,7 @@ namespace Thousand.Compose
                             (start, _) = Intrinsics.Line(fromBox.Center + edge.FromOffset, end, outputShapes.GetValueOrDefault(edge.FromTarget), null);
                             if (start == null)
                             {
-                                ws.Add(new(edge.FromName.Location, ErrorKind.Layout, $"after anchoring end, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
+                                ws.Add(new(edge.FromName.Span, ErrorKind.Layout, $"after anchoring end, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
                                 continue;
                             }
                         }
@@ -226,7 +226,7 @@ namespace Thousand.Compose
                 {
                     if (child.Row.HasValue || child.Column.HasValue)
                     {
-                        es.Add(new(child.Name.Location, ErrorKind.Layout, $"object `{child.Name.Text}` has both anchor and grid row/column"));
+                        es.Add(new(child.Name.Span, ErrorKind.Layout, $"object `{child.Name.Text}` has both anchor and grid row/column"));
                         return Point.Zero;
                     }
 

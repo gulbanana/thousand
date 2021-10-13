@@ -9,7 +9,7 @@ namespace Thousand.Parse
 {
     public record Identifier(string Text) : ILocated
     {
-        public Superpower.Model.TextSpan Location { get; set; }
+        public Superpower.Model.TextSpan Span { get; set; }
 
         public static TokenListParser<TokenKind, Identifier> Any { get; } =
             Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Located());
