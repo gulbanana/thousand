@@ -108,6 +108,22 @@ namespace Thousand.Parse
         };
         #endregion
 
+        #region special alignment shorthand helpers
+        private static TokenListParser<TokenKind, AlignmentKind> AlignColumnOnly { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "left").Value(AlignmentKind.Start)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "right").Value(AlignmentKind.End));
+
+        private static TokenListParser<TokenKind, AlignmentKind> AlignColumn { get; } =
+            AlignColumnOnly.Or(Identifier.Enum<AlignmentKind>());
+
+        private static TokenListParser<TokenKind, AlignmentKind> AlignRowOnly { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "top").Value(AlignmentKind.Start)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "bottom").Value(AlignmentKind.End));
+
+        private static TokenListParser<TokenKind, AlignmentKind> AlignRow { get; } =
+            AlignRowOnly.Or(Identifier.Enum<AlignmentKind>());
+        #endregion
+
         #region arrow group, used only by edges
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorStartAttribute { get; } =
             from key in Key(ArrowAttributeKind.AnchorStart)
@@ -223,10 +239,6 @@ namespace Thousand.Parse
                 .Or(EntityOffsetAttribute);
         #endregion
 
-        public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } =
-            LineAttribute.Select(x => (AST.EntityAttribute)x)
-                .Or(PositionAttribute.Select(x => (AST.EntityAttribute)x));
-
         #region text group, used only by objects (so far)
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontSizeAttribute { get; } =
             from key in Key(TextAttributeKind.FontSize)
@@ -263,7 +275,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelJustifyAttribute { get; } =
             from key in Key(NodeAttributeKind.LabelJustify)
-            from value in Identifier.Enum<AlignmentKind>()
+            from value in AlignColumn
             select new AST.NodeLabelJustifyAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeLabelAttribute { get; } =
@@ -306,20 +318,22 @@ namespace Thousand.Parse
             from value in Identifier.Enum<ShapeKind>().OrNone()
             select new AST.NodeShapeAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignRowAttribute { get; } =
-            from key in Key(NodeAttributeKind.AlignVertical)
-            from value in Identifier.Enum<AlignmentKind>().OrNone()
-            select new AST.NodeAlignRowAttribute(value) as AST.NodeAttribute;
-
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignColumnAttribute { get; } =
             from key in Key(NodeAttributeKind.AlignHorizontal)
-            from value in Identifier.Enum<AlignmentKind>().OrNone()
+            from value in AlignColumn.OrNone()
             select new AST.NodeAlignColumnAttribute(value) as AST.NodeAttribute;
+
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignRowAttribute { get; } =
+            from key in Key(NodeAttributeKind.AlignVertical)
+            from value in AlignRow.OrNone()
+            select new AST.NodeAlignRowAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAlignAttribute { get; } =
             from key in Key(NodeAttributeKind.Align)
-            from value in Identifier.Enum<AlignmentKind>().OrNone().Twice()
-            select new AST.NodeAlignAttribute(value.first, value.second) as AST.NodeAttribute;
+            from value in AlignColumnOnly.Then(c => AlignRow.OrNone().OptionalOrDefault(default(AlignmentKind?)).Select(r => (new AlignmentKind?(c), r)))
+                .Or(AlignRowOnly.Then(r => AlignColumn.OrNone().OptionalOrDefault(default(AlignmentKind?)).Select(c => (c, new AlignmentKind?(r)))))
+                .Or(Identifier.Enum<AlignmentKind>().OrNone().Then(cOrBoth => AlignRow.OrNone().OptionalOrDefault(default(AlignmentKind?)).Select(rOrNeither => (cOrBoth, rOrNeither ?? cOrBoth))))
+            select new AST.NodeAlignAttribute(value.Item1, value.Item2) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMarginAttribute { get; } =
             from key in Key(NodeAttributeKind.Margin)
@@ -375,7 +389,6 @@ namespace Thousand.Parse
             from values in Shorthand(Identifier.Enum<FlowKind>(), Value.CountingNumber)
             select values switch { (var flow, var max) => new AST.RegionGridAttribute(flow, max) as AST.RegionAttribute };
 
-
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionSpaceColumnsAttribute { get; } =
             from key in Key(RegionAttributeKind.SpaceColumns)
             from value in Value.WholeNumber
@@ -408,18 +421,20 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyColumnsAttribute { get; } =
             from key in Key(RegionAttributeKind.JustifyColumns)
-            from value in Identifier.Enum<AlignmentKind>()
+            from value in AlignColumn
             select new AST.RegionJustifyColumnsAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyRowsAttribute { get; } =
             from key in Key(RegionAttributeKind.JustifyRows)
-            from value in Identifier.Enum<AlignmentKind>()
+            from value in AlignRow
             select new AST.RegionJustifyRowsAttribute(value) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionJustifyAttribute { get; } =
             from key in Key(RegionAttributeKind.Justify)
-            from columnsAndRows in Identifier.Enum<AlignmentKind>().Twice()
-            select new AST.RegionJustifyAttribute(columnsAndRows.first, columnsAndRows.second) as AST.RegionAttribute;
+            from columnsAndRows in AlignColumnOnly.Then(c => AlignRow.OptionalOrDefault(AlignmentKind.Center).Select(r => (c, r)))
+                .Or(AlignRowOnly.Then(r => AlignColumn.OptionalOrDefault(AlignmentKind.Center).Select(c => (c, r))))
+                .Or(Identifier.Enum<AlignmentKind>().Then(cOrBoth => AlignRow.Select(r => new AlignmentKind?(r)).OptionalOrDefault(default(AlignmentKind?)).Select(rOrNeither => (cOrBoth, rOrNeither ?? cOrBoth))))
+            select new AST.RegionJustifyAttribute(columnsAndRows.Item1, columnsAndRows.Item2) as AST.RegionAttribute;
 
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } =
             RegionFillAttribute

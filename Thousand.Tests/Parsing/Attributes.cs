@@ -250,5 +250,44 @@ namespace Thousand.Tests.Parsing
             Assert.True(result2.HasValue, result2.ToString());
             Assert.Equal(result1.Value, result2.Value);
         }
+
+        [Theory]
+        [InlineData("start start", AlignmentKind.Start, AlignmentKind.Start)]   // two explicit tracks
+        [InlineData("end", AlignmentKind.End, AlignmentKind.End)]               // two implicit tracks
+        [InlineData("left", AlignmentKind.Start, AlignmentKind.Center)]         // one implicit column
+        [InlineData("left center", AlignmentKind.Start, AlignmentKind.Center)]  // one explicit column, one explicit track
+        [InlineData("bottom", AlignmentKind.Center, AlignmentKind.End)]         // one explicit row
+        [InlineData("bottom right", AlignmentKind.End, AlignmentKind.End)]      // one explicit row, one explicit column
+        [InlineData("start top", AlignmentKind.Start, AlignmentKind.Start)]     // one explicit track, one explicit row
+        public void JustifyShorthand(string value, AlignmentKind expectedHorizontal, AlignmentKind expectedVertical)
+        {
+            var tokens = tokenizer.Tokenize($"justify={value}");
+            var result = AttributeParsers.RegionJustifyAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(expectedHorizontal, ((AST.RegionJustifyAttribute)result.Value).Columns);
+            Assert.Equal(expectedVertical, ((AST.RegionJustifyAttribute)result.Value).Rows);
+        }
+
+        [Theory]
+        [InlineData("start start", AlignmentKind.Start, AlignmentKind.Start)]   // two explicit tracks
+        [InlineData("none center", null, AlignmentKind.Center)]                 // one explicit null, one explicit track
+        [InlineData("end", AlignmentKind.End, AlignmentKind.End)]               // two implicit tracks
+        [InlineData("none", null, null)]                                        // two implicit nulls
+        [InlineData("left", AlignmentKind.Start, null)]                         // one implicit column
+        [InlineData("left center", AlignmentKind.Start, AlignmentKind.Center)]  // one explicit column, one explicit track
+        [InlineData("bottom", null, AlignmentKind.End)]                         // one explicit row
+        [InlineData("bottom right", AlignmentKind.End, AlignmentKind.End)]      // one explicit row, one explicit column
+        [InlineData("start top", AlignmentKind.Start, AlignmentKind.Start)]     // one explicit track, one explicit row
+        [InlineData("none top", null, AlignmentKind.Start)]                     // one explicit null, one explicit row
+        public void AlignShorthand(string value, AlignmentKind? expectedHorizontal, AlignmentKind? expectedVertical)
+        {
+            var tokens = tokenizer.Tokenize($"align={value}");
+            var result = AttributeParsers.NodeAlignAttribute(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(expectedHorizontal, ((AST.NodeAlignAttribute)result.Value).Columns);
+            Assert.Equal(expectedVertical, ((AST.NodeAlignAttribute)result.Value).Rows);
+        }
     }
 }

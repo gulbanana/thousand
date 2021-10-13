@@ -12,6 +12,10 @@ namespace Thousand.Parse
      **********************************************************************/
     public static class Typed
     {
+        public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } =
+            AttributeParsers.LineAttribute.Select(x => (AST.EntityAttribute)x)
+                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.EntityAttribute)x));
+
         /**********************************************************************
          * Classes, the key unit of abstraction, shared by objects and lines. *
          **********************************************************************/
@@ -23,7 +27,7 @@ namespace Thousand.Parse
             Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(AttributeParsers.EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
+            Shared.List(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ClassBody(Identifier name, Identifier[] bases) => input =>
         {
@@ -38,7 +42,7 @@ namespace Thousand.Parse
             while (true)
             {
                 var lineOnlyAttr = AttributeParsers.ArrowOnlyAttribute(remainder);
-                var eitherAttr = AttributeParsers.EntityAttribute(remainder);
+                var eitherAttr = EntityAttribute(remainder);
                 if (eitherAttr.HasValue && !lineOnlyAttr.HasValue)
                 {
                     remainder = eitherAttr.Remainder;
