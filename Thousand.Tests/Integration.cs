@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Thousand.Model;
@@ -7,8 +8,15 @@ using Xunit;
 
 namespace Thousand.Tests
 {
-    public class Integration
+    public class Integration : IDisposable
     {
+        private readonly GenerationState state = new();
+
+        public void Dispose()
+        {
+            Assert.False(state.HasWarnings(), state.JoinWarnings());
+        }
+
         private static IEnumerable<object[]> Samples()
         {
             foreach (var filename in Directory.GetFiles("samples"))
@@ -35,17 +43,14 @@ namespace Thousand.Tests
 
             generator
                 .GenerateImage(graph)
-                .Switch(result => Assert.Empty(result.Warnings), errors => AssertEx.Fail(errors.Join()));            
+                .Switch(result => Assert.Empty(result.Warnings), errors => AssertEx.Fail(state.JoinErrors()));            
         }
 
         [Fact]
         public void EntityOffsetAsObject()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class foo [offset=1 1]; foo bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class foo [offset=1 1]; foo bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var objekt = rules!.Region.Objects.Single();
             Assert.Equal(new Point(1, 1), objekt.Offset);
@@ -54,11 +59,8 @@ namespace Thousand.Tests
         [Fact]
         public void EntityOffsetAsLine()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class object; class foo [offset=1 1]; object bar; foo bar--bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class object; class foo [offset=1 1]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
             Assert.Equal(new Point(1, 1), line.FromOffset);
@@ -68,11 +70,8 @@ namespace Thousand.Tests
         [Fact]
         public void LineOffsetAsLine()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class object; class foo [offset=1 1 2 2]; object bar; foo bar--bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class object; class foo [offset=1 1 2 2]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
             Assert.Equal(new Point(1, 1), line.FromOffset);
@@ -82,11 +81,8 @@ namespace Thousand.Tests
         [Fact]
         public void EntityAnchorAsObject()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class foo [anchor=n]; foo bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class foo [anchor=n]; foo bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var objekt = rules!.Region.Objects.Single();
             Assert.Equal(CompassKind.N, objekt.Anchor);
@@ -95,11 +91,8 @@ namespace Thousand.Tests
         [Fact]
         public void EntityAnchorAsLine()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class object; class foo [anchor=n]; object bar; foo bar--bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class object; class foo [anchor=n]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
             Assert.Equal(new SpecificAnchor(CompassKind.N), line.FromAnchor);
@@ -109,11 +102,8 @@ namespace Thousand.Tests
         [Fact]
         public void LineAnchorAsLine_Twice()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class object; class foo [anchor=n e]; object bar; foo bar--bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class object; class foo [anchor=n e]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
             Assert.Equal(new SpecificAnchor(CompassKind.N), line.FromAnchor);
@@ -123,11 +113,8 @@ namespace Thousand.Tests
         [Fact]
         public void LineAnchorAsLine_Group()
         {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            Assert.True(Parser.TryParse(@"class object; class foo [anchor=any]; object bar; foo bar--bar", warnings, errors, out var document), errors.Join());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, warnings, errors, out var rules), errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(Parser.TryParse(@"class object; class foo [anchor=any]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
             Assert.Equal(new AnyAnchor(), line.FromAnchor);

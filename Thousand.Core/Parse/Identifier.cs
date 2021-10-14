@@ -1,6 +1,8 @@
 ﻿using Superpower;
+using Superpower.Model;
 using Superpower.Parsers;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -9,7 +11,13 @@ namespace Thousand.Parse
 {
     public record Identifier(string Text) : ILocated
     {
-        public Superpower.Model.TextSpan Span { get; set; }
+        public TextSpan Span { get; set; }
+
+        public string DisplayName(IReadOnlyDictionary<string, TextSpan> sourceMap)
+        {
+            var spanText = Span.ToStringValue();
+            return sourceMap.ContainsKey(spanText) ? sourceMap[spanText].ToStringValue() : spanText;
+        }
 
         public static TokenListParser<TokenKind, Identifier> Any { get; } =
             Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Located());

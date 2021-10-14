@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Thousand.Compose;
 using Thousand.Model;
@@ -9,18 +8,11 @@ namespace Thousand.Tests
 {
     public class Composition : IDisposable
     {
-        private readonly List<GenerationError> warnings;
-        private List<GenerationError> errors;
-
-        public Composition()
-        {
-            warnings = new List<GenerationError>();
-            errors = new List<GenerationError>();
-        }
+        private readonly GenerationState state = new();
 
         public void Dispose()
         {
-            Assert.Empty(warnings);
+            Assert.False(state.HasWarnings(), state.JoinWarnings());
         }
 
         [Fact]
@@ -33,9 +25,9 @@ namespace Thousand.Tests
                 )
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Equal(20, layout!.Width);
             Assert.Equal(10, layout.Height);
         }
@@ -50,9 +42,9 @@ namespace Thousand.Tests
                 )
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Equal(10, layout!.Width);
             Assert.Equal(20, layout.Height);
         }
@@ -68,9 +60,9 @@ namespace Thousand.Tests
                 )
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Equal(30, layout!.Width);
             Assert.Equal(30, layout.Height);
         }
@@ -89,9 +81,9 @@ namespace Thousand.Tests
                 new IR.Edge(left, right)
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Lines);
             Assert.Equal(new Point(10, 5), layout.Lines.Single().Start);
             Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
@@ -111,9 +103,9 @@ namespace Thousand.Tests
                 new IR.Edge(left, right)
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Lines);
             AssertEx.Eta(new Point(10, 10), layout.Lines.Single().Start);
             AssertEx.Eta(new Point(20, 20), layout.Lines.Single().End);
@@ -133,9 +125,9 @@ namespace Thousand.Tests
                 new IR.Edge(left, right) with { FromOffset = new Point(0, 1), ToOffset = new Point(0, 1) }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Lines);
             Assert.Equal(new Point(10, 6), layout.Lines.Single().Start);
             Assert.Equal(new Point(20, 6), layout.Lines.Single().End);
@@ -155,9 +147,9 @@ namespace Thousand.Tests
                 new IR.Edge(left, right) with { FromAnchor = new CornerAnchor(), ToAnchor = new AnyAnchor() }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
+            var result = Composer.TryCompose(rules, state, out var layout);
 
-            Assert.True(result, errors.Join());
+            Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Lines);
             AssertEx.Eta(new Point(10, 0), layout.Lines.Single().Start); // XXX this can be 10,0 or 10,10 depending on the order of anchors; we need some sort of closest-to-other-anchor algorithm
             Assert.Equal(new Point(20, 5), layout.Lines.Single().End);
@@ -177,8 +169,8 @@ namespace Thousand.Tests
                 new IR.Edge(left, right) with { FromAnchor = new CornerAnchor(), ToAnchor = new CornerAnchor() }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
-            Assert.True(result, errors.Join());
+            var result = Composer.TryCompose(rules, state, out var layout);
+            Assert.True(result, state.JoinErrors());
 
             var line = layout!.Lines.Single();
             var shape1 = layout.Shapes[0];
@@ -205,8 +197,8 @@ namespace Thousand.Tests
                 new IR.Edge(left, right) with { FromAnchor = new NoAnchor(), ToAnchor = new CornerAnchor() }
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
-            Assert.True(result, errors.Join());
+            var result = Composer.TryCompose(rules, state, out var layout);
+            Assert.True(result, state.JoinErrors());
 
             var line = layout!.Lines.Single();
             var shape2 = layout.Shapes[1];
@@ -228,8 +220,8 @@ namespace Thousand.Tests
                 )
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
-            Assert.True(result, errors.Join());
+            var result = Composer.TryCompose(rules, state, out var layout);
+            Assert.True(result, state.JoinErrors());
 
             var textSize = layout!.Labels[0].Bounds.Size;
             Assert.Equal(Point.Zero, layout.Shapes[0].Bounds.Size);
@@ -273,8 +265,8 @@ namespace Thousand.Tests
                 )
             );
 
-            var result = Composer.TryCompose(rules, warnings, errors, out var layout);
-            Assert.True(result, errors.Join());
+            var result = Composer.TryCompose(rules, state, out var layout);
+            Assert.True(result, state.JoinErrors());
 
             Assert.Equal(new Point(62, 13), new Point(layout!.Width, layout.Height));
             AssertEx.Sequence(layout!.Shapes.Where(s => s.Kind != ShapeKind.Circle).Select(s => s.Bounds.Size), 

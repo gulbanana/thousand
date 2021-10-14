@@ -3,17 +3,15 @@ using System;
 
 namespace Thousand
 {
-    public record GenerationError(Position Position, int Length, ErrorKind Kind, string Message, string? Details = null)
+    public record GenerationError(TextSpan Span, ErrorKind Kind, string Message, string? Details = null)
     {
-        public GenerationError(TextSpan span, ErrorKind Kind, string Message, string? Details = null) : this(span.Position, span.Length, Kind, Message, Details) { }
-
-        public GenerationError(Exception e) : this(Position.Empty, 0, ErrorKind.Internal, e.Message, e.ToString()) { }
+        public GenerationError(Exception e) : this(new TextSpan(), ErrorKind.Internal, e.Message, e.ToString()) { }
 
         public override string ToString()
         {
-            if (Position.HasValue)
+            if (Span.Position.HasValue)
             {
-                return $"{Kind} error (line {Position.Line}, column {Position.Column}): {Message}.";
+                return $"{Kind} error (line {Span.Position.Line}, column {Span.Position.Column}): {Message}.";
             }
             else
             {

@@ -50,10 +50,10 @@
             decorating = true;
             var newDecorations = Errors.Select(ge => new ModelDeltaDecoration
             {
-                Range = ge.Position.HasValue ? new BlazorMonaco.Range(ge.Position.Line, ge.Position.Column, ge.Position.Line, ge.Position.Column + ge.Length) : new BlazorMonaco.Range(1, 1, 1, 1),
+                Range = ge.Span.Position.HasValue ? new BlazorMonaco.Range(ge.Span.Position.Line, ge.Span.Position.Column, ge.Span.Position.Line, ge.Span.Position.Column + ge.Span.Length) : new BlazorMonaco.Range(1, 1, 1, 1),
                 Options = new ModelDecorationOptions
                 {
-                    IsWholeLine = !ge.Position.HasValue,
+                    IsWholeLine = !ge.Span.Position.HasValue,
                     InlineClassName = "source-error",
                     HoverMessage = new MarkdownString[] { new() { IsTrusted = true, Value = $"{ge.Kind} error: {ge.Message}." } }
                 }

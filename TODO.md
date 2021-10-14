@@ -3,10 +3,15 @@ TO DO
 
 P1
 --
+* triage todo list
 * object class contents, with placeholders (need skip-level evaluation here)
+* fix errors failing to clear
 
 P2
 --
+* probable syntax changes: alists should be line scopes; clists should be available for lines and *maybe* the only form
+* scoped names (can’t overwrite siblings)
+* path names (when not anonymous)
 * line labels
 * investigate span - possibly doable, definitely useful
 * object offset (already parsed/styled)

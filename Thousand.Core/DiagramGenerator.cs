@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Thousand.Compose;
 using Thousand.Parse;
 
 namespace Thousand
@@ -17,21 +18,6 @@ namespace Thousand
             return reader.ReadToEnd();
         }
 
-        private OneOf<GenerationResult<AST.TypedDocument>, GenerationError[]> Parse(string sourceFile)
-        {
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-
-            if (!Parser.TryParse(sourceFile, warnings, errors, out var document))
-            {
-                return errors.ToArray();
-            }
-            else
-            {
-                return new GenerationResult<AST.TypedDocument>(document, warnings.ToArray());
-            }
-        }
-
         /// <summary>Create a diagram from source code.</summary>
         /// <param name="source">.1000 source text.</param>
         /// <returns>Either the generated diagram (as a data structure) and zero-or-more-warnings, or one-or-more errors.</returns>
@@ -41,34 +27,28 @@ namespace Thousand
             if (stdlib) sources.Add(ReadStdlib());
             sources.Add(source);
 
+            var state = new GenerationState();
+
             var documents = new List<AST.TypedDocument>();
             foreach (var s in sources)
             {
-                var result = Parse(s);
-                if (result.IsT1)
+                if (Parser.TryParse(s, state, out var document))
                 {
-                    return result.AsT1;
-                }
-                else
-                {
-                    documents.Add(result.AsT0.Diagram);
+                    documents.Add(document);
                 }
             }
 
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-
-            if (!Evaluator.TryEvaluate(documents, warnings, errors, out var rules))
+            if (state.HasErrors() || !Evaluator.TryEvaluate(documents, state, out var rules))
             {
-                return errors.ToArray();
+                return state.GetErrors();
             }
 
-            if (!Compose.Composer.TryCompose(rules, warnings, errors, out var diagram))
+            if (!Composer.TryCompose(rules, state, out var diagram))
             {
-                return errors.ToArray();
+                return state.GetErrors();
             }
 
-            return new GenerationResult<Layout.Diagram>(diagram, warnings.ToArray());
+            return new GenerationResult<Layout.Diagram>(diagram, state.GetWarnings());
         }
     }
 

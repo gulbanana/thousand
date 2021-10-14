@@ -8,29 +8,28 @@ namespace Thousand
 {
     public class Evaluator
     {
-        public static bool TryEvaluate(IEnumerable<AST.TypedDocument> documents, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out IR.Root? rules)
+        public static bool TryEvaluate(IEnumerable<AST.TypedDocument> documents, GenerationState state, [NotNullWhen(true)] out IR.Root? rules)
         {
             try
             {
-                var evaluation = new Evaluator(warnings, errors);
+                var evaluation = new Evaluator(state);
                 foreach (var doc in documents)
                 {
                     evaluation.AddDocument(doc);
                 }
                 rules = new IR.Root(evaluation.Scale, new IR.Region(evaluation.Config, evaluation.Objects), evaluation.Edges);
 
-                return !errors.Any();
+                return !state.HasErrors();
             }
             catch (Exception ex)
             {
-                errors.Add(new(ex));
+                state.AddError(ex);
                 rules = null;
                 return false;
             }
         }
 
-        private readonly List<GenerationError> ws;
-        private readonly List<GenerationError> es;
+        private readonly GenerationState state;
         private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
         private readonly Dictionary<string, AST.SegmentAttribute[]> lineClasses;
         private readonly Dictionary<string, IR.Object> allObjects;
@@ -43,10 +42,9 @@ namespace Thousand
         public IReadOnlyList<IR.Object> Objects => rootObjects;
         public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
-        private Evaluator(List<GenerationError> warnings, List<GenerationError> errors)
+        private Evaluator(GenerationState state)
         {
-            ws = warnings;
-            es = errors;
+            this.state = state;
 
             objectClasses = new(StringComparer.OrdinalIgnoreCase);
             lineClasses = new(StringComparer.OrdinalIgnoreCase);
@@ -78,6 +76,15 @@ namespace Thousand
 
             foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
+                foreach (var b in c.BaseClasses)
+                {
+                    if (!objectClasses.ContainsKey(b.Text) && !lineClasses.ContainsKey(b.Text))
+                    {
+                        state.AddError(b, ErrorKind.Type, $"class {0} is not defined", b);
+                        return;
+                    }
+                }
+
                 if (c is AST.ObjectClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => objectClasses.ContainsKey(b.Text)))
                 {
                     var localAttrs = c switch
@@ -251,7 +258,7 @@ namespace Thousand
 
             if (node.Name?.Text is string name && allObjects.ContainsKey(name))
             {
-                es.Add(new(node.Name.Span, ErrorKind.Reference, $"object `{name}` has already been defined"));
+                state.AddError(node.Name, ErrorKind.Reference, "object {0} has already been defined", node.Name);
             }
             else
             {
@@ -348,7 +355,7 @@ namespace Thousand
                             break;
                             
                         default:
-                            es.Add(new(from.Target.Span, ErrorKind.Internal, $"unknown ArrowKind {from.Direction.Value} from object `{from.Target.Text}`"));
+                            state.AddError(from.Target, ErrorKind.Internal, $"unknown ArrowKind {from.Direction.Value} from object {0}", from.Target);
                             break;
                     }
                 }
@@ -417,11 +424,11 @@ namespace Thousand
             {
                 if (lineClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new(name.Span, ErrorKind.Type, $"class `{name.Text}` can only be used for lines, not objects"));
+                    state.AddWarning(name, ErrorKind.Type, "class {0} can only be used for lines, not objects", name);
                 }
                 else
                 {
-                    ws.Add(new(name.Span, ErrorKind.Type, $"class `{name.Text}` is not defined"));
+                    state.AddWarning(name, ErrorKind.Reference, "class {0} is not defined", name);
                 }
                 
                 return Array.Empty<AST.ObjectAttribute>();
@@ -438,11 +445,11 @@ namespace Thousand
             {
                 if (objectClasses.ContainsKey(name.Text))
                 {
-                    ws.Add(new(name.Span, ErrorKind.Type, $"class `{name.Text}` can only be used for objects, not lines"));
+                    state.AddWarning(name, ErrorKind.Type, "class {0} can only be used for objects, not lines", name);
                 }
                 else
                 {
-                    ws.Add(new(name.Span, ErrorKind.Type, $"class `{name.Text}` is not defined"));
+                    state.AddWarning(name, ErrorKind.Reference, "class {0} is not defined", name);
                 }
 
                 return Array.Empty<AST.SegmentAttribute>();
@@ -457,7 +464,7 @@ namespace Thousand
         {
             if (!allObjects.ContainsKey(name.Text))
             {
-                ws.Add(new(name.Span, ErrorKind.Reference, $"object `{name.Text}` is not defined"));
+                state.AddWarning(name, ErrorKind.Reference, "object {0} is not defined", name);
                 return null;
             }
 

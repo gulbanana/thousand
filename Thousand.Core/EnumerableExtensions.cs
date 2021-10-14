@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Thousand
 {
@@ -12,11 +10,6 @@ namespace Thousand
             {
                 if (elem is not null) yield return elem;
             }
-        }
-
-        public static string Join(this IEnumerable<GenerationError> errors)
-        {
-            return string.Join(Environment.NewLine, errors.Select(e => e.ToString()));
         }
     }
 }

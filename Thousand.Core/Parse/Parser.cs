@@ -10,38 +10,40 @@ namespace Thousand.Parse
 {
     public sealed class Parser
     {
-        public static bool TryParse(string text, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out AST.TypedDocument? document)
+        public static bool TryParse(string text, GenerationState state, [NotNullWhen(true)] out AST.TypedDocument? document)
         {
-            document = Parse(text, warnings, errors);
-            return !errors.Any();
+            document = Parse(text, state);
+            return !state.HasErrors();
         }
 
-        private static AST.TypedDocument? Parse(string text, List<GenerationError> warnings, List<GenerationError> errors)
+        private static AST.TypedDocument? Parse(string text, GenerationState state)
         {
             var tokenizer = Tokenizer.Build();
 
             var untypedTokens = tokenizer.TryTokenize(text);
             if (!untypedTokens.HasValue)
             {
-                errors.Add(new(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment()));
+                state.AddError(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment());
                 return null;
             }
             var pass1Tokens = untypedTokens.Value;
 
+            // resolve objects and lines with template base classes (turning those classes concrete)
             var pass1AST = Untyped.UntypedDocument(pass1Tokens);
             if (!pass1AST.HasValue)
             {
                 var badToken = pass1AST.Location.IsAtEnd ? pass1Tokens.Last() : pass1AST.Location.First();
-                errors.Add(new(badToken.Span, ErrorKind.Syntax, pass1AST.FormatErrorMessageFragment()));
+                state.AddError(badToken.Span, ErrorKind.Syntax, pass1AST.FormatErrorMessageFragment());
                 return null;
             }
 
-            var pass2Tokens = new Parser(warnings, errors, 1).Pass1(pass1Tokens, pass1AST.Value);
-            if (errors.Any())
+            var pass2Tokens = new Parser(state, 1).Pass1(pass1Tokens, pass1AST.Value);
+            if (state.HasErrors())
             {
                 return null;
             }
 
+            // repeatedly resolve concrete classes with template base classes
             var p = 2;
             var pass2AST = Untyped.UntypedDocument(pass2Tokens);
             do
@@ -49,12 +51,12 @@ namespace Thousand.Parse
                 if (!pass2AST.HasValue)
                 {
                     var badToken = pass2AST.Location.IsAtEnd ? pass2Tokens.Last() : pass2AST.Location.First();
-                    errors.Add(new(badToken.Span, ErrorKind.Syntax, pass2AST.FormatErrorMessageFragment()));
+                    state.AddError(badToken.Span, ErrorKind.Syntax, pass2AST.FormatErrorMessageFragment());
                     return null;
                 }
 
-                pass2Tokens = new Parser(warnings, errors, p++).Pass2(pass2Tokens, pass2AST.Value);
-                if (errors.Any())
+                pass2Tokens = new Parser(state, p++).Pass2(pass2Tokens, pass2AST.Value);
+                if (state.HasErrors())
                 {
                     return null;
                 }
@@ -62,16 +64,17 @@ namespace Thousand.Parse
                 pass2AST = Untyped.UntypedDocument(pass2Tokens);
             } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.IsT1 && Resolveable(d.AsT1.Value)));
 
+            // remove remaining template classes
             var pass3AST = Untyped.UntypedDocument(pass2Tokens);
             if (!pass3AST.HasValue)
             {
                 var badToken = pass3AST.Location.IsAtEnd ? pass2Tokens.Last() : pass3AST.Location.First();
-                errors.Add(new(badToken.Span, ErrorKind.Syntax, pass3AST.FormatErrorMessageFragment()));
+                state.AddError(badToken.Span, ErrorKind.Syntax, pass3AST.FormatErrorMessageFragment());
                 return null;
             }
 
-            var typedTokens = new Parser(warnings, errors, p).Pass3(pass2Tokens, pass3AST.Value);
-            if (errors.Any())
+            var typedTokens = new Parser(state, p).Pass3(pass2Tokens, pass3AST.Value);
+            if (state.HasErrors())
             {
                 return null;
             }
@@ -80,7 +83,7 @@ namespace Thousand.Parse
             if (!typedAST.HasValue)
             {
                 var badToken = typedAST.Location.IsAtEnd ? pass1Tokens.Last() : typedAST.Location.First();
-                errors.Add(new(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment()));
+                state.AddError(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment());
                 return null;
             }
 
@@ -92,18 +95,17 @@ namespace Thousand.Parse
             return !klass.Arguments.Value.Any() && klass.BaseClasses.Any(b => b.Value.Arguments.Any());
         }
 
-        private readonly List<GenerationError> ws;
-        private readonly List<GenerationError> es;
+        private readonly GenerationState state;
         private readonly int p;
         private readonly Dictionary<string, Macro<AST.UntypedClass>> templates;
         private readonly Dictionary<string, List<Token[]>> instantiations;
         private readonly List<Splice> splices;
 
-        private Parser(List<GenerationError> warnings, List<GenerationError> errors, int p)
+        private Parser(GenerationState state, int p)
         {
-            ws = warnings;
-            es = errors;
+            this.state = state;
             this.p = p;
+
             templates = new();
             instantiations = new();
             splices = new();
@@ -222,7 +224,7 @@ namespace Thousand.Parse
             {
                 if (!allClasses.Add(c.Value.Name.Text))
                 {
-                    es.Add(new(c.Value.Name.Span, ErrorKind.Reference, $"class `{c.Value.Name.Text}` has already been defined"));
+                    state.AddError(c.Value.Name, ErrorKind.Reference, "class {0} has already been defined", c.Value.Name);
                     return false;
                 }
             }
@@ -241,7 +243,7 @@ namespace Thousand.Parse
                 {
                     if (!names.Add(v.Name.Text))
                     {
-                        es.Add(new(klass.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
+                        state.AddError(v.Name, ErrorKind.Reference, "parameter {0} has already been declared", v.Name);
                         return false;
                     }
 
@@ -251,7 +253,7 @@ namespace Thousand.Parse
                     }
                     else if (hasDefault)
                     {
-                        es.Add(new(klass.Name.Span, ErrorKind.Type, $"class `{klass.Name.Text}` has default arguments following non-default arguments"));
+                        state.AddError(klass.Name, ErrorKind.Type, "class {0} has default arguments following non-default arguments", klass.Name);
                         return false;
                     }
                 }
@@ -309,11 +311,11 @@ namespace Thousand.Parse
                 {
                     if (klass.Arguments.Value.All(v => v.Default is null))
                     {
-                        es.Add(new(callMacro.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}"));
+                        state.AddError(callMacro.Value.Name, ErrorKind.Type, $"expected {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}");
                     }
                     else
                     {
-                        es.Add(new(callMacro.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Value.Where(v => v.Default == null).Count()} to {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}"));
+                        state.AddError(callMacro.Value.Name, ErrorKind.Type, $"expected {klass.Arguments.Value.Where(v => v.Default == null).Count()} to {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}");
                     }
                     return;
                 }
@@ -324,12 +326,15 @@ namespace Thousand.Parse
                 var substitutions = suppliedArguments.Concat(defaultArguments)
                     .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
+                var uniqueString = $"{call.Name.Text}-{p}-{instantiations[call.Name.Text].Count + 1}";
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
-                        new TextSpan($"{call.Name.Text}-{p}-{instantiations[call.Name.Text].Count + 1}")
+                        new TextSpan(uniqueString)
                     )
                 };
+
+                state.MapSpan(uniqueString, callMacro.Value.Name.Span);
                 splices.Add(new(callMacro.Range(), uniqueName));
 
                 var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
@@ -364,7 +369,7 @@ namespace Thousand.Parse
                         }
                         else
                         {
-                            es.Add(new(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined"));
+                            state.AddError(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined; try adding a parameter to class {{0}}", klass.Name);
                             replacements.Add(token);
                         }
                     }
@@ -392,7 +397,7 @@ namespace Thousand.Parse
                         }
                         else
                         {
-                            es.Add(new(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined"));
+                            state.AddError(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined; try adding a parameter to class {{0}}", klass.Name);
                             replacements.Add(token);
                         }
                     }

@@ -39,12 +39,11 @@ namespace Thousand.Tests
                 new AST.TypedLine(new Parse.Identifier[]{new("line")}, new AST.LineSegment[]{ new(new("foo"), ArrowKind.Forward), new(new("bar"), ArrowKind.Backward), new(new("foo"), null) }, new AST.SegmentAttribute[]{ })
             });
 
-            var warnings = new List<GenerationError>();
-            var errors = new List<GenerationError>();
-            var result = Evaluator.TryEvaluate(new[] { document }, warnings, errors, out var root);
+            var state = new GenerationState();
+            var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
 
-            Assert.True(result, errors.Join());
-            Assert.Empty(warnings);
+            Assert.True(result, state.JoinErrors());
+            Assert.False(state.HasWarnings(), state.JoinWarnings());
             Assert.Equal(Colour.Blue, root!.Region.Config.Fill);
             Assert.Equal(5, root.Region.WalkObjects().Count());
             Assert.Equal(3, root.Region.Objects.Count); // group, big baz

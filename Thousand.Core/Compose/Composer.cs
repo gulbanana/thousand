@@ -8,7 +8,7 @@ namespace Thousand.Compose
 {
     public class Composer
     {
-        public static bool TryCompose(IR.Root ir, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out Layout.Diagram? diagram)
+        public static bool TryCompose(IR.Root ir, GenerationState state, [NotNullWhen(true)] out Layout.Diagram? diagram)
         {
             try
             {
@@ -18,21 +18,20 @@ namespace Thousand.Compose
                     textMeasures[t] = Intrinsics.TextBlock(t);
                 }
 
-                var composition = new Composer(warnings, errors, ir, textMeasures);
+                var composition = new Composer(state, ir, textMeasures);
                 diagram = composition.Compose();
 
-                return !errors.Any();
+                return !state.HasErrors();
             }
             catch (Exception ex)
             {
-                errors.Add(new(ex));
+                state.AddError(ex);
                 diagram = null;
                 return false;
             }
         }
 
-        private readonly List<GenerationError> ws;
-        private readonly List<GenerationError> es;
+        private readonly GenerationState state;
         private readonly IR.Root root;
         private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, LayoutState> layouts;
@@ -40,11 +39,9 @@ namespace Thousand.Compose
         private readonly List<Layout.LabelBlock> outputLabels;
         private readonly List<Layout.Line> outputLines;
 
-        private Composer(List<GenerationError> warnings, List<GenerationError> errors, IR.Root root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures)
+        private Composer(GenerationState state, IR.Root root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures)
         {
-            ws = warnings;
-            es = errors;
-
+            this.state = state;
             this.root = root;
             this.textMeasures = textMeasures;
 
@@ -75,12 +72,12 @@ namespace Thousand.Compose
 
                     if (start == null)
                     {
-                        ws.Add(new(edge.FromName.Span, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
+                        state.AddWarning(edge.FromName, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.FromName, edge.ToName);
                     }
 
                     if (end == null)
                     {
-                        ws.Add(new(edge.ToName.Span, ErrorKind.Layout, $"failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
+                        state.AddWarning(edge.ToName, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.FromName, edge.ToName);
                     }
 
                     if (start == null || end == null)
@@ -112,7 +109,7 @@ namespace Thousand.Compose
                             (_, end) = Intrinsics.Line(start, toBox.Center + edge.ToOffset, null, outputShapes.GetValueOrDefault(edge.ToTarget));
                             if (end == null)
                             {
-                                ws.Add(new(edge.FromName.Span, ErrorKind.Layout, $"after anchoring start, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.ToName.Text}`"));
+                                state.AddWarning(edge.FromName, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.FromName, edge.ToName);
                                 continue;
                             }
                         }
@@ -142,7 +139,7 @@ namespace Thousand.Compose
                             (start, _) = Intrinsics.Line(fromBox.Center + edge.FromOffset, end, outputShapes.GetValueOrDefault(edge.FromTarget), null);
                             if (start == null)
                             {
-                                ws.Add(new(edge.FromName.Span, ErrorKind.Layout, $"after anchoring end, failed to find point where line from `{edge.FromName.Text}` to `{edge.ToName.Text}` intersects `{edge.FromName.Text}`"));
+                                state.AddWarning(edge.FromName, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.FromName, edge.ToName);
                                 continue;
                             }
                         }
@@ -152,7 +149,7 @@ namespace Thousand.Compose
                 }
                 catch (Exception ex)
                 { 
-                    ws.Add(new(ex));
+                    state.AddWarning(ex);
                     continue;
                 }
             }
@@ -208,8 +205,8 @@ namespace Thousand.Compose
         // a size determined by the object bounds, their margins and the region's gutter
         private Point Measure(IR.Region region, Point intrinsicSize)
         {
-            var state = new LayoutState();
-            layouts[region] = state;
+            var layout = new LayoutState();
+            layouts[region] = layout;
 
             var currentRow = 1;
             var currentColumn = 1;
@@ -226,13 +223,13 @@ namespace Thousand.Compose
                 {
                     if (child.Row.HasValue || child.Column.HasValue)
                     {
-                        es.Add(new(child.Name.Span, ErrorKind.Layout, $"object `{child.Name.Text}` has both anchor and grid row/column"));
+                        state.AddError(child.Name, ErrorKind.Layout, "object {0} has both anchor and grid row/column", child.Name);
                         return Point.Zero;
                     }
 
                     var node = new AnchorLayoutNode(desiredSize, desiredMargin, child.Anchor.Value, child.Alignment.Select(k => k ?? AlignmentKind.Center));
-                    state.AllNodes[child] = node;
-                    state.AnchorNodes[child] = node;
+                    layout.AllNodes[child] = node;
+                    layout.AnchorNodes[child] = node;
                     continue;
                 }
 
@@ -260,8 +257,8 @@ namespace Thousand.Compose
                     } 
 
                     var measurements = new GridLayoutNode(desiredSize, desiredMargin, currentRow, currentColumn);
-                    state.GridNodes[child] = measurements;
-                    state.AllNodes[child] = measurements;
+                    layout.GridNodes[child] = measurements;
+                    layout.AllNodes[child] = measurements;
 
                     // grid-march: update size and move to the next cell
                     rowCount = Math.Max(currentRow, rowCount);
@@ -289,30 +286,30 @@ namespace Thousand.Compose
             }
 
             // calculate track sizes
-            var maxWidth = state.GridNodes.Values.Select(s => s.Size.X + s.Margin.X).Append(0).Max();
+            var maxWidth = layout.GridNodes.Values.Select(s => s.Size.X + s.Margin.X).Append(0).Max();
             for (var c = 0; c < columnCount; c++)
             {
-                var intrinsicWidth = state.GridNodes.Values.Where(s => s.Column == c + 1).Select(s => s.Size.X + s.Margin.X).Append(0).Max();
+                var intrinsicWidth = layout.GridNodes.Values.Where(s => s.Column == c + 1).Select(s => s.Size.X + s.Margin.X).Append(0).Max();
                 var trackWidth = region.Config.Layout.Columns switch
                 {
                     EqualSize => maxWidth,
                     MinimumSize(var minWidth) => Math.Max(minWidth, intrinsicWidth),
                     PackedSize or _ => intrinsicWidth
                 };
-                state.Columns.Add(trackWidth);
+                layout.Columns.Add(trackWidth);
             }
 
-            var maxHeight = state.GridNodes.Values.Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
+            var maxHeight = layout.GridNodes.Values.Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
             for (var r = 0; r < rowCount; r++)
             {
-                var intrinsicHeight = state.GridNodes.Values.Where(s => s.Row == r + 1).Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
+                var intrinsicHeight = layout.GridNodes.Values.Where(s => s.Row == r + 1).Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
                 var trackHeight = region.Config.Layout.Rows switch
                 {
                     EqualSize => maxHeight,
                     MinimumSize(var minHeight) => Math.Max(minHeight, intrinsicHeight),
                     PackedSize or _ => intrinsicHeight
                 };
-                state.Rows.Add(trackHeight);
+                layout.Rows.Add(trackHeight);
             }
 
             // calculate own size
@@ -320,8 +317,8 @@ namespace Thousand.Compose
             var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding.X, intrinsicSize.Y + intrinsicPadding.Y);
             var regionPadding = rowCount + columnCount == 0 ? new Border(0) : region.Config.Padding;
 
-            var contentWidth = state.Columns.Sum() + (columnCount - 1) * region.Config.Gutter.Columns + regionPadding.X;
-            var contentHeight = state.Rows.Sum() + (rowCount - 1) * region.Config.Gutter.Rows + regionPadding.Y;
+            var contentWidth = layout.Columns.Sum() + (columnCount - 1) * region.Config.Gutter.Columns + regionPadding.X;
+            var contentHeight = layout.Rows.Sum() + (rowCount - 1) * region.Config.Gutter.Rows + regionPadding.Y;
 
             var regionSize = new Point(contentWidth, contentHeight);
             var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));

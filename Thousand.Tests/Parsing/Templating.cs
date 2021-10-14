@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Thousand.Model;
 using Thousand.Parse;
@@ -9,8 +8,7 @@ namespace Thousand.Tests.Parsing
 {
     public class Templating
     {
-        private readonly List<GenerationError> warnings = new();
-        private readonly List<GenerationError> errors = new();
+        private readonly GenerationState state = new();
 
         [Fact]
         public void RemoveUnreferencedTemplate()
@@ -18,7 +16,7 @@ namespace Thousand.Tests.Parsing
             var source = @"
 class foo($w) [min-width=$w]
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             Assert.Empty(ast!.Declarations.Where(d => d.IsT1));
         }
@@ -30,7 +28,7 @@ class foo($w) [min-width=$w]
 class foo($x) [min-width=$x]
 foo(1) bar
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
@@ -45,7 +43,7 @@ class foo($s) [stroke=$s, anchor=none]
 object a; object b
 foo(2) a--b
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.LineClass)ast!.Declarations.Where(d => d.IsT1).First();
 
@@ -60,7 +58,7 @@ class foo($x) [min-width=$x]
 class bar : foo(1)
 bar baz
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
@@ -75,7 +73,7 @@ class foo($x) [min-width=$x]
 class bar($y) : foo($y) [min-height=$y]
 bar(1) baz
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var foo = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
             var bar = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).Last();
@@ -93,7 +91,7 @@ class bar($y) : foo($y) [min-height=$y]
 class baz($z) : bar($z)
 baz(1) quux
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var foo = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).ElementAt(0);
             var bar = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).ElementAt(1);
@@ -110,7 +108,7 @@ class foo($w) [min-width=$w]
 foo(1) bar
 foo(2) baz
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klasses = ast!.Declarations.Where(d => d.IsT1).Select(d => (AST.ObjectClass)d).ToList();
             Assert.Equal(2, klasses.Count);
@@ -131,7 +129,7 @@ foo(2) baz
 class foo($shape) [shape=$shape]
 foo({shape}) bar
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
@@ -145,7 +143,7 @@ foo({shape}) bar
 class foo($x, $y) [min-width=$x, min-height=$y]
 foo(1, 2) bar
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
@@ -161,7 +159,7 @@ class foo($x) [min-width=$x]
 class bar($x) [min-height=$x]
 foo(1).bar(2) bar
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
             // XXX more asserts
         }
 
@@ -172,7 +170,7 @@ foo(1).bar(2) bar
 class foo($x) [min-width=$x]
 object { foo(1) }
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
@@ -186,7 +184,7 @@ object { foo(1) }
 class foo($x) [min-width=$x]
 object { object { foo(1) } }
 ";
-            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
 
             var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
 
