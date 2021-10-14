@@ -1,12 +1,44 @@
-﻿using Superpower.Model;
+﻿using Superpower;
+using Superpower.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Thousand.Parse
 {
+    // XXX basically ITemplated with concrete init - extract the interface somehow
     public record Macro(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder)
     {
+        public static TokenListParser<TokenKind, Macro> Raw(params TokenKind[] terminators) => input =>
+        {
+            var remainder = input;
+            while (!remainder.IsAtEnd)
+            {
+                var next = remainder.ConsumeToken();
+                if (terminators.Contains(next.Value.Kind))
+                {
+                    break;
+                }
+
+                remainder = next.Remainder;
+            }
+
+            return TokenListParserResult.Value(new Macro(input, remainder), input, remainder);
+        };
+
+        public static TokenListParser<TokenKind, Macro<T>> Of<T>(TokenListParser<TokenKind, T> pT) => input =>
+        {            
+            var t = pT(input);
+            if (t.HasValue)
+            {
+                return TokenListParserResult.Value(new Macro<T>(input, t.Remainder, t.Value), input, t.Remainder);
+            }
+            else
+            {
+                return TokenListParserResult.CastEmpty<TokenKind, T, Macro<T>>(t);
+            }
+        };
+
         public IEnumerable<Token<TokenKind>> Sequence()
         {
             return Location.Take(Remainder.Position - Location.Position);
@@ -19,4 +51,6 @@ namespace Thousand.Parse
             return start..end;
         }
     }
+
+    public record Macro<T>(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder, T Value) : Macro(Location, Remainder);
 }

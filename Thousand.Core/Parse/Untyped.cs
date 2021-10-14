@@ -12,7 +12,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedAttribute> UntypedAttribute { get; } =
             from key in Identifier.Any.Named("attribute name")
             from _ in Token.EqualTo(TokenKind.EqualsSign)
-            from value in Value.Macro(TokenKind.Comma, TokenKind.RightBracket)
+            from value in Macro.Raw(TokenKind.Comma, TokenKind.RightBracket)
             select new AST.UntypedAttribute(key, value);
 
         /*************************************************************
@@ -21,19 +21,19 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.Argument> ClassArg { get; } =
             from name in Identifier.Variable
-            from @default in Token.EqualTo(TokenKind.EqualsSign).IgnoreThen(Value.Macro(TokenKind.Comma, TokenKind.RightParenthesis)).AsNullable().OptionalOrDefault()
+            from @default in Token.EqualTo(TokenKind.EqualsSign).IgnoreThen(Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis)).AsNullable().OptionalOrDefault()
             select new AST.Argument(name, @default);
 
-        public static TokenListParser<TokenKind, AST.ArgumentList> ClassArgs { get; } =
+        public static TokenListParser<TokenKind, AST.Argument[]> ClassArgs { get; } =
             from begin in Token.EqualTo(TokenKind.LeftParenthesis)
             from arguments in ClassArg.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
-            select new AST.ArgumentList(arguments);
+            select arguments;
 
         public static TokenListParser<TokenKind, AST.UntypedClass> Class { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier.Any
-            from arguments in ClassArgs.Templated()
+            from arguments in Macro.Of(ClassArgs)
             from bases in Shared.BaseClasses
             from attrs in Shared.List(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.UntypedClass(name, arguments, bases, attrs);
@@ -44,7 +44,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, Macro[]> CallArgs { get; } =
             from begin in Token.EqualTo(TokenKind.LeftParenthesis)
-            from arguments in Value.Macro(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from arguments in Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select arguments;
 
@@ -53,8 +53,8 @@ namespace Thousand.Parse
             from arguments in CallArgs.OptionalOrDefault(Array.Empty<Macro>())
             select new AST.ClassCall(name, arguments);
 
-        public static TokenListParser<TokenKind, AST.ClassCall[]> ClassCallList { get; } =
-            ClassCall.Templated().AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+        public static TokenListParser<TokenKind, Macro<AST.ClassCall>[]> ClassCallList { get; } =
+            Macro.Of(ClassCall).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
         /*************************************************************************************
          * Objects and lines, which can instantiate template classes with a macro expansion. *
@@ -134,7 +134,7 @@ namespace Thousand.Parse
             var first = input.ConsumeToken();
             if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
             {
-                var untypedClass = Class.Templated().Select(x => (AST.UntypedDocumentContent)x)(input);
+                var untypedClass = Macro.Of(Class).Select(x => (AST.UntypedDocumentContent)x)(input);
                 if (untypedClass.HasValue)
                 {
                     return untypedClass;

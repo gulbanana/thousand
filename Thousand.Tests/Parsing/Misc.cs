@@ -140,8 +140,8 @@ bar""");
             var result = Untyped.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("line", result.Value.Classes[0].Name.Text);
-            Assert.Single(result.Value.Classes[0].Arguments);
+            Assert.Equal("line", result.Value.Classes[0].Value.Name.Text);
+            Assert.Single(result.Value.Classes[0].Value.Arguments);
         }
 
         [Fact]

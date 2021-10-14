@@ -18,7 +18,7 @@ namespace Thousand.Parse
 
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
-        private readonly Dictionary<string, AST.UntypedClass> templates;
+        private readonly Dictionary<string, Macro<AST.UntypedClass>> templates;
         private readonly Dictionary<string, List<Token<TokenKind>[]>> instantiations;
         private readonly List<Splice> splices;
         public AST.TypedDocument? ParsedDocument;
@@ -73,7 +73,7 @@ namespace Thousand.Parse
             var allClasses = new HashSet<string>();
             foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 || d.IsT2))
             {
-                var name = c.IsT1 ? c.AsT1.Name : c.AsT2.Name;
+                var name = c.IsT1 ? c.AsT1.Value.Name : c.AsT2.Name;
                 if (!allClasses.Add(name.Text))
                 {
                     es.Add(new(name.Span, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
@@ -81,15 +81,17 @@ namespace Thousand.Parse
                 }
             }
 
-            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
+            foreach (var macro in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
+                var klass = macro.Value;
+
                 var names = new HashSet<string>();
                 var hasDefault = false;
-                foreach (var v in c.Arguments.Variables)
+                foreach (var v in klass.Arguments.Value)
                 {
                     if (!names.Add(v.Name.Text))
                     {
-                        es.Add(new(c.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
+                        es.Add(new(klass.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
                         return template;
                     }
 
@@ -99,13 +101,13 @@ namespace Thousand.Parse
                     }
                     else if (hasDefault)
                     {
-                        es.Add(new(c.Name.Span, ErrorKind.Type, $"class `{c.Name.Text}` has default arguments following non-default arguments"));
+                        es.Add(new(klass.Name.Span, ErrorKind.Type, $"class `{klass.Name.Text}` has default arguments following non-default arguments"));
                         return template;
                     }
                 }
 
-                templates.Add(c.Name.Text, c);
-                instantiations.Add(c.Name.Text, new List<Token[]>());
+                templates.Add(klass.Name.Text, macro);
+                instantiations.Add(klass.Name.Text, new List<Token[]>());
             }
 
             foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedObject)d))
@@ -123,7 +125,7 @@ namespace Thousand.Parse
             {
                 var replacements = new List<Token>();
 
-                foreach (var instantiation in instantiations[c.Name.Text])
+                foreach (var instantiation in instantiations[c.Value.Name.Text])
                 {
                     replacements.AddRange(instantiation);
                     replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
@@ -166,27 +168,29 @@ namespace Thousand.Parse
             }
         }
 
-        private void Invoke(AST.ClassCall call)
+        private void Invoke(Macro<AST.ClassCall> callMacro)
         {
+            var call = callMacro.Value;
             if (templates.ContainsKey(call.Name.Text))
             {
-                var klass = templates[call.Name.Text];
+                var klassMacro = templates[call.Name.Text];
+                var klass = klassMacro.Value;
 
-                if (call.Arguments.Length < klass.Arguments.Variables.Where(v => v.Default == null).Count())
+                if (call.Arguments.Length < klass.Arguments.Value.Where(v => v.Default == null).Count())
                 {
-                    if (klass.Arguments.Variables.All(v => v.Default is null))
+                    if (klass.Arguments.Value.All(v => v.Default is null))
                     {
-                        es.Add(new(call.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
+                        es.Add(new(callMacro.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}"));
                     }
                     else
                     {
-                        es.Add(new(call.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Variables.Where(v => v.Default == null).Count()} to {klass.Arguments.Variables.Length} arguments, found {call.Arguments.Length}"));
+                        es.Add(new(callMacro.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Value.Where(v => v.Default == null).Count()} to {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}"));
                     }
                     return;
                 }
 
-                var suppliedArguments = call.Arguments.Zip(klass.Arguments.Variables, Tuple.Create);
-                var defaultArguments = klass.Arguments.Variables.Skip(call.Arguments.Length).Select(v => Tuple.Create(v.Default!, v));
+                var suppliedArguments = call.Arguments.Zip(klass.Arguments.Value, Tuple.Create);
+                var defaultArguments = klass.Arguments.Value.Skip(call.Arguments.Length).Select(v => Tuple.Create(v.Default!, v));
 
                 var substitutions = suppliedArguments.Concat(defaultArguments)
                     .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
@@ -197,14 +201,14 @@ namespace Thousand.Parse
                         new TextSpan($"{call.Name.Text}-{instantiations[call.Name.Text].Count + 1}")
                     )
                 };
-                splices.Add(new(call.Range(), uniqueName));
+                splices.Add(new(callMacro.Range(), uniqueName));
 
-                var instantiation = Instantiate(klass, uniqueName, substitutions);
+                var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
                 instantiations[call.Name.Text].Add(instantiation);
             }
         }
 
-        private Token[] Instantiate(AST.UntypedClass klass, Token[] name, Dictionary<string, Token[]> substitutions)
+        private Token[] Instantiate(Macro<AST.UntypedClass> klass, Token[] name, Dictionary<string, Token[]> substitutions)
         {
             var relativeSplices = new List<Splice>();
 
@@ -212,10 +216,10 @@ namespace Thousand.Parse
             relativeSplices.Add(new(1..2, name));
 
             // remove argument list
-            relativeSplices.Add(new(klass.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
+            relativeSplices.Add(new(klass.Value.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
 
             // substitute variables into attribute list
-            foreach (var a in klass.Attributes)
+            foreach (var a in klass.Value.Attributes)
             {
                 var replacements = new List<Token>();
                 foreach (var token in a.Value.Sequence())

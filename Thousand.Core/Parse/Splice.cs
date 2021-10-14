@@ -17,5 +17,10 @@ namespace Thousand.Parse
 
             return new(newList.ToArray());
         }
+
+        public override string ToString()
+        {
+            return $"Splice {Location} {Replacements.Dump()}";
+        }
     }
 }

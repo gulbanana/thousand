@@ -1,5 +1,4 @@
 ﻿using Superpower;
-using Superpower.Model;
 using Superpower.Parsers;
 using System.Linq;
 using Thousand.Model;
@@ -8,23 +7,6 @@ namespace Thousand.Parse
 {
     public static class Value
     {
-        public static TokenListParser<TokenKind, Macro> Macro(params TokenKind[] terminators) => input =>
-        {
-            var remainder = input;
-            while (!remainder.IsAtEnd)
-            {
-                var next = remainder.ConsumeToken();
-                if (terminators.Contains(next.Value.Kind))
-                {
-                    break;
-                }
-
-                remainder = next.Remainder;
-            }
-            
-            return TokenListParserResult.Value(new Macro(input, remainder), input, remainder);
-        };
-
         public static TokenListParser<TokenKind, int> CountingNumber { get; } =
             Token.EqualTo(TokenKind.Number).Apply(TextParsers.CountingNumber);
 

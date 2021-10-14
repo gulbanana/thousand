@@ -87,18 +87,7 @@ namespace Thousand.Parse
             };
         }
 
-        public static TokenListParser<TokenKind, T> Templated<T>(this TokenListParser<TokenKind, T> parser) where T : ITemplated
-        {
-            return input => {
-                var inner = parser(input);
-                if (!inner.HasValue) return inner;
-                inner.Value.Location = inner.Location;
-                inner.Value.Remainder = inner.Remainder;
-                return inner;
-            };
-        }
-
-        public static string Dump(this TokenList<TokenKind> list)
+        public static string Dump(this IEnumerable<Token<TokenKind>> list)
         {
             return string.Join(" ", list.Select(t => t.ToStringValue()));
         }
