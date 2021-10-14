@@ -39,7 +39,7 @@ namespace Thousand.Tests
         {
             var graph = File.ReadAllText(@"samples\" + filename);
 
-            using var generator = new Render.SkiaDiagramGenerator();
+            using var generator = new DiagramGenerator<SkiaSharp.SKImage>(new Render.SkiaRenderer());
 
             generator
                 .GenerateImage(graph)

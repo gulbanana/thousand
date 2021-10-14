@@ -2,7 +2,7 @@
   "profiles": {
     "Thousand.CLI": {
       "commandName": "Project",
-      "commandLineArgs": "../../../../samples/arrow-directions.1000"
+      "commandLineArgs": "-o ../../../../samples/demo.1000"
     }
   }
 }
