@@ -8,20 +8,70 @@ using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
 namespace Thousand.Parse
 {
-    public class Parser
+    public sealed class Parser
     {
         public static bool TryParse(string text, List<GenerationError> warnings, List<GenerationError> errors, [NotNullWhen(true)] out AST.TypedDocument? document)
         {
-            document = new Parser(warnings, errors).Parse(text);
+            document = Parse(text, warnings, errors);
             return !errors.Any();
+        }
+
+        private static AST.TypedDocument? Parse(string text, List<GenerationError> warnings, List<GenerationError> errors)
+        {
+            var tokenizer = Tokenizer.Build();
+
+            var untypedTokens = tokenizer.TryTokenize(text);
+            if (!untypedTokens.HasValue)
+            {
+                errors.Add(new(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment()));
+                return null;
+            }
+            var pass1Tokens = untypedTokens.Value;
+
+            var pass1AST = Untyped.UntypedDocument(pass1Tokens);
+            if (!pass1AST.HasValue)
+            {
+                var badToken = pass1AST.Location.IsAtEnd ? pass1Tokens.Last() : pass1AST.Location.First();
+                errors.Add(new(badToken.Span, ErrorKind.Syntax, pass1AST.FormatErrorMessageFragment()));
+                return null;
+            }
+
+            var pass2Tokens = new Parser(warnings, errors).Pass1(pass1Tokens, pass1AST.Value);
+            if (errors.Any())
+            {
+                return null;
+            }
+
+            var pass2AST = Untyped.UntypedDocument(pass2Tokens);
+            if (!pass2AST.HasValue)
+            {
+                var badToken = pass2AST.Location.IsAtEnd ? pass2Tokens.Last() : pass2AST.Location.First();
+                errors.Add(new(badToken.Span, ErrorKind.Syntax, pass2AST.FormatErrorMessageFragment()));
+                return null;
+            }
+
+            var typedTokens = new Parser(warnings, errors).Pass2(pass2Tokens, pass2AST.Value);
+            if (errors.Any())
+            {
+                return null;
+            }
+
+            var typedAST = Typed.Document(typedTokens);
+            if (!typedAST.HasValue)
+            {
+                var badToken = typedAST.Location.IsAtEnd ? pass1Tokens.Last() : typedAST.Location.First();
+                errors.Add(new(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment()));
+                return null;
+            }
+
+            return typedAST.Value;
         }
 
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
         private readonly Dictionary<string, Macro<AST.UntypedClass>> templates;
-        private readonly Dictionary<string, List<Token<TokenKind>[]>> instantiations;
+        private readonly Dictionary<string, List<Token[]>> instantiations;
         private readonly List<Splice> splices;
-        public AST.TypedDocument? ParsedDocument;
 
         private Parser(List<GenerationError> warnings, List<GenerationError> errors)
         {
@@ -32,82 +82,12 @@ namespace Thousand.Parse
             splices = new();
         }
 
-        private AST.TypedDocument? Parse(string text)
+        // resolve templates used by entities, which may be still end up as subclasses of other templates
+        public TokenList Pass1(TokenList untypedTokens, AST.UntypedDocument untypedAST)
         {
-            var tokenizer = Tokenizer.Build();
-
-            var untypedTokens = tokenizer.TryTokenize(text);
-            if (!untypedTokens.HasValue)
+            if (!TypeCheck(untypedAST))
             {
-                es.Add(new(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment()));
-                return null;
-            }
-
-            var untypedAST = Untyped.UntypedDocument(untypedTokens.Value);
-            if (!untypedAST.HasValue)
-            {
-                var badToken = untypedAST.Location.IsAtEnd ? untypedTokens.Value.Last() : untypedAST.Location.First();
-                es.Add(new(badToken.Span, ErrorKind.Syntax, untypedAST.FormatErrorMessageFragment()));
-                return null;
-            }
-
-            var typedTokens = Template(untypedTokens.Value, untypedAST.Value);
-            if (es.Any())
-            {
-                return null;
-            }
-
-            var typedAST = Typed.Document(typedTokens);
-            if (!typedAST.HasValue)
-            {
-                var badToken = typedAST.Location.IsAtEnd ? typedTokens.Last() : typedAST.Location.First();
-                es.Add(new(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment()));
-                return null;
-            }
-
-            return typedAST.Value;
-        }
-
-        private TokenList Template(TokenList template, AST.UntypedDocument untypedAST)
-        {
-            var allClasses = new HashSet<string>();
-            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 || d.IsT2))
-            {
-                var name = c.IsT1 ? c.AsT1.Value.Name : c.AsT2.Name;
-                if (!allClasses.Add(name.Text))
-                {
-                    es.Add(new(name.Span, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
-                    return template;
-                }
-            }
-
-            foreach (var macro in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
-            {
-                var klass = macro.Value;
-
-                var names = new HashSet<string>();
-                var hasDefault = false;
-                foreach (var v in klass.Arguments.Value)
-                {
-                    if (!names.Add(v.Name.Text))
-                    {
-                        es.Add(new(klass.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
-                        return template;
-                    }
-
-                    if (v.Default != null)
-                    {
-                        hasDefault = true;
-                    }
-                    else if (hasDefault)
-                    {
-                        es.Add(new(klass.Name.Span, ErrorKind.Type, $"class `{klass.Name.Text}` has default arguments following non-default arguments"));
-                        return template;
-                    }
-                }
-
-                templates.Add(klass.Name.Text, macro);
-                instantiations.Add(klass.Name.Text, new List<Token[]>());
+                return untypedTokens;
             }
 
             foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedObject)d))
@@ -120,7 +100,6 @@ namespace Thousand.Parse
                 SubstituteLine(l);
             }
 
-            // remove template declarations
             foreach (var c in templates.Values)
             {
                 var replacements = new List<Token>();
@@ -136,10 +115,84 @@ namespace Thousand.Parse
 
             foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
             {
-                template = splice.Apply(template);
+                untypedTokens = splice.Apply(untypedTokens);
             }
 
-            return template;
+            return untypedTokens;
+        }
+
+        // resolve templates used by classes, which may or not have been templates themselves, and remove the unresolved templates
+        public TokenList Pass2(TokenList untypedTokens, AST.UntypedDocument untypedAST)
+        {
+            if (!TypeCheck(untypedAST))
+            {
+                return untypedTokens;
+            }
+
+            foreach (var c in templates.Values)
+            {
+                var replacements = new List<Token>();
+
+                foreach (var instantiation in instantiations[c.Value.Name.Text])
+                {
+                    replacements.AddRange(instantiation);
+                    replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
+                }
+
+                splices.Add(new(c.Range(), replacements.ToArray()));
+            }
+
+            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
+            {
+                untypedTokens = splice.Apply(untypedTokens);
+            }
+
+            return untypedTokens;
+        }
+
+        private bool TypeCheck(AST.UntypedDocument untypedAST)
+        {
+            var allClasses = new HashSet<string>();
+            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 || d.IsT2))
+            {
+                var name = c.IsT1 ? c.AsT1.Value.Name : c.AsT2.Name;
+                if (!allClasses.Add(name.Text))
+                {
+                    es.Add(new(name.Span, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
+                    return false;
+                }
+            }
+
+            foreach (var macro in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
+            {
+                var klass = macro.Value;
+
+                var names = new HashSet<string>();
+                var hasDefault = false;
+                foreach (var v in klass.Arguments.Value)
+                {
+                    if (!names.Add(v.Name.Text))
+                    {
+                        es.Add(new(klass.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
+                        return false;
+                    }
+
+                    if (v.Default != null)
+                    {
+                        hasDefault = true;
+                    }
+                    else if (hasDefault)
+                    {
+                        es.Add(new(klass.Name.Span, ErrorKind.Type, $"class `{klass.Name.Text}` has default arguments following non-default arguments"));
+                        return false;
+                    }
+                }
+
+                templates.Add(klass.Name.Text, macro);
+                instantiations.Add(klass.Name.Text, new List<Token[]>());
+            }
+
+            return true;
         }
 
         private void SubstituteObject(AST.UntypedObject objekt)
@@ -208,7 +261,7 @@ namespace Thousand.Parse
             }
         }
 
-        private Token[] Instantiate(Macro<AST.UntypedClass> klass, Token[] name, Dictionary<string, Token[]> substitutions)
+        private Token[] Instantiate(Macro<AST.UntypedClass> macro, Token[] name, Dictionary<string, Token[]> substitutions)
         {
             var relativeSplices = new List<Splice>();
 
@@ -216,10 +269,10 @@ namespace Thousand.Parse
             relativeSplices.Add(new(1..2, name));
 
             // remove argument list
-            relativeSplices.Add(new(klass.Value.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
+            relativeSplices.Add(new(macro.Value.Arguments.Range(macro.Location.Position), Array.Empty<Token>()));
 
             // substitute variables into attribute list
-            foreach (var a in klass.Value.Attributes)
+            foreach (var a in macro.Value.Attributes)
             {
                 var replacements = new List<Token>();
                 foreach (var token in a.Value.Sequence())
@@ -244,10 +297,10 @@ namespace Thousand.Parse
                     }
                 }
 
-                relativeSplices.Add(new(a.Value.Range(klass.Location.Position), replacements.ToArray()));
+                relativeSplices.Add(new(a.Value.Range(macro.Location.Position), replacements.ToArray()));
             }
 
-            var template = new TokenList(klass.Location.Take(klass.Remainder.Position - klass.Location.Position).ToArray());
+            var template = new TokenList(macro.Location.Take(macro.Remainder.Position - macro.Location.Position).ToArray());
             foreach (var splice in relativeSplices.OrderByDescending(s => s.Location.Start.Value))
             {
                 template = splice.Apply(template);
