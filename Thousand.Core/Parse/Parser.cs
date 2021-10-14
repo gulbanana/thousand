@@ -36,7 +36,7 @@ namespace Thousand.Parse
                 return null;
             }
 
-            var pass2Tokens = new Parser(warnings, errors).Pass1(pass1Tokens, pass1AST.Value);
+            var pass2Tokens = new Parser(warnings, errors, 1).Pass1(pass1Tokens, pass1AST.Value);
             if (errors.Any())
             {
                 return null;
@@ -50,7 +50,7 @@ namespace Thousand.Parse
                 return null;
             }
 
-            var typedTokens = new Parser(warnings, errors).Pass2(pass2Tokens, pass2AST.Value);
+            var typedTokens = new Parser(warnings, errors, 2).Pass2(pass2Tokens, pass2AST.Value);
             if (errors.Any())
             {
                 return null;
@@ -69,14 +69,16 @@ namespace Thousand.Parse
 
         private readonly List<GenerationError> ws;
         private readonly List<GenerationError> es;
+        private readonly int p;
         private readonly Dictionary<string, Macro<AST.UntypedClass>> templates;
         private readonly Dictionary<string, List<Token[]>> instantiations;
         private readonly List<Splice> splices;
 
-        private Parser(List<GenerationError> warnings, List<GenerationError> errors)
+        private Parser(List<GenerationError> warnings, List<GenerationError> errors, int p)
         {
             ws = warnings;
             es = errors;
+            this.p = p;
             templates = new();
             instantiations = new();
             splices = new();
@@ -90,19 +92,22 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
-            foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedObject)d))
+            foreach (var o in untypedAST.Declarations.Where(d => d.IsT2).Select(d => (AST.UntypedObject)d))
             {
-                SubstituteObject(o);
+                ResolveObject(o);
             }
 
-            foreach (var l in untypedAST.Declarations.Where(d => d.IsT4).Select(d => (AST.UntypedLine)d))
+            foreach (var l in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedLine)d))
             {
-                SubstituteLine(l);
+                ResolveLine(l);
             }
 
             foreach (var c in templates.Values)
             {
                 var replacements = new List<Token>();
+
+                replacements.AddRange(c.Sequence());
+                replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
 
                 foreach (var instantiation in instantiations[c.Value.Name.Text])
                 {
@@ -129,6 +134,11 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
+            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 && !d.AsT1.Value.Arguments.Value.Any()).Select(d => (Macro<AST.UntypedClass>)d))
+            {
+                ResolveClass(c.Value);
+            }
+
             foreach (var c in templates.Values)
             {
                 var replacements = new List<Token>();
@@ -153,12 +163,11 @@ namespace Thousand.Parse
         private bool TypeCheck(AST.UntypedDocument untypedAST)
         {
             var allClasses = new HashSet<string>();
-            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 || d.IsT2))
+            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
-                var name = c.IsT1 ? c.AsT1.Value.Name : c.AsT2.Name;
-                if (!allClasses.Add(name.Text))
+                if (!allClasses.Add(c.Value.Name.Text))
                 {
-                    es.Add(new(name.Span, ErrorKind.Reference, $"class `{name.Text}` has already been defined"));
+                    es.Add(new(c.Value.Name.Span, ErrorKind.Reference, $"class `{c.Value.Name.Text}` has already been defined"));
                     return false;
                 }
             }
@@ -166,6 +175,10 @@ namespace Thousand.Parse
             foreach (var macro in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
                 var klass = macro.Value;
+                if (!klass.Arguments.Value.Any())
+                {
+                    continue; // not a template
+                }
 
                 var names = new HashSet<string>();
                 var hasDefault = false;
@@ -195,7 +208,7 @@ namespace Thousand.Parse
             return true;
         }
 
-        private void SubstituteObject(AST.UntypedObject objekt)
+        private void ResolveObject(AST.UntypedObject objekt)
         {
             foreach (var call in objekt.Classes)
             {
@@ -204,18 +217,26 @@ namespace Thousand.Parse
 
             foreach (var child in objekt.Children.Where(d => d.IsT1).Select(d => (AST.UntypedObject)d))
             {
-                SubstituteObject(child);
+                ResolveObject(child);
             }
 
             foreach (var child in objekt.Children.Where(d => d.IsT2).Select(d => (AST.UntypedLine)d))
             {
-                SubstituteLine(child);
+                ResolveLine(child);
             }
         }
 
-        private void SubstituteLine(AST.UntypedLine line)
+        private void ResolveLine(AST.UntypedLine line)
         {
             foreach (var call in line.Classes)
+            {
+                Invoke(call);
+            }
+        }
+
+        private void ResolveClass(AST.UntypedClass klass)
+        {
+            foreach (var call in klass.BaseClasses)
             {
                 Invoke(call);
             }
@@ -251,7 +272,7 @@ namespace Thousand.Parse
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
-                        new TextSpan($"{call.Name.Text}-{instantiations[call.Name.Text].Count + 1}")
+                        new TextSpan($"{call.Name.Text}-{p}-{instantiations[call.Name.Text].Count + 1}")
                     )
                 };
                 splices.Add(new(callMacro.Range(), uniqueName));
@@ -263,16 +284,17 @@ namespace Thousand.Parse
 
         private Token[] Instantiate(Macro<AST.UntypedClass> macro, Token[] name, Dictionary<string, Token[]> substitutions)
         {
+            var klass = macro.Value;
             var relativeSplices = new List<Splice>();
 
             // replace name
             relativeSplices.Add(new(1..2, name));
 
             // remove argument list
-            relativeSplices.Add(new(macro.Value.Arguments.Range(macro.Location.Position), Array.Empty<Token>()));
+            relativeSplices.Add(new(klass.Arguments.Range(macro.Location.Position), Array.Empty<Token>()));
 
             // substitute variables into attribute list
-            foreach (var a in macro.Value.Attributes)
+            foreach (var a in klass.Attributes)
             {
                 var replacements = new List<Token>();
                 foreach (var token in a.Value.Sequence())
@@ -296,8 +318,31 @@ namespace Thousand.Parse
                         replacements.Add(token);
                     }
                 }
-
                 relativeSplices.Add(new(a.Value.Range(macro.Location.Position), replacements.ToArray()));
+            }
+
+            // substitute variables into base class list
+            foreach (var a in klass.BaseClasses.SelectMany(b => b.Value.Arguments))
+            {
+                var replacements = new List<Token>();
+                foreach (var token in a.Sequence())
+                {                   
+                    if (token.Kind == TokenKind.Variable)
+                    {
+                        var key = token.ToStringValue();
+                        if (substitutions.ContainsKey(key))
+                        {
+                            var value = substitutions[key];
+                            replacements.AddRange(value);
+                        }
+                        else
+                        {
+                            es.Add(new(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined"));
+                            replacements.Add(token);
+                        }
+                    }
+                }
+                relativeSplices.Add(new(a.Range(macro.Location.Position), replacements.ToArray()));
             }
 
             var template = new TokenList(macro.Location.Take(macro.Remainder.Position - macro.Location.Position).ToArray());

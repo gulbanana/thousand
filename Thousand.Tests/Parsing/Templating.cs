@@ -53,6 +53,38 @@ foo(2) a--b
         }
 
         [Fact]
+        public void InstantiateClassTemplate()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+class bar : foo(1)
+bar baz
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
+        }
+
+        [Fact]
+        public void InstantiateTemplateTemplate()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+class bar($y) : foo($y) [min-height=$y]
+bar(1) baz
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var foo = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var bar = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).Last();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), foo.Attributes);
+            Assert.Contains(new AST.NodeMinHeightAttribute(1), bar.Attributes);
+        }
+
+        [Fact]
         public void InstantiateTemplateTwice()
         {
             var source = @"

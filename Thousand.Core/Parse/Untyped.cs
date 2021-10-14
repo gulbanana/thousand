@@ -15,6 +15,24 @@ namespace Thousand.Parse
             from value in Macro.Raw(TokenKind.Comma, TokenKind.RightBracket)
             select new AST.UntypedAttribute(key, value);
 
+        /**************************************************
+         * Class calls - invocations of template classes. *
+         **************************************************/
+
+        public static TokenListParser<TokenKind, Macro[]> CallArgs { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            from arguments in Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from end in Token.EqualTo(TokenKind.RightParenthesis)
+            select arguments;
+
+        public static TokenListParser<TokenKind, AST.ClassCall> ClassCall { get; } =
+            from name in Identifier.Any
+            from arguments in CallArgs.OptionalOrDefault(Array.Empty<Macro>())
+            select new AST.ClassCall(name, arguments);
+
+        public static TokenListParser<TokenKind, Macro<AST.ClassCall>[]> ClassCallList { get; } =
+            Macro.Of(ClassCall).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+
         /*************************************************************
          * Classes which may be templates requiring macro-expansion. *
          *************************************************************/
@@ -33,28 +51,11 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedClass> Class { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier.Any
-            from arguments in Macro.Of(ClassArgs)
-            from bases in Shared.BaseClasses
+            from arguments in Macro.Of(ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
+            from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
             from attrs in Shared.List(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.UntypedClass(name, arguments, bases, attrs);
 
-        /**************************************************
-         * Class calls - invocations of template classes. *
-         **************************************************/
-
-        public static TokenListParser<TokenKind, Macro[]> CallArgs { get; } =
-            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
-            from arguments in Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
-            from end in Token.EqualTo(TokenKind.RightParenthesis)
-            select arguments;
-
-        public static TokenListParser<TokenKind, AST.ClassCall> ClassCall { get; } =
-            from name in Identifier.Any
-            from arguments in CallArgs.OptionalOrDefault(Array.Empty<Macro>())
-            select new AST.ClassCall(name, arguments);
-
-        public static TokenListParser<TokenKind, Macro<AST.ClassCall>[]> ClassCallList { get; } =
-            Macro.Of(ClassCall).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
         /*************************************************************************************
          * Objects and lines, which can instantiate template classes with a macro expansion. *
@@ -134,15 +135,7 @@ namespace Thousand.Parse
             var first = input.ConsumeToken();
             if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
             {
-                var untypedClass = Macro.Of(Class).Select(x => (AST.UntypedDocumentContent)x)(input);
-                if (untypedClass.HasValue)
-                {
-                    return untypedClass;
-                }
-                else
-                {
-                    return Typed.Class.Select(x => (AST.UntypedDocumentContent)x)(input); // we support untemplated classes in the template AST as an error-quality optimisation
-                }
+                return Macro.Of(Class).Select(x => (AST.UntypedDocumentContent)x)(input);
             }
             else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {

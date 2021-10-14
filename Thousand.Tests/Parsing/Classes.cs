@@ -115,5 +115,38 @@ namespace Thousand.Tests.Parsing
             Assert.IsType<AST.ObjectOrLineClass>(result.Value);
             AssertEx.Sequence(((AST.ObjectOrLineClass)result.Value).Attributes, new AST.LineStrokeColourAttribute(Colour.Red));
         }
+
+        [Fact]
+        public void Untyped_Empty()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name.Text);
+            Assert.Empty(result.Value.BaseClasses);
+        }
+
+        [Fact]
+        public void Untyped_Subclass()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : baz");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name.Text);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+        }
+
+        [Fact]
+        public void Untyped_Subclass_WithArguments()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : baz(1, foo)");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name.Text);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+        }
     }
 }
