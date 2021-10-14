@@ -85,6 +85,24 @@ bar(1) baz
         }
 
         [Fact]
+        public void InstantiateTemplateTemplateTemplate()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+class bar($y) : foo($y) [min-height=$y]
+class baz($z) : bar($z)
+baz(1) quux
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var foo = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).ElementAt(0);
+            var bar = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).ElementAt(1);
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), foo.Attributes);
+            Assert.Contains(new AST.NodeMinHeightAttribute(1), bar.Attributes);
+        }
+
+        [Fact]
         public void InstantiateTemplateTwice()
         {
             var source = @"

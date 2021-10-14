@@ -42,15 +42,35 @@ namespace Thousand.Parse
                 return null;
             }
 
+            var p = 2;
             var pass2AST = Untyped.UntypedDocument(pass2Tokens);
-            if (!pass2AST.HasValue)
+            do
             {
-                var badToken = pass2AST.Location.IsAtEnd ? pass2Tokens.Last() : pass2AST.Location.First();
-                errors.Add(new(badToken.Span, ErrorKind.Syntax, pass2AST.FormatErrorMessageFragment()));
+                if (!pass2AST.HasValue)
+                {
+                    var badToken = pass2AST.Location.IsAtEnd ? pass2Tokens.Last() : pass2AST.Location.First();
+                    errors.Add(new(badToken.Span, ErrorKind.Syntax, pass2AST.FormatErrorMessageFragment()));
+                    return null;
+                }
+
+                pass2Tokens = new Parser(warnings, errors, p++).Pass2(pass2Tokens, pass2AST.Value);
+                if (errors.Any())
+                {
+                    return null;
+                }
+
+                pass2AST = Untyped.UntypedDocument(pass2Tokens);
+            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.IsT1 && Resolveable(d.AsT1.Value)));
+
+            var pass3AST = Untyped.UntypedDocument(pass2Tokens);
+            if (!pass3AST.HasValue)
+            {
+                var badToken = pass3AST.Location.IsAtEnd ? pass2Tokens.Last() : pass3AST.Location.First();
+                errors.Add(new(badToken.Span, ErrorKind.Syntax, pass3AST.FormatErrorMessageFragment()));
                 return null;
             }
 
-            var typedTokens = new Parser(warnings, errors, 2).Pass2(pass2Tokens, pass2AST.Value);
+            var typedTokens = new Parser(warnings, errors, p).Pass3(pass2Tokens, pass3AST.Value);
             if (errors.Any())
             {
                 return null;
@@ -65,6 +85,11 @@ namespace Thousand.Parse
             }
 
             return typedAST.Value;
+        }
+
+        private static bool Resolveable(AST.UntypedClass klass)
+        {
+            return !klass.Arguments.Value.Any() && klass.BaseClasses.Any(b => b.Value.Arguments.Any());
         }
 
         private readonly List<GenerationError> ws;
@@ -126,8 +151,46 @@ namespace Thousand.Parse
             return untypedTokens;
         }
 
-        // resolve templates used by classes, which may or not have been templates themselves, and remove the unresolved templates
+        // resolve templates used by classes, which may or not have been templates themselves (repeat until none left)
         public TokenList Pass2(TokenList untypedTokens, AST.UntypedDocument untypedAST)
+        {
+            if (!TypeCheck(untypedAST))
+            {
+                return untypedTokens;
+            }
+
+            var cl = untypedAST.Declarations.Where(d => d.IsT1 && Resolveable(d.AsT1.Value)).Select(d => (Macro<AST.UntypedClass>)d).LastOrDefault();
+            if (cl != null)
+            {
+                ResolveClass(cl.Value);
+            }
+
+            foreach (var c in templates.Values)
+            {
+                var replacements = new List<Token>();
+
+                replacements.AddRange(c.Sequence());
+                replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
+
+                foreach (var instantiation in instantiations[c.Value.Name.Text])
+                {
+                    replacements.AddRange(instantiation);
+                    replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
+                }
+
+                splices.Add(new(c.Range(), replacements.ToArray()));
+            }
+
+            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
+            {
+                untypedTokens = splice.Apply(untypedTokens);
+            }
+
+            return untypedTokens;
+        }
+
+        // remove unused templates (which may have been used in previous passes)
+        public TokenList Pass3(TokenList untypedTokens, AST.UntypedDocument untypedAST)
         {
             if (!TypeCheck(untypedAST))
             {
@@ -141,15 +204,7 @@ namespace Thousand.Parse
 
             foreach (var c in templates.Values)
             {
-                var replacements = new List<Token>();
-
-                foreach (var instantiation in instantiations[c.Value.Name.Text])
-                {
-                    replacements.AddRange(instantiation);
-                    replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
-                }
-
-                splices.Add(new(c.Range(), replacements.ToArray()));
+                splices.Add(new(c.Range(), Array.Empty<Token>()));
             }
 
             foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
