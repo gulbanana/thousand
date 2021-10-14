@@ -1,6 +1,16 @@
 <Project>
   <PropertyGroup>
     <Nullable>enable</Nullable>
-    <NoWarn>CS8524</NoWarn>
+    <NoWarn>CS8524</NoWarn>    
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/gulbanana/thousand.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>thousand</PackageTags>
+    <Title>Thousand Words</Title>
+    <Description>Create pictures in fewer than a thousand words.</Description>
   </PropertyGroup>
 </Project>
