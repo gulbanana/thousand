@@ -1,7 +1,8 @@
 font-size=16
 
 class c [justify=center]
-class box($w=100, $h=100) [min-width=$w, min-height=$h, label=none, stroke=2]
+class box($w, $h) [min-width=$w, min-height=$h, label=none, stroke=2]
+class box100 [min-width=100, min-height=100, label=none, stroke=2] // XXX we want base class expansions here
 class spacer($x) [shape=none, min-width=$x]
 class title : label [font=20, label-justify=start]
 class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
@@ -11,8 +12,8 @@ column [space=20]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
 will draw arrowheads at the corresponding ends."
     group [space=40, grid=4 columns] {
-        box a-1; box b-1; box c-1; box d-1
-        box a-2; box b-2; box c-2; box d-2
+        box100 a-1; box100 b-1; box100 c-1; box100 d-1
+        box100 a-2; box100 b-2; box100 c-2; box100 d-2
 
         line a-1 -> b-1 <- c-1 -- d-1
         line a-2 --- b-2 --> c-2 <-- d-2
@@ -31,18 +32,18 @@ will draw arrowheads at the corresponding ends."
     }
 
     group.c [gutter=50] {
-        box a1 [shape=diamond]
-        box a2 [shape=square]
-        box(100,50) a3 [shape=trapezium]
+        box100 a1 [shape=diamond]
+        box100 a2 [shape=square]
+        box a3(100,50) [shape=trapezium]
         aline a1--a2--a3; cline a1--a2--a3; gline a1--a2--a3 [anchor=se sw]
 
-        box a4 [shape=circle,row=2]
-        box a5 [shape=triangle]
+        box100 a4 [shape=circle,row=2]
+        box100 a5 [shape=triangle]
         gline a4--a5 [anchor=s]; aline a4--a5
 
-        box(100,50) f [shape=ellipse]
-        box(100,50) g [shape=roundrect]
-        box(100,50) h [shape=rectangle,row=1,col=4]
+        box f(100,50) [shape=ellipse]
+        box g(100,50) [shape=roundrect]
+        box h(100,50) [shape=rectangle,row=1,col=4]
         aline f--h; cline f--h
         aline h--g; cline h--g
         gline g--f [anchor-start=nw]
@@ -56,10 +57,10 @@ will draw arrowheads at the corresponding ends."
     title "Line ends can be offset, together or separately."
 
     row [space=50] {
-        box b1
-        box b2
-        box b3
-        box b4
+        box100 b1
+        box100 b2
+        box100 b3
+        box100 b4
 
         tline b1 -> b2 -> b3 -> b4
         line b1 -> b2 -> b3

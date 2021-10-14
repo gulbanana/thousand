@@ -1,5 +1,5 @@
 class red [fill=red]; class blue [fill=blue]; class yellow [fill=yellow]
-class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10, padding=0]
+class box($w,$h) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10, padding=0]
 class m3 [margin=3]
 
 class area [padding=0, label=none, stroke=none]
@@ -10,9 +10,9 @@ class header : label [font=32]
 group {
 	header "layout=pack"
 	body.red [grid=3] {
-		box; box(50); box
+		box(100,100); box(50,100); box(100,100)
 		box(100,50) [col=3]
-		box [col=3]
+		box(100,100) [col=3]
 	}
 }
 
@@ -29,43 +29,43 @@ group {
 group {
 	header "layout=fixed(125)"
 	body.red [grid=2, layout=125] {
-		box
-		box
-		box [align=end]
+		box(100,100)
+		box(100,100)
+		box(100,100) [align=end]
 	}
 }
 
 group [row=2] {
 	header "justify=center"
 	body.blue [justify=center] {
-		box [label="j"]
+		box(100,100) [label="j"]
 		column.red {
-			box(50)
+			box(50,100)
 			box(50,50) [label="j"]
-			box(50)
+			box(50,100)
 		}
-		box [label="j"]
+		box(100,100) [label="j"]
 	}
 }
 
 group {
 	header "align=center/end"
 	body.blue {
-		box "a=c" [align=center]
+		box "a=c"(100,100) [align=center]
 		column.red {
-			box(50)
+			box(50,100)
 			box(50,50)
-			box(50)
+			box(50,100)
 		}
-		box "a=e" [align=end]
+		box "a=e"(100,100) [align=end]
 	}
 }
 
 group {
 	header "axial alignment"
 	body.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
-		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]
-		box(50,50) [label="s/e"]; box ; box(50,50) [label="s"]
+		box(100,100); box(50,50) [label="s/e"]; box(50,50) [label="s"]
+		box(50,50) [label="s/e"]; box(100,100) ; box(50,50) [label="s"]
 		box(50,50) [label="e"]; box(50,50) [label="e"]; box(50,50)
 	}
 }
@@ -73,22 +73,22 @@ group {
 group [row=3] {
 	header "uniform margins"
 	body.yellow [min-height=250] {
-		box(44).m3
-		box(44).m3
-		box(44).m3
-		box(44).m3
-		box(44).m3
+		box.m3(44,100)
+		box.m3(44,100)
+		box.m3(44,100)
+		box.m3(44,100)
+		box.m3(44,100)
 	}
 }
 
 group {
 	header "uniform padding"
 	body.yellow [min-height=250,padding=5] {
-		box(48)
-		box(48)
-		box(48)
-		box(48)
-		box(48)
+		box(48,100)
+		box(48,100)
+		box(48,100)
+		box(48,100)
+		box(48,100)
 	}
 }
 
