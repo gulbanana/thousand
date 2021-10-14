@@ -15,18 +15,16 @@ namespace Thousand.Parse
             from value in Macro.Raw(TokenKind.Comma, TokenKind.RightBracket)
             select new AST.UntypedAttribute(key, value);
 
+        public static TokenListParser<TokenKind, Parse.Macro<Parse.Identifier>[]> ClassList { get; } =
+            Macro.Of(Identifier.Any).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+
         /*************************************************************
          * Classes which may be templates requiring macro-expansion. *
          *************************************************************/
 
-        public static TokenListParser<TokenKind, AST.Argument> ClassArg { get; } =
-            from name in Identifier.Variable
-            from @default in Token.EqualTo(TokenKind.EqualsSign).IgnoreThen(Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis)).AsNullable().OptionalOrDefault()
-            select new AST.Argument(name, @default);
-
-        public static TokenListParser<TokenKind, AST.Argument[]> ClassArgs { get; } =
+        public static TokenListParser<TokenKind, Identifier[]> ClassArgs { get; } =
             from begin in Token.EqualTo(TokenKind.LeftParenthesis)
-            from arguments in ClassArg.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from arguments in Identifier.Variable.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select arguments;
 
@@ -42,36 +40,30 @@ namespace Thousand.Parse
          * Class calls - invocations of template classes. *
          **************************************************/
 
-        public static TokenListParser<TokenKind, Macro[]> CallArgs { get; } =
+        public static TokenListParser<TokenKind, Macro[]> ClassCall { get; } =
             from begin in Token.EqualTo(TokenKind.LeftParenthesis)
             from arguments in Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select arguments;
 
-        public static TokenListParser<TokenKind, AST.ClassCall> ClassCall { get; } =
-            from name in Identifier.Any
-            from arguments in CallArgs.OptionalOrDefault(Array.Empty<Macro>())
-            select new AST.ClassCall(name, arguments);
-
-        public static TokenListParser<TokenKind, Macro<AST.ClassCall>[]> ClassCallList { get; } =
-            Macro.Of(ClassCall).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+        public static TokenListParser<TokenKind, Macro<Macro[]>?> OptionalClassCall { get; } =
+            Macro.Of(ClassCall).AsNullable().OptionalOrDefault(null);
 
         /*************************************************************************************
          * Objects and lines, which can instantiate template classes with a macro expansion. *
          *************************************************************************************/
 
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
-            from calls in ClassCallList
+            from classes in ClassList
+            from call in OptionalClassCall
             from chain in Shared.Edges
             from attrs in Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
-            select new AST.UntypedLine(calls, chain.ToArray(), attrs);
+            select new AST.UntypedLine(classes, call, chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.UntypedObjectContent> ObjectContent { get; } = input =>
         {
-            var fail = TokenListParserResult.Empty<TokenKind, AST.UntypedObjectContent>(input, new[] { "attribute", "object", "line" });
-
             var first = input.ConsumeToken();
-            if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
+            if (first.Value.Kind == TokenKind.Identifier) // this is part of a classlist. could be an attribute, an object or a line
             {
                 var second = first.Remainder.ConsumeToken();
 
@@ -85,43 +77,61 @@ namespace Thousand.Parse
                 }
                 else // could still be an object or a line
                 {
-                    var classList = ClassCallList(input);
+                    var classList = ClassList(input);
                     if (classList.HasValue)
                     {
-                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue) // a slightly less trivial object 
+                        var third = classList.Remainder.ConsumeToken();
+                        if (!third.HasValue) // a slightly less trivial object
                         {
                             return Ref(() => Object!).Select(x => (AST.UntypedObjectContent)x)(input);
                         }
 
-                        var arrow = identifier.Remainder.ConsumeToken();
-                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                        if (third.Value.Kind is TokenKind.Identifier or TokenKind.String) // line or named object; followed immediately by an arrow if line
                         {
-                            return Line.Select(x => (AST.UntypedObjectContent)x)(input);
+                            var arrow = third.Remainder.ConsumeToken();
+                            if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                            {
+                                return Line.Select(x => (AST.UntypedObjectContent)x)(input);
+                            }
+                            else
+                            {
+                                return Ref(() => Object!).Select(x => (AST.UntypedObjectContent)x)(input);
+                            }
                         }
-                        else
+                        else if (third.Value.Kind == TokenKind.LeftParenthesis) // line or anonymous object; followed by a call then a target if line
+                        {
+                            var call = ClassCall(classList.Remainder);
+                            if (call.HasValue)
+                            {
+                                var lineFrom = Shared.Target(call.Remainder);
+                                if (lineFrom.HasValue)
+                                {
+                                    return Line.Select(x => (AST.UntypedObjectContent)x)(input);
+                                }
+                                else
+                                {
+                                    return Ref(() => Object!).Select(x => (AST.UntypedObjectContent)x)(input);
+                                }
+                            }
+                        }
+                        else // still a (slightly less trivial) object
                         {
                             return Ref(() => Object!).Select(x => (AST.UntypedObjectContent)x)(input);
                         }
-                    }
-                    else
-                    {
-                        return fail;
                     }
                 }
             }
-            else
-            {
-                return fail;
-            }
+
+            return TokenListParserResult.Empty<TokenKind, AST.UntypedObjectContent>(input, new[] { "attribute", "object", "line" });
         };
 
         public static TokenListParser<TokenKind, AST.UntypedObject> Object { get; } =
-            from classes in ClassCallList
+            from classes in ClassList
             from name in Shared.Target.AsNullable().OptionalOrDefault()
+            from call in OptionalClassCall
             from attrs in Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.UntypedObjectContent>())
-            select new AST.UntypedObject(classes, name, attrs, children);
+            select new AST.UntypedObject(classes, name, call, attrs, children);
 
         /*****************************************************************
          * Documents which require macro resolution, currently hermetic. *
@@ -129,8 +139,6 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.UntypedDocumentContent> DocumentContent { get; } = input =>
         {
-            var fail = TokenListParserResult.Empty<TokenKind, AST.UntypedDocumentContent>(input, new[] { "attribute", "class", "object", "line" });
-
             var first = input.ConsumeToken();
             if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
             {
@@ -144,7 +152,7 @@ namespace Thousand.Parse
                     return Typed.Class.Select(x => (AST.UntypedDocumentContent)x)(input); // we support untemplated classes in the template AST as an error-quality optimisation
                 }
             }
-            else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
+            else if (first.Value.Kind == TokenKind.Identifier) // this is part of a classlist. could be an attribute, an object or a line
             {
                 var second = first.Remainder.ConsumeToken();
 
@@ -152,41 +160,58 @@ namespace Thousand.Parse
                 {
                     return Object.Select(x => (AST.UntypedDocumentContent)x)(input);
                 }
-                if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
+                else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
                     return Shared.DiagramAttribute.Select(x => (AST.UntypedDocumentContent)x)(input);
                 }
                 else // could still be an object or a line
                 {
-                    var classList = ClassCallList(input);
+                    var classList = ClassList(input);
                     if (classList.HasValue)
                     {
-                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue) // a slightly less trivial object 
+                        var third = classList.Remainder.ConsumeToken();
+                        if (!third.HasValue) // a slightly less trivial object
                         {
                             return Object.Select(x => (AST.UntypedDocumentContent)x)(input);
                         }
 
-                        var arrow = identifier.Remainder.ConsumeToken();
-                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                        if (third.Value.Kind is TokenKind.Identifier or TokenKind.String) // line or named object; followed immediately by an arrow if line
                         {
-                            return Line.Select(x => (AST.UntypedDocumentContent)x)(input);
+                            var arrow = third.Remainder.ConsumeToken();
+                            if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                            {
+                                return Line.Select(x => (AST.UntypedDocumentContent)x)(input);
+                            }
+                            else
+                            {
+                                return Object.Select(x => (AST.UntypedDocumentContent)x)(input);
+                            }
                         }
-                        else
+                        else if (third.Value.Kind == TokenKind.LeftParenthesis) // line or anonymous object; followed by a call then a target if line
+                        {
+                            var call = ClassCall(classList.Remainder);
+                            if (call.HasValue)
+                            {
+                                var lineFrom = Shared.Target(call.Remainder);
+                                if (lineFrom.HasValue)
+                                {
+                                    return Line.Select(x => (AST.UntypedDocumentContent)x)(input);
+                                }
+                                else
+                                {
+                                    return Object.Select(x => (AST.UntypedDocumentContent)x)(input);
+                                }
+                            }
+                        }
+                        else // still a (slightly less trivial) object
                         {
                             return Object.Select(x => (AST.UntypedDocumentContent)x)(input);
                         }
                     }
-                    else
-                    {
-                        return fail;
-                    }
                 }
             }
-            else
-            {
-                return fail;
-            }
+
+            return TokenListParserResult.Empty<TokenKind, AST.UntypedDocumentContent>(input, new[] { "attribute", "class", "object", "line" });
         };
 
         public static TokenListParser<TokenKind, AST.UntypedDocument> UntypedDocument { get; } =

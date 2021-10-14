@@ -28,7 +28,21 @@ class foo($w) [min-width=$w]
         {
             var source = @"
 class foo($x) [min-width=$x]
-foo(1) bar
+foo bar(1)
+";
+            Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
+        }
+
+        [Fact]
+        public void InstantiateObjectTemplateAnonymous()
+        {
+            var source = @"
+class foo($x) [min-width=$x]
+foo(1)
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -57,8 +71,8 @@ foo(2) a--b
         {
             var source = @"
 class foo($w) [min-width=$w]
-foo(1) bar
-foo(2) baz
+foo bar(1)
+foo baz(2)
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -79,7 +93,7 @@ foo(2) baz
         {
             var source = @$"
 class foo($shape) [shape=$shape]
-foo({shape}) bar
+foo bar({shape})
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -93,7 +107,7 @@ foo({shape}) bar
         {
             var source = @"
 class foo($x, $y) [min-width=$x, min-height=$y]
-foo(1, 2) bar
+foo bar(1, 2)
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -109,7 +123,7 @@ foo(1, 2) bar
             var source = @"
 class foo($x) [min-width=$x]
 class bar($x) [min-height=$x]
-foo(1).bar(2) bar
+foo.bar baz(1, 2)
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
             // XXX more asserts
@@ -120,7 +134,7 @@ foo(1).bar(2) bar
         {
             var source = @"
 class foo($x) [min-width=$x]
-object { foo(1) }
+object { foo bar(1) }
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 
@@ -134,7 +148,7 @@ object { foo(1) }
         {
             var source = @"
 class foo($x) [min-width=$x]
-object { object { foo(1) } }
+object { object { foo bar(1) } }
 ";
             Assert.True(Parser.TryParse(source, warnings, errors, out var ast), errors.Join());
 

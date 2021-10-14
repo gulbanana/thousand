@@ -134,14 +134,46 @@ bar""");
         }
 
         [Fact]
+        public void Line_Untyped_NoArgs()
+        {
+            var tokens = tokenizer.Tokenize(@"line foo--bar");
+            var result = Untyped.Line(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("line", result.Value.Classes[0].Value.Text);
+            Assert.Null(result.Value.Invocation);
+        }
+
+        [Fact]
         public void Line_Untyped()
         {
             var tokens = tokenizer.Tokenize(@"line(x) foo--bar");
             var result = Untyped.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("line", result.Value.Classes[0].Value.Name.Text);
-            Assert.Single(result.Value.Classes[0].Value.Arguments);
+            Assert.Equal("line", result.Value.Classes[0].Value.Text);
+            Assert.NotNull(result.Value.Invocation);
+            Assert.Single(result.Value.Invocation!.Value);
+        }
+
+        [Fact]
+        public void Line_Untyped_ComplexNames()
+        {
+            var tokens = tokenizer.Tokenize(@"line ""foo bar""->""baz\n"" [stroke=none]");
+            var result = Untyped.Line(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Equal("foo bar", result.Value.Segments[0].Target.Text);
+        }
+
+
+        [Fact]
+        public void Line_Untyped_ComplexNames_AsContent()
+        {
+            var tokens = tokenizer.Tokenize(@"line ""foo bar""->""baz\n"" [stroke=none]");
+            var result = Untyped.DocumentContent(tokens);
+
+            Assert.True(result.HasValue);
         }
 
         [Fact]
@@ -320,6 +352,16 @@ line foo -> bar");
         public void Declaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [stroke=none]");
+            var result = Typed.DocumentContent(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.True(result.Value.IsT3);
+        }
+
+        [Fact]
+        public void Declaration_Line_ComplexNames()
+        {
+            var tokens = tokenizer.Tokenize(@"line ""foo bar""->""baz\n"" [stroke=none]");
             var result = Typed.DocumentContent(tokens);
 
             Assert.True(result.HasValue);

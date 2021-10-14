@@ -81,33 +81,20 @@ namespace Thousand.Parse
                 }
             }
 
-            foreach (var macro in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
+            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
-                var klass = macro.Value;
-
                 var names = new HashSet<string>();
-                var hasDefault = false;
-                foreach (var v in klass.Arguments.Value)
+                foreach (var v in c.Value.Arguments.Value)
                 {
-                    if (!names.Add(v.Name.Text))
+                    if (!names.Add(v.Text))
                     {
-                        es.Add(new(klass.Name.Span, ErrorKind.Reference, $"variable `{v.Name.Text}` has already been declared"));
-                        return template;
-                    }
-
-                    if (v.Default != null)
-                    {
-                        hasDefault = true;
-                    }
-                    else if (hasDefault)
-                    {
-                        es.Add(new(klass.Name.Span, ErrorKind.Type, $"class `{klass.Name.Text}` has default arguments following non-default arguments"));
+                        es.Add(new(c.Value.Name.Span, ErrorKind.Reference, $"variable `{v.Text}` has already been declared"));
                         return template;
                     }
                 }
 
-                templates.Add(klass.Name.Text, macro);
-                instantiations.Add(klass.Name.Text, new List<Token[]>());
+                templates.Add(c.Value.Name.Text, c);
+                instantiations.Add(c.Value.Name.Text, new List<Token[]>());
             }
 
             foreach (var o in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedObject)d))
@@ -144,9 +131,9 @@ namespace Thousand.Parse
 
         private void SubstituteObject(AST.UntypedObject objekt)
         {
-            foreach (var call in objekt.Classes)
+            if (objekt.Invocation != null)
             {
-                Invoke(call);
+                Invoke(objekt.Classes, objekt.Invocation);
             }
 
             foreach (var child in objekt.Children.Where(d => d.IsT1).Select(d => (AST.UntypedObject)d))
@@ -162,64 +149,66 @@ namespace Thousand.Parse
 
         private void SubstituteLine(AST.UntypedLine line)
         {
-            foreach (var call in line.Classes)
+            if (line.Invocation != null)
             {
-                Invoke(call);
+                Invoke(line.Classes, line.Invocation);
             }
         }
 
-        private void Invoke(Macro<AST.ClassCall> callMacro)
+        private void Invoke(Macro<Identifier>[] classes, Macro<Macro[]> call)
         {
-            var call = callMacro.Value;
-            if (templates.ContainsKey(call.Name.Text))
+            // check arguments 
+            var requiredArgs = classes.Where(c => templates.ContainsKey(c.Value.Text)).SelectMany(c => templates[c.Value.Text].Value.Arguments.Value).Count();
+            if (call.Value.Length != requiredArgs)
             {
-                var klassMacro = templates[call.Name.Text];
-                var klass = klassMacro.Value;
+                var begin = call.Location.First().Span;
+                var location = begin.Source != null ?
+                    new TextSpan(begin.Source, begin.Position, call.Sequence().Select(t => t.Span.Length).Sum()) :
+                    new TextSpan(new TokenList(call.Sequence().ToArray()).Dump());
+                es.Add(new(location, ErrorKind.Type, $"expected {requiredArgs} arguments, found {call.Value.Length}"));
+                return;
+            }
 
-                if (call.Arguments.Length < klass.Arguments.Value.Where(v => v.Default == null).Count())
-                {
-                    if (klass.Arguments.Value.All(v => v.Default is null))
-                    {
-                        es.Add(new(callMacro.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}"));
-                    }
-                    else
-                    {
-                        es.Add(new(callMacro.Location.First().Span, ErrorKind.Type, $"expected {klass.Arguments.Value.Where(v => v.Default == null).Count()} to {klass.Arguments.Value.Length} arguments, found {call.Arguments.Length}"));
-                    }
-                    return;
-                }
+            // remove the invocation
+            splices.Add(new(call.Range(), Array.Empty<Token>()));
 
-                var suppliedArguments = call.Arguments.Zip(klass.Arguments.Value, Tuple.Create);
-                var defaultArguments = klass.Arguments.Value.Skip(call.Arguments.Length).Select(v => Tuple.Create(v.Default!, v));
-
-                var substitutions = suppliedArguments.Concat(defaultArguments)
-                    .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
+            // instantiate the template
+            var index = 0;
+            foreach (var klassName in classes.Where(c => templates.ContainsKey(c.Value.Text)))
+            {
+                var template = templates[klassName.Value.Text];
+                var klass = template.Value;
+                var suppliedArguments = call.Value.Skip(0).Take(klass.Arguments.Value.Length).Zip(klass.Arguments.Value, Tuple.Create);
+                var substitutions = suppliedArguments.ToDictionary(t => t.Item2.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
-                        new TextSpan($"{call.Name.Text}-{instantiations[call.Name.Text].Count + 1}")
+                        new TextSpan($"{klass.Name.Text}-{instantiations[klass.Name.Text].Count + 1}")
                     )
                 };
-                splices.Add(new(callMacro.Range(), uniqueName));
+                splices.Add(new(klassName.Range(), uniqueName));
 
-                var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
-                instantiations[call.Name.Text].Add(instantiation);
+                var instantiation = Instantiate(template, uniqueName, substitutions);
+                instantiations[klass.Name.Text].Add(instantiation);
+
+                index += klass.Arguments.Value.Length;
             }
         }
 
-        private Token[] Instantiate(Macro<AST.UntypedClass> klass, Token[] name, Dictionary<string, Token[]> substitutions)
+        private Token[] Instantiate(Macro<AST.UntypedClass> macro, Token[] name, Dictionary<string, Token[]> substitutions)
         {
+            var klass = macro.Value;
             var relativeSplices = new List<Splice>();
 
             // replace name
             relativeSplices.Add(new(1..2, name));
 
             // remove argument list
-            relativeSplices.Add(new(klass.Value.Arguments.Range(klass.Location.Position), Array.Empty<Token>()));
+            relativeSplices.Add(new(klass.Arguments.Range(macro.Location.Position), Array.Empty<Token>()));
 
             // substitute variables into attribute list
-            foreach (var a in klass.Value.Attributes)
+            foreach (var a in klass.Attributes)
             {
                 var replacements = new List<Token>();
                 foreach (var token in a.Value.Sequence())
@@ -244,10 +233,10 @@ namespace Thousand.Parse
                     }
                 }
 
-                relativeSplices.Add(new(a.Value.Range(klass.Location.Position), replacements.ToArray()));
+                relativeSplices.Add(new(a.Value.Range(macro.Location.Position), replacements.ToArray()));
             }
 
-            var template = new TokenList(klass.Location.Take(klass.Remainder.Position - klass.Location.Position).ToArray());
+            var template = new TokenList(macro.Location.Take(macro.Remainder.Position - macro.Location.Position).ToArray());
             foreach (var splice in relativeSplices.OrderByDescending(s => s.Location.Start.Value))
             {
                 template = splice.Apply(template);

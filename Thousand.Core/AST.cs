@@ -75,18 +75,16 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<PositionAttribute, ArrowAttribute, LineAttribute> { } 
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }
 
-    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
     public record LineSegment(Parse.Identifier Target, ArrowKind? Direction);
 
     /*********************************************
      * Untyped AST, containing unresolved macros *
      *********************************************/
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
-    public record Argument(Parse.Identifier Name, Parse.Macro? Default);
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes);
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Parse.Identifier[]> Arguments, Parse.Identifier[] BaseClasses, UntypedAttribute[] Attributes);
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedObject, UntypedLine> { }
-    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectContent[] Children);
-    public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
+    public record UntypedObject(Parse.Macro<Parse.Identifier>[] Classes, Parse.Identifier? Name, Parse.Macro<Parse.Macro[]>? Invocation, ObjectAttribute[] Attributes, UntypedObjectContent[] Children);
+    public record UntypedLine(Parse.Macro<Parse.Identifier>[] Classes, Parse.Macro<Parse.Macro[]>? Invocation, LineSegment[] Segments, SegmentAttribute[] Attributes);
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<DiagramAttribute, Parse.Macro<UntypedClass>, TypedClass /* for better errors */, UntypedObject, UntypedLine> { }
     public record UntypedDocument(UntypedDocumentContent[] Declarations);
 
