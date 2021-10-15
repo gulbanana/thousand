@@ -120,7 +120,7 @@ namespace Thousand.Tests.Parsing
         public void Decimal_Valid(decimal v)
         {
             var tokens = tokenizer.Tokenize(v.ToString());
-            var result = Value.Decimal(tokens);
+            var result = Value.PositiveDecimal(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(v, result.Value);

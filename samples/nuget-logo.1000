@@ -1,0 +1,13 @@
+class brand [stroke=#004880 2, corner=10]
+class circle($x) [shape=circle, min-width=$x, min-height=$x]
+class se [row=2,col=2]
+
+group [gutter=2] {
+    brand.circle(6.65)
+    se.brand [gutter=2, padding=6, layout=equal] {
+        brand.circle(7.61)
+        se.brand.circle(13.38)
+    }
+}
+
+scale=5

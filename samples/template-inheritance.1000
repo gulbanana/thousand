@@ -1,0 +1,10 @@
+class s($x) [stroke=$x]
+class f($y) [fill=$y]
+class sred : s(red)
+class both($c) : s($c).f($c)
+
+group [grid=rows] {
+    sred red-white
+    s(green).f(blue) green-blue
+    both(yellow) yellow-yellow
+}

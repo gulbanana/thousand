@@ -141,8 +141,8 @@ namespace Thousand
 
             var alignment = new IR.Axes<AlignmentKind?>(null, null);
             var margin = new Border(0);
-            var width = new int?();
-            var height = new int?();
+            var width = new decimal?();
+            var height = new decimal?();
 
             var column = new int?();
             var row = new int?();           

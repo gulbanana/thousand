@@ -16,8 +16,8 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, int> Integer { get; } =
             Token.EqualTo(TokenKind.Number).Apply(Numerics.IntegerInt32);
 
-        public static TokenListParser<TokenKind, decimal> Decimal { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal);
+        public static TokenListParser<TokenKind, decimal> PositiveDecimal { get; } =
+            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d > 0);
 
         public static TokenListParser<TokenKind, string> String { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String);

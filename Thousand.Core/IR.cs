@@ -47,7 +47,7 @@ namespace Thousand.IR
         Region Region,
         StyledText? Label,
         // layout
-        Axes<AlignmentKind?> Alignment, Border Margin, int? MinWidth, int? MinHeight,
+        Axes<AlignmentKind?> Alignment, Border Margin, decimal? MinWidth, decimal? MinHeight,
         int? Row, int? Column, int? X, int? Y, CompassKind? Anchor, Point? Offset,
         // shape
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
