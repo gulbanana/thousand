@@ -372,12 +372,12 @@ namespace Thousand.Compose
                     GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
                     {
                         AlignmentKind.Start => columns[gln.Column - 1].Start + gln.Margin.Left,
-                        AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2,
+                        AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2 + (gln.Margin.Left - gln.Margin.Right) / 2,
                         AlignmentKind.End => columns[gln.Column - 1].End - (gln.Size.X + gln.Margin.Right),
                     }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
                     {
                         AlignmentKind.Start => rows[gln.Row - 1].Start + gln.Margin.Top,
-                        AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.Size.Y) / 2,
+                        AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.Size.Y) / 2 + (gln.Margin.Top - gln.Margin.Bottom) / 2,
                         AlignmentKind.End => rows[gln.Row - 1].End - (gln.Size.Y + gln.Margin.Bottom),
                     }),
 
