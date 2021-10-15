@@ -1,4 +1,4 @@
-[![continuous integration](https://github.com/gulbanana/thousand/actions/workflows/master_thousandwords.yml/badge.svg)](https://github.com/gulbanana/thousand/actions/workflows/master_thousandwords(staging).yml)
+[![continuous integration](https://github.com/gulbanana/thousand/actions/workflows/master_thousandwords.yml/badge.svg)](https://github.com/gulbanana/thousand/actions/workflows/master_thousandwords.yml)
 
 thousand words
 ==============

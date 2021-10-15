@@ -115,9 +115,7 @@ namespace Thousand.Tests.Parsing
         [Theory]
         [InlineData(1)]
         [InlineData(0.1)]
-        [InlineData(0)]
-        [InlineData(-1)]
-        public void Decimal_Valid(decimal v)
+        public void PositiveDecimal_Valid(decimal v)
         {
             var tokens = tokenizer.Tokenize(v.ToString());
             var result = Value.PositiveDecimal(tokens);
