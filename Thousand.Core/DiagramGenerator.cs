@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Thousand.Compose;
-using Thousand.Parse;
 
 namespace Thousand
 {
@@ -32,18 +30,18 @@ namespace Thousand
             var documents = new List<AST.TypedDocument>();
             foreach (var s in sources)
             {
-                if (Parser.TryParse(s, state, out var document))
+                if (Parse.Parser.TryParse(s, state, out var document))
                 {
                     documents.Add(document);
                 }
             }
 
-            if (state.HasErrors() || !Evaluator.TryEvaluate(documents, state, out var rules))
+            if (state.HasErrors() || !Evaluate.Evaluator.TryEvaluate(documents, state, out var rules))
             {
                 return state.GetErrors();
             }
 
-            if (!Composer.TryCompose(rules, state, out var diagram))
+            if (!Compose.Composer.TryCompose(rules, state, out var diagram))
             {
                 return state.GetErrors();
             }

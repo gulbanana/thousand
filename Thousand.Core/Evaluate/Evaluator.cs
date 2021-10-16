@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Thousand.Model;
 
-namespace Thousand
+namespace Thousand.Evaluate
 {
     public class Evaluator
     {
@@ -17,7 +17,7 @@ namespace Thousand
                 {
                     evaluation.AddDocument(doc);
                 }
-                rules = new IR.Root(evaluation.Scale, new IR.Region(evaluation.Config, evaluation.Objects), evaluation.Edges);
+                rules = new IR.Root(evaluation.Scale, new IR.Region(evaluation.Config, evaluation.Objects.ToList()), evaluation.Edges);
 
                 return !state.HasErrors();
             }
@@ -32,14 +32,15 @@ namespace Thousand
         private readonly GenerationState state;
         private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
         private readonly Dictionary<string, AST.SegmentAttribute[]> lineClasses;
-        private readonly Dictionary<string, IR.Object> allObjects;
+
+        private readonly Scope rootScope;
         private readonly List<IR.Object> rootObjects;
         private readonly List<IR.Edge> rootEdges;
 
         private Font rootFont;
         public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
-        public IReadOnlyList<IR.Object> Objects => rootObjects;
+        public IEnumerable<IR.Object> Objects => rootObjects;
         public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
         private Evaluator(GenerationState state)
@@ -48,8 +49,9 @@ namespace Thousand
 
             objectClasses = new(StringComparer.OrdinalIgnoreCase);
             lineClasses = new(StringComparer.OrdinalIgnoreCase);
-            allObjects = new(StringComparer.OrdinalIgnoreCase);
-            rootObjects = new();
+
+            rootScope = new("root", state);
+            rootObjects = new();            
             rootEdges = new();
 
             rootFont = new Font();
@@ -122,16 +124,16 @@ namespace Thousand
 
             foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
             {
-                rootObjects.Add(AddObject(node, rootFont));
+                rootObjects.Add(AddObject(node, rootFont, rootScope));
             }
 
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
-                AddEdge(chain);
+                AddEdge(chain, rootScope);
             }
         }
 
-        private IR.Object AddObject(AST.TypedObject node, Font cascadeFont)
+        private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, Scope scope)
         {
             var regionConfig = new IR.Config(null, FlowKind.Columns, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
@@ -244,31 +246,35 @@ namespace Thousand
             var children = new List<IR.Object>();
             if (node.Children.Any())
             {
+                var objectScope = scope.Chain(node.Name?.Text ?? node.Classes.First().Text);
+
                 foreach (var child in node.Children.Where(d => d.IsT1).Select(d => d.AsT1))
                 {
-                    children.Add(AddObject(child, font));
+                    children.Add(AddObject(child, font, objectScope));
                 }
 
                 foreach (var chain in node.Children.Where(d => d.IsT2).Select(d => d.AsT2))
                 {
-                    AddEdge(chain);
+                    AddEdge(chain, objectScope);
                 }
             }
-            var result = new IR.Object(node.Name??node.Classes.First() /* XXX */, new IR.Region(regionConfig, children), label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), alignment, margin, width, height, row, column, x, y, anchor, offset, shape, cornerRadius, stroke);
 
-            if (node.Name?.Text is string name && allObjects.ContainsKey(name))
-            {
-                state.AddError(node.Name, ErrorKind.Reference, "object {0} has already been defined", node.Name);
-            }
-            else
-            {
-                allObjects.Add(node.Name?.Text ?? Guid.NewGuid().ToString(), result);
-            }
+            var result = new IR.Object(
+                node.Name ?? node.Classes.First(), // XXX
+                new IR.Region(regionConfig, children), 
+                label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), 
+                alignment, margin, width, height, 
+                row, column, x, y, anchor, offset, 
+                shape, cornerRadius, 
+                stroke
+            );
+
+            scope.AddObject(node.Name, result);
 
             return result;
         }
 
-        private void AddEdge(AST.TypedLine line)
+        private void AddEdge(AST.TypedLine line, Scope scope)
         {
             var stroke = new Stroke();
             var anchorStart = new NoAnchor() as Anchor;
@@ -331,8 +337,8 @@ namespace Thousand
                 var from = line.Segments[i];
                 var to = line.Segments[i + 1];
 
-                var fromTarget = FindObject(from.Target);
-                var toTarget = FindObject(to.Target);
+                var fromTarget = scope.FindObject(from.Target);
+                var toTarget = scope.FindObject(to.Target);
 
                 if (fromTarget != null && toTarget != null && from.Direction.HasValue)
                 {
@@ -458,17 +464,6 @@ namespace Thousand
             {
                 return lineClasses[name.Text];
             }
-        }
-
-        private IR.Object? FindObject(Parse.Identifier name)
-        {
-            if (!allObjects.ContainsKey(name.Text))
-            {
-                state.AddWarning(name, ErrorKind.Reference, "object {0} is not defined", name);
-                return null;
-            }
-
-            return allObjects[name.Text];
         }
     }
 }

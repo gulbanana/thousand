@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Thousand.Evaluate;
 using Thousand.Model;
 using Thousand.Parse;
 using Xunit;
