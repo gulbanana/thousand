@@ -12,13 +12,8 @@ namespace Thousand.Evaluate
 
         private readonly Dictionary<string, IR.Object> canonicalObjects = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IR.Object> bubbledObjects = new(StringComparer.OrdinalIgnoreCase);
-        public IReadOnlyDictionary<string, IR.Object> Objects => canonicalObjects;
-
         private readonly Dictionary<string, ObjectContent> objectClasses = new(StringComparer.OrdinalIgnoreCase);
-        public IReadOnlyDictionary<string, ObjectContent> ObjectClasses => objectClasses;
-
         private readonly Dictionary<string, LineContent> lineClasses = new(StringComparer.OrdinalIgnoreCase);
-        public IReadOnlyDictionary<string, LineContent> LineClasses => lineClasses;
 
         public Scope(string name, GenerationState state)
         {
@@ -42,7 +37,12 @@ namespace Thousand.Evaluate
                 state.AddError(b, ErrorKind.Type, $"class {{0}} is not defined in scope `{RecursiveName()}`", b);
                 return false;
             }
-       }
+        }
+
+        public IEnumerable<IR.Object> GetObjects()
+        {
+            return canonicalObjects.Values;
+        }
 
         public ObjectContent FindObjectClass(Parse.Identifier name, bool warn)
         {
@@ -149,7 +149,6 @@ namespace Thousand.Evaluate
             (canon ? canonicalObjects : bubbledObjects).Add(key, value);
         }
 
-
         private string RecursiveName()
         {
             var builder = new StringBuilder();
@@ -167,7 +166,7 @@ namespace Thousand.Evaluate
 
         public override string ToString()
         {
-            return $"Scope {RecursiveName()}: {Objects.Count} objects";
+            return $"Scope {RecursiveName()}: {canonicalObjects.Count} objects";
         }
     }
 }

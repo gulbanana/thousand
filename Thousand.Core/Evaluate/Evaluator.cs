@@ -37,7 +37,7 @@ namespace Thousand.Evaluate
         public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
 
-        public IEnumerable<IR.Object> Objects => rootScope.Objects.Values;
+        public IEnumerable<IR.Object> Objects => rootScope.GetObjects();
         public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
         private Evaluator(GenerationState state)
