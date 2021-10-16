@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: test
+name: build
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         include-prerelease: true
 
     - name: dotnet build
-      run: dotnet build --configuration Release
+      run: dotnet build -c Release
 
     - name: dotnet test
       run: dotnet test -c Release --no-build --verbosity normal Thousand.Tests

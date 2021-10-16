@@ -1,4 +1,4 @@
-[![test](https://github.com/gulbanana/thousand/actions/workflows/master.yml/badge.svg)](https://github.com/gulbanana/thousand/actions/workflows/master.yml) [![nuget](https://github.com/gulbanana/thousand/actions/workflows/release.yml/badge.svg)](https://github.com/gulbanana/thousand/actions/workflows/release.yml)
+[![build](https://github.com/gulbanana/thousand/actions/workflows/master.yml/badge.svg)](https://github.com/gulbanana/thousand/actions/workflows/master.yml) [![nuget](https://github.com/gulbanana/thousand/actions/workflows/release.yml/badge.svg)](https://github.com/gulbanana/thousand/actions/workflows/release.yml)
 
 thousand words
 ==============
