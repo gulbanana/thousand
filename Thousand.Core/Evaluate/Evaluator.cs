@@ -165,7 +165,10 @@ namespace Thousand.Evaluate
 
             var stroke = new Stroke();                        
 
-            foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
+            foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes)
+                .Concat(node.Classes.SelectMany(c => scope.FindObjectClass(c, false).Children.Where(d => d.IsT0).Select(d => d.AsT0)))
+                .Concat(node.Attributes)
+                .Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
                 attr.Switch(e =>
                 {
