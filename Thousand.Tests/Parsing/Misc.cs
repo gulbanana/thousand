@@ -192,14 +192,16 @@ bar""");
         public void Scope_InContext()
         {
             var tokens = tokenizer.Tokenize(@"object {
-	object foo
-    object bar 
-    line foo <- bar
+    shape=rect
+    class foo
+	object bar
+    object baz
+    line bar <- baz
 }");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(3, result.Value.Children.Length);
+            Assert.Equal(5, result.Value.Children.Length);
         }
 
         [Fact]

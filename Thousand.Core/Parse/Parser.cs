@@ -272,12 +272,12 @@ namespace Thousand.Parse
                 Invoke(call);
             }
 
-            foreach (var child in objekt.Children.Where(d => d.IsT1).Select(d => (AST.UntypedObject)d))
+            foreach (var child in objekt.Children.Where(d => d.IsT2).Select(d => d.AsT2))
             {
                 ResolveObject(child);
             }
 
-            foreach (var child in objekt.Children.Where(d => d.IsT2).Select(d => (AST.UntypedLine)d))
+            foreach (var child in objekt.Children.Where(d => d.IsT3).Select(d => d.AsT3))
             {
                 ResolveLine(child);
             }

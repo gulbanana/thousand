@@ -88,7 +88,7 @@ namespace Thousand.AST
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
     public record Argument(Parse.Identifier Name, Parse.Macro? Default);
     public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, UntypedObjectContent[] Children);
-    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedObject, UntypedLine> { }
+    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedClass, UntypedObject, UntypedLine> { }
     public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectContent[] Children);
     public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<DiagramAttribute, Parse.Macro<UntypedClass>, UntypedObject, UntypedLine> { }
@@ -107,7 +107,7 @@ namespace Thousand.AST
         public LineClass(string name, params SegmentAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs) { }
     }
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
-    [GenerateOneOf] public partial class TypedObjectContent : OneOfBase<ObjectAttribute, TypedObject, TypedLine> { }
+    [GenerateOneOf] public partial class TypedObjectContent : OneOfBase<ObjectAttribute, TypedClass, TypedObject, TypedLine> { }
     public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectContent[] Children)
     {
         public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedObjectContent[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }

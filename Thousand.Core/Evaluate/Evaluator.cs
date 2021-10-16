@@ -30,26 +30,20 @@ namespace Thousand.Evaluate
         }
 
         private readonly GenerationState state;
-        private readonly Dictionary<string, ClassContent> objectClasses;
-        private readonly Dictionary<string, AST.SegmentAttribute[]> lineClasses;
-
         private readonly Scope rootScope;
         private readonly List<IR.Edge> rootEdges;
 
         private Font rootFont;
         public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
+
         public IEnumerable<IR.Object> Objects => rootScope.Objects.Values;
         public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
         private Evaluator(GenerationState state)
         {
             this.state = state;
-
-            objectClasses = new(StringComparer.OrdinalIgnoreCase);
-            lineClasses = new(StringComparer.OrdinalIgnoreCase);
-
-            rootScope = new("root", state);
+            rootScope = new("diagram", state);
             rootEdges = new();
 
             rootFont = new Font();
@@ -76,59 +70,7 @@ namespace Thousand.Evaluate
 
             foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
             {
-                foreach (var b in c.BaseClasses)
-                {
-                    if (!objectClasses.ContainsKey(b.Text) && !lineClasses.ContainsKey(b.Text))
-                    {
-                        state.AddError(b, ErrorKind.Type, $"class {0} is not defined", b);
-                        return;
-                    }
-                }
-
-                if (c is AST.ObjectClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => objectClasses.ContainsKey(b.Text)))
-                {
-                    var localAttrs = c switch
-                    {
-                        AST.ObjectClass oc => oc.Attributes,
-                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.ObjectAttribute(ea.AsT0) : new AST.ObjectAttribute(ea.AsT1)),
-                        _ => Enumerable.Empty<AST.ObjectAttribute>()
-                    };
-
-                    var localChildren = c switch
-                    {
-                        AST.ObjectClass oc => oc.Children,
-                        _ => Enumerable.Empty<AST.TypedObjectContent>()
-                    };
-
-                    var allAttrs = c.BaseClasses
-                        .SelectMany(b => FindObjectClass(b).Attributes)
-                        .Concat(localAttrs)
-                        .ToArray();
-
-                    var allChildren = c.BaseClasses
-                        .SelectMany(b => FindObjectClass(b).Children)
-                        .Concat(localChildren)
-                        .ToArray();
-
-                    objectClasses[c.Name.Text] = new(allAttrs, allChildren);
-                }
-
-                if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => lineClasses.ContainsKey(b.Text)))
-                {
-                    var localAttrs = c switch
-                    {
-                        AST.LineClass lc => lc.Attributes,
-                        AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.SegmentAttribute(ea.AsT0) : new AST.SegmentAttribute(ea.AsT1)),
-                        _ => Enumerable.Empty<AST.SegmentAttribute>()
-                    };
-
-                    var allAttrs = c.BaseClasses
-                        .SelectMany(FindLineClass)
-                        .Concat(localAttrs)
-                        .ToArray();
-
-                    lineClasses[c.Name.Text] = allAttrs;
-                }
+                AddClass(c, rootScope);
             }
 
             foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
@@ -139,6 +81,62 @@ namespace Thousand.Evaluate
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
                 AddEdge(chain, rootScope);
+            }
+        }
+
+        private void AddClass(AST.TypedClass c, Scope scope)
+        {
+            foreach (var b in c.BaseClasses)
+            {
+                if (!scope.HasRequiredClass(b))
+                {
+                    return;
+                }
+            }
+
+            if (c is AST.ObjectClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => scope.FindObjectClass(b, false).Found))
+            {
+                var localAttrs = c switch
+                {
+                    AST.ObjectClass oc => oc.Attributes,
+                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.ObjectAttribute(ea.AsT0) : new AST.ObjectAttribute(ea.AsT1)),
+                    _ => Enumerable.Empty<AST.ObjectAttribute>()
+                };
+
+                var localChildren = c switch
+                {
+                    AST.ObjectClass oc => oc.Children,
+                    _ => Enumerable.Empty<AST.TypedObjectContent>()
+                };
+
+                var allAttrs = c.BaseClasses
+                    .SelectMany(b => scope.FindObjectClass(b, true).Attributes)
+                    .Concat(localAttrs)
+                    .ToArray();
+
+                var allChildren = c.BaseClasses
+                    .SelectMany(b => scope.FindObjectClass(b, false).Children)
+                    .Concat(localChildren)
+                    .ToArray();
+
+                scope.AddObjectClass(c.Name.Text, new(true, allAttrs, allChildren));
+            }
+
+            if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => scope.FindLineClass(b, false).Found))
+            {
+                var localAttrs = c switch
+                {
+                    AST.LineClass lc => lc.Attributes,
+                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.SegmentAttribute(ea.AsT0) : new AST.SegmentAttribute(ea.AsT1)),
+                    _ => Enumerable.Empty<AST.SegmentAttribute>()
+                };
+
+                var allAttrs = c.BaseClasses
+                    .SelectMany(b => scope.FindLineClass(b, true).Attributes)
+                    .Concat(localAttrs)
+                    .ToArray();
+
+                scope.AddLineClass(c.Name.Text, new(true, allAttrs));
             }
         }
 
@@ -167,7 +165,7 @@ namespace Thousand.Evaluate
 
             var stroke = new Stroke();                        
 
-            foreach (var attr in node.Classes.SelectMany(c => FindObjectClass(c).Attributes).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
+            foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
                 attr.Switch(e =>
                 {
@@ -253,17 +251,22 @@ namespace Thousand.Evaluate
             }
 
             var childObjects = new List<IR.Object>();
-            var childContent = node.Classes.SelectMany(c => FindObjectClass(c).Children).Concat(node.Children).ToList();            
+            var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Children).ToList();            
             if (childContent.Any())
             {
                 var objectScope = scope.Chain(node.Name?.Text ?? node.Classes.First().Text);
 
-                foreach (var child in childContent.Where(d => d.IsT1).Select(d => d.AsT1))
+                foreach (var childClass in childContent.Where(d => d.IsT1).Select(d => d.AsT1))
                 {
-                    childObjects.Add(AddObject(child, font, objectScope));
+                    AddClass(childClass, objectScope);
                 }
 
-                foreach (var chain in childContent.Where(d => d.IsT2).Select(d => d.AsT2))
+                foreach (var childObject in childContent.Where(d => d.IsT2).Select(d => d.AsT2))
+                {
+                    childObjects.Add(AddObject(childObject, font, objectScope));
+                }
+
+                foreach (var chain in childContent.Where(d => d.IsT3).Select(d => d.AsT3))
                 {
                     AddEdge(chain, objectScope);
                 }
@@ -292,7 +295,7 @@ namespace Thousand.Evaluate
             var offsetStart = Point.Zero;
             var offsetEnd = Point.Zero;
 
-            foreach (var attr in line.Classes.SelectMany(FindLineClass).Concat(line.Attributes))
+            foreach (var attr in line.Classes.SelectMany(c => scope.FindLineClass(c, true).Attributes).Concat(line.Attributes))
             {
                 attr.Switch(entity =>
                 {
@@ -432,48 +435,6 @@ namespace Thousand.Evaluate
                 },
                 _ => stroke
             };
-        }
-
-        private ClassContent FindObjectClass(Parse.Identifier name)
-        {
-            if (!objectClasses.ContainsKey(name.Text))
-            {
-                if (lineClasses.ContainsKey(name.Text))
-                {
-                    state.AddWarning(name, ErrorKind.Type, "class {0} can only be used for lines, not objects", name);
-                }
-                else
-                {
-                    state.AddWarning(name, ErrorKind.Reference, "class {0} is not defined", name);
-                }
-                
-                return new(Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectContent>());
-            }
-            else
-            {
-                return objectClasses[name.Text];
-            }
-        }
-
-        private AST.SegmentAttribute[] FindLineClass(Parse.Identifier name)
-        {
-            if (!lineClasses.ContainsKey(name.Text))
-            {
-                if (objectClasses.ContainsKey(name.Text))
-                {
-                    state.AddWarning(name, ErrorKind.Type, "class {0} can only be used for objects, not lines", name);
-                }
-                else
-                {
-                    state.AddWarning(name, ErrorKind.Reference, "class {0} is not defined", name);
-                }
-
-                return Array.Empty<AST.SegmentAttribute>();
-            }
-            else
-            {
-                return lineClasses[name.Text];
-            }
         }
     }
 }

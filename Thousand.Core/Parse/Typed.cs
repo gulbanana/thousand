@@ -110,10 +110,18 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedObjectContent> ObjectContent { get; } = input =>
         {
-            var fail = TokenListParserResult.Empty<TokenKind, AST.TypedObjectContent>(input, new[] { "attribute", "object", "line" });
+            var fail = TokenListParserResult.Empty<TokenKind, AST.TypedObjectContent>(input, new[] { "attribute", "class", "object", "line" });
 
             var first = input.ConsumeToken();
-            if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
+            if (!first.HasValue)
+            {
+                return fail;
+            }
+            else if (first.Value.Kind == TokenKind.ClassKeyword)
+            {
+                return Class.Select(x => (AST.TypedObjectContent)x)(input);
+            }
+            else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {
                 var second = first.Remainder.ConsumeToken();
 

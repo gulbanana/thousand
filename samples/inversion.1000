@@ -1,0 +1,18 @@
+class inverse [fill=black] {
+    class line [stroke=white]
+    class object [stroke=white,font=white]
+}
+
+column {
+    group [gutter=10] {
+        object a
+        object b 
+        line a--b
+    }
+
+    group.inverse [gutter=10] {
+        object a
+        object b
+        line a--b
+    }
+}
