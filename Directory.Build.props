@@ -5,8 +5,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
+    <Authors>Thomas Castiglione</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://thousandwords.azurewebsites.net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/gulbanana/thousand.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>thousand</PackageTags>
