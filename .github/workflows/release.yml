@@ -22,7 +22,6 @@ jobs:
         VERSION_FILE_PATH: Directory.Build.props
         PROJECT_FILE_PATH: Thousand.Core/Thousand.Core.csproj
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-        INCLUDE_SYMBOLS: true
 
     - name: nuget push Thousand.CLI
       uses: rohith/publish-nuget@v2
@@ -30,4 +29,3 @@ jobs:
         VERSION_FILE_PATH: Directory.Build.props
         PROJECT_FILE_PATH: Thousand.CLI/Thousand.CLI.csproj
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-        INCLUDE_SYMBOLS: true
