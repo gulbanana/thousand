@@ -1,5 +1,4 @@
-﻿using System;
-using SkiaSharp;
+﻿using SkiaSharp;
 using Topten.RichTextKit;
 using Thousand.Model;
 using Thousand.Render;
@@ -28,7 +27,7 @@ namespace Thousand.Compose
             var textBlock = new TextBlock()
             {
                 Alignment = text.Justification switch {
-                    AlignmentKind.Center => TextAlignment.Center,
+                    AlignmentKind.Center or AlignmentKind.Stretch => TextAlignment.Center, // it's a shame RichTextKit doesn't do full justification 
                     AlignmentKind.Start => TextAlignment.Left,
                     AlignmentKind.End => TextAlignment.Right
                 }

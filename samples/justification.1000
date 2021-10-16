@@ -1,0 +1,18 @@
+// XXX merge with layout.1000
+
+class container [padding=0, gutter=10, layout=equal, fill=red]
+class box($x) [min-width=$x, min-height=60, fill=blue]
+
+column {
+    container [justify=center] {
+        box(20); box(60); box(40)
+    }
+
+    container [justify=stretch] {
+        box(20); box(60); box(40)
+    }
+
+    container [justify=stretch] {
+        box(20) [align=right]; box(60); box(40)
+    }
+}

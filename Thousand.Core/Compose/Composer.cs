@@ -59,13 +59,13 @@ namespace Thousand.Compose
             var rootSize = Measure(root.Region, Point.Zero);
 
             // create labels and shapes, laid out according to the measurements above and each region's settings
-            var boxes = Arrange(root.Region, Point.Zero);
+            var allBounds = Arrange(root.Region, new Rect(rootSize));
 
             // create lines, which are global - all they need from layout is the margin-exclusive laid out bounds of each object 
             foreach (var edge in root.Edges)
             {
-                var fromBox = boxes[edge.FromTarget];
-                var toBox = boxes[edge.ToTarget];
+                var fromBox = allBounds[edge.FromTarget];
+                var toBox = allBounds[edge.ToTarget];
                 try
                 {
                     var (start, end) = Intrinsics.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, outputShapes.GetValueOrDefault(edge.FromTarget), outputShapes.GetValueOrDefault(edge.ToTarget));
@@ -326,16 +326,53 @@ namespace Thousand.Compose
             return contentSize;
         }
 
-        // lays out a region's contents at a given point - size is known to parents, so it's just a matter of dividing up the space
-        // paint back-to-front: shape, then intrinsic content, then c hildren
-        private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Point location)
+        // layout objects back-to-front: shape, then intrinsic (text) content, then children
+        private Dictionary<IR.Object, Rect> Arrange(IR.Object objekt, Rect bounds)
         {
-            var boxes = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
+            if (objekt.Shape.HasValue)
+            {
+                var shape = new Layout.Shape(bounds, objekt.Shape.Value, objekt.CornerRadius, objekt.Stroke, objekt.Region.Config.Fill);
+                outputShapes[objekt] = shape;
+
+                foreach (var kvp in Shapes.Anchors(objekt.Shape.Value, objekt.CornerRadius, bounds))
+                {
+                    layouts[objekt.Region].Anchors.Add(kvp.Key, kvp.Value.Location);
+                }
+            }
+
+            if (objekt.Label != null && objekt.Label.Content != string.Empty)
+            {
+                var block = textMeasures[objekt.Label];
+                var blockBox = new Rect(block.Size).CenteredAt(bounds.Center);
+
+                // subpixel vertical positioning is not consistently supported in SVG
+                var pixelBoundary = blockBox.Top * root.Scale;
+                if (Math.Floor(pixelBoundary) != pixelBoundary)
+                {
+                    blockBox = blockBox.Move(new Point(0, 0.5m));
+                }
+
+                var lines = new List<Layout.LabelLine>();
+                foreach (var line in block.Lines)
+                {
+                    var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
+                    lines.Add(new Layout.LabelLine(lineBox, line.Run));
+                }
+                var label = new Layout.LabelBlock(objekt.Label.Font, blockBox, objekt.Label.Content, lines);
+                outputLabels.Add(label);
+            }
+
+            return Arrange(objekt.Region, bounds);
+        }
+
+        // layout region context within a given box - bounds are known to parents, so it's just a matter of dividing up the space
+        private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Rect bounds)
+        {
             var state = layouts[region];
 
             // calculate tracks based on flow children
             var columns = new Track[state.Columns.Count];
-            var colMarker = location.X + region.Config.Padding.Left;
+            var colMarker = bounds.Left + region.Config.Padding.Left;
             for (var c = 0; c < state.Columns.Count; c++)
             {
                 var width = state.Columns[c];
@@ -343,13 +380,13 @@ namespace Thousand.Compose
                 var start = colMarker;
                 var center = colMarker + width / 2;
                 colMarker = colMarker + width + region.Config.Gutter.Columns;
-                var end = colMarker;
+                var end = colMarker - region.Config.Gutter.Columns;
 
                 columns[c] = new(start, center, end);
             }
 
             var rows = new Track[state.Rows.Count];
-            var rowMarker = location.Y + region.Config.Padding.Top;
+            var rowMarker = bounds.Top + region.Config.Padding.Top;
             for (var r = 0; r < state.Rows.Count; r++)
             {
                 var height = state.Rows[r];
@@ -357,94 +394,73 @@ namespace Thousand.Compose
                 var start = rowMarker;
                 var center = rowMarker + height / 2;
                 rowMarker = rowMarker + height + region.Config.Gutter.Rows;
-                var end = rowMarker;
+                var end = rowMarker - region.Config.Gutter.Rows;
 
                 rows[r] = new(start, center, end);
             }
 
-            // arrange each child in the tracks recursively
+            // place each child recursively
+            var childrenBounds = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
+
             foreach (var child in region.Objects)
             {
                 var node = state.AllNodes[child];
 
                 var origin = node switch
                 {
+                    // place within intersection of tracks
                     GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
                     {
-                        AlignmentKind.Start => columns[gln.Column - 1].Start + gln.Margin.Left,
+                        AlignmentKind.Start or AlignmentKind.Stretch => columns[gln.Column - 1].Start + gln.Margin.Left,
                         AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2 + (gln.Margin.Left - gln.Margin.Right) / 2,
                         AlignmentKind.End => columns[gln.Column - 1].End - (gln.Size.X + gln.Margin.Right),
                     }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
                     {
-                        AlignmentKind.Start => rows[gln.Row - 1].Start + gln.Margin.Top,
+                        AlignmentKind.Start or AlignmentKind.Stretch => rows[gln.Row - 1].Start + gln.Margin.Top,
                         AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.Size.Y) / 2 + (gln.Margin.Top - gln.Margin.Bottom) / 2,
                         AlignmentKind.End => rows[gln.Row - 1].End - (gln.Size.Y + gln.Margin.Bottom),
                     }),
 
-                    // *after* anchor = anchor is shape's *origin*
+                    // place *after* anchor = anchor is shape's *origin*
                     AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => new Point((child.Alignment.Columns ?? AlignmentKind.Center) switch
                     {
                         AlignmentKind.Start => (state.Anchors[aln.Anchor] - node.Size).X,
-                        AlignmentKind.Center => (state.Anchors[aln.Anchor] - node.Size / 2).X,
+                        AlignmentKind.Center or AlignmentKind.Stretch => (state.Anchors[aln.Anchor] - node.Size / 2).X,
                         AlignmentKind.End => state.Anchors[aln.Anchor].X,
                     }, (child.Alignment.Rows ?? AlignmentKind.Center) switch
                     {
                         AlignmentKind.Start => (state.Anchors[aln.Anchor] - node.Size).Y,
-                        AlignmentKind.Center => (state.Anchors[aln.Anchor] - node.Size / 2).Y,
+                        AlignmentKind.Center or AlignmentKind.Stretch => (state.Anchors[aln.Anchor] - node.Size / 2).Y,
                         AlignmentKind.End => state.Anchors[aln.Anchor].Y,
                     }),
                     
                     _ => Point.Zero
                 };
 
-                var bounds = new Rect(origin, node.Size);
-                boxes[child] = bounds;
-
-                // paint shape and determine its anchors for its own children to use
-                if (child.Shape.HasValue)
+                var size = node switch
                 {
-                    var shape = new Layout.Shape(bounds, child.Shape.Value, child.CornerRadius, child.Stroke, child.Region.Config.Fill);
-                    outputShapes[child] = shape;
-
-                    foreach (var kvp in Shapes.Anchors(child.Shape.Value, child.CornerRadius, bounds))
+                    GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
                     {
-                        layouts[child.Region].Anchors.Add(kvp.Key, kvp.Value.Location);
-                    }
-                }
+                        AlignmentKind.Stretch => columns[gln.Column - 1].Size,
+                        _ => node.Size.X
+                    }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
+                    {
+                        AlignmentKind.Stretch => rows[gln.Row - 1].Size,
+                        _ => node.Size.Y
+                    }),
+                    _ => node.Size
+                };
 
-                // paint intrinsic (text) content 
-                if (child.Label != null && child.Label.Content != string.Empty)
+                var childBounds = new Rect(origin, size);
+                childrenBounds[child] = childBounds;
+
+                foreach (var kvp in Arrange(child, childBounds))
                 {
-                    var block = textMeasures[child.Label];
-                    var blockBox = new Rect(block.Size).CenteredAt(bounds.Center);
-
-                    // subpixel vertical positioning is not consistently supported in SVG
-                    var pixelBoundary = blockBox.Top * root.Scale;
-                    if (Math.Floor(pixelBoundary) != pixelBoundary)
-                    {
-                        blockBox = blockBox.Move(new Point(0, 0.5m));
-                    }
-
-                    var lines = new List<Layout.LabelLine>();
-                    foreach (var line in block.Lines)
-                    {
-                        var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
-                        lines.Add(new Layout.LabelLine(lineBox, line.Run));
-                    }
-                    var label = new Layout.LabelBlock(child.Label.Font, blockBox, child.Label.Content, lines);
-                    outputLabels.Add(label);
-                }
-
-                if (child.Region.Objects.Any())
-                {
-                    foreach (var kvp in Arrange(child.Region, bounds.Origin))
-                    {
-                        boxes.Add(kvp.Key, kvp.Value);
-                    }
+                    childrenBounds.Add(kvp.Key, kvp.Value);
                 }
             }
 
-            return boxes;
+            return childrenBounds;
         }
 
         private static Border GetAnchorBorder(AnchorLayoutNode node, IR.Object parent, Point parentSize)
@@ -467,12 +483,12 @@ namespace Thousand.Compose
             var childOrigin = new Point(node.Alignment.Columns switch
             {
                 AlignmentKind.Start => (childAnchor - childBox).X,
-                AlignmentKind.Center => (childAnchor - childBox / 2).X,
+                AlignmentKind.Center or AlignmentKind.Stretch => (childAnchor - childBox / 2).X,
                 AlignmentKind.End => childAnchor.X,
             }, node.Alignment.Rows switch
             {
                 AlignmentKind.Start => (childAnchor - childBox).Y,
-                AlignmentKind.Center => (childAnchor - childBox / 2).Y,
+                AlignmentKind.Center or AlignmentKind.Stretch => (childAnchor - childBox / 2).Y,
                 AlignmentKind.End => childAnchor.Y,
             });
             var childBounds = new Rect(childOrigin, childBox) + node.Margin;

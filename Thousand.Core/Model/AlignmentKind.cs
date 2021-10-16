@@ -5,5 +5,6 @@
         Start,
         Center,
         End,
+        Stretch
     }
 }
