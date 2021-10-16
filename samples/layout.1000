@@ -3,13 +3,12 @@ class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, 
 class m3 [margin=3]
 
 class area [padding=0, label=none, stroke=none]
-class group : area [margin=5,justify=center]
-class body : area [row=2]
+class group : area [margin=5,justify=center, grid=rows]
 class header : label [font=32]
 
 group {
 	header "layout=pack"
-	body.red [grid=3] {
+	area.red [grid=3] {
 		box; box(50); box
 		box(100,50) [col=3]
 		box [col=3]
@@ -17,8 +16,8 @@ group {
 }
 
 group {
-	header "layout=equal"
-	body.red [layout=equal] {
+	header "layout=equal-content"
+	area.red [layout=equal-content] {
 		box(50,50)
 		box(25,50) [row=3,col=2]
 		box(50,25) [row=4,col=5]
@@ -27,8 +26,23 @@ group {
 }
 
 group {
+	header "layout=equal-area"
+	area.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
+		box(50,50)
+		box(50,50)
+		box(50,50)		
+	}
+	area.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
+		box(50,50)
+		box(50,50)
+		box(50,50)
+		box(50,50)		
+	}
+}
+
+group {
 	header "layout=fixed(125)"
-	body.red [grid=2, layout=125] {
+	area.red [grid=2, layout=125] {
 		box
 		box
 		box [align=end]
@@ -37,7 +51,7 @@ group {
 
 group [row=2] {
 	header "justify=center"
-	body.blue [justify=center] {
+	area.blue [justify=center] {
 		box [label="j"]
 		column.red {
 			box(50)
@@ -50,7 +64,7 @@ group [row=2] {
 
 group {
 	header "align=center/end"
-	body.blue {
+	area.blue {
 		box "a=c" [align=center]
 		column.red {
 			box(50)
@@ -63,7 +77,7 @@ group {
 
 group {
 	header "axial alignment"
-	body.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
+	area.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
 		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]
 		box(50,50) [label="s/e"]; box ; box(50,50) [label="s"]
 		box(50,50) [label="e"]; box(50,50) [label="e"]; box(50,50)
@@ -72,7 +86,7 @@ group {
 
 group [row=3] {
 	header "uniform margins"
-	body.yellow [min-height=250] {
+	area.yellow [min-height=250] {
 		box(44).m3
 		box(44).m3
 		box(44).m3
@@ -83,7 +97,7 @@ group [row=3] {
 
 group {
 	header "uniform padding"
-	body.yellow [min-height=250,padding=5] {
+	area.yellow [min-height=250,padding=5] {
 		box(48)
 		box(48)
 		box(48)
@@ -94,7 +108,7 @@ group {
 
 group [row=3] {
 	header "variable margins"
-	body.yellow [min-width=250] {
+	area.yellow [min-width=250] {
 		box(50,250) [margin=0 0 5 0]
 		box(50,230) [margin=0 10 10 10]
 		box(50,210) [margin=0 20 20 20]

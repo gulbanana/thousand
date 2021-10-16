@@ -54,7 +54,7 @@ namespace Thousand
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(Colour.White, FlowKind.Columns, 0, new(5), new(0), new(new EqualSize()), new(AlignmentKind.Center));
+            Config = new IR.Config(Colour.White, FlowKind.Columns, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.TypedDocument diagram)

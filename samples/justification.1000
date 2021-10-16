@@ -1,6 +1,6 @@
 // XXX merge with layout.1000
 
-class container [padding=0, gutter=10, layout=equal, fill=red]
+class container [padding=0, gutter=10, layout=content, fill=red]
 class box($x) [min-width=$x, min-height=60, fill=blue]
 
 column {

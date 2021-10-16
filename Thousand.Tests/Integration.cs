@@ -43,7 +43,7 @@ namespace Thousand.Tests
 
             generator
                 .GenerateImage(graph)
-                .Switch(result => Assert.Empty(result.Warnings), errors => AssertEx.Fail(state.JoinErrors()));            
+                .Switch(result => Assert.Empty(result.Warnings), errors => AssertEx.Fail(errors.First().ToString()));            
         }
 
         [Fact]

@@ -292,7 +292,7 @@ namespace Thousand.Compose
                 var intrinsicWidth = layout.GridNodes.Values.Where(s => s.Column == c + 1).Select(s => s.Size.X + s.Margin.X).Append(0).Max();
                 var trackWidth = region.Config.Layout.Columns switch
                 {
-                    EqualSize => maxWidth,
+                    EqualAreaSize or EqualContentSize => maxWidth,
                     MinimumSize(var minWidth) => Math.Max(minWidth, intrinsicWidth),
                     PackedSize or _ => intrinsicWidth
                 };
@@ -305,7 +305,7 @@ namespace Thousand.Compose
                 var intrinsicHeight = layout.GridNodes.Values.Where(s => s.Row == r + 1).Select(s => s.Size.Y + s.Margin.Y).Append(0).Max();
                 var trackHeight = region.Config.Layout.Rows switch
                 {
-                    EqualSize => maxHeight,
+                    EqualAreaSize or EqualContentSize => maxHeight,
                     MinimumSize(var minHeight) => Math.Max(minHeight, intrinsicHeight),
                     PackedSize or _ => intrinsicHeight
                 };
@@ -375,7 +375,7 @@ namespace Thousand.Compose
             var colMarker = bounds.Left + region.Config.Padding.Left;
             for (var c = 0; c < state.Columns.Count; c++)
             {
-                var width = state.Columns[c];
+                var width = region.Config.Layout.Columns is EqualAreaSize ? bounds.Width / state.Columns.Count : state.Columns[c];
                 
                 var start = colMarker;
                 var center = colMarker + width / 2;
@@ -389,8 +389,8 @@ namespace Thousand.Compose
             var rowMarker = bounds.Top + region.Config.Padding.Top;
             for (var r = 0; r < state.Rows.Count; r++)
             {
-                var height = state.Rows[r];
-                
+                var height = region.Config.Layout.Rows is EqualAreaSize ? bounds.Height / state.Rows.Count : state.Rows[r];
+
                 var start = rowMarker;
                 var center = rowMarker + height / 2;
                 rowMarker = rowMarker + height + region.Config.Gutter.Rows;
