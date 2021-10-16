@@ -1,0 +1,33 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: nuget
+
+on:
+  push:
+    branches:
+      - release
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: nuget push Thousand.Core
+      uses: rohith/publish-nuget@v2
+      with:
+        VERSION_FILE_PATH: Directory.Build.props
+        PROJECT_FILE_PATH: Thousand.Core/Thousand.Core.csproj
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+        INCLUDE_SYMBOLS: true
+
+    - name: nuget push Thousand.CLI
+      uses: rohith/publish-nuget@v2
+      with:
+        VERSION_FILE_PATH: Directory.Build.props
+        PROJECT_FILE_PATH: Thousand.CLI/Thousand.CLI.csproj
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+        INCLUDE_SYMBOLS: true
