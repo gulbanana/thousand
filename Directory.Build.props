@@ -9,7 +9,7 @@
     <Authors>Thomas Castiglione</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://thousandwords.azurewebsites.net</PackageProjectUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- <PackageReadmeFile>README.md</PackageReadmeFile> (broken until .NET 6) -->
     <RepositoryUrl>https://github.com/gulbanana/thousand.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>thousand</PackageTags>
@@ -17,11 +17,19 @@
     <Description>Create pictures in fewer than a thousand words.</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <ItemGroup>
-      <None Include="../README.md" Pack="true" PackagePath="/" Visible="false" />
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
   </ItemGroup>
 </Project>
