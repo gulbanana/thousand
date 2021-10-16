@@ -54,8 +54,8 @@ namespace Thousand.Parse
             from arguments in Macro.Of(ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
             from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
             from attrs in Shared.List(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
-            select new AST.UntypedClass(name, arguments, bases, attrs);
-
+            from children in Shared.Scope(Ref(() => ObjectContent!)).OptionalOrDefault(Array.Empty<AST.UntypedObjectContent>())
+            select new AST.UntypedClass(name, arguments, bases, attrs, children);
 
         /*************************************************************************************
          * Objects and lines, which can instantiate template classes with a macro expansion. *

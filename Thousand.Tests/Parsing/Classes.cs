@@ -25,6 +25,18 @@ namespace Thousand.Tests.Parsing
             Assert.Empty(result.Value.BaseClasses);
         }
 
+
+        [Fact]
+        public void Empty_Untyped()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name.Text);
+            Assert.Empty(result.Value.BaseClasses);
+        }
+
         [Fact]
         public void Subclass()
         {
@@ -34,6 +46,29 @@ namespace Thousand.Tests.Parsing
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name.Text);
             AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "baz");
+        }
+
+
+        [Fact]
+        public void Subclass_Untyped()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : baz");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name.Text);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+        }
+
+        [Fact]
+        public void Subclass_Untyped_WithArguments()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo : baz(1, foo)");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Name.Text);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
         }
 
         [Fact]
@@ -116,37 +151,59 @@ namespace Thousand.Tests.Parsing
             AssertEx.Sequence(((AST.ObjectOrLineClass)result.Value).Attributes, new AST.LineStrokeColourAttribute(Colour.Red));
         }
 
-        [Fact]
-        public void Untyped_Empty()
+        [Fact] 
+        public void WithScope()
         {
-            var tokens = tokenizer.Tokenize(@"class foo");
-            var result = Untyped.Class(tokens);
+            var tokens = tokenizer.Tokenize(@"class foo {shape=square}");
+            var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
-            Assert.Empty(result.Value.BaseClasses);
+            Assert.IsType<AST.ObjectClass>(result.Value);
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
         }
 
         [Fact]
-        public void Untyped_Subclass()
+        public void WithScope_AfterAttrs()
         {
-            var tokens = tokenizer.Tokenize(@"class foo : baz");
-            var result = Untyped.Class(tokens);
+            var tokens = tokenizer.Tokenize(@"class foo [shape=rect] {shape=square}");
+            var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+            Assert.IsType<AST.ObjectClass>(result.Value);
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Rect));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
         }
 
         [Fact]
-        public void Untyped_Subclass_WithArguments()
+        public void WithScope_AfterAttrs_OLC()
         {
-            var tokens = tokenizer.Tokenize(@"class foo : baz(1, foo)");
+            var tokens = tokenizer.Tokenize(@"class foo [stroke-colour=black] {stroke-colour=black}");
+            var result = Typed.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.IsType<AST.ObjectClass>(result.Value);
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.LineStrokeColourAttribute(Colour.Black));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Children, (AST.ObjectAttribute)new AST.LineStrokeColourAttribute(Colour.Black));
+        }
+
+        [Fact]
+        public void WithScope_Untyped()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo {shape=square}");
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+            AssertEx.Sequence(result.Value.Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+        }
+
+        [Fact]
+        public void WithScope_Untyped_AfterAttrs()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo [shape=rect] {shape=square}");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            AssertEx.Sequence(result.Value.Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
         }
     }
 }

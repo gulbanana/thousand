@@ -55,7 +55,7 @@ namespace Thousand
 
         public void AddError(TextSpan span, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
         {
-            var formatted = string.Format(message, identifiers.Select(i => "`" + i.DisplayName(sourceMap) + "`").ToArray());
+            var formatted = string.Format(message.Replace("`{`", "`{{`").Replace("`}`", "`}}`"), identifiers.Select(i => "`" + i.DisplayName(sourceMap) + "`").ToArray());
             errors.Add(new(span, kind, formatted));
         }
 

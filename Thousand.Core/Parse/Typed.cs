@@ -21,7 +21,9 @@ namespace Thousand.Parse
          **********************************************************************/
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>()).Select(attrs => new AST.ObjectClass(name, bases, attrs) as AST.TypedClass);
+            from attrs in Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
+            select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
             Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
@@ -31,14 +33,20 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedClass> ClassBody(Identifier name, Identifier[] bases) => input =>
         {
-            var begin = Token.EqualTo(TokenKind.LeftBracket)(input);
-            if (!begin.HasValue)
+            var beginAttrs = Token.EqualTo(TokenKind.LeftBracket)(input);
+            if (!beginAttrs.HasValue)
             {
-                // XXX process object-class scopes
-                return TokenListParserResult.Value<TokenKind, AST.TypedClass>(new AST.ObjectOrLineClass(name, bases, Array.Empty<AST.EntityAttribute>()), input, input);
+                if (Token.EqualTo(TokenKind.LeftBrace)(input).HasValue)
+                {
+                    return ObjectClassBody(name, bases)(input);
+                }
+                else
+                {
+                    return ObjectOrLineClassBody(name, bases)(input);
+                }
             }
 
-            var remainder = begin.Remainder;
+            var remainder = beginAttrs.Remainder;
             while (true)
             {
                 var lineOnlyAttr = AttributeParsers.ArrowOnlyAttribute(remainder);
@@ -59,6 +67,7 @@ namespace Thousand.Parse
                     }
                     else if (next.Value.Kind == TokenKind.RightBracket)
                     {
+                        remainder = next.Remainder;
                         break;
                     }
                 }
@@ -78,8 +87,14 @@ namespace Thousand.Parse
                 return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(Shared.ObjectAttribute.Value(Unit.Value).Or(Shared.SegmentAttribute.Value(Unit.Value))(remainder));
             }
 
-            // XXX process object-class scopes
-            return ObjectOrLineClassBody(name, bases)(input);
+            if (remainder.ConsumeToken() is { HasValue: true, Value: { Kind: TokenKind.LeftBrace } })
+            {
+                return ObjectClassBody(name, bases)(input);
+            }
+            else
+            {
+                return ObjectOrLineClassBody(name, bases)(input);
+            }
         };
 
         public static TokenListParser<TokenKind, AST.TypedClass> Class { get; } =
