@@ -48,13 +48,19 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select arguments;
 
+        public static TokenListParser<TokenKind, Macro[]> ClassContent =>
+            from begin in Token.EqualTo(TokenKind.LeftBrace)
+            from decs in Macro.Raw(TokenKind.LineSeparator, TokenKind.RightBrace).ManyOptionalDelimited(terminator: TokenKind.RightBrace)
+            from end in Token.EqualTo(TokenKind.RightBrace)
+            select decs.ToArray();
+
         public static TokenListParser<TokenKind, AST.UntypedClass> Class { get; } =
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier.Any
             from arguments in Macro.Of(ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
             from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
             from attrs in Shared.List(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
-            from children in Shared.Scope(Ref(() => ObjectContent!)).OptionalOrDefault(Array.Empty<AST.UntypedObjectContent>())
+            from children in ClassContent.OptionalOrDefault(Array.Empty<Macro>())
             select new AST.UntypedClass(name, arguments, bases, attrs, children);
 
         /*************************************************************************************

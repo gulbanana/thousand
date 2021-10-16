@@ -405,6 +405,34 @@ namespace Thousand.Parse
                 relativeSplices.Add(new(a.Range(macro.Location.Position), replacements.ToArray()));
             }
 
+            // substitute variables into scope
+            foreach (var decMacro in klass.Children)
+            {
+                var replacements = new List<Token>();
+                foreach (var token in decMacro.Sequence())
+                {
+                    if (token.Kind == TokenKind.Variable)
+                    {
+                        var key = token.ToStringValue();
+                        if (substitutions.ContainsKey(key))
+                        {
+                            var value = substitutions[key];
+                            replacements.AddRange(value);
+                        }
+                        else
+                        {
+                            state.AddError(token.Span, ErrorKind.Reference, $"variable `{key}` is not defined; try adding a parameter to class {{0}}", klass.Name);
+                            replacements.Add(token);
+                        }
+                    }
+                    else
+                    {
+                        replacements.Add(token);
+                    }
+                }
+                relativeSplices.Add(new(decMacro.Range(macro.Location.Position), replacements.ToArray()));
+            }
+
             var template = new TokenList(macro.Location.Take(macro.Remainder.Position - macro.Location.Position).ToArray());
             foreach (var splice in relativeSplices.OrderByDescending(s => s.Location.Start.Value))
             {

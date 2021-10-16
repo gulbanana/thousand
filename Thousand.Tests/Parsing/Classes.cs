@@ -193,7 +193,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+            Assert.NotEmpty(result.Value.Children);
         }
 
         [Fact]
@@ -203,7 +203,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+            Assert.NotEmpty(result.Value.Children);
         }
     }
 }
