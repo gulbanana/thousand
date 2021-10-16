@@ -30,17 +30,16 @@ namespace Thousand.Evaluate
         }
 
         private readonly GenerationState state;
-        private readonly Dictionary<string, AST.ObjectAttribute[]> objectClasses;
+        private readonly Dictionary<string, ClassContent> objectClasses;
         private readonly Dictionary<string, AST.SegmentAttribute[]> lineClasses;
 
         private readonly Scope rootScope;
-        private readonly List<IR.Object> rootObjects;
         private readonly List<IR.Edge> rootEdges;
 
         private Font rootFont;
         public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
-        public IEnumerable<IR.Object> Objects => rootObjects;
+        public IEnumerable<IR.Object> Objects => rootScope.Objects.Values;
         public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
         private Evaluator(GenerationState state)
@@ -51,7 +50,6 @@ namespace Thousand.Evaluate
             lineClasses = new(StringComparer.OrdinalIgnoreCase);
 
             rootScope = new("root", state);
-            rootObjects = new();            
             rootEdges = new();
 
             rootFont = new Font();
@@ -96,12 +94,23 @@ namespace Thousand.Evaluate
                         _ => Enumerable.Empty<AST.ObjectAttribute>()
                     };
 
+                    var localChildren = c switch
+                    {
+                        AST.ObjectClass oc => oc.Children,
+                        _ => Enumerable.Empty<AST.TypedObjectContent>()
+                    };
+
                     var allAttrs = c.BaseClasses
-                        .SelectMany(FindObjectClass)
+                        .SelectMany(b => FindObjectClass(b).Attributes)
                         .Concat(localAttrs)
                         .ToArray();
 
-                    objectClasses[c.Name.Text] = allAttrs;
+                    var allChildren = c.BaseClasses
+                        .SelectMany(b => FindObjectClass(b).Children)
+                        .Concat(localChildren)
+                        .ToArray();
+
+                    objectClasses[c.Name.Text] = new(allAttrs, allChildren);
                 }
 
                 if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => lineClasses.ContainsKey(b.Text)))
@@ -124,7 +133,7 @@ namespace Thousand.Evaluate
 
             foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
             {
-                rootObjects.Add(AddObject(node, rootFont, rootScope));
+                AddObject(node, rootFont, rootScope);
             }
 
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
@@ -158,7 +167,7 @@ namespace Thousand.Evaluate
 
             var stroke = new Stroke();                        
 
-            foreach (var attr in node.Classes.SelectMany(FindObjectClass).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
+            foreach (var attr in node.Classes.SelectMany(c => FindObjectClass(c).Attributes).Concat(node.Attributes).Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
                 attr.Switch(e =>
                 {
@@ -243,17 +252,18 @@ namespace Thousand.Evaluate
                 l => stroke = ApplyStrokeAttributes(stroke, l));
             }
 
-            var children = new List<IR.Object>();
-            if (node.Children.Any())
+            var childObjects = new List<IR.Object>();
+            var childContent = node.Classes.SelectMany(c => FindObjectClass(c).Children).Concat(node.Children).ToList();            
+            if (childContent.Any())
             {
                 var objectScope = scope.Chain(node.Name?.Text ?? node.Classes.First().Text);
 
-                foreach (var child in node.Children.Where(d => d.IsT1).Select(d => d.AsT1))
+                foreach (var child in childContent.Where(d => d.IsT1).Select(d => d.AsT1))
                 {
-                    children.Add(AddObject(child, font, objectScope));
+                    childObjects.Add(AddObject(child, font, objectScope));
                 }
 
-                foreach (var chain in node.Children.Where(d => d.IsT2).Select(d => d.AsT2))
+                foreach (var chain in childContent.Where(d => d.IsT2).Select(d => d.AsT2))
                 {
                     AddEdge(chain, objectScope);
                 }
@@ -261,7 +271,7 @@ namespace Thousand.Evaluate
 
             var result = new IR.Object(
                 node.Name ?? node.Classes.First(), // XXX
-                new IR.Region(regionConfig, children), 
+                new IR.Region(regionConfig, childObjects), 
                 label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), 
                 alignment, margin, width, height, 
                 row, column, x, y, anchor, offset, 
@@ -424,7 +434,7 @@ namespace Thousand.Evaluate
             };
         }
 
-        private AST.ObjectAttribute[] FindObjectClass(Parse.Identifier name)
+        private ClassContent FindObjectClass(Parse.Identifier name)
         {
             if (!objectClasses.ContainsKey(name.Text))
             {
@@ -437,7 +447,7 @@ namespace Thousand.Evaluate
                     state.AddWarning(name, ErrorKind.Reference, "class {0} is not defined", name);
                 }
                 
-                return Array.Empty<AST.ObjectAttribute>();
+                return new(Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectContent>());
             }
             else
             {
