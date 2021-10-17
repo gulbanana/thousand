@@ -1,7 +1,9 @@
-﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+﻿using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System;
 using System.Linq;
 using Thousand.AST;
+using Thousand.Layout;
 using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
 using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
@@ -9,8 +11,17 @@ namespace Thousand.LSP
 {
     public class SemanticDocument
     {
+        public DocumentUri Uri { get; }
+        // XXX add uint version, might help to avoid races
+
         public TokenList? Tokens { get; set; }
         public TolerantDocument? Syntax { get; set; }
+        public Diagram? Diagram { get; set; }
+
+        public SemanticDocument(DocumentUri uri)
+        {
+            Uri = uri;
+        }
 
         public Token? FindToken(Position position)
         {

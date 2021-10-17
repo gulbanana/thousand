@@ -19,13 +19,15 @@ namespace Thousand.LSP
         private readonly ILanguageServerConfiguration configuration;
         private readonly BufferService documentService;
         private readonly SemanticService semanticService;
+        private readonly IDiagnosticService diagnosticService;
 
-        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, BufferService documentService, SemanticService semanticService)
+        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, BufferService documentService, SemanticService semanticService, IDiagnosticService diagnosticService)
         {
             this.logger = logger;
             this.configuration = configuration;
             this.documentService = documentService;
             this.semanticService = semanticService;
+            this.diagnosticService = diagnosticService;
         }
 
         protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new()
@@ -46,6 +48,7 @@ namespace Thousand.LSP
             config.GetSection("thousand").GetSection("server").Bind(options);
 
             documentService.Add(request.TextDocument.Uri, request.TextDocument.Text);
+            diagnosticService.Track(request.TextDocument.Uri);
             semanticService.Reparse(request.TextDocument.Uri);
 
             return Unit.Value;
@@ -58,7 +61,8 @@ namespace Thousand.LSP
                 disposable.Dispose();
             }
 
-            documentService.Remove(request.TextDocument.Uri);
+            diagnosticService.Untrack(request.TextDocument.Uri);
+            documentService.Remove(request.TextDocument.Uri);            
 
             return Unit.Task;
         }

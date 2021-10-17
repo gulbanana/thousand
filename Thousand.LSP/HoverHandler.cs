@@ -10,10 +10,12 @@ namespace Thousand.LSP
     class HoverHandler : HoverHandlerBase
     {
         private readonly SemanticService semanticService;
+        private readonly IDiagnosticService diagnosticService;
 
-        public HoverHandler(SemanticService semanticService)
+        public HoverHandler(SemanticService semanticService, IDiagnosticService diagnosticService)
         {
             this.semanticService = semanticService;
+            this.diagnosticService = diagnosticService;
         }
 
         protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities) => new HoverRegistrationOptions
@@ -25,6 +27,11 @@ namespace Thousand.LSP
 
         public override async Task<Hover?> Handle(HoverParams request, CancellationToken cancellationToken)
         {
+            if (diagnosticService.HasDiagnostics(request.TextDocument.Uri, request.Position))
+            {
+                return null;
+            }
+
             var parse = await semanticService.GetParseAsync(request.TextDocument.Uri);
 
             if (parse.FindDeclaration(request.Position) is Macro<AST.TolerantDocumentContent> macro)

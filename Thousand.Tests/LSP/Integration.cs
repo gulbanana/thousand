@@ -1,4 +1,5 @@
-﻿using OmniSharp.Extensions.LanguageServer.Protocol;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using System.Linq;
 using System.Threading.Tasks;
 using Thousand.LSP;
@@ -14,7 +15,7 @@ namespace Thousand.Tests.LSP
         public Integration()
         {
             buffers = new BufferService();
-            semantics = new SemanticService(buffers);
+            semantics = new SemanticService(NullLogger<SemanticService>.Instance, buffers, new MockDiagnosticService());
         }
 
         private Task<SemanticDocument> ParseAsync(string source)
