@@ -25,5 +25,8 @@ jobs:
     - name: dotnet pack Thousand.CLI
       run: dotnet pack -c Release --no-build -p:RepositoryBranch=release -p:RepositoryCommit=${GITHUB_SHA} Thousand.CLI -o .
 
+    - name: dotnet pack Thousand.LSP
+      run: dotnet pack -c Release --no-build -p:RepositoryBranch=release -p:RepositoryCommit=${GITHUB_SHA} Thousand.LSP -o .
+
     - name: dotnet nuget push
       run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_API_KEY}} --skip-duplicate
