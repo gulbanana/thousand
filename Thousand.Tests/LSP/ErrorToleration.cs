@@ -10,13 +10,15 @@ namespace Thousand.Tests.LSP
 {
     public class ErrorToleration
     {
+        private readonly IDiagnosticService diagnostics;
         private readonly BufferService buffers;
         private readonly SemanticService semantics;
 
         public ErrorToleration()
         {
+            diagnostics = new MockDiagnosticService();
             buffers = new BufferService();
-            semantics = new SemanticService(NullLogger<SemanticService>.Instance, buffers, new MockDiagnosticService());
+            semantics = new SemanticService(NullLogger<SemanticService>.Instance, buffers, diagnostics);
         }
 
         private Task<SemanticDocument> ParseAsync(string source)
@@ -170,7 +172,7 @@ line bar -- baz [stroke=blue] // good");
             Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects);
         }
 
-        [Fact(Skip = "not yet implemented")]
+        [Fact]
         public async Task IgnoreBadDeclaration_NestInClass()
         {
             var document = await ParseAsync(
@@ -186,6 +188,29 @@ a");
             Assert.NotNull(document.Diagram);
 
             Assert.Equal(AlignmentKind.Start, document.Rules!.Region.Objects.Single().Alignment.Columns);
+        }
+
+        [Fact]
+        public async Task IgnoreBadDeclaration_NestInObjectInClass()
+        {
+            var document = await ParseAsync(
+@"class foo {
+    object {
+        []
+        object 
+    }
+}
+foo");
+
+            Assert.NotNull(document.Tokens);
+            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.ValidSyntax);
+            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Diagram);
+
+            Assert.Single(document.Rules!.Region.Objects);
+            Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects);
+            Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects.Single().Region.Objects);
         }
     }
 }

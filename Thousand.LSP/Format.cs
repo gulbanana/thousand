@@ -79,7 +79,7 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.UntypedClass klass)
+        public static string Canonicalise(AST.TolerantClass klass)
         {
             var builder = new StringBuilder();
 

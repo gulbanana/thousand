@@ -133,7 +133,15 @@ namespace Thousand.AST
      ***********************************/
     public record InvalidDeclaration;
 
-    [GenerateOneOf] public partial class TolerantObjectContent : OneOfBase<InvalidDeclaration, ObjectAttribute, UntypedClass, TolerantObject, UntypedLine> { }
+    public record TolerantClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
+    {
+        public UntypedClass WithoutErrors()
+        {
+            return new UntypedClass(Name, Arguments, BaseClasses, Attributes, Declarations.Where(d => !d.Value.IsT0).ToArray());
+        }
+    }
+
+    [GenerateOneOf] public partial class TolerantObjectContent : OneOfBase<InvalidDeclaration, ObjectAttribute, TolerantClass, TolerantObject, UntypedLine> { }
     public record TolerantObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
     {
         public UntypedObject WithoutErrors()
@@ -141,14 +149,14 @@ namespace Thousand.AST
             return new UntypedObject(Classes, Name, Attributes, Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedObjectContent>(
                 _ => throw new Exception(),
                 _ => d.Value.AsT1,
-                _ => d.Value.AsT2,
+                _ => d.Value.AsT2.WithoutErrors(),
                 _ => d.Value.AsT3.WithoutErrors(),
                 _ => d.Value.AsT4
             )).ToArray());
         }
     }
 
-    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, UntypedClass, TolerantObject, UntypedLine> { }
+    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, TolerantClass, TolerantObject, UntypedLine> { }
     public record TolerantDocument(Parse.Macro<TolerantDocumentContent>[] Declarations)
     {
         public UntypedDocument WithoutErrors()
@@ -156,7 +164,7 @@ namespace Thousand.AST
             return new UntypedDocument(Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedDocumentContent>(
                 _ => throw new Exception(),
                 _ => d.Value.AsT1,
-                _ => d.Select(v => v.AsT2),
+                _ => d.Select(v => v.AsT2.WithoutErrors()),
                 _ => d.Value.AsT3.WithoutErrors(),
                 _ => d.Value.AsT4
             )).ToArray());

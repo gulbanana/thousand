@@ -205,5 +205,15 @@ namespace Thousand.Tests.Parsing
             Assert.True(result.HasValue, result.ToString());
             Assert.NotEmpty(result.Value.Declarations);
         }
+        
+        [Fact]
+        public void WithScope_Untyped_Nested_AsDocument()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo { object { object } } foo");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.NotEmpty(result.Value.Declarations);
+        }
     }
 }

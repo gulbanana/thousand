@@ -160,6 +160,43 @@ namespace Thousand.LSP
 
                     yield return new Splice(declaration.Range(), Array.Empty<Token<TokenKind>>());
                 }
+                else if (declaration.Value.IsT2)
+                {
+                    foreach (var splice in SpliceClass(state, declaration.Value.AsT2))
+                    {
+                        yield return splice;
+                    }
+                }
+                else if (declaration.Value.IsT3)
+                {
+                    foreach (var splice in SpliceObject(state, declaration.Value.AsT3))
+                    {
+                        yield return splice;
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<Splice> SpliceClass(GenerationState state, AST.TolerantClass ast)
+        {
+            foreach (var declaration in ast.Declarations)
+            {
+                if (declaration.Value.IsT0)
+                {
+                    var subTokens = new TokenList<TokenKind>(declaration.Sequence().ToArray());
+                    var error = Untyped.DocumentContent(subTokens);
+                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
+                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
+
+                    yield return new Splice(declaration.Range(), Array.Empty<Token<TokenKind>>());
+                }
+                else if (declaration.Value.IsT2)
+                {
+                    foreach (var splice in SpliceClass(state, declaration.Value.AsT2))
+                    {
+                        yield return splice;
+                    }
+                }
                 else if (declaration.Value.IsT3)
                 {
                     foreach (var splice in SpliceObject(state, declaration.Value.AsT3))
@@ -182,6 +219,20 @@ namespace Thousand.LSP
                     state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
 
                     yield return new Splice(declaration.Range(), Array.Empty<Token<TokenKind>>());
+                }
+                else if (declaration.Value.IsT2)
+                {
+                    foreach (var splice in SpliceClass(state, declaration.Value.AsT2))
+                    {
+                        yield return splice;
+                    }
+                }
+                else if (declaration.Value.IsT3)
+                {
+                    foreach (var splice in SpliceObject(state, declaration.Value.AsT3))
+                    {
+                        yield return splice;
+                    }
                 }
             }
         }

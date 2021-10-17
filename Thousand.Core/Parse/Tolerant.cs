@@ -1,5 +1,6 @@
 ﻿using Superpower;
 using Superpower.Model;
+using Superpower.Parsers;
 using System;
 using System.Linq;
 using static Superpower.Parse;
@@ -29,6 +30,25 @@ namespace Thousand.Parse
         };
 
         /*********************************************************************
+         * Classes, which are actually better-typed than in the main parser! *
+         *********************************************************************/
+
+        public static TokenListParser<TokenKind, Macro<AST.TolerantObjectContent>[]> ClassContent =>
+            from begin in Token.EqualTo(TokenKind.LeftBrace)
+            from decs in Macro.Of(ObjectContent).ManyOptionalDelimited(terminator: TokenKind.RightBrace)
+            from end in Token.EqualTo(TokenKind.RightBrace)
+            select decs.ToArray();
+
+        public static TokenListParser<TokenKind, AST.TolerantClass> Class { get; } =
+            from keyword in Token.EqualTo(TokenKind.ClassKeyword)
+            from name in Identifier.Any
+            from arguments in Macro.Of(Untyped.ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
+            from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(Untyped.ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
+            from attrs in Shared.List(Untyped.UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
+            from children in ClassContent.OptionalOrDefault(Array.Empty<Macro<AST.TolerantObjectContent>>())
+            select new AST.TolerantClass(name, arguments, bases, attrs, children);
+
+        /*********************************************************************
          * Objects, which can be nested, containing declarations and errors. *
          *********************************************************************/
 
@@ -41,7 +61,7 @@ namespace Thousand.Parse
             }
             else if (first.Value.Kind == TokenKind.ClassKeyword)
             {
-                return Untyped.Class.Select(x => (AST.TolerantObjectContent)x)(input);
+                return Class.Select(x => (AST.TolerantObjectContent)x)(input);
             }
             else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {
@@ -104,7 +124,7 @@ namespace Thousand.Parse
             var first = input.ConsumeToken();
             if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
             {
-                return Untyped.Class.Select(x => (AST.TolerantDocumentContent)x)(input);
+                return Class.Select(x => (AST.TolerantDocumentContent)x)(input);
             }
             else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {
