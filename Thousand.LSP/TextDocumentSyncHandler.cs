@@ -7,6 +7,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,12 +16,14 @@ namespace Thousand.LSP
     class TextDocumentSyncHandler : TextDocumentSyncHandlerBase
     {
         private readonly ILogger<TextDocumentSyncHandler> logger;
-        private readonly ILanguageServerConfiguration configuration;        
+        private readonly ILanguageServerConfiguration configuration;
+        private readonly DocumentService documentService;
 
-        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration)
+        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, DocumentService documentService)
         {
             this.logger = logger;
-            this.configuration = configuration;            
+            this.configuration = configuration;
+            this.documentService = documentService;
         }
 
         protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new()
@@ -28,7 +31,7 @@ namespace Thousand.LSP
             DocumentSelector = new(
                 new DocumentFilter { Language = "thousand" }
             ),
-            Change = TextDocumentSyncKind.Full, // XXX 
+            Change = TextDocumentSyncKind.Incremental,
             Save = new SaveOptions { IncludeText = false } // we don't need it for anything
         };
 
@@ -36,40 +39,46 @@ namespace Thousand.LSP
 
         public override async Task<Unit> Handle(DidOpenTextDocumentParams request, CancellationToken cancellationToken)
         {
-            logger.LogInformation("DidOpenTextDocument");
-
             var config = await configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
             var options = new ServerOptions();
             config.GetSection("thousand").GetSection("server").Bind(options);
 
-            logger.LogInformation("Dummy: {0}", options.Dummy);
+            documentService.Add(request.TextDocument.Uri, request.TextDocument.Text);
 
             return Unit.Value;
         }
 
         public override Task<Unit> Handle(DidCloseTextDocumentParams request, CancellationToken cancellationToken)
         {
-            logger.LogInformation("DidCloseTextDocument");
-
             if (configuration.TryGetScopedConfiguration(request.TextDocument.Uri, out var disposable))
             {
                 disposable.Dispose();
             }
+
+            documentService.Remove(request.TextDocument.Uri);
 
             return Unit.Task;
         }
 
         public override Task<Unit> Handle(DidChangeTextDocumentParams request, CancellationToken cancellationToken)
         {
-            logger.LogInformation("DidChangeTextDocument");
+            foreach (var change in request.ContentChanges)
+            {
+                if (change.Range != null)
+                {
+                    documentService.ApplyIncrementalChange(request.TextDocument.Uri, change.Range, change.Text);
+                }
+                else
+                {
+                    documentService.ApplyFullChange(request.TextDocument.Uri, change.Text);
+                }
+            }
 
             return Unit.Task;
         }
 
         public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken)
         {
-            logger.LogInformation("DidSaveTextDocument");
-
             return Unit.Task;
         }
     }
