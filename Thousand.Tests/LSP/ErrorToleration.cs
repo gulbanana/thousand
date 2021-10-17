@@ -69,6 +69,26 @@ template(1) a -- b");
         }
 
         [Fact]
+        public async Task CorrectTemplatedDocument()
+        {
+            var document = await ParseAsync(@"
+class foo($x) {
+    object $x
+}
+foo(""bar"")
+");
+
+            Assert.NotNull(document.Tokens);
+            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.ValidSyntax);
+            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Diagram);
+            
+            Assert.Single(document.Rules!.Region.Objects);
+            Assert.Equal("bar", document.Rules!.Region.Objects.Single().Region.Objects.Single().Label?.Content);
+        }
+
+        [Fact]
         public async Task ReadUpToInvalidToken()
         {
             var document = await ParseAsync(@"

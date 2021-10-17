@@ -190,5 +190,36 @@ object { object { foo(1) } }
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
         }
+
+        [Fact]
+        public void InstantiateTemplateWithBody()
+        {
+            var source = @"
+class foo($x) {
+}
+foo("""")
+";
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
+
+            var objekt = (AST.TypedObject)ast!.Declarations.Where(d => d.IsT2).FirstOrDefault();
+
+            Assert.NotNull(objekt);
+        }
+
+        [Fact]
+        public void InstantiateTemplateWithBodyUsingVariable()
+        {
+            var source = @"
+class foo($x) {
+    object $x
+}
+foo("""")
+";
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
+
+            var objekt = (AST.TypedObject)ast!.Declarations.Where(d => d.IsT2).FirstOrDefault();
+
+            Assert.NotNull(objekt);
+        }
     }
 }

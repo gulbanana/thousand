@@ -181,7 +181,7 @@ namespace Thousand.LSP
         {
             foreach (var declaration in ast.Declarations)
             {
-                if (declaration.Value.IsT0)
+                if (declaration.Value.IsT0 && !declaration.Sequence().Any(t => t.Kind == TokenKind.Variable))
                 {
                     var subTokens = new TokenList<TokenKind>(declaration.Sequence().ToArray());
                     var error = Untyped.DocumentContent(subTokens);

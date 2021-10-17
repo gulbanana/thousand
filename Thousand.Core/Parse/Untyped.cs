@@ -50,7 +50,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, Macro[]> ClassContent =>
             from begin in Token.EqualTo(TokenKind.LeftBrace)
-            from decs in Macro.Of(ObjectContent).Cast<Macro<AST.UntypedObjectContent>, Macro>().ManyOptionalDelimited(terminator: TokenKind.RightBrace)
+            from decs in Macro.Of(ObjectContent).Cast<Macro<AST.UntypedObjectContent>, Macro>().Or(Macro.Raw(TokenKind.LineSeparator, TokenKind.RightBrace)).ManyOptionalDelimited(terminator: TokenKind.RightBrace)
             from end in Token.EqualTo(TokenKind.RightBrace)
             select decs.ToArray();
 

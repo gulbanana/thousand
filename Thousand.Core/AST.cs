@@ -137,7 +137,7 @@ namespace Thousand.AST
     {
         public UntypedClass WithoutErrors()
         {
-            return new UntypedClass(Name, Arguments, BaseClasses, Attributes, Declarations.Where(d => !d.Value.IsT0).ToArray());
+            return new UntypedClass(Name, Arguments, BaseClasses, Attributes, Declarations.Where(d => !d.Value.IsT0 || d.Sequence().Any(t => t.Kind == Parse.TokenKind.Variable)).ToArray());
         }
     }
 
