@@ -24,6 +24,7 @@ namespace Thousand.LSP
                     .ConfigureLogging(builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(LogLevel.Debug))
                     .WithHandler<TextDocumentSyncHandler>()
                     .WithHandler<HoverHandler>()
+                    .WithHandler<SemanticTokensHandler>()
                     .WithServices(ConfigureServices)
             );
 

@@ -32,9 +32,7 @@ namespace Thousand.LSP
 
         protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new()
         {
-            DocumentSelector = new(
-                new DocumentFilter { Language = "thousand" }
-            ),
+            DocumentSelector = DocumentSelector.ForLanguage("thousand"),
             Change = TextDocumentSyncKind.Incremental,
             Save = new SaveOptions { IncludeText = false } // we don't need it for anything
         };

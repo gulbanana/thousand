@@ -20,9 +20,7 @@ namespace Thousand.LSP
 
         protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities) => new HoverRegistrationOptions
         {
-            DocumentSelector = new(
-                new DocumentFilter { Language = "thousand" }
-            )
+            DocumentSelector = DocumentSelector.ForLanguage("thousand")
         };
 
         public override async Task<Hover?> Handle(HoverParams request, CancellationToken cancellationToken)
