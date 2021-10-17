@@ -63,7 +63,7 @@ namespace Thousand.LSP
                 Message = w.Message
             });
 
-            var all = warnings.Concat(errors).ToList();
+            var all = warnings.Concat(errors).Distinct().ToList();
             current[uri] = all;
 
             facade.TextDocument.PublishDiagnostics(new PublishDiagnosticsParams

@@ -12,6 +12,8 @@ namespace Thousand.Compose
         {
             try
             {
+                var errors = state.ErrorCount();
+
                 var textMeasures = new Dictionary<IR.StyledText, BlockMeasurements>();
                 foreach (var t in ir.WalkObjects().Select(o => o.Label).WhereNotNull())
                 {
@@ -21,7 +23,7 @@ namespace Thousand.Compose
                 var composition = new Composer(state, ir, textMeasures);
                 diagram = composition.Compose();
 
-                return !state.HasErrors();
+                return state.ErrorCount() == errors;
             }
             catch (Exception ex)
             {

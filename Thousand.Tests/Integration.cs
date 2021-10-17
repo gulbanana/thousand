@@ -30,7 +30,7 @@ namespace Thousand.Tests
         public void ParseStdlib()
         {
             var source = DiagramGenerator.ReadStdlib();
-            var tokens = Tokenizer.Build(false).Tokenize(source);
+            var tokens = Tokenizer.Build().Tokenize(source);
             var ast = Typed.Document(tokens);
             Assert.True(ast.HasValue, ast.ToString());
         }

@@ -12,13 +12,21 @@ namespace Thousand.Parse
     {
         public static bool TryParse(string text, GenerationState state, [NotNullWhen(true)] out AST.TypedDocument? document)
         {
-            document = Parse(text, state);
-            return !state.HasErrors();
+            var errors = state.ErrorCount();
+            document = Parse(state, text);
+            return state.ErrorCount() == errors;
         }
 
-        private static AST.TypedDocument? Parse(string text, GenerationState state)
+        public static bool TryParse(TokenList tokens, GenerationState state, [NotNullWhen(true)] out AST.TypedDocument? document)
         {
-            var tokenizer = Tokenizer.Build(false);
+            var errors = state.ErrorCount();
+            document = Parse(state, tokens);
+            return state.ErrorCount() == errors;
+        }
+
+        private static AST.TypedDocument? Parse(GenerationState state, string text)
+        {
+            var tokenizer = Tokenizer.Build();
 
             var untypedTokens = tokenizer.TryTokenize(text);
             if (!untypedTokens.HasValue)
@@ -26,8 +34,12 @@ namespace Thousand.Parse
                 state.AddError(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment());
                 return null;
             }
-            var pass1Tokens = untypedTokens.Value;
 
+            return Parse(state, untypedTokens.Value);
+        }
+
+        private static AST.TypedDocument? Parse(GenerationState state, TokenList pass1Tokens)
+        {
             // resolve objects and lines with template base classes (turning those classes concrete)
             var pass1AST = Untyped.Document(pass1Tokens);
             if (!pass1AST.HasValue)
@@ -37,8 +49,9 @@ namespace Thousand.Parse
                 return null;
             }
 
+            var errors = state.ErrorCount();
             var pass2Tokens = new Parser(state, 1).Pass1(pass1Tokens, pass1AST.Value);
-            if (state.HasErrors())
+            if (state.ErrorCount() > errors)
             {
                 return null;
             }
@@ -55,8 +68,9 @@ namespace Thousand.Parse
                     return null;
                 }
 
+                errors = state.ErrorCount();
                 pass2Tokens = new Parser(state, p++).Pass2(pass2Tokens, pass2AST.Value);
-                if (state.HasErrors())
+                if (state.ErrorCount() > errors)
                 {
                     return null;
                 }
@@ -73,8 +87,9 @@ namespace Thousand.Parse
                 return null;
             }
 
+            errors = state.ErrorCount();
             var typedTokens = new Parser(state, p).Pass3(pass2Tokens, pass3AST.Value);
-            if (state.HasErrors())
+            if (state.ErrorCount() > errors)
             {
                 return null;
             }
@@ -272,12 +287,12 @@ namespace Thousand.Parse
                 Invoke(call);
             }
 
-            foreach (var child in objekt.Children.Where(d => d.IsT2).Select(d => d.AsT2))
+            foreach (var child in objekt.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
             {
                 ResolveObject(child);
             }
 
-            foreach (var child in objekt.Children.Where(d => d.IsT3).Select(d => d.AsT3))
+            foreach (var child in objekt.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
                 ResolveLine(child);
             }
@@ -406,7 +421,7 @@ namespace Thousand.Parse
             }
 
             // substitute variables into scope
-            foreach (var decMacro in klass.Children)
+            foreach (var decMacro in klass.Declarations)
             {
                 var replacements = new List<Token>();
                 foreach (var token in decMacro.Sequence())

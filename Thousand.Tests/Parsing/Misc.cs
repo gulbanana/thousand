@@ -12,7 +12,7 @@ namespace Thousand.Tests.Parsing
 
         public Misc()
         {
-            tokenizer = Tokenizer.Build(false);            
+            tokenizer = Tokenizer.Build();            
         }
 
         [Fact]
@@ -201,7 +201,7 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(5, result.Value.Children.Length);
+            Assert.Equal(5, result.Value.Declarations.Length);
         }
 
         [Fact]

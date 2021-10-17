@@ -27,7 +27,7 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.UntypedObject objekt)
+        public static string Canonicalise(AST.TolerantObject objekt)
         {
             var builder = new StringBuilder();
 

@@ -11,7 +11,7 @@ namespace Thousand.Tests.Parsing
 
         public Classes()
         {
-            tokenizer = Tokenizer.Build(false);            
+            tokenizer = Tokenizer.Build();            
         }
 
         [Fact]
@@ -159,7 +159,7 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
         }
 
         [Fact]
@@ -171,7 +171,7 @@ namespace Thousand.Tests.Parsing
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
             AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Rect));
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Children, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
         }
 
         [Fact]
@@ -183,7 +183,7 @@ namespace Thousand.Tests.Parsing
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
             AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.LineStrokeColourAttribute(Colour.Black));
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Children, (AST.ObjectAttribute)new AST.LineStrokeColourAttribute(Colour.Black));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.LineStrokeColourAttribute(Colour.Black));
         }
 
         [Fact]
@@ -193,7 +193,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.NotEmpty(result.Value.Children);
+            Assert.NotEmpty(result.Value.Declarations);
         }
 
         [Fact]
@@ -203,7 +203,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.NotEmpty(result.Value.Children);
+            Assert.NotEmpty(result.Value.Declarations);
         }
     }
 }

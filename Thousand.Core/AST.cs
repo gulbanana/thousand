@@ -1,5 +1,6 @@
 ﻿using OneOf;
 using System;
+using System.Linq;
 using Thousand.Model;
 
 // Intermediate representation shared between Parse and Canonicalise stages
@@ -24,7 +25,7 @@ namespace Thousand.AST
     public record LineStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : LineAttribute;
 
     public abstract record RegionAttribute;
-    public record RegionFillAttribute(Colour? Colour) : RegionAttribute;    
+    public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
     public record RegionPaddingAttribute(Border Value) : RegionAttribute;
     public record RegionGridFlowAttribute(FlowKind Kind) : RegionAttribute;
     public record RegionGridMaxAttribute(int Value) : RegionAttribute;
@@ -36,7 +37,7 @@ namespace Thousand.AST
 
     public record RegionLayoutColumnsAttribute(TrackSize Size) : RegionAttribute;
     public record RegionLayoutRowsAttribute(TrackSize Size) : RegionAttribute;
-    public record RegionLayoutAttribute(TrackSize Columns, TrackSize Rows) : RegionAttribute;    
+    public record RegionLayoutAttribute(TrackSize Columns, TrackSize Rows) : RegionAttribute;
 
     public record RegionJustifyColumnsAttribute(AlignmentKind Kind) : RegionAttribute;
     public record RegionJustifyRowsAttribute(AlignmentKind Kind) : RegionAttribute;
@@ -51,7 +52,7 @@ namespace Thousand.AST
     public record NodeLabelJustifyAttribute(AlignmentKind Kind) : NodeAttribute;
     public record NodeLabelAttribute(Text? Content, AlignmentKind? Justify) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
-    public record NodeRowAttribute(int Value) : NodeAttribute;    
+    public record NodeRowAttribute(int Value) : NodeAttribute;
     public record NodeXAttribute(int Value) : NodeAttribute;
     public record NodeYAttribute(int Value) : NodeAttribute;
     public record NodeMinWidthAttribute(decimal? Value) : NodeAttribute;
@@ -73,7 +74,7 @@ namespace Thousand.AST
 
     [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, LineAttribute> { }
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
-    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<PositionAttribute, ArrowAttribute, LineAttribute> { } 
+    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<PositionAttribute, ArrowAttribute, LineAttribute> { }
     [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }
 
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
@@ -86,11 +87,15 @@ namespace Thousand.AST
      * Untyped AST, containing unresolved macros *
      *********************************************/
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
+
     public record Argument(Parse.Identifier Name, Parse.Macro? Default);
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro[] Children);
-    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedClass, UntypedObject, UntypedLine> { } // XXX would this produce better error messages?
-    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectContent[] Children);
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro[] Declarations);
+
+    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedClass, UntypedObject, UntypedLine> { } 
+    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectContent[] Declarations);
+
     public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes);
+
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<DiagramAttribute, Parse.Macro<UntypedClass>, UntypedObject, UntypedLine> { }
     public record UntypedDocument(UntypedDocumentContent[] Declarations);
 
@@ -98,7 +103,7 @@ namespace Thousand.AST
      * Typed AST *
      *************/
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
-    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, TypedObjectContent[] Children) : TypedClass(Name, BaseClasses)
+    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, TypedObjectContent[] Declarations) : TypedClass(Name, BaseClasses)
     {
         public ObjectClass(string name, params ObjectAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs, Array.Empty<TypedObjectContent>()) { }
     }
@@ -107,16 +112,19 @@ namespace Thousand.AST
         public LineClass(string name, params SegmentAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs) { }
     }
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
+
     [GenerateOneOf] public partial class TypedObjectContent : OneOfBase<ObjectAttribute, TypedClass, TypedObject, TypedLine> { }
-    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectContent[] Children)
+    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectContent[] Declarations)
     {
         public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedObjectContent[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }
         public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedObjectContent>()) { }
     }
+
     public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes)
     {
         public TypedLine(string klass, params LineSegment[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<SegmentAttribute>()) { }
     }
+
     [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
     public record TypedDocument(TypedDocumentContent[] Declarations);
 
@@ -124,6 +132,34 @@ namespace Thousand.AST
      * Error-tolerant AST, used by LSP *
      ***********************************/
     public record InvalidDeclaration;
-    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, UntypedClass, UntypedObject, UntypedLine> { }
-    public record TolerantDocument(Parse.Macro<TolerantDocumentContent>[] Declarations);
+
+    [GenerateOneOf] public partial class TolerantObjectContent : OneOfBase<InvalidDeclaration, ObjectAttribute, UntypedClass, TolerantObject, UntypedLine> { }
+    public record TolerantObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
+    {
+        public UntypedObject WithoutErrors()
+        {
+            return new UntypedObject(Classes, Name, Attributes, Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedObjectContent>(
+                _ => throw new Exception(),
+                _ => d.Value.AsT1,
+                _ => d.Value.AsT2,
+                _ => d.Value.AsT3.WithoutErrors(),
+                _ => d.Value.AsT4
+            )).ToArray());
+        }
+    }
+
+    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, UntypedClass, TolerantObject, UntypedLine> { }
+    public record TolerantDocument(Parse.Macro<TolerantDocumentContent>[] Declarations)
+    {
+        public UntypedDocument WithoutErrors()
+        {
+            return new UntypedDocument(Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedDocumentContent>(
+                _ => throw new Exception(),
+                _ => d.Value.AsT1,
+                _ => d.Select(v => v.AsT2),
+                _ => d.Value.AsT3.WithoutErrors(),
+                _ => d.Value.AsT4
+            )).ToArray());
+        }
+    }
 }

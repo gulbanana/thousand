@@ -16,6 +16,8 @@ namespace Thousand.LSP
 
         public TokenList? Tokens { get; set; }
         public TolerantDocument? Syntax { get; set; }
+        public TypedDocument? ValidSyntax { get; set; }
+        public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
         public SemanticDocument(DocumentUri uri)

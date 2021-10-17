@@ -12,6 +12,8 @@ namespace Thousand.Evaluate
         {
             try
             {
+                var errors = state.ErrorCount();
+
                 var evaluation = new Evaluator(state);
                 foreach (var doc in documents)
                 {
@@ -19,7 +21,7 @@ namespace Thousand.Evaluate
                 }
                 rules = new IR.Root(evaluation.Scale, new IR.Region(evaluation.Config, evaluation.Objects.ToList()), evaluation.Edges);
 
-                return !state.HasErrors();
+                return state.ErrorCount() == errors;
             }
             catch (Exception ex)
             {
@@ -105,7 +107,7 @@ namespace Thousand.Evaluate
 
                 var localChildren = c switch
                 {
-                    AST.ObjectClass oc => oc.Children,
+                    AST.ObjectClass oc => oc.Declarations,
                     _ => Enumerable.Empty<AST.TypedObjectContent>()
                 };
 
@@ -168,7 +170,7 @@ namespace Thousand.Evaluate
             foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes)
                 .Concat(node.Classes.SelectMany(c => scope.FindObjectClass(c, false).Children.Where(d => d.IsT0).Select(d => d.AsT0)))
                 .Concat(node.Attributes)
-                .Concat(node.Children.Where(d => d.IsT0).Select(d => d.AsT0)))
+                .Concat(node.Declarations.Where(d => d.IsT0).Select(d => d.AsT0)))
             {
                 attr.Switch(e =>
                 {
@@ -254,7 +256,7 @@ namespace Thousand.Evaluate
             }
 
             var childObjects = new List<IR.Object>();
-            var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Children).ToList();            
+            var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Declarations).ToList();            
             if (childContent.Any())
             {
                 var objectScope = scope.Chain(node.Name?.Text ?? node.Classes.First().Text);

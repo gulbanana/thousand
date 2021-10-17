@@ -11,6 +11,11 @@ namespace Thousand
         private List<GenerationError> errors { get; } = new();
         private Dictionary<string, TextSpan> sourceMap { get; } = new();
 
+        public int ErrorCount()
+        {
+            return errors.Count;
+        }
+
         public bool HasErrors()
         {
             return errors.Any();
