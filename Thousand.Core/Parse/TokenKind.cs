@@ -4,6 +4,8 @@ namespace Thousand.Parse
 {
     public enum TokenKind
     {
+        Invalid,
+
         [Token(Example = "[")]
         LeftBracket,
 

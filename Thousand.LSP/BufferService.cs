@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace Thousand.LSP
 {
-    class DocumentService
+    public class BufferService
     {
         private readonly ConcurrentDictionary<DocumentUri, string> buffers = new();
 

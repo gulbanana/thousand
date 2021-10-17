@@ -18,7 +18,7 @@ namespace Thousand.Parse
 
         private static AST.TypedDocument? Parse(string text, GenerationState state)
         {
-            var tokenizer = Tokenizer.Build();
+            var tokenizer = Tokenizer.Build(false);
 
             var untypedTokens = tokenizer.TryTokenize(text);
             if (!untypedTokens.HasValue)
@@ -29,7 +29,7 @@ namespace Thousand.Parse
             var pass1Tokens = untypedTokens.Value;
 
             // resolve objects and lines with template base classes (turning those classes concrete)
-            var pass1AST = Untyped.UntypedDocument(pass1Tokens);
+            var pass1AST = Untyped.Document(pass1Tokens);
             if (!pass1AST.HasValue)
             {
                 var badToken = pass1AST.Location.IsAtEnd ? pass1Tokens.Last() : pass1AST.Location.First();
@@ -45,7 +45,7 @@ namespace Thousand.Parse
 
             // repeatedly resolve concrete classes with template base classes
             var p = 2;
-            var pass2AST = Untyped.UntypedDocument(pass2Tokens);
+            var pass2AST = Untyped.Document(pass2Tokens);
             do
             {
                 if (!pass2AST.HasValue)
@@ -61,11 +61,11 @@ namespace Thousand.Parse
                     return null;
                 }
 
-                pass2AST = Untyped.UntypedDocument(pass2Tokens);
+                pass2AST = Untyped.Document(pass2Tokens);
             } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.IsT1 && Resolveable(d.AsT1.Value)));
 
             // remove remaining template classes
-            var pass3AST = Untyped.UntypedDocument(pass2Tokens);
+            var pass3AST = Untyped.Document(pass2Tokens);
             if (!pass3AST.HasValue)
             {
                 var badToken = pass3AST.Location.IsAtEnd ? pass2Tokens.Last() : pass3AST.Location.First();
@@ -101,7 +101,7 @@ namespace Thousand.Parse
         private readonly Dictionary<string, List<Token[]>> instantiations;
         private readonly List<Splice> splices;
 
-        private Parser(GenerationState state, int p)
+        public Parser(GenerationState state, int p)
         {
             this.state = state;
             this.p = p;

@@ -3,6 +3,7 @@ using Superpower.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Thousand.AST;
 
 namespace Thousand.Parse
 {
@@ -50,7 +51,37 @@ namespace Thousand.Parse
             var end = Remainder.Position - offset;
             return start..end;
         }
+
+        public TextSpan Span()
+        {
+            if (Location.IsAtEnd)
+            {
+                return TextSpan.Empty;
+            }
+            
+            var start = Location.First().Span;
+            if (start.Source == null)
+            {
+                return TextSpan.Empty;
+            }
+
+            if (Remainder.IsAtEnd)
+            {
+                return new TextSpan(start.Source, start.Position, start.Source.Length - start.Position.Absolute);
+            }
+            else
+            {
+                var end = Remainder.First().Span;
+                return start.Until(end);
+            }
+        }
     }
 
-    public record Macro<T>(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder, T Value) : Macro(Location, Remainder);
+    public record Macro<T>(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder, T Value) : Macro(Location, Remainder)
+    {
+        public Macro<U> Select<U>(Func<T, U> f)
+        {
+            return new Macro<U>(Location, Remainder, f(Value));
+        }
+    }
 }

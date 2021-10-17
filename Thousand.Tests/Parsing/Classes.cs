@@ -11,7 +11,7 @@ namespace Thousand.Tests.Parsing
 
         public Classes()
         {
-            tokenizer = Tokenizer.Build();            
+            tokenizer = Tokenizer.Build(false);            
         }
 
         [Fact]

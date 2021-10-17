@@ -11,7 +11,7 @@ namespace Thousand.Tests
 
         public Tokenization()
         {
-            sut = Tokenizer.Build();
+            sut = Tokenizer.Build(false);
         }
 
         [Fact]

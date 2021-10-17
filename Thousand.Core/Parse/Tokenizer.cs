@@ -7,7 +7,7 @@ namespace Thousand.Parse
 {
     public static class Tokenizer
     {
-        public static Tokenizer<TokenKind> Build()
+        public static Tokenizer<TokenKind> Build(bool tolerant)
         {
             TextParser<Unit> parseLineSeparator = Character.EqualTo(';').Or(Character.EqualTo('\r').Optional().IgnoreThen(Character.EqualTo('\n'))).Value(Unit.Value);
 
@@ -32,7 +32,7 @@ namespace Thousand.Parse
                 from close in Character.EqualTo('"')
                 select Unit.Value;
 
-            return new TokenizerBuilder<TokenKind>()
+            var builder = new TokenizerBuilder<TokenKind>()
                 .Ignore(parseInLineWhiteSpace)
                 .Ignore(Comment.CPlusPlusStyle)
                 .Match(parseLineSeparator, TokenKind.LineSeparator)
@@ -57,8 +57,14 @@ namespace Thousand.Parse
                 .Match(Numerics.Decimal, TokenKind.Number)
                 .Match(parseStringToken, TokenKind.String)
                 .Match(Character.EqualTo('$').IgnoreThen(TextParsers.Identifier), TokenKind.Variable)
-                .Match(Span.MatchedBy(TextParsers.Identifier), TokenKind.Identifier)
-                .Build();
+                .Match(Span.MatchedBy(TextParsers.Identifier), TokenKind.Identifier);
+
+            if (tolerant)
+            {
+                builder = builder.Match(Character.AnyChar, TokenKind.Invalid);
+            }
+                
+            return builder.Build();
         }
     }
 }

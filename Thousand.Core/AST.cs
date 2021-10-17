@@ -119,4 +119,11 @@ namespace Thousand.AST
     }
     [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
     public record TypedDocument(TypedDocumentContent[] Declarations);
+
+    /***********************************
+     * Error-tolerant AST, used by LSP *
+     ***********************************/
+    public record InvalidDeclaration;
+    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, UntypedClass, UntypedObject, UntypedLine> { }
+    public record TolerantDocument(Parse.Macro<TolerantDocumentContent>[] Declarations);
 }

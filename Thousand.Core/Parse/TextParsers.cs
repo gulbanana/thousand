@@ -8,7 +8,7 @@ using Thousand.Model;
 
 namespace Thousand.Parse
 {
-    internal static class TextParsers
+    public static class TextParsers
     {
         private static bool IsLatinDigit(char ch)
         {

@@ -196,7 +196,7 @@ namespace Thousand.Parse
             }
         };
 
-        public static TokenListParser<TokenKind, AST.UntypedDocument> UntypedDocument { get; } =
+        public static TokenListParser<TokenKind, AST.UntypedDocument> Document { get; } =
             DocumentContent
                 .ManyOptionalDelimited()
                 .Select(decs => new AST.UntypedDocument(decs.ToArray()))

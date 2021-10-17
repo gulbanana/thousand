@@ -12,7 +12,7 @@ namespace Thousand.Tests.Parsing
 
         public Misc()
         {
-            tokenizer = Tokenizer.Build();            
+            tokenizer = Tokenizer.Build(false);            
         }
 
         [Fact]

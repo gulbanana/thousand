@@ -23,6 +23,7 @@ namespace Thousand.LSP
                     .WithOutput(Console.OpenStandardOutput())
                     .ConfigureLogging(builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(LogLevel.Debug))
                     .WithHandler<TextDocumentSyncHandler>()
+                    .WithHandler<HoverHandler>()
                     .WithServices(ConfigureServices)
             );
 
@@ -31,8 +32,9 @@ namespace Thousand.LSP
 
         private static void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(b => b.SetMinimumLevel(LogLevel.Debug));
             services.AddSingleton(new ConfigurationItem { Section = "thousand" });
+            services.AddSingleton<BufferService>();
+            services.AddSingleton<SemanticService>();
         }
     }
 }

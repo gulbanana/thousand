@@ -9,7 +9,7 @@ namespace Thousand.Tests.Parsing
 
         public Synonyms()
         {
-            tokenizer = Tokenizer.Build();            
+            tokenizer = Tokenizer.Build(false);            
         }
 
         [Fact]
