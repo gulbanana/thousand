@@ -11,5 +11,6 @@ namespace Thousand.Compose
         public Dictionary<IR.Object, LayoutNode> AllNodes { get; } = new(ReferenceEqualityComparer.Instance);
         public Dictionary<IR.Object, GridLayoutNode> GridNodes { get; } = new(ReferenceEqualityComparer.Instance);
         public Dictionary<IR.Object, AnchorLayoutNode> AnchorNodes { get; } = new(ReferenceEqualityComparer.Instance);
+        public Dictionary<IR.Object, PositionLayoutNode> PositionNodes { get; } = new(ReferenceEqualityComparer.Instance);
     }
 }

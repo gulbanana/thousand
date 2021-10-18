@@ -11,6 +11,7 @@ namespace Thousand.Model
 
         public decimal X => Left + Right;
         public decimal Y => Top + Bottom;
+        public Point TopLeft => new Point(Left, Top);
 
         public Border Combine(Border that) => new(
             Math.Max(this.Left, that.Left),

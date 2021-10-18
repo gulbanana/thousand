@@ -48,13 +48,13 @@ namespace Thousand.IR
         StyledText? Label,
         // layout
         Axes<AlignmentKind?> Alignment, Border Margin, decimal? MinWidth, decimal? MinHeight,
-        int? Row, int? Column, int? X, int? Y, CompassKind? Anchor, Point? Offset,
+        int? Row, int? Column, Point? Position, CompassKind? Anchor, Point? Offset,
         // shape
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
     )
     {
-        public Object(string label, params Object[] children) : this(new Parse.Identifier("object"), new Region(new Config(), children), new StyledText(label), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
-        public Object(Config config, params Object[] children) : this(new Parse.Identifier("object"), new Region(config, children), null, new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(string label, params Object[] children) : this(new Parse.Identifier("object"), new Region(new Config(), children), new StyledText(label), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
+        public Object(Config config, params Object[] children) : this(new Parse.Identifier("object"), new Region(config, children), null, new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
         public Object(params Object[] children) : this(new Config(), children) { }        
     }
     

@@ -156,9 +156,8 @@ namespace Thousand.Evaluate
             var height = new decimal?();
 
             var column = new int?();
-            var row = new int?();           
-            var x = new int?();
-            var y = new int?();
+            var row = new int?();
+            var position = default(Point?);
             var anchor = default(CompassKind?);
             var offset = default(Point?);
 
@@ -209,12 +208,8 @@ namespace Thousand.Evaluate
                             row = nra.Value;
                             break;
 
-                        case AST.NodeXAttribute nxa:
-                            x = nxa.Value;
-                            break;
-
-                        case AST.NodeYAttribute nya:
-                            y = nya.Value;
+                        case AST.NodePositionAttribute nxa:
+                            position = nxa.Origin;
                             break;
 
                         case AST.NodeMinWidthAttribute nwa:
@@ -282,7 +277,7 @@ namespace Thousand.Evaluate
                 new IR.Region(regionConfig, childObjects), 
                 label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), 
                 alignment, margin, width, height, 
-                row, column, x, y, anchor, offset, 
+                row, column, position, anchor, offset, 
                 shape, cornerRadius, 
                 stroke
             );

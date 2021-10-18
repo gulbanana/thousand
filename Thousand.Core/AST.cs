@@ -53,8 +53,7 @@ namespace Thousand.AST
     public record NodeLabelAttribute(Text? Content, AlignmentKind? Justify) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;
-    public record NodeXAttribute(int Value) : NodeAttribute;
-    public record NodeYAttribute(int Value) : NodeAttribute;
+    public record NodePositionAttribute(Point Origin) : NodeAttribute;
     public record NodeMinWidthAttribute(decimal? Value) : NodeAttribute;
     public record NodeMinHeightAttribute(decimal? Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;

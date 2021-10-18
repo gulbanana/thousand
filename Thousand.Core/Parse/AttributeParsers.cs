@@ -293,15 +293,11 @@ namespace Thousand.Parse
             from value in Value.CountingNumber
             select new AST.NodeRowAttribute(value) as AST.NodeAttribute;
 
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeXAttribute { get; } =
-            from key in Key(NodeAttributeKind.X)
-            from value in Value.WholeNumber
-            select new AST.NodeXAttribute(value) as AST.NodeAttribute;
-
-        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeYAttribute { get; } =
-            from key in Key(NodeAttributeKind.X)
-            from value in Value.WholeNumber
-            select new AST.NodeYAttribute(value) as AST.NodeAttribute;
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodePositionAttribute { get; } =
+            from key in Key(NodeAttributeKind.Pos)
+            from x in Value.WholeNumber
+            from y in Value.WholeNumber
+            select new AST.NodePositionAttribute(new Point(x, y)) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMinWidthAttribute { get; } =
             from key in Key(NodeAttributeKind.MinWidth)
@@ -357,8 +353,7 @@ namespace Thousand.Parse
                 .Or(NodeCornerRadiusAttribute)
                 .Or(NodeColumnAttribute)
                 .Or(NodeRowAttribute)
-                .Or(NodeXAttribute)
-                .Or(NodeYAttribute)
+                .Or(NodePositionAttribute)
                 .Or(NodeMinWidthAttribute)
                 .Or(NodeMinHeightAttribute);
         #endregion

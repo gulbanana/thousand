@@ -229,9 +229,30 @@ namespace Thousand.Compose
                         return Point.Zero;
                     }
 
+                    if (child.Position != null)
+                    {
+                        state.AddError(child.Name, ErrorKind.Layout, "object {0} has both anchor and position", child.Name);
+                        return Point.Zero;
+                    }
+
                     var node = new AnchorLayoutNode(desiredSize, desiredMargin, child.Anchor.Value, child.Alignment.Select(k => k ?? AlignmentKind.Center));
                     layout.AllNodes[child] = node;
                     layout.AnchorNodes[child] = node;
+                    continue;
+                }
+
+                // positioned layout: position at a specified point relative to the parent (which contributes to its size)
+                else if (child.Position != null)
+                {
+                    if (child.Row.HasValue || child.Column.HasValue)
+                    {
+                        state.AddError(child.Name, ErrorKind.Layout, "object {0} has both position and grid row/column", child.Name);
+                        return Point.Zero;
+                    }
+
+                    var node = new PositionLayoutNode(desiredSize, desiredMargin, child.Position);
+                    layout.AllNodes[child] = node;
+                    layout.PositionNodes[child] = node;
                     continue;
                 }
 
@@ -317,15 +338,19 @@ namespace Thousand.Compose
             // calculate own size
             var intrinsicPadding = intrinsicSize == Point.Zero ? new Border(0) : region.Config.Padding;
             var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding.X, intrinsicSize.Y + intrinsicPadding.Y);
-            var regionPadding = rowCount + columnCount == 0 ? new Border(0) : region.Config.Padding;
+            var regionPadding = rowCount + columnCount + layout.PositionNodes.Count == 0 ? new Border(0) : region.Config.Padding;
 
-            var contentWidth = layout.Columns.Sum() + (columnCount - 1) * region.Config.Gutter.Columns + regionPadding.X;
-            var contentHeight = layout.Rows.Sum() + (rowCount - 1) * region.Config.Gutter.Rows + regionPadding.Y;
+            var gridWidth = layout.Columns.Sum() + (columnCount - 1) * region.Config.Gutter.Columns;
+            var gridHeight = layout.Rows.Sum() + (rowCount - 1) * region.Config.Gutter.Rows;
 
-            var regionSize = new Point(contentWidth, contentHeight);
-            var contentSize = new Point(Math.Max(paddedIntrinsicSize.X, regionSize.X), Math.Max(paddedIntrinsicSize.Y, regionSize.Y));
+            var absoluteRects = layout.PositionNodes.Values.Select(pln => new Rect(pln.Origin, pln.Size)).ToList();
+            var absoluteWidth = absoluteRects.Select(r => r.Right).Prepend(0).Max();
+            var absoluteHeight = absoluteRects.Select(r => r.Bottom).Prepend(0).Max();
+
+            var contentSize = new Point(Math.Max(absoluteWidth, gridWidth) + regionPadding.X, Math.Max(absoluteHeight, gridHeight) + regionPadding.Y);
+            var regionSize = new Point(Math.Max(paddedIntrinsicSize.X, contentSize.X), Math.Max(paddedIntrinsicSize.Y, contentSize.Y));
             
-            return contentSize;
+            return regionSize;
         }
 
         // layout objects back-to-front: shape, then intrinsic (text) content, then children
@@ -435,6 +460,9 @@ namespace Thousand.Compose
                         AlignmentKind.Center or AlignmentKind.Stretch => (state.Anchors[aln.Anchor] - node.Size / 2).Y,
                         AlignmentKind.End => state.Anchors[aln.Anchor].Y,
                     }),
+
+                    // place at specific loation
+                    PositionLayoutNode pln => bounds.Origin + pln.Origin + region.Config.Padding.TopLeft,
                     
                     _ => Point.Zero
                 };

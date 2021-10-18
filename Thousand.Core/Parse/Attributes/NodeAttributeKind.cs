@@ -20,7 +20,6 @@
 
         Row,
         Col, Column = Col,
-        X,
-        Y,
+        Position, Pos = Position,
     }
 }
