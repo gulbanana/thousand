@@ -9,9 +9,9 @@ namespace Thousand.LSP
 {
     class SemanticTokensHandler : SemanticTokensHandlerBase
     {
-        private readonly SemanticService semanticService;
+        private readonly AnalysisService semanticService;
 
-        public SemanticTokensHandler(SemanticService semanticService)
+        public SemanticTokensHandler(AnalysisService semanticService)
         {
             this.semanticService = semanticService;
         }
@@ -34,7 +34,7 @@ namespace Thousand.LSP
 
         protected override async Task Tokenize(SemanticTokensBuilder builder, ITextDocumentIdentifierParams identifier, CancellationToken cancellationToken)
         {
-            var document = await semanticService.GetParseAsync(identifier.TextDocument.Uri);
+            var document = await semanticService.GetAnalysisAsync(identifier.TextDocument.Uri);
             if (document.Syntax != null)
             {
                 foreach (var topLevelClass in document.Syntax.Declarations.Where(d => d.Value.IsT2).Select(d => d.Value.AsT2))

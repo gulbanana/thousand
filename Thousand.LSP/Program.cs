@@ -35,7 +35,7 @@ namespace Thousand.LSP
         {
             services.AddSingleton(new ConfigurationItem { Section = "thousand" });
             services.AddSingleton<BufferService>();
-            services.AddSingleton<SemanticService>();
+            services.AddSingleton<AnalysisService>();
             services.AddSingleton<IDiagnosticService, DiagnosticService>();
         }
     }

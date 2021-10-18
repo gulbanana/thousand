@@ -18,10 +18,10 @@ namespace Thousand.LSP
         private readonly ILogger<TextDocumentSyncHandler> logger;
         private readonly ILanguageServerConfiguration configuration;
         private readonly BufferService documentService;
-        private readonly SemanticService semanticService;
+        private readonly AnalysisService semanticService;
         private readonly IDiagnosticService diagnosticService;
 
-        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, BufferService documentService, SemanticService semanticService, IDiagnosticService diagnosticService)
+        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, BufferService documentService, AnalysisService semanticService, IDiagnosticService diagnosticService)
         {
             this.logger = logger;
             this.configuration = configuration;

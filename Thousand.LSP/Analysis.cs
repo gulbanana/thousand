@@ -9,7 +9,7 @@ using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
 namespace Thousand.LSP
 {
-    public class SemanticDocument
+    public class Analysis
     {
         public DocumentUri Uri { get; }
         // XXX add uint version, might help to avoid races
@@ -20,7 +20,7 @@ namespace Thousand.LSP
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
-        public SemanticDocument(DocumentUri uri)
+        public Analysis(DocumentUri uri)
         {
             Uri = uri;
         }

@@ -12,21 +12,21 @@ namespace Thousand.Tests.LSP
     {
         private readonly IDiagnosticService diagnostics;
         private readonly BufferService buffers;
-        private readonly SemanticService semantics;
+        private readonly AnalysisService semantics;
 
         public ErrorToleration()
         {
             diagnostics = new MockDiagnosticService();
             buffers = new BufferService();
-            semantics = new SemanticService(NullLogger<SemanticService>.Instance, buffers, diagnostics);
+            semantics = new AnalysisService(NullLogger<AnalysisService>.Instance, buffers, diagnostics);
         }
 
-        private Task<SemanticDocument> ParseAsync(string source)
+        private Task<Analysis> ParseAsync(string source)
         {
             var key = DocumentUri.From("file://test.1000");
             buffers.Add(key, source);
             semantics.Reparse(key);
-            return semantics.GetParseAsync(key);
+            return semantics.GetAnalysisAsync(key);
         }
 
         [Fact]

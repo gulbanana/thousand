@@ -9,10 +9,10 @@ namespace Thousand.LSP
 {
     class HoverHandler : HoverHandlerBase
     {
-        private readonly SemanticService semanticService;
+        private readonly AnalysisService semanticService;
         private readonly IDiagnosticService diagnosticService;
 
-        public HoverHandler(SemanticService semanticService, IDiagnosticService diagnosticService)
+        public HoverHandler(AnalysisService semanticService, IDiagnosticService diagnosticService)
         {
             this.semanticService = semanticService;
             this.diagnosticService = diagnosticService;
@@ -30,7 +30,7 @@ namespace Thousand.LSP
                 return null;
             }
 
-            var parse = await semanticService.GetParseAsync(request.TextDocument.Uri);
+            var parse = await semanticService.GetAnalysisAsync(request.TextDocument.Uri);
 
             if (parse.FindDeclaration(request.Position) is Macro<AST.TolerantDocumentContent> macro)
             {

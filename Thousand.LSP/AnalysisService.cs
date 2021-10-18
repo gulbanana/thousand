@@ -4,22 +4,23 @@ using Superpower;
 using Superpower.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Thousand.Parse;
 
 namespace Thousand.LSP
 {
-    public class SemanticService
+    public class AnalysisService
     {
-        private readonly Dictionary<DocumentUri, Task<SemanticDocument>> parses = new();
-        private readonly ILogger<SemanticService> logger;
+        private readonly Dictionary<DocumentUri, Task<Analysis>> analyses = new();
+        private readonly ILogger<AnalysisService> logger;
         private readonly BufferService documentService;
         private readonly IDiagnosticService diagnosticService;
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly AST.TypedDocument? stdlib;
 
-        public SemanticService(ILogger<SemanticService> logger, BufferService documentService, IDiagnosticService diagnosticService)
+        public AnalysisService(ILogger<AnalysisService> logger, BufferService documentService, IDiagnosticService diagnosticService)
         {
             this.logger = logger;
             this.documentService = documentService;
@@ -35,15 +36,15 @@ namespace Thousand.LSP
 
         public void Reparse(DocumentUri key)
         {
-            lock (parses)
+            lock (analyses)
             {
-                if (!parses.TryGetValue(key, out var t))
+                if (!analyses.TryGetValue(key, out var t))
                 {
-                    parses[key] = Task.Run(() => Analyse(key));
+                    analyses[key] = Task.Run(() => Analyse(key));
                 }
                 else
                 {
-                    parses[key] = Task.Run(async () =>
+                    analyses[key] = Task.Run(async () =>
                     {
                         await t;
                         return Analyse(key);
@@ -52,25 +53,30 @@ namespace Thousand.LSP
             }
         }
 
-        public Task<SemanticDocument> GetParseAsync(DocumentUri key)
+        public Task<Analysis> GetAnalysisAsync(DocumentUri key)
         {
-            return parses[key];
+            return analyses[key];
         }
 
-        private SemanticDocument Analyse(DocumentUri key)
+        private Analysis Analyse(DocumentUri key)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             var source = documentService.GetText(key); // XXX is this a race condition?
             var state = new GenerationState();
-            var doc = new SemanticDocument(key); 
+            var doc = new Analysis(key); 
             
             AnalysePartial(state, doc, source);
+
+            stopwatch.Stop();
+            logger.LogInformation("Analysed {Uri} in {ElapsedMilliseconds}ms", key, stopwatch.ElapsedMilliseconds);
 
             diagnosticService.Update(key, state);
 
             return doc;
         }
 
-        private void AnalysePartial(GenerationState state, SemanticDocument doc, string source)
+        private void AnalysePartial(GenerationState state, Analysis doc, string source)
         {
             // tokenize the whole document. unlike parsing, this is not line-by-line, so a single
             // ! will result in untypedTokens.Location extending to the end of the document
@@ -128,7 +134,8 @@ namespace Thousand.LSP
 
             doc.ValidSyntax = typedAST;
 
-            // generate as much of the diagram as possible
+            // generate as much of the diagram as possible. according to a crude performance analysis 
+            // on a large diagram, these stages are 10% or less of the analysis cost (~3ms of ~30ms)
             if (stdlib != null)
             { 
                 if (!Evaluate.Evaluator.TryEvaluate(new[] { stdlib, typedAST }, state, out var rules))
