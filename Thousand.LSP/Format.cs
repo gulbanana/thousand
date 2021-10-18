@@ -47,7 +47,7 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.UntypedLine line)
+        public static string Canonicalise(AST.TolerantLine line)
         {
             var builder = new StringBuilder();
 

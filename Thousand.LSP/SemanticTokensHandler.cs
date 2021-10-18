@@ -23,7 +23,7 @@ namespace Thousand.LSP
             Range = true,
             Legend = new ()
             {
-                TokenTypes = new[] { SemanticTokenType.Class }
+                TokenTypes = new[] { SemanticTokenType.Class, SemanticTokenType.EnumMember }
             }
         };
 
@@ -63,6 +63,17 @@ namespace Thousand.LSP
                 builder.Push(call.Span().AsRange(), 0, 0);
             }
 
+            foreach (var attribute in klass.Attributes)
+            {
+                foreach (var token in attribute.Value.Sequence())
+                {
+                    if (token.Kind == Parse.TokenKind.Identifier)
+                    {
+                        builder.Push(token.Span.AsRange(), 1, 0);
+                    }
+                }
+            }
+
             foreach (var nestedClass in klass.Declarations.Where(d => d.Value.IsT2).Select(d => d.Value.AsT2))
             {
                 HighlightClass(builder, nestedClass);
@@ -86,6 +97,17 @@ namespace Thousand.LSP
                 builder.Push(call.Span().AsRange(), 0, 0);
             }
 
+            foreach (var attribute in objekt.Attributes)
+            {
+                foreach (var token in attribute.Sequence().SkipWhile(t => t.Kind != Parse.TokenKind.EqualsSign).Skip(1))
+                {
+                    if (token.Kind == Parse.TokenKind.Identifier)
+                    {
+                        builder.Push(token.Span.AsRange(), 1, 0);
+                    }
+                }
+            }
+
             foreach (var nestedClass in objekt.Declarations.Where(d => d.Value.IsT2).Select(d => d.Value.AsT2))
             {
                 HighlightClass(builder, nestedClass);
@@ -102,11 +124,22 @@ namespace Thousand.LSP
             }
         }
 
-        private static void HighlightLine(SemanticTokensBuilder builder, AST.UntypedLine line)
+        private static void HighlightLine(SemanticTokensBuilder builder, AST.TolerantLine line)
         {
             foreach (var call in line.Classes)
             {
                 builder.Push(call.Span().AsRange(), 0, 0);
+            }
+
+            foreach (var attribute in line.Attributes)
+            {
+                foreach (var token in attribute.Sequence().SkipWhile(t => t.Kind != Parse.TokenKind.EqualsSign).Skip(1))
+                {
+                    if (token.Kind == Parse.TokenKind.Identifier)
+                    {
+                        builder.Push(token.Span.AsRange(), 1, 0);
+                    }
+                }
             }
         }
     }

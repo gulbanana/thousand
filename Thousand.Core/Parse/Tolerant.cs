@@ -89,7 +89,7 @@ namespace Thousand.Parse
                         var arrow = identifier.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
-                            return Untyped.Line.Select(x => (AST.TolerantObjectContent)x)(input);
+                            return Ref(() => Line!).Select(x => (AST.TolerantObjectContent)x)(input);
                         }
                         else
                         {
@@ -111,9 +111,18 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TolerantObject> Object { get; } =
             from classes in Untyped.ClassCallList
             from name in Shared.Target.AsNullable().OptionalOrDefault()
-            from attrs in Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from attrs in Shared.List(Macro.Of(Shared.ObjectAttribute)).OptionalOrDefault(Array.Empty<Macro<AST.ObjectAttribute>>())
             from children in Shared.Scope(Macro.Of(ObjectContent)).OptionalOrDefault(Array.Empty<Macro<AST.TolerantObjectContent>>())
             select new AST.TolerantObject(classes, name, attrs, children);
+
+        /*************************************************************************
+         * Lines, which only differ from their main variant by adding token info *
+         *************************************************************************/
+        public static TokenListParser<TokenKind, AST.TolerantLine> Line { get; } =
+            from calls in Untyped.ClassCallList
+            from chain in Shared.Edges
+            from attrs in Shared.List(Macro.Of(Shared.SegmentAttribute)).OptionalOrDefault(Array.Empty<Macro<AST.SegmentAttribute>>())
+            select new AST.TolerantLine(calls, chain.ToArray(), attrs);
 
         /**************************************************************
          * Documents, which contain top-level declarations and errors *
@@ -152,7 +161,7 @@ namespace Thousand.Parse
                         var arrow = identifier.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
-                            return Untyped.Line.Select(x => (AST.TolerantDocumentContent)x)(input);
+                            return Line.Select(x => (AST.TolerantDocumentContent)x)(input);
                         }
                         else
                         {

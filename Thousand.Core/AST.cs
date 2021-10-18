@@ -141,22 +141,30 @@ namespace Thousand.AST
         }
     }
 
-    [GenerateOneOf] public partial class TolerantObjectContent : OneOfBase<InvalidDeclaration, ObjectAttribute, TolerantClass, TolerantObject, UntypedLine> { }
-    public record TolerantObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
+    [GenerateOneOf] public partial class TolerantObjectContent : OneOfBase<InvalidDeclaration, ObjectAttribute, TolerantClass, TolerantObject, TolerantLine> { }
+    public record TolerantObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, Parse.Macro<ObjectAttribute>[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
     {
         public UntypedObject WithoutErrors()
         {
-            return new UntypedObject(Classes, Name, Attributes, Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedObjectContent>(
+            return new UntypedObject(Classes, Name, Attributes.Select(a => a.Value).ToArray(), Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedObjectContent>(
                 _ => throw new Exception(),
                 _ => d.Value.AsT1,
                 _ => d.Value.AsT2.WithoutErrors(),
                 _ => d.Value.AsT3.WithoutErrors(),
-                _ => d.Value.AsT4
+                _ => d.Value.AsT4.WithoutErrors()
             )).ToArray());
         }
     }
 
-    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, TolerantClass, TolerantObject, UntypedLine> { }
+    public record TolerantLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, Parse.Macro<SegmentAttribute>[] Attributes)
+    {
+        public UntypedLine WithoutErrors()
+        {
+            return new UntypedLine(Classes, Segments, Attributes.Select(a => a.Value).ToArray());
+        }
+    }
+
+    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, DiagramAttribute, TolerantClass, TolerantObject, TolerantLine> { }
     public record TolerantDocument(Parse.Macro<TolerantDocumentContent>[] Declarations)
     {
         public UntypedDocument WithoutErrors()
@@ -166,7 +174,7 @@ namespace Thousand.AST
                 _ => d.Value.AsT1,
                 _ => d.Select(v => v.AsT2.WithoutErrors()),
                 _ => d.Value.AsT3.WithoutErrors(),
-                _ => d.Value.AsT4
+                _ => d.Value.AsT4.WithoutErrors()
             )).ToArray());
         }
     }
