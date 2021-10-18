@@ -10,7 +10,7 @@ namespace Thousand.Tests.LSP
 
         public bool HasDiagnostics(DocumentUri uri, Position position) => false;
         public void Track(DocumentUri uri) { }
-        public void Update(DocumentUri uri, GenerationState state) => LastState = state;
         public void Untrack(DocumentUri uri) { }
+        public void Update(DocumentUri uri, GenerationState state) => LastState = state;
     }
 }

@@ -17,14 +17,16 @@ namespace Thousand.LSP
         private readonly ILogger<AnalysisService> logger;
         private readonly BufferService documentService;
         private readonly IDiagnosticService diagnosticService;
+        private readonly IGenerationService generationService;
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly AST.TypedDocument? stdlib;
 
-        public AnalysisService(ILogger<AnalysisService> logger, BufferService documentService, IDiagnosticService diagnosticService)
+        public AnalysisService(ILogger<AnalysisService> logger, BufferService documentService, IDiagnosticService diagnosticService, IGenerationService generationService)
         {
             this.logger = logger;
             this.documentService = documentService;
             this.diagnosticService = diagnosticService;
+            this.generationService = generationService;
             this.tokenizer = Tokenizer.Build();
 
             var stdlibState = new GenerationState();
@@ -72,6 +74,11 @@ namespace Thousand.LSP
             logger.LogInformation("Analysed {Uri} in {ElapsedMilliseconds}ms", key, stopwatch.ElapsedMilliseconds);
 
             diagnosticService.Update(key, state);
+
+            if (doc.Diagram != null)
+            {
+                generationService.Update(key, doc.Diagram);
+            }
 
             return doc;
         }

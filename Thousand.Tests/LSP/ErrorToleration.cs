@@ -18,7 +18,7 @@ namespace Thousand.Tests.LSP
         {
             diagnostics = new MockDiagnosticService();
             buffers = new BufferService();
-            semantics = new AnalysisService(NullLogger<AnalysisService>.Instance, buffers, diagnostics);
+            semantics = new AnalysisService(NullLogger<AnalysisService>.Instance, buffers, diagnostics, new MockGenerationService());
         }
 
         private Task<Analysis> ParseAsync(string source)

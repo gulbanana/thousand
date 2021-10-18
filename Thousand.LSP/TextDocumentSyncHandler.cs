@@ -7,7 +7,6 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,14 +19,16 @@ namespace Thousand.LSP
         private readonly BufferService documentService;
         private readonly AnalysisService semanticService;
         private readonly IDiagnosticService diagnosticService;
+        private readonly IGenerationService generationService;
 
-        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, BufferService documentService, AnalysisService semanticService, IDiagnosticService diagnosticService)
+        public TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> logger, ILanguageServerConfiguration configuration, BufferService documentService, AnalysisService semanticService, IDiagnosticService diagnosticService, IGenerationService generationService)
         {
             this.logger = logger;
             this.configuration = configuration;
             this.documentService = documentService;
             this.semanticService = semanticService;
             this.diagnosticService = diagnosticService;
+            this.generationService = generationService;
         }
 
         protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities) => new()
@@ -46,6 +47,7 @@ namespace Thousand.LSP
             config.GetSection("thousand").GetSection("server").Bind(options);
 
             documentService.Add(request.TextDocument.Uri, request.TextDocument.Text);
+            if (options.PreviewDiagrams) generationService.Track(request.TextDocument.Uri);
             diagnosticService.Track(request.TextDocument.Uri);
             semanticService.Reparse(request.TextDocument.Uri);
 
@@ -59,6 +61,7 @@ namespace Thousand.LSP
                 disposable.Dispose();
             }
 
+            generationService.Untrack(request.TextDocument.Uri);
             diagnosticService.Untrack(request.TextDocument.Uri);
             documentService.Remove(request.TextDocument.Uri);            
 

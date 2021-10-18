@@ -28,6 +28,11 @@ namespace Thousand.LSP
             current.Add(uri, new List<Diagnostic>());
         }
 
+        public void Untrack(DocumentUri uri)
+        {
+            current.Remove(uri);
+        }
+
         public void Update(DocumentUri uri, GenerationState state)
         {
             if (!current.ContainsKey(uri))
@@ -71,11 +76,6 @@ namespace Thousand.LSP
                 Uri = uri,
                 Diagnostics = all
             });
-        }
-
-        public void Untrack(DocumentUri uri)
-        {
-            current.Remove(uri);
         }
     }
 }

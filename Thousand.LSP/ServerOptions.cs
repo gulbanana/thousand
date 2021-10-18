@@ -2,6 +2,6 @@
 {
     class ServerOptions
     {
-        public string Dummy { get; set; } = "foo";
+        public bool PreviewDiagrams { get; set; }
     }
 }
