@@ -12,10 +12,12 @@ TO DO
 * feature: drop shadows (object/line, though different)
 * feature: customisable arrowheads
 * feature: track-span (maybe)
+* feature: -bottom/-top/etc for 4-way attributes
 * extension: download the language server automatically instead of requiring people to dotnet tool install --global Thousand.LSP
 * website: fix monaco errors failing to clear
 * website: docs - generated for attrs? or just handwrite it all?
 * website: web components lib (e.g. make it easy to do a lot of previews in the docs)
+* website: attempt wasm. this does make font support an issue, and might require the latest skia, but it seems possible
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
