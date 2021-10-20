@@ -50,7 +50,7 @@ namespace Thousand.Evaluate
 
             rootFont = new Font();
             Scale = 1m;
-            Config = new IR.Config(Colour.White, FlowKind.Columns, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
+            Config = new IR.Config(Colour.White, FlowKind.Auto, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.TypedDocument diagram)
@@ -144,7 +144,7 @@ namespace Thousand.Evaluate
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, Scope scope)
         {
-            var regionConfig = new IR.Config(null, FlowKind.Columns, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
+            var regionConfig = new IR.Config(null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
             var label = new Text(node.Name?.Text); // names are a separate thing, but if a node has one, it is also the default label
             var justifyText = AlignmentKind.Center;

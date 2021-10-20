@@ -259,8 +259,21 @@ namespace Thousand.Compose
                 // default (grid) layout: place object in row/column tracks according to flow
                 else
                 {
+                    var flow = region.Config.GridFlow;
+                    if (flow is FlowKind.Auto)
+                    {
+                        if (region.Objects.Any(o => o.Region.Config.GridFlow is FlowKind.Columns or FlowKind.ReverseColumns) && !region.Objects.Any(o => o.Region.Config.GridFlow is FlowKind.Rows or FlowKind.ReverseRows))
+                        {
+                            flow = FlowKind.Rows;
+                        }
+                        else
+                        {
+                            flow = FlowKind.Columns;
+                        }
+                    }
+
                     // grid-march: reset to manually specified cell
-                    if (region.Config.GridFlow == FlowKind.Columns)
+                    if (flow == FlowKind.Columns)
                     {
                         if (child.Row.HasValue && currentRow != child.Row.Value)
                         {
@@ -269,7 +282,7 @@ namespace Thousand.Compose
                         }
                         currentColumn = child.Column ?? currentColumn;
                     }
-                    else if (region.Config.GridFlow == FlowKind.Rows)
+                    else if (flow == FlowKind.Rows)
                     {
                         if (child.Column.HasValue && currentColumn != child.Column.Value)
                         {
@@ -287,7 +300,7 @@ namespace Thousand.Compose
                     rowCount = Math.Max(currentRow, rowCount);
                     columnCount = Math.Max(currentColumn, columnCount);
 
-                    if (region.Config.GridFlow == FlowKind.Columns)
+                    if (flow == FlowKind.Columns)
                     {
                         currentColumn++;
                         if (region.Config.GridMax != 0 && currentColumn > region.Config.GridMax)
@@ -296,7 +309,7 @@ namespace Thousand.Compose
                             currentColumn = 1;
                         }
                     }
-                    else if (region.Config.GridFlow == FlowKind.Rows)
+                    else if (flow == FlowKind.Rows)
                     {
                         currentRow++;
                         if (region.Config.GridMax != 0 && currentRow > region.Config.GridMax)
