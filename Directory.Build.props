@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.3.2</Version>
+    <Version>0.3.3</Version>
     <Authors>Thomas Castiglione</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://thousandwords.azurewebsites.net</PackageProjectUrl>
