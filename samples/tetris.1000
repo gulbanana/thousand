@@ -1,44 +1,44 @@
-fill=#ddd
-
 class block [shape=square, min-width=48, padding=4, margin=1] {
     object [shape=square, min-width=40, stroke=#444]
 }
 
 // tetrominoes
-class t1 [fill=#00f0f0] // the line
-class t1a:group [grid=4 columns] { block.t1; block.t1; block.t1; block.t1 }
-class t1b:group [grid=4 rows] { block.t1; block.t1; block.t1; block.t1 }
+class I [fill=#00f0f0]
+class I0:group [grid=4 columns] { block.i; block.i; block.i; block.i }
+class I90:group [grid=4 rows] { block.i; block.i; block.i; block.i }
 
-class t2 [fill=#0000f0] // the backwards L
-class t2a:group [grid=3 columns] { block.t2; block.t2 [row=2]; block.t2; block.t2}
-class t2b:group [grid=3 rows] { block.t2; block.t2; block.t2; block.t2 }
+class O [fill=#f0f000]
+class O0:group [grid=2 columns] {block.o; block.o; block.o; block.o}
 
-class t3 [fill=#f0a000] // the forwards L
-class t3a:group [grid=3 columns] { block.t3 [col=3]; block.t3 ; block.t3; block.t3}
+class T [fill=#a000f0]
+class T180:group [grid=3 columns] { block.t [col=2]; block.t [row=2]; block.t; block.t }
+class T90:group [grid=3 rows] { block.t; block.t; block.t; block.t [row=2] }
 
-class t4 [fill=#f0f000] // the square
-class t4a:group [grid=2 columns] {block.t4; block.t4; block.t4; block.t4}
+class J [fill=#0000f0]
+class J90:group [grid=3 columns] { block.j; block.j [row=2]; block.j; block.j}
+class J180:group [grid=3 rows] { block.j; block.j; block.j; block.j }
 
-class t5 [fill=#00f000]
-class t5a:group [grid=3 columns] { block.t5 [col=2]; block.t5; block.t5; block.t5 }
-class t5b:group [grid=3 rows] { block.t5; block.t5; block.t5 [row=2,col=2]; block.t5 }
+class L [fill=#f0a000]
+class L270:group [grid=3 columns] { block.l [col=3]; block.l ; block.l; block.l}
 
-class t6 [fill=#a000f0]
-class t6a:group [grid=3 columns] { block.t6 [col=2]; block.t6 [row=2]; block.t6; block.t6 }
-class t6b:group [grid=3 rows] { block.t6; block.t6; block.t6; block.t6 [row=2] }
+class S [fill=#00f000]
+class S0:group [grid=3 columns] { block.s [col=2]; block.s; block.s; block.s }
+class S90:group [grid=3 rows] { block.s; block.s; block.s [row=2,col=2]; block.s }
 
-class t7 [fill=#f00000]
-class t7a : group [grid=3 columns] { block.t7; block.t7; block.t7 [row=2,col=2]; block.t7 }
+class Z [fill=#f00000]
+class Z0 : group [grid=3 columns] { block.z; block.z; block.z [row=2,col=2]; block.z }
 
 // a game in progress
-t1a [pos=0 950]
-t2a [pos=200 900]
-t1b [pos=450 800]
-t3a [pos=50 850]
-t4a [pos=350 900]
-t5a [pos=250 850]
-t6b [pos=0 800]
-t7a [pos=150 800]
-t6a [pos=250 750]
-t2b [pos=100 750]
-t5b [pos=150 250]
+fill=#ddd
+
+i0 [pos=0 950]
+j90 [pos=200 900]
+i90 [pos=450 800]
+l270 [pos=50 850]
+o0 [pos=350 900]
+s0 [pos=250 850]
+t180 [pos=0 800]
+z0 [pos=150 800]
+t90 [pos=250 750]
+j180 [pos=100 750]
+s90 [pos=150 250]
