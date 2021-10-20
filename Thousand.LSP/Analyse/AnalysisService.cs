@@ -46,11 +46,18 @@ namespace Thousand.LSP.Analyse
                 }
                 else
                 {
-                    analyses[key] = Task.Run(async () =>
+                    if (t.IsCompleted)
                     {
-                        await t;
-                        return Analyse(key);
-                    });
+                        analyses[key] = Task.Run(() => Analyse(key));
+                    }
+                    else
+                    {
+                        analyses[key] = Task.Run(async () =>
+                        {
+                            await t;
+                            return Analyse(key);
+                        });
+                    }
                 }
             }
         }
@@ -66,9 +73,16 @@ namespace Thousand.LSP.Analyse
 
             var source = documentService.GetText(key); // XXX is this a race condition?
             var state = new GenerationState();
-            var doc = new Analysis(key); 
-            
-            AnalyseSyntax(doc, state, source);
+            var doc = new Analysis(key);
+
+            try
+            {
+                AnalyseSyntax(doc, state, source);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+            }
 
             stopwatch.Stop();
             logger.LogInformation("Analysed {Uri} in {ElapsedMilliseconds}ms", key, stopwatch.ElapsedMilliseconds);
@@ -80,7 +94,14 @@ namespace Thousand.LSP.Analyse
                 generationService.Update(key, doc.Diagram);
             }
 
-            AnalyseSemantics(doc);
+            try
+            {
+                AnalyseSemantics(doc);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+            }            
 
             return doc;
         }
