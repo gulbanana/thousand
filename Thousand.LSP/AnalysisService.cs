@@ -68,7 +68,7 @@ namespace Thousand.LSP
             var state = new GenerationState();
             var doc = new Analysis(key); 
             
-            AnalysePartial(state, doc, source);
+            AnalyseSyntax(doc, state, source);
 
             stopwatch.Stop();
             logger.LogInformation("Analysed {Uri} in {ElapsedMilliseconds}ms", key, stopwatch.ElapsedMilliseconds);
@@ -80,10 +80,12 @@ namespace Thousand.LSP
                 generationService.Update(key, doc.Diagram);
             }
 
+            AnalyseSemantics(doc);
+
             return doc;
         }
 
-        private void AnalysePartial(GenerationState state, Analysis doc, string source)
+        private void AnalyseSyntax(Analysis doc, GenerationState state, string source)
         {
             // tokenize the whole document. unlike parsing, this is not line-by-line, so a single
             // ! will result in untypedTokens.Location extending to the end of the document
@@ -247,6 +249,131 @@ namespace Thousand.LSP
                     {
                         yield return splice;
                     }
+                }
+            }
+        }
+
+        private void AnalyseSemantics(Analysis doc)
+        {
+            if (doc.Syntax != null)
+            {
+                WalkDocument(doc, doc.Syntax);
+            }
+        }
+
+        private void WalkDocument(Analysis doc, AST.TolerantDocument ast)
+        {
+            var root = new AnalysisScope();
+
+            foreach (var dec in ast.Declarations)
+            {
+                dec.Value.Switch(invalid => { }, asAttribute =>
+                {
+                    
+                }, asClass =>
+                {
+                    WalkClass(doc, root, asClass);
+                    root.Pop(asClass);
+                }, asObject =>
+                {
+                    WalkObject(doc, root, asObject);
+                    root.Pop(asObject);
+                }, asLine =>
+                {
+                    WalkLine(doc, root, asLine);
+                });
+            }
+        }
+
+        private void WalkClass(Analysis doc, AnalysisScope scope, AST.TolerantClass ast)
+        {
+            if (ast.Name != null)
+            {
+                doc.ClassReferences.Add((ast.Name.Span, ast));
+            }
+
+            foreach (var callMacro in ast.BaseClasses)
+            {
+                if (scope.FindClass(callMacro.Value.Name) is AST.TolerantClass objekt)
+                {
+                    doc.ClassReferences.Add((callMacro.Span(), objekt));
+                }
+            }
+
+            var contents = scope.Push();
+
+            foreach (var dec in ast.Declarations)
+            {
+                dec.Value.Switch(invalid => { }, asAttribute =>
+                {
+
+                }, asClass =>
+                {
+                    WalkClass(doc, contents, asClass);
+                    contents.Pop(asClass);
+                }, asObject =>
+                {
+                    WalkObject(doc, contents, asObject);
+                    contents.Pop(asObject);
+                }, asLine =>
+                {
+                    WalkLine(doc, contents, asLine);
+                });
+            }
+        }
+
+        private void WalkObject(Analysis doc, AnalysisScope scope, AST.TolerantObject ast)
+        {
+            if (ast.Name != null)
+            {
+                doc.ObjectReferences.Add((ast.Name.Span, ast));
+            }
+
+            foreach (var callMacro in ast.Classes)
+            {
+                if (scope.FindClass(callMacro.Value.Name) is AST.TolerantClass objekt)
+                {
+                    doc.ClassReferences.Add((callMacro.Span(), objekt));
+                }
+            }
+
+            var contents = scope.Push();
+
+            foreach (var dec in ast.Declarations)
+            {
+                dec.Value.Switch(invalid => { }, asAttribute =>
+                {
+
+                }, asClass =>
+                {
+                    WalkClass(doc, contents, asClass);
+                    contents.Pop(asClass);
+                }, asObject =>
+                {
+                    WalkObject(doc, contents, asObject);
+                    contents.Pop(asObject);
+                }, asLine =>
+                {
+                    WalkLine(doc, contents, asLine);
+                });
+            }
+        }
+
+        private void WalkLine(Analysis doc, AnalysisScope  scope, AST.TolerantLine ast)
+        {
+            foreach (var segment in ast.Segments)
+            {
+                if (scope.FindObject(segment.Target) is AST.TolerantObject objekt)
+                {
+                    doc.ObjectReferences.Add((segment.Target.Span, objekt));
+                }               
+            }
+
+            foreach (var callMacro in ast.Classes)
+            {
+                if (scope.FindClass(callMacro.Value.Name) is AST.TolerantClass objekt)
+                {
+                    doc.ClassReferences.Add((callMacro.Span(), objekt));
                 }
             }
         }

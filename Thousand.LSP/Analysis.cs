@@ -1,9 +1,10 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using Thousand.AST;
 using Thousand.Layout;
+using TextSpan = Superpower.Model.TextSpan;
 using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
 using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
@@ -19,6 +20,9 @@ namespace Thousand.LSP
         public TypedDocument? ValidSyntax { get; set; }
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
+
+        public List<(TextSpan, TolerantClass)> ClassReferences { get; } = new();
+        public List<(TextSpan, TolerantObject)> ObjectReferences { get; } = new();
 
         public Analysis(DocumentUri uri)
         {
@@ -52,7 +56,7 @@ namespace Thousand.LSP
             if (FindToken(position) is not Token token) return null;
 
             return Syntax.Declarations.Where(d => !d.Value.IsT0 && d.Sequence().Contains(token)).Select(d => d.Value.Match(
-                _ => throw new Exception(),
+                _ => throw new System.NotSupportedException(),
                 _ => d.Select(v => (TolerantDocumentContent)v.AsT1),
                 _ => d.Select(v => (TolerantDocumentContent)v.AsT2),
                 _ => d.Select(v => (TolerantDocumentContent)v.AsT3),

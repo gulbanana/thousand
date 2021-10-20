@@ -27,38 +27,44 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.TolerantObject objekt)
+        public static string Canonicalise(AST.TolerantObject ast)
         {
             var builder = new StringBuilder();
 
-            builder.Append(Canonicalise(objekt.Classes.First().Value));
-            foreach (var call in objekt.Classes.Skip(1))
+            builder.Append(Canonicalise(ast.Classes.First().Value));
+            foreach (var call in ast.Classes.Skip(1))
             {
                 builder.Append('.');
                 builder.Append(Canonicalise(call.Value));
             }
 
-            if (objekt.Name != null)
+            if (ast.Name != null)
             {
                 builder.Append(' ');
-                builder.Append(Target(objekt.Name));
+                builder.Append(Target(ast.Name));
+            }
+
+            if (ast.Attributes.Any())
+            {
+                builder.Append(' ');
+                builder.Append(Attributes(ast.Attributes));
             }
 
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.TolerantLine line)
+        public static string Canonicalise(AST.TolerantLine ast)
         {
             var builder = new StringBuilder();
 
-            builder.Append(Canonicalise(line.Classes.First().Value));
-            foreach (var call in line.Classes.Skip(1))
+            builder.Append(Canonicalise(ast.Classes.First().Value));
+            foreach (var call in ast.Classes.Skip(1))
             {
                 builder.Append('.');
                 builder.Append(Canonicalise(call.Value));
             }
 
-            foreach (var segment in line.Segments)
+            foreach (var segment in ast.Segments)
             {
                 builder.Append(' ');
                 builder.Append(Target(segment.Target));
@@ -76,21 +82,28 @@ namespace Thousand.LSP
                 }
             }
 
+            if (ast.Attributes.Any())
+            {
+                builder.Append(' ');
+                builder.Append(Attributes(ast.Attributes));
+            }
+
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.TolerantClass klass)
+        public static string Canonicalise(AST.TolerantClass ast)
         {
             var builder = new StringBuilder();
 
             builder.Append("class ");
-            builder.Append(klass.Name.Text);
+            builder.Append(ast.Name.Text);
 
-            if (klass.Arguments.Value.Any())
+            if (ast.Arguments.Value.Any())
             {
-                builder.Append("($");
-                builder.Append(klass.Arguments.Value.First().Name.Text);
-                foreach (var arg in klass.Arguments.Value.Skip(1))
+                builder.Append('(');
+                builder.Append('$');
+                builder.Append(ast.Arguments.Value.First().Name.Text);
+                foreach (var arg in ast.Arguments.Value.Skip(1))
                 {
                     builder.Append(", $");
                     builder.Append(arg.Name.Text);
@@ -98,15 +111,21 @@ namespace Thousand.LSP
                 builder.Append(')');
             }
 
-            if (klass.BaseClasses.Any())
+            if (ast.BaseClasses.Any())
             {
                 builder.Append(" : ");
-                builder.Append(Canonicalise(klass.BaseClasses.First().Value));
-                foreach (var call in klass.BaseClasses.Skip(1))
+                builder.Append(Canonicalise(ast.BaseClasses.First().Value));
+                foreach (var call in ast.BaseClasses.Skip(1))
                 {
                     builder.Append('.');
                     builder.Append(Canonicalise(call.Value));
                 }
+            }
+
+            if (ast.Attributes.Any())
+            {
+                builder.Append(' ');
+                builder.Append(Attributes(ast.Attributes));
             }
 
             return builder.ToString();
@@ -129,6 +148,56 @@ namespace Thousand.LSP
                 }
                 builder.Append(")");
             }
+
+            return builder.ToString();
+        }
+
+        public static string Attributes(Macro[] list)
+        {
+            var builder = new StringBuilder();
+
+            builder.Append('[');
+
+            var firstAttr = Untyped.UntypedAttribute(list.First().Location).Value;
+            builder.Append(firstAttr.Key.Text);
+            builder.Append('=');
+            builder.Append(firstAttr.Value.Span().ToStringValue());
+            
+            foreach (var macro in list.Skip(1))
+            {
+                var attr = Untyped.UntypedAttribute(macro.Location).Value;
+                builder.Append(' ');
+                builder.Append(attr.Key.Text);
+                builder.Append('=');
+                builder.Append(attr.Value.Span().ToStringValue());
+            }
+
+            builder.Append(']');
+
+            return builder.ToString();
+        }
+
+        public static string Attributes(AST.UntypedAttribute[] list)
+        {
+            var builder = new StringBuilder();
+
+            builder.Append('[');
+
+            var firstAttr = list.First();
+            builder.Append(firstAttr.Key.Text);
+            builder.Append('=');
+            builder.Append(firstAttr.Value.Span().ToStringValue());
+
+            foreach (var attr in list.Skip(1))
+            {
+                builder.Append(',');
+                builder.Append(' ');
+                builder.Append(attr.Key.Text);
+                builder.Append('=');
+                builder.Append(attr.Value.Span().ToStringValue());
+            }
+
+            builder.Append(']');
 
             return builder.ToString();
         }

@@ -30,37 +30,33 @@ namespace Thousand.LSP
                 return null;
             }
 
-            var parse = await semanticService.GetAnalysisAsync(request.TextDocument.Uri);
+            var analysis = await semanticService.GetAnalysisAsync(request.TextDocument.Uri);
 
-            if (parse.FindDeclaration(request.Position) is Macro<AST.TolerantDocumentContent> macro)
+            foreach (var (loc, ast) in analysis.ObjectReferences)
             {
-                if (macro.Value.IsT2)
+                var r = loc.AsRange();
+                if (r.Contains(request.Position))
                 {
-                    var tooltip = Format.Canonicalise(macro.Value.AsT2);
+                    var tooltip = Format.Canonicalise(ast);
 
                     return new Hover
                     {
-                        Range = macro.Span().AsRange(),
+                        Range = r,
                         Contents = Format.CodeBlock(tooltip)
                     };
                 }
-                else if (macro.Value.IsT3)
+            }
+
+            foreach (var (loc, ast) in analysis.ClassReferences)
+            {
+                var r = loc.AsRange();
+                if (r.Contains(request.Position))
                 {
-                    var tooltip = Format.Canonicalise(macro.Value.AsT3);
+                    var tooltip = Format.Canonicalise(ast);
 
                     return new Hover
                     {
-                        Range = macro.Span().AsRange(),
-                        Contents = Format.CodeBlock(tooltip)
-                    };
-                }
-                else if (macro.Value.IsT4)
-                {
-                    var tooltip = Format.Canonicalise(macro.Value.AsT4);
-
-                    return new Hover
-                    {
-                        Range = macro.Span().AsRange(),
+                        Range = r,
                         Contents = Format.CodeBlock(tooltip)
                     };
                 }
