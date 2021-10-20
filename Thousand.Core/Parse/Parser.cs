@@ -144,21 +144,7 @@ namespace Thousand.Parse
                 ResolveLine(l);
             }
 
-            foreach (var c in templates.Values)
-            {
-                var replacements = new List<Token>();
-
-                replacements.AddRange(c.Sequence());
-                replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
-
-                foreach (var instantiation in instantiations[(c.Value.Name.Text, c.Value.Arity)])
-                {
-                    replacements.AddRange(instantiation);
-                    replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
-                }
-
-                splices.Add(new(c.Range(), replacements.ToArray()));
-            }
+            GenerateInstantiations();
 
             foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
             {
@@ -182,21 +168,7 @@ namespace Thousand.Parse
                 ResolveClass(cl.Value);
             }
 
-            foreach (var c in templates.Values)
-            {
-                var replacements = new List<Token>();
-
-                replacements.AddRange(c.Sequence());
-                replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
-
-                foreach (var instantiation in instantiations[(c.Value.Name.Text, c.Value.Arity)])
-                {
-                    replacements.AddRange(instantiation);
-                    replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
-                }
-
-                splices.Add(new(c.Range(), replacements.ToArray()));
-            }
+            GenerateInstantiations();
 
             foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
             {
@@ -214,14 +186,9 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
-            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1 && !d.AsT1.Value.Arguments.Value.Any()).Select(d => (Macro<AST.UntypedClass>)d))
+            foreach (var cg in templates.Values.GroupBy(c => c.Range()))
             {
-                ResolveClass(c.Value);
-            }
-
-            foreach (var c in templates.Values)
-            {
-                splices.Add(new(c.Range(), Array.Empty<Token>()));
+                splices.Add(new(cg.Key, Array.Empty<Token>()));
             }
 
             foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
@@ -279,9 +246,8 @@ namespace Thousand.Parse
                 for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
                 {
                     templates.Add((klass.Name.Text, arity), macro);
+                    instantiations.Add((klass.Name.Text, arity), new List<Token[]>());
                 }
-
-                instantiations.Add((klass.Name.Text, klass.Arity), new List<Token[]>());
             }
 
             return true;
@@ -348,7 +314,7 @@ namespace Thousand.Parse
                 var substitutions = suppliedArguments.Concat(defaultArguments)
                     .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
-                var uniqueString = $"{klass.Name.Text}-{klass.Arity}-{p}-{instantiations[(klass.Name.Text, klass.Arity)].Count + 1}";
+                var uniqueString = $"{klass.Name.Text}-a{call.Arguments.Length}-p{p}-{instantiations[(klass.Name.Text, call.Arguments.Length)].Count + 1}";
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
@@ -360,7 +326,7 @@ namespace Thousand.Parse
                 splices.Add(new(callMacro.Range(), uniqueName));
 
                 var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
-                instantiations[(klass.Name.Text, klass.Arity)].Add(instantiation);
+                instantiations[(klass.Name.Text, call.Arguments.Length)].Add(instantiation);
             }
         }
 
@@ -462,6 +428,24 @@ namespace Thousand.Parse
             }
 
             return template.ToArray();
+        }
+
+        private void GenerateInstantiations()
+        {
+            foreach (var kvpg in templates.GroupBy(kvp => kvp.Value.Range()))
+            {
+                var replacements = new List<Token>();
+                replacements.AddRange(kvpg.First().Value.Sequence());
+                foreach (var kvp in kvpg)
+                {
+                    foreach (var instantiation in instantiations[kvp.Key])
+                    {
+                        replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
+                        replacements.AddRange(instantiation);
+                    }
+                }
+                splices.Add(new(kvpg.Key, replacements.ToArray()));
+            }
         }
     }
 }

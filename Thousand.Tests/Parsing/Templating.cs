@@ -221,5 +221,19 @@ foo("""")
 
             Assert.NotNull(objekt);
         }
+
+        [Fact]
+        public void InstantiateTemplateWithDefaults()
+        {
+            var source = @"
+class foo($x=100) [min-width=$x]
+foo bar
+";
+            Assert.True(Parser.TryParse(source, state, out var ast), state.JoinErrors());
+
+            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+
+            Assert.Contains(new AST.NodeMinWidthAttribute(100), klass.Attributes);
+        }
     }
 }
