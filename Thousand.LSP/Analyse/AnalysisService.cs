@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Thousand.Parse;
 
-namespace Thousand.LSP
+namespace Thousand.LSP.Analyse
 {
     public class AnalysisService
     {
@@ -289,15 +289,17 @@ namespace Thousand.LSP
         {
             if (ast.Name != null)
             {
-                doc.ClassReferences.Add((ast.Name.Span, ast));
+                doc.ClassReferences.Add(new(ast.Name, ast));
             }
 
             foreach (var callMacro in ast.BaseClasses)
             {
-                if (scope.FindClass(callMacro.Value.Name) is AST.TolerantClass objekt)
-                {
-                    doc.ClassReferences.Add((callMacro.Span(), objekt));
-                }
+                doc.ClassReferences.Add(new(callMacro, scope.FindClass(callMacro.Value.Name)));
+            }
+
+            foreach (var attribute in ast.Attributes)
+            {
+                doc.Attributes.Add(attribute);
             }
 
             var contents = scope.Push();
@@ -306,7 +308,7 @@ namespace Thousand.LSP
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-
+                    doc.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
                     WalkClass(doc, contents, asClass);
@@ -326,15 +328,17 @@ namespace Thousand.LSP
         {
             if (ast.Name != null)
             {
-                doc.ObjectReferences.Add((ast.Name.Span, ast));
+                doc.ObjectReferences.Add(new(ast.Name, ast));
             }
 
             foreach (var callMacro in ast.Classes)
             {
-                if (scope.FindClass(callMacro.Value.Name) is AST.TolerantClass objekt)
-                {
-                    doc.ClassReferences.Add((callMacro.Span(), objekt));
-                }
+                doc.ClassReferences.Add(new(callMacro, scope.FindClass(callMacro.Value.Name)));
+            }
+
+            foreach (var attribute in ast.Attributes)
+            {
+                doc.Attributes.Add(attribute);
             }
 
             var contents = scope.Push();
@@ -343,7 +347,7 @@ namespace Thousand.LSP
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-
+                    doc.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
                     WalkClass(doc, contents, asClass);
@@ -361,20 +365,22 @@ namespace Thousand.LSP
 
         private void WalkLine(Analysis doc, AnalysisScope  scope, AST.TolerantLine ast)
         {
+            foreach (var attribute in ast.Attributes)
+            {
+                doc.Attributes.Add(attribute);
+            }
+
             foreach (var segment in ast.Segments)
             {
                 if (scope.FindObject(segment.Target) is AST.TolerantObject objekt)
                 {
-                    doc.ObjectReferences.Add((segment.Target.Span, objekt));
+                    doc.ObjectReferences.Add(new(segment.Target, objekt));
                 }               
             }
 
             foreach (var callMacro in ast.Classes)
             {
-                if (scope.FindClass(callMacro.Value.Name) is AST.TolerantClass objekt)
-                {
-                    doc.ClassReferences.Add((callMacro.Span(), objekt));
-                }
+                doc.ClassReferences.Add(new(callMacro, scope.FindClass(callMacro.Value.Name)));
             }
         }
     }

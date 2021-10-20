@@ -3,6 +3,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol;
 using System.Linq;
 using System.Threading.Tasks;
 using Thousand.LSP;
+using Thousand.LSP.Analyse;
 using Thousand.Model;
 using Xunit;
 
@@ -231,6 +232,34 @@ foo");
             Assert.Single(document.Rules!.Region.Objects);
             Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects);
             Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects.Single().Region.Objects);
+        }
+
+        [Fact]
+        public async Task IgnoreBadDeclaration_IncompleteDocContent()
+        {
+            var document = await ParseAsync(
+@"class foo [fill=red]
+class bar [");
+
+            Assert.NotNull(document.Tokens);
+            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.ValidSyntax);
+            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Diagram);
+        }
+
+        public async Task IgnoreBadDeclaration_IncompleteObjContent()
+        {
+            var document = await ParseAsync(
+@"class foo [fill=red] {
+    class bar [
+}");
+
+            Assert.NotNull(document.Tokens);
+            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.ValidSyntax);
+            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Diagram);
         }
     }
 }

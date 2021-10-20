@@ -152,31 +152,6 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Attributes(Macro[] list)
-        {
-            var builder = new StringBuilder();
-
-            builder.Append('[');
-
-            var firstAttr = Untyped.UntypedAttribute(list.First().Location).Value;
-            builder.Append(firstAttr.Key.Text);
-            builder.Append('=');
-            builder.Append(firstAttr.Value.Span().ToStringValue());
-            
-            foreach (var macro in list.Skip(1))
-            {
-                var attr = Untyped.UntypedAttribute(macro.Location).Value;
-                builder.Append(' ');
-                builder.Append(attr.Key.Text);
-                builder.Append('=');
-                builder.Append(attr.Value.Span().ToStringValue());
-            }
-
-            builder.Append(']');
-
-            return builder.ToString();
-        }
-
         public static string Attributes(AST.UntypedAttribute[] list)
         {
             var builder = new StringBuilder();

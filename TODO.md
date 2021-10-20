@@ -22,7 +22,7 @@ TO DO
 * website: docs - generated for attrs? or just handwrite it all?
 * website: web components lib (e.g. make it easy to do a lot of previews in the docs)
 * website: attempt wasm. this does make font support an issue, and might require the latest skia, but it seems possible
-* language server: hovers for class names, object names and attribute keys
+* language server: hovers for attribute keys
 * language server: completions for class names, object names and attribute keys
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
@@ -32,3 +32,4 @@ TO DO
 * regularity control (a square is a regular rectangle) (not so sure about this, it makes the code simpler but the api more complex...). otoh autoregularising shapes confuse me (diamond vs rhombus)
 * do a defaults pass, picking values which produce a nice appearance without customisation
 * image embedding!
+* can i just replace the untyped AST with the tolerant AST entirely?

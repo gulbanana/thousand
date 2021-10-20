@@ -9,6 +9,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using System.Threading;
 using System.Threading.Tasks;
+using Thousand.LSP.Analyse;
 
 namespace Thousand.LSP
 {

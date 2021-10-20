@@ -9,10 +9,10 @@ namespace Thousand.Parse
 {
     public static class Untyped
     {
-        public static TokenListParser<TokenKind, AST.UntypedAttribute> UntypedAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.UntypedAttribute> Attribute { get; } =
             from key in Identifier.Any.Named("attribute name")
             from _ in Token.EqualTo(TokenKind.EqualsSign)
-            from value in Macro.Raw(TokenKind.Comma, TokenKind.RightBracket)
+            from value in Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace)
             select new AST.UntypedAttribute(key, value);
 
         /**************************************************
@@ -59,7 +59,7 @@ namespace Thousand.Parse
             from name in Identifier.Any
             from arguments in Macro.Of(ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
             from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
-            from attrs in Shared.List(UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
+            from attrs in Shared.List(Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             from children in ClassContent.OptionalOrDefault(Array.Empty<Macro>())
             select new AST.UntypedClass(name, arguments, bases, attrs, children);
 
@@ -70,7 +70,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
             from calls in ClassCallList
             from chain in Shared.Edges
-            from attrs in Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
+            from attrs in Shared.List(Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.UntypedLine(calls, chain.ToArray(), attrs);
 
         public static TokenListParser<TokenKind, AST.UntypedObjectContent> ObjectContent { get; } = input =>
@@ -96,7 +96,7 @@ namespace Thousand.Parse
                 }
                 else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return Shared.ObjectAttribute.Select(x => (AST.UntypedObjectContent)x)(input);
+                    return Attribute.Select(x => (AST.UntypedObjectContent)x)(input);
                 }
                 else // could still be an object or a line
                 {
@@ -134,7 +134,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedObject> Object { get; } =
             from classes in ClassCallList
             from name in Shared.Target.AsNullable().OptionalOrDefault()
-            from attrs in Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from attrs in Shared.List(Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.UntypedObjectContent>())
             select new AST.UntypedObject(classes, name, attrs, children);
 
@@ -161,7 +161,7 @@ namespace Thousand.Parse
                 }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return Shared.DiagramAttribute.Select(x => (AST.UntypedDocumentContent)x)(input);
+                    return Attribute.Select(x => (AST.UntypedDocumentContent)x)(input);
                 }
                 else // could still be an object or a line
                 {

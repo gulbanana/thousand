@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Thousand.Parse;
 
-namespace Thousand.LSP
+namespace Thousand.LSP.Analyse
 {
     // XXX this duplicates the algorithm (but not the structure) used by Evaluate.Scope
     // there's an irritating tradeoff here between the batch-compilation model and error tolerance

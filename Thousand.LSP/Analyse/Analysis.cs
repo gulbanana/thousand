@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Thousand.AST;
 using Thousand.Layout;
-using TextSpan = Superpower.Model.TextSpan;
 using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
 using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
-namespace Thousand.LSP
+namespace Thousand.LSP.Analyse
 {
     public class Analysis
     {
@@ -21,8 +20,9 @@ namespace Thousand.LSP
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
-        public List<(TextSpan, TolerantClass)> ClassReferences { get; } = new();
-        public List<(TextSpan, TolerantObject)> ObjectReferences { get; } = new();
+        public List<Reference<TolerantClass?>> ClassReferences { get; } = new();
+        public List<Reference<TolerantObject>> ObjectReferences { get; } = new();
+        public List<UntypedAttribute> Attributes { get; } = new();
 
         public Analysis(DocumentUri uri)
         {

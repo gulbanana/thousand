@@ -12,6 +12,23 @@ namespace Thousand.Parse
      **********************************************************************/
     public static class Typed
     {
+        public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
+            AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
+                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.LineAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
+
+        public static TokenListParser<TokenKind, AST.SegmentAttribute> SegmentAttribute { get; } =
+            AttributeParsers.ArrowAttribute.Select(x => (AST.SegmentAttribute)x)
+                .Or(AttributeParsers.LineAttribute.Select(x => (AST.SegmentAttribute)x))
+                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.SegmentAttribute)x));
+
+        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
+            AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
+                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
+                .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
+
         public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } =
             AttributeParsers.LineAttribute.Select(x => (AST.EntityAttribute)x)
                 .Or(AttributeParsers.PositionAttribute.Select(x => (AST.EntityAttribute)x));
@@ -21,12 +38,12 @@ namespace Thousand.Parse
          **********************************************************************/
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Identifier name, Identifier[] bases) =>
-            from attrs in Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from attrs in Shared.List(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
             select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
+            Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
             Shared.List(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
@@ -72,19 +89,19 @@ namespace Thousand.Parse
                     }
                 }
 
-                var lineAttr = Shared.SegmentAttribute(remainder);
+                var lineAttr = SegmentAttribute(remainder);
                 if (lineAttr.HasValue)
                 {
                     return LineClassBody(name, bases)(input);
                 }
 
-                var objectAttr = Shared.ObjectAttribute(remainder);
+                var objectAttr = ObjectAttribute(remainder);
                 if (objectAttr.HasValue)
                 {
                     return ObjectClassBody(name, bases)(input);
                 }
 
-                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(Shared.ObjectAttribute.Value(Unit.Value).Or(Shared.SegmentAttribute.Value(Unit.Value))(remainder));
+                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(ObjectAttribute.Value(Unit.Value).Or(SegmentAttribute.Value(Unit.Value))(remainder));
             }
 
             if (remainder.ConsumeToken() is { HasValue: true, Value: { Kind: TokenKind.LeftBrace } })
@@ -131,7 +148,7 @@ namespace Thousand.Parse
                 }
                 else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return Shared.ObjectAttribute.Select(x => (AST.TypedObjectContent)x)(input);
+                    return ObjectAttribute.Select(x => (AST.TypedObjectContent)x)(input);
                 }
                 else // could still be an object or a line
                 {
@@ -169,7 +186,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in Shared.ClassList
             from name in Shared.Target.AsNullable().OptionalOrDefault()
-            from attrs in Shared.List(Shared.ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from attrs in Shared.List(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
             select new AST.TypedObject(classes, name, attrs, children);
 
@@ -180,7 +197,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
             from chain in Shared.Edges
-            from attrs in Shared.List(Shared.SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
+            from attrs in Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
             select new AST.TypedLine(classes, chain.ToArray(), attrs);
 
         /***************************************************************************
@@ -206,7 +223,7 @@ namespace Thousand.Parse
                 }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return Shared.DiagramAttribute.Select(x => (AST.TypedDocumentContent)x)(input);
+                    return DiagramAttribute.Select(x => (AST.TypedDocumentContent)x)(input);
                 }
                 else // could still be an object or a line
                 {

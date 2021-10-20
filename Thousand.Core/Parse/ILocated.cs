@@ -2,7 +2,7 @@
 
 namespace Thousand.Parse
 {
-    internal interface ILocated
+    public interface ILocated
     {
         TextSpan Span { get; set; }
     }

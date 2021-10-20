@@ -3,7 +3,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Threading;
 using System.Threading.Tasks;
-using Thousand.Parse;
+using Thousand.LSP.Analyse;
 
 namespace Thousand.LSP
 {
@@ -34,14 +34,13 @@ namespace Thousand.LSP
 
             foreach (var (loc, ast) in analysis.ObjectReferences)
             {
-                var r = loc.AsRange();
-                if (r.Contains(request.Position))
+                if (loc.Contains(request.Position))
                 {
                     var tooltip = Format.Canonicalise(ast);
 
                     return new Hover
                     {
-                        Range = r,
+                        Range = loc,
                         Contents = Format.CodeBlock(tooltip)
                     };
                 }
@@ -49,14 +48,18 @@ namespace Thousand.LSP
 
             foreach (var (loc, ast) in analysis.ClassReferences)
             {
-                var r = loc.AsRange();
-                if (r.Contains(request.Position))
+                if (ast is null)
+                {
+                    continue;
+                }
+
+                if (loc.Contains(request.Position))
                 {
                     var tooltip = Format.Canonicalise(ast);
 
                     return new Hover
                     {
-                        Range = r,
+                        Range = loc,
                         Contents = Format.CodeBlock(tooltip)
                     };
                 }

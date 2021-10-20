@@ -44,7 +44,7 @@ namespace Thousand.Parse
             from name in Identifier.Any
             from arguments in Macro.Of(Untyped.ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
             from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(Untyped.ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
-            from attrs in Shared.List(Untyped.UntypedAttribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
+            from attrs in Shared.List(Untyped.Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             from children in ClassContent.OptionalOrDefault(Array.Empty<Macro<AST.TolerantObjectContent>>())
             select new AST.TolerantClass(name, arguments, bases, attrs, children);
 
@@ -73,7 +73,7 @@ namespace Thousand.Parse
                 }
                 else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return Shared.ObjectAttribute.Select(x => (AST.TolerantObjectContent)x)(input);
+                    return Untyped.Attribute.Select(x => (AST.TolerantObjectContent)x)(input);
                 }
                 else // could still be an object or a line
                 {
@@ -111,7 +111,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TolerantObject> Object { get; } =
             from classes in Untyped.ClassCallList
             from name in Shared.Target.AsNullable().OptionalOrDefault()
-            from attrs in Shared.List(Macro.Of(Shared.ObjectAttribute)).OptionalOrDefault(Array.Empty<Macro<AST.ObjectAttribute>>())
+            from attrs in Shared.List(Untyped.Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             from children in Shared.Scope(Macro.Of(ObjectContent)).OptionalOrDefault(Array.Empty<Macro<AST.TolerantObjectContent>>())
             select new AST.TolerantObject(classes, name, attrs, children);
 
@@ -121,7 +121,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TolerantLine> Line { get; } =
             from calls in Untyped.ClassCallList
             from chain in Shared.Edges
-            from attrs in Shared.List(Macro.Of(Shared.SegmentAttribute)).OptionalOrDefault(Array.Empty<Macro<AST.SegmentAttribute>>())
+            from attrs in Shared.List(Untyped.Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.TolerantLine(calls, chain.ToArray(), attrs);
 
         /**************************************************************
@@ -130,6 +130,8 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TolerantDocumentContent> DocumentContent { get; } = input =>
         {
+            var fail = TokenListParserResult.Empty<TokenKind, AST.TolerantDocumentContent>(input, new[] { "attribute", "class", "object", "line" });
+
             var first = input.ConsumeToken();
             if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
             {
@@ -145,7 +147,7 @@ namespace Thousand.Parse
                 }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return Shared.DiagramAttribute.Select(x => (AST.TolerantDocumentContent)x)(input);
+                    return Untyped.Attribute.Select(x => (AST.TolerantDocumentContent)x)(input);
                 }
                 else // could still be an object or a line
                 {
@@ -170,18 +172,18 @@ namespace Thousand.Parse
                     }
                     else
                     {
-                        return InvalidDeclaration.Select(x => (AST.TolerantDocumentContent)x)(input);
+                        return fail;
                     }
                 }
             }
             else
             {
-                return InvalidDeclaration.Select(x => (AST.TolerantDocumentContent)x)(input);
+                return fail;
             }
         };
 
         public static TokenListParser<TokenKind, AST.TolerantDocument> Document { get; } =
-            Macro.Of(DocumentContent)
+            Macro.Of(DocumentContent.Try().Or(InvalidDeclaration.Select(x => (AST.TolerantDocumentContent)x)))
                 .ManyOptionalDelimited()
                 .Select(decs => new AST.TolerantDocument(decs.ToArray()))
                 .AtEnd();

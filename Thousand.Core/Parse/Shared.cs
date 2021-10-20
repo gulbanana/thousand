@@ -22,23 +22,6 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBrace)
             select decs.ToArray();
 
-        public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
-            AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
-                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.LineAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
-
-        public static TokenListParser<TokenKind, AST.SegmentAttribute> SegmentAttribute { get; } =
-            AttributeParsers.ArrowAttribute.Select(x => (AST.SegmentAttribute)x)
-                .Or(AttributeParsers.LineAttribute.Select(x => (AST.SegmentAttribute)x))
-                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.SegmentAttribute)x));
-
-        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
-            AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
-                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
-                .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
-
         /*******************************
          * Subclass/object/line parts. *
          *******************************/
