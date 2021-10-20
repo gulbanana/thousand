@@ -187,7 +187,7 @@ namespace Thousand.Parse
         #region doc group, used only by diagrams
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentScaleAttribute { get; } =
             from key in Key(DocumentAttributeKind.Scale)
-            from value in Value.PositiveDecimal
+            from value in Value.CountingDecimal
             select new AST.DocumentScaleAttribute(value) as AST.DocumentAttribute;
 
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
@@ -301,12 +301,12 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMinWidthAttribute { get; } =
             from key in Key(NodeAttributeKind.MinWidth)
-            from value in Value.PositiveDecimal.OrNone()
+            from value in Value.CountingDecimal.OrNone()
             select new AST.NodeMinWidthAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeMinHeightAttribute { get; } =
             from key in Key(NodeAttributeKind.MinHeight)
-            from value in Value.PositiveDecimal.OrNone()
+            from value in Value.CountingDecimal.OrNone()
             select new AST.NodeMinHeightAttribute(value) as AST.NodeAttribute;
 
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeShapeAttribute { get; } =

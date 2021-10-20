@@ -118,7 +118,7 @@ namespace Thousand.Tests.Parsing
         public void PositiveDecimal_Valid(decimal v)
         {
             var tokens = tokenizer.Tokenize(v.ToString());
-            var result = Value.PositiveDecimal(tokens);
+            var result = Value.CountingDecimal(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(v, result.Value);

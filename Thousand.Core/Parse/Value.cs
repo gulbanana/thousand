@@ -16,8 +16,12 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, int> Integer { get; } =
             Token.EqualTo(TokenKind.Number).Apply(Numerics.IntegerInt32);
 
-        public static TokenListParser<TokenKind, decimal> PositiveDecimal { get; } =
+        // XXX these can produce bad errors ("unsatisfied condition") and should instead use textparsers
+        public static TokenListParser<TokenKind, decimal> CountingDecimal { get; } =
             Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d > 0);
+
+        public static TokenListParser<TokenKind, decimal> WholeDecimal { get; } =
+            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d >= 0);
 
         public static TokenListParser<TokenKind, string> String { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String);
@@ -41,9 +45,9 @@ namespace Thousand.Parse
                 .OrDefault(new NoAnchor());
 
         public static TokenListParser<TokenKind, Border> Border { get; } =
-            from first in WholeNumber
-            from second in WholeNumber.Optional()
-            from thirdAndFourth in WholeNumber.Then(a => WholeNumber.Select(b => (third: a, fourth: b))).Optional()
+            from first in WholeDecimal
+            from second in WholeDecimal.Optional()
+            from thirdAndFourth in WholeDecimal.Then(a => WholeDecimal.Select(b => (third: a, fourth: b))).Optional()
             select thirdAndFourth.HasValue ? new Border(first, second.Value, thirdAndFourth.Value.third, thirdAndFourth.Value.fourth) :
                    second.HasValue ? new Border(first, second.Value) :
                    new Border(first);
