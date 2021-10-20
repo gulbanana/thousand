@@ -28,7 +28,7 @@ namespace Thousand.LSP.Analyse
 
         public void Pop(AST.TolerantObject o)
         {
-            if (o.Name != null)
+            if (o.Name != null && !Objects.ContainsKey(o.Name.Text))
             {
                 Objects.Add(o.Name.Text, o);
             }
