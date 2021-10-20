@@ -88,7 +88,10 @@ namespace Thousand.AST
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
 
     public record Argument(Parse.Identifier Name, Parse.Macro? Default);
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro[] Declarations);
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro[] Declarations)
+    {
+        public int Arity => Arguments.Value.Length;
+    }
 
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<ObjectAttribute, UntypedClass, UntypedObject, UntypedLine> { } 
     public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, UntypedObjectContent[] Declarations);

@@ -64,9 +64,20 @@ namespace Thousand
             errors.Add(new(span, kind, formatted));
         }
 
+        public void AddErrorEx(TextSpan span, ErrorKind kind, string message, params (Parse.Identifier name, string suffix)[] identifiers)
+        {
+            var formatted = string.Format(message.Replace("`{`", "`{{`").Replace("`}`", "`}}`"), identifiers.Select(i => "`" + i.name.DisplayName(sourceMap) + i.suffix + "`").ToArray());
+            errors.Add(new(span, kind, formatted));
+        }
+
         public void AddError(Parse.Identifier source, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
         {
             AddError(source.Span, kind, message, identifiers);
+        }
+
+        public void AddErrorEx(Parse.Identifier source, ErrorKind kind, string message, params (Parse.Identifier, string)[] identifiers)
+        {
+            AddErrorEx(source.Span, kind, message, identifiers);
         }
 
         public void AddWarning(Exception e)

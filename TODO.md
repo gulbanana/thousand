@@ -16,6 +16,7 @@ TO DO
 * feature: track-span (maybe)
 * feature: -bottom/-top/etc for 4-way attributes
 * feature: reverse flow - this would also start the grid at the far side of its containing box
+* feature: *parent* flow - instead of defaulting to row, default to "row unless i contain rows"
 * extension: download the language server automatically instead of requiring people to dotnet tool install --global Thousand.LSP
 * website: fix monaco errors failing to clear
 * website: docs - generated for attrs? or just handwrite it all?

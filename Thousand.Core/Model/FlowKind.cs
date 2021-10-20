@@ -3,6 +3,8 @@
     public enum FlowKind
     {
         Rows,
-        Columns
+        Columns,
+        ReverseRows,
+        ReverseColumns,
     }
 }

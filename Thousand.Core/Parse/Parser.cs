@@ -112,8 +112,8 @@ namespace Thousand.Parse
 
         private readonly GenerationState state;
         private readonly int p;
-        private readonly Dictionary<string, Macro<AST.UntypedClass>> templates;
-        private readonly Dictionary<string, List<Token[]>> instantiations;
+        private readonly Dictionary<(string, int), Macro<AST.UntypedClass>> templates;
+        private readonly Dictionary<(string, int), List<Token[]>> instantiations;
         private readonly List<Splice> splices;
 
         public Parser(GenerationState state, int p)
@@ -151,7 +151,7 @@ namespace Thousand.Parse
                 replacements.AddRange(c.Sequence());
                 replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
 
-                foreach (var instantiation in instantiations[c.Value.Name.Text])
+                foreach (var instantiation in instantiations[(c.Value.Name.Text, c.Value.Arity)])
                 {
                     replacements.AddRange(instantiation);
                     replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
@@ -189,7 +189,7 @@ namespace Thousand.Parse
                 replacements.AddRange(c.Sequence());
                 replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
 
-                foreach (var instantiation in instantiations[c.Value.Name.Text])
+                foreach (var instantiation in instantiations[(c.Value.Name.Text, c.Value.Arity)])
                 {
                     replacements.AddRange(instantiation);
                     replacements.Add(new Token(TokenKind.LineSeparator, new TextSpan(";")));
@@ -234,13 +234,16 @@ namespace Thousand.Parse
 
         private bool TypeCheck(AST.UntypedDocument untypedAST)
         {
-            var allClasses = new HashSet<string>();
-            foreach (var c in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
+            var allClasses = new HashSet<(string, int)>();
+            foreach (var klass in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1.Value))
             {
-                if (!allClasses.Add(c.Value.Name.Text))
+                for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
                 {
-                    state.AddError(c.Value.Name, ErrorKind.Reference, "class {0} has already been defined", c.Value.Name);
-                    return false;
+                    if (!allClasses.Add((klass.Name.Text, arity)))
+                    {
+                        state.AddErrorEx(klass.Name, ErrorKind.Reference, "class {0} has already been defined", (klass.Name, $"/{arity}"));
+                        return false;
+                    }
                 }
             }
 
@@ -273,8 +276,12 @@ namespace Thousand.Parse
                     }
                 }
 
-                templates.Add(klass.Name.Text, macro);
-                instantiations.Add(klass.Name.Text, new List<Token[]>());
+                for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
+                {
+                    templates.Add((klass.Name.Text, arity), macro);
+                }
+
+                instantiations.Add((klass.Name.Text, klass.Arity), new List<Token[]>());
             }
 
             return true;
@@ -317,9 +324,9 @@ namespace Thousand.Parse
         private void Invoke(Macro<AST.ClassCall> callMacro)
         {
             var call = callMacro.Value;
-            if (templates.ContainsKey(call.Name.Text))
+            if (templates.ContainsKey((call.Name.Text, call.Arguments.Length)))
             {
-                var klassMacro = templates[call.Name.Text];
+                var klassMacro = templates[(call.Name.Text, call.Arguments.Length)];
                 var klass = klassMacro.Value;
 
                 if (call.Arguments.Length < klass.Arguments.Value.Where(v => v.Default == null).Count())
@@ -341,7 +348,7 @@ namespace Thousand.Parse
                 var substitutions = suppliedArguments.Concat(defaultArguments)
                     .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
-                var uniqueString = $"{call.Name.Text}-{p}-{instantiations[call.Name.Text].Count + 1}";
+                var uniqueString = $"{klass.Name.Text}-{klass.Arity}-{p}-{instantiations[(klass.Name.Text, klass.Arity)].Count + 1}";
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
@@ -353,7 +360,7 @@ namespace Thousand.Parse
                 splices.Add(new(callMacro.Range(), uniqueName));
 
                 var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
-                instantiations[call.Name.Text].Add(instantiation);
+                instantiations[(klass.Name.Text, klass.Arity)].Add(instantiation);
             }
         }
 
