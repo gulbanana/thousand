@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <ProjectReference Include="../Thousand.Core/Thousand.Core.csproj" />
+    <ProjectReference Include="../Thousand.LSP/Thousand.LSP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="*.1000" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

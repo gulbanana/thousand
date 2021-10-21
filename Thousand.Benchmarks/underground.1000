@@ -1,0 +1,183 @@
+grid=rows; layout=pack; gutter=50 // could be replaced with canvas-scale x/y?
+
+class box($x) [min-width=$x, min-height=$x, layout=$x, justify=center]
+
+// layout debugging
+class vis //[stroke=hairline]
+class group : group.vis
+class column : column.vis
+class row : row.vis
+
+// basic elements
+class char [shape=rect, fill=#fff, stroke=2, padding=10, font=16 black]
+class tag : label [anchor=nw, align=end, padding=5 0 0 0, font-size=18]
+class lh : line [stroke=2]
+class lhi : line [stroke=2, stroke=white]
+class u [label="?", align=center]
+
+// grouping
+class header : label [anchor=n, align=bottom, font-size=24]
+class org($title) [padding=10 40 10 10, fill=#ccc, stroke=long-dash 3] {
+    header $title
+} 
+class minor [font-size=24, stroke=short-dash 2]
+class inverse [fill=#333, stroke-color=white, font-color=white]
+class proles : group [layout=content pack, justify=stretch center, gutter=10]
+
+//////////////
+// VAMPIRES //
+//////////////
+
+class vampire : char [stroke-colour=red]
+class t-gangrel : tag [label=g, font="Blood of Dracula" red]
+class t-daeva : tag [label=d, font="Blood of Dracula" red]
+class t-nosferatu : tag [label=n, font="Blood of Dracula" red]
+class t-mekhet : tag [label=m, font="Blood of Dracula" red]
+class t-ventrue : tag [label=v, font="Blood of Dracula" red]
+class bline : line [stroke=#f99 1, anchor=any]
+
+org("Victus Indomitus").minor {
+    column [justify=center, space=40] {
+        vampire "Emily de la Warr" { t-gangrel; font=#080 }
+
+		column [space=40,justify=stretch] {
+			row [layout=content, justify=center stretch] {    
+				vampire simpson [label="Simpson Kirkpatrick\nBaron Weaste"] { t-ventrue }
+				vampire carl [label="Carl\nBaron Eccles"] { t-nosferatu }
+				vampire fortunato [label="Fortunato\nBaron Agecroft"] { t-daeva }            
+				vampire ruth [label="Ruth Gardener?"] { t-mekhet }
+			}
+			row [layout=area,justify=center] {
+				point vi1; point vi2 point vi3; point vi4; point vi5; point vi6; point; point
+			}
+		}
+
+        proles [grid=4 columns] {
+            vampire "Sergio Bonasera" { t-ventrue }
+            vampire "Drew Salmon"            
+            vampire "Patience Errol-Chyves"
+            vampire "Agatha Hursley-Apple" { t-mekhet }            
+            vampire.u
+            vampire.u
+			vampire.u
+            vampire.u
+        }
+
+        lh "Emily de la Warr" -> ruth
+        lh "Emily de la Warr" -> simpson
+        lh "Emily de la Warr" -> "Fortunato"
+        lh "Emily de la Warr" -> "Carl"
+        lh simpson -> vi1
+        lh simpson -> vi1
+        lh simpson -> vi2
+        lh carl -> vi3
+        lh carl -> vi4
+        lh fortunato -> vi5
+        lh fortunato -> vi6        
+    }
+}
+
+org("The Wise & Solemn Court") [grid=rows] {
+    row court-main [justify=center, align=stretch] {
+        group [padding=0 0 20 0,grid=rows] {
+            group constabulary [align=center,margin=0 0 0 20,justify=center,space-columns=20] {
+                vampire damani [label="Sydney Damani\nCarthian Constable"]
+                column deputies [gutter=10,justify=stretch] {
+                    vampire "Brutus Barrigan" { t-gangrel }
+                    row [layout=area] { vampire.u deputy1 [align=start]; vampire.u deputy2; vampire.u deputy3 [align=end] }
+                }
+                lh damani -> "Brutus Barrigan"
+                lh damani -> deputy1
+                lh damani -> deputy2
+                lh damani -> deputy3
+            }
+
+            group.box(280) [shape=circle] {
+                vampire "Seele Shaw" [label="Seele Shaw\nNight Mayor",align=center] { t-daeva }
+                vampire jane [label="Jane Boxer\nPrimogen"] {anchor=n; t-nosferatu}
+                vampire letitia [label="Letitia Barrowsmith"] { anchor=sw; t-nosferatu }
+                vampire "Suzie Cutsworth" { anchor=se; t-mekhet }
+                vampire "Gabrielle X" { anchor=ene; t-gangrel }
+                vampire "Killer Clive" { anchor=wnw; t-ventrue }
+
+                lh "Seele Shaw" -> jane
+                lh "Seele Shaw" -> letitia
+                lh "Seele Shaw" -> "Suzie Cutsworth"
+                lh "Seele Shaw" -> "Killer Clive"
+                lh "Seele Shaw" -> "Gabrielle X"
+            }
+
+            group council-bottom [align=center]
+            group ordo-top [align=center, margin=0 40 0 0]
+        }
+
+		group court-authorities [margin=0 0 40 0]
+
+        proles other-vampires [align=stretch, grid=3 columns, padding=20 0 0 0] {
+            vampire "Barbara Barrigan" { t-mekhet }
+            vampire "Eliza Beth Hursley" { t-mekhet }            
+            vampire "Doug Killarney" { t-mekhet }
+            vampire "Carol Sebastian"
+            vampire "Craig Dunlop" { t-mekhet }
+            vampire "Magale Carreña" { t-daeva }
+            vampire samwise [label="\"Samwise\"\nPrimogen"] { t-mekhet }                        
+            vampire urash [label="Urash gro-Bagrat\nGrand Warlock"]
+            vampire "Henry I\nRegistrar" 
+            vampire.u; vampire.u; vampire.u; 
+			vampire.u; vampire.u; vampire.u; 
+			vampire.u; vampire.u; vampire.u; 
+			vampire.u; vampire.u; vampire.u;
+			vampire.u; vampire.u; vampire.u;
+        }
+    }
+
+    row court-extra [padding=0 20 0 0,space-columns=20] {
+        org("The Order of Dracula").minor.inverse {
+            proles [grid=3 columns] {                    
+                vampire "Sarhos Sari"
+                vampire "Ultim Vados" { t-ventrue }
+                vampire "Paranewton"
+                vampire "Abraham Butcher"
+                vampire "Pentacaust" [col=3]
+                vampire "Casaubon" [row=3,col=2]
+            }
+
+            lhi "Abraham Butcher" <- "Sarhos Sari" <- "Ultim Vados" -> "Paranewton" -> "Pentacaust"
+            lhi "Ultim Vados" -> "Casaubon"
+            lhi "Sarhos Sari" -> "Casaubon" <- "Paranewton" [anchor=corner none]
+            lhi "Abraham Butcher" -> "Casaubon" <- "Pentacaust" [anchor=corner none]
+        }
+
+        org("Clan Gangrel").minor.inverse {
+            proles [grid=3 columns] {
+                vampire stella [label="Stella Savoy\nPrimogen"] { t-gangrel }
+                vampire "Craig Armstrong" [align=stretch] { t-gangrel }
+                vampire.u { t-gangrel }
+                char "Dylan" { t-gangrel }
+                char "Gerry" { t-gangrel }
+                char "Sandra" { t-gangrel }
+            }
+        }
+    }
+
+    lh court-authorities -> other-vampires [offset=0 -120]
+    lh court-authorities -> other-vampires [offset=0 -60]
+    lh court-authorities -> other-vampires 
+    lh court-authorities -> other-vampires [offset=0 60]
+    lh court-authorities -> other-vampires [offset=0 120]
+    
+    lh council-bottom -> ordo-top [offset=-120 0]
+    lh council-bottom -> ordo-top [offset=-60 0]
+    lh council-bottom -> ordo-top 
+    lh council-bottom -> ordo-top [offset=60 0]
+    lh council-bottom -> ordo-top [offset=120 0]
+}
+
+// bloodlines
+bline simpson -- "Sergio Bonasera"
+bline ruth -- "Agatha Hursley-Apple" -- "Eliza Beth Hursley"
+bline "Doug Killarney" -- ruth -- "Barbara Barrigan"
+bline "Suzie Cutsworth" -- ruth -- "Samwise" -- "Craig Dunlop"
+bline fortunato -- "Seele Shaw"
+bline "Gabrielle X" -- stella -- "Craig Armstrong"
+bline urash -- letitia

@@ -1,0 +1,44 @@
+class block [shape=square, min-width=0.96, padding=0.08, margin=0.02] {
+    object [shape=square, min-width=0.8, stroke=#444]
+}
+
+// tetrominoes
+class I [fill=#00f0f0]
+class I0:group [grid=4 columns] { block.i; block.i; block.i; block.i }
+class I90:group [grid=4 rows] { block.i; block.i; block.i; block.i }
+
+class O [fill=#f0f000]
+class O0:group [grid=2 columns] {block.o; block.o; block.o; block.o}
+
+class T [fill=#a000f0]
+class T180:group [grid=3 columns] { block.t [col=2]; block.t [row=2]; block.t; block.t }
+class T90:group [grid=3 rows] { block.t; block.t; block.t; block.t [row=2] }
+
+class J [fill=#0000f0]
+class J90:group [grid=3 columns] { block.j; block.j [row=2]; block.j; block.j}
+class J180:group [grid=3 rows] { block.j; block.j; block.j; block.j }
+
+class L [fill=#f0a000]
+class L270:group [grid=3 columns] { block.l [col=3]; block.l ; block.l; block.l}
+
+class S [fill=#00f000]
+class S0:group [grid=3 columns] { block.s [col=2]; block.s; block.s; block.s }
+class S90:group [grid=3 rows] { block.s; block.s; block.s [row=2,col=2]; block.s }
+
+class Z [fill=#f00000]
+class Z0 : group [grid=3 columns] { block.z; block.z; block.z [row=2,col=2]; block.z }
+
+// a game in progress
+scale=50; padding=0; fill=#ddd
+
+i0 [pos=0 19]
+j90 [pos=4 18]
+i90 [pos=9 16]
+l270 [pos=1 17]
+o0 [pos=7 18]
+s0 [pos=5 17]
+t90 [pos=0 16]
+z0 [pos=3 16]
+t180 [pos=5 15]
+j180 [pos=2 15]
+s90 [pos=3 5]

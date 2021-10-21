@@ -67,7 +67,7 @@ namespace Thousand.LSP.Analyse
             return analyses[key];
         }
 
-        private Analysis Analyse(DocumentUri key)
+        public Analysis Analyse(DocumentUri key)
         {
             var stopwatch = Stopwatch.StartNew();
 
