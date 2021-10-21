@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System.Xml;
 using Thousand.Layout;
 using Thousand.LSP.Protocol;
 using Thousand.Render;
@@ -16,20 +18,24 @@ namespace Thousand.LSP
     {
         private readonly string tempDir;
         private readonly HashSet<DocumentUri> current;
-        private readonly SkiaRenderer renderer;
+        private readonly SkiaRenderer pngRenderer;
+        private readonly SVGRenderer svgRenderer;
         private readonly ILogger<GenerationService> logger;
+        private readonly IOptionsMonitor<ServerOptions> options;
         private readonly ILanguageServerFacade facade;
 
-        public GenerationService(ILogger<GenerationService> logger, ILanguageServerFacade facade)
+        public GenerationService(ILogger<GenerationService> logger, IOptionsMonitor<ServerOptions> options, ILanguageServerFacade facade)
         {
             var tempPath = Path.GetTempPath();
             tempDir = Path.Combine(tempPath, "Thousand.LSP");
             Directory.CreateDirectory(tempDir);
 
             current = new HashSet<DocumentUri>();
-            renderer = new SkiaRenderer();
+            pngRenderer = new SkiaRenderer();
+            svgRenderer = new SVGRenderer();
 
             this.logger = logger;
+            this.options = options;
             this.facade = facade;
         }
 
@@ -50,15 +56,15 @@ namespace Thousand.LSP
                 return;
             }
 
-            _ = Task.Run(() => UpdateImpl(key, diagram));
+            _ = options.CurrentValue.GeneratePNG ? Task.Run(() => GenPNG(key, diagram)) : Task.Run(() => GenSVG(key, diagram));
         }
 
-        private void UpdateImpl(DocumentUri key, Diagram diagram)
+        private void GenPNG(DocumentUri key, Diagram diagram)
         {
             try
             {
                 var stopwatch = Stopwatch.StartNew();
-                var image = renderer.Render(diagram);
+                var image = pngRenderer.Render(diagram);
                 var png = image.Encode();
 
                 var pngPath = Path.Combine(tempDir, Path.ChangeExtension(Path.GetFileName(key.Path), "png"));
@@ -66,13 +72,36 @@ namespace Thousand.LSP
                 {
                     png.SaveTo(pngFile);
                 }
-                logger.LogInformation("Generated {OutputFileFile} in {ElapsedMilliseconds}ms", pngPath, stopwatch.ElapsedMilliseconds);
+                logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", pngPath, stopwatch.ElapsedMilliseconds);
 
                 facade.SendNotification(new UpdatePreview { Uri = key, Filename = pngPath });
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Generation failed for {Uri}", key);
+                logger.LogError(e, "PNG generation failed for {Uri}", key);
+            }
+        }
+
+        private void GenSVG(DocumentUri key, Diagram diagram)
+        {
+            try
+            {
+                var stopwatch = Stopwatch.StartNew();
+                var xml = svgRenderer.Render(diagram);
+
+                var svgPath = Path.Combine(tempDir, Path.ChangeExtension(Path.GetFileName(key.Path), "svg"));
+                using (var writer = XmlWriter.Create(svgPath))
+                {
+                    xml.WriteTo(writer);
+                }
+
+                logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", svgPath, stopwatch.ElapsedMilliseconds);
+
+                facade.SendNotification(new UpdatePreview { Uri = key, Filename = svgPath });
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "SVG generation failed for {Uri}", key);
             }
         }
     }

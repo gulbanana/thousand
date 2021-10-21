@@ -32,5 +32,4 @@ TO DO
 * regularity control (a square is a regular rectangle) (not so sure about this, it makes the code simpler but the api more complex...). otoh autoregularising shapes confuse me (diamond vs rhombus)
 * do a defaults pass, picking values which produce a nice appearance without customisation
 * image embedding!
-* can i just replace the untyped AST with the tolerant AST entirely?
-* GenerationService needs queueing or other concurrency control mechanisms. Rendering to PNG is more expensive than the whole analysis combined, and we don't want to throw away results
+* in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
