@@ -133,7 +133,7 @@ namespace Thousand.LSP.Analyse
             doc.Tokens = untypedTokens.Value;
 
             // parse the document with a special overlay allowing entire declarations to fail and preserving the valid content
-            var tolerantAST = Tolerant.Document(untypedTokens.Value);
+            var tolerantAST = Untyped.Document(untypedTokens.Value);
             if (!tolerantAST.HasValue || !tolerantAST.Remainder.IsAtEnd)
             {
                 if (!tolerantAST.HasValue)
@@ -184,7 +184,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private IEnumerable<Splice> SpliceDocument(GenerationState state, AST.TolerantDocument ast)
+        private IEnumerable<Splice> SpliceDocument(GenerationState state, AST.UntypedDocument ast)
         {
             foreach (var declaration in ast.Declarations)
             {
@@ -214,7 +214,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private IEnumerable<Splice> SpliceClass(GenerationState state, AST.TolerantClass ast)
+        private IEnumerable<Splice> SpliceClass(GenerationState state, AST.UntypedClass ast)
         {
             foreach (var declaration in ast.Declarations)
             {
@@ -244,7 +244,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private IEnumerable<Splice> SpliceObject(GenerationState state, AST.TolerantObject ast)
+        private IEnumerable<Splice> SpliceObject(GenerationState state, AST.UntypedObject ast)
         {
             foreach (var declaration in ast.Declarations)
             {
@@ -282,7 +282,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private void WalkDocument(Analysis doc, AST.TolerantDocument ast)
+        private void WalkDocument(Analysis doc, AST.UntypedDocument ast)
         {
             var root = new AnalysisScope();
 
@@ -306,7 +306,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private void WalkClass(Analysis doc, AnalysisScope scope, AST.TolerantClass ast)
+        private void WalkClass(Analysis doc, AnalysisScope scope, AST.UntypedClass ast)
         {
             if (ast.Name != null)
             {
@@ -345,7 +345,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private void WalkObject(Analysis doc, AnalysisScope scope, AST.TolerantObject ast)
+        private void WalkObject(Analysis doc, AnalysisScope scope, AST.UntypedObject ast)
         {
             if (ast.Name != null)
             {
@@ -384,7 +384,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private void WalkLine(Analysis doc, AnalysisScope  scope, AST.TolerantLine ast)
+        private void WalkLine(Analysis doc, AnalysisScope  scope, AST.UntypedLine ast)
         {
             foreach (var attribute in ast.Attributes)
             {
@@ -393,7 +393,7 @@ namespace Thousand.LSP.Analyse
 
             foreach (var segment in ast.Segments)
             {
-                if (scope.FindObject(segment.Target) is AST.TolerantObject objekt)
+                if (scope.FindObject(segment.Target) is AST.UntypedObject objekt)
                 {
                     doc.ObjectReferences.Add(new(segment.Target, objekt));
                 }               

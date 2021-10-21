@@ -27,7 +27,7 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.TolerantObject ast)
+        public static string Canonicalise(AST.UntypedObject ast)
         {
             var builder = new StringBuilder();
 
@@ -53,7 +53,7 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.TolerantLine ast)
+        public static string Canonicalise(AST.UntypedLine ast)
         {
             var builder = new StringBuilder();
 
@@ -91,7 +91,7 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Canonicalise(AST.TolerantClass ast)
+        public static string Canonicalise(AST.UntypedClass ast)
         {
             var builder = new StringBuilder();
 

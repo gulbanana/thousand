@@ -76,7 +76,7 @@ namespace Thousand.Parse
                 }
 
                 pass2AST = Untyped.Document(pass2Tokens);
-            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.IsT1 && Resolveable(d.AsT1.Value)));
+            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)));
 
             // remove remaining template classes
             var pass3AST = Untyped.Document(pass2Tokens);
@@ -134,12 +134,12 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
-            foreach (var o in untypedAST.Declarations.Where(d => d.IsT2).Select(d => (AST.UntypedObject)d))
+            foreach (var o in untypedAST.Declarations.Where(d => d.Value.IsT3).Select(d => d.Value.AsT3))
             {
                 ResolveObject(o);
             }
 
-            foreach (var l in untypedAST.Declarations.Where(d => d.IsT3).Select(d => (AST.UntypedLine)d))
+            foreach (var l in untypedAST.Declarations.Where(d => d.Value.IsT4).Select(d => d.Value.AsT4))
             {
                 ResolveLine(l);
             }
@@ -162,7 +162,7 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
-            var cl = untypedAST.Declarations.Where(d => d.IsT1 && Resolveable(d.AsT1.Value)).Select(d => (Macro<AST.UntypedClass>)d).LastOrDefault();
+            var cl = untypedAST.Declarations.Where(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)).Select(d => d.Select(x => x.AsT2)).LastOrDefault();
             if (cl != null)
             {
                 ResolveClass(cl.Value);
@@ -202,7 +202,7 @@ namespace Thousand.Parse
         private bool TypeCheck(AST.UntypedDocument untypedAST)
         {
             var allClasses = new HashSet<(string, int)>();
-            foreach (var klass in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1.Value))
+            foreach (var klass in untypedAST.Declarations.Where(d => d.Value.IsT2).Select(d => d.Value.AsT2))
             {
                 for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
                 {
@@ -214,7 +214,7 @@ namespace Thousand.Parse
                 }
             }
 
-            foreach (var macro in untypedAST.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
+            foreach (var macro in untypedAST.Declarations.Where(d => d.Value.IsT2).Select(d => d.Select(x => x.AsT2)))
             {
                 var klass = macro.Value;
                 if (!klass.Arguments.Value.Any())
@@ -260,12 +260,12 @@ namespace Thousand.Parse
                 Invoke(call);
             }
 
-            foreach (var child in objekt.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
+            foreach (var child in objekt.Declarations.Where(d => d.Value.IsT3).Select(d => d.Value.AsT3))
             {
                 ResolveObject(child);
             }
 
-            foreach (var child in objekt.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
+            foreach (var child in objekt.Declarations.Where(d => d.Value.IsT4).Select(d => d.Value.AsT4))
             {
                 ResolveLine(child);
             }

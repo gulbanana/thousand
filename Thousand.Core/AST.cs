@@ -82,25 +82,26 @@ namespace Thousand.AST
         public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
     }
 
-    /*********************************************
-     * Untyped AST, containing unresolved macros *
-     *********************************************/
+    /*****************************************************************************
+     * Error-tolerant AST, containing invalid declarations and unresolved macros *
+     *****************************************************************************/
+    public record InvalidDeclaration;
     public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
+    public record Argument(Parse.Identifier Name, Parse.Macro? Default);   
 
-    public record Argument(Parse.Identifier Name, Parse.Macro? Default);
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro[] Declarations);
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
-    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { } 
-    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, UntypedObjectContent[] Declarations);
+    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
+    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
     public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, UntypedAttribute[] Attributes);
 
-    [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<UntypedAttribute, Parse.Macro<UntypedClass>, UntypedObject, UntypedLine> { }
-    public record UntypedDocument(UntypedDocumentContent[] Declarations);
+    [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
+    public record UntypedDocument(Parse.Macro<UntypedDocumentContent>[] Declarations);
 
-    /*************
-     * Typed AST *
-     *************/
+    /****************************************************************
+     * Strict AST, with macros resolved and attributes fully parsed *
+     ****************************************************************/
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
     public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, TypedObjectContent[] Declarations) : TypedClass(Name, BaseClasses)
     {
@@ -126,55 +127,4 @@ namespace Thousand.AST
 
     [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
     public record TypedDocument(TypedDocumentContent[] Declarations);
-
-    /***********************************
-     * Error-tolerant AST, used by LSP *
-     ***********************************/
-    public record InvalidDeclaration;
-
-    public record TolerantClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
-    {
-        public UntypedClass WithoutErrors()
-        {
-            return new UntypedClass(Name, Arguments, BaseClasses, Attributes, Declarations.Where(d => !d.Value.IsT0 || d.Sequence().Any(t => t.Kind == Parse.TokenKind.Variable)).ToArray());
-        }
-    }
-
-    [GenerateOneOf] public partial class TolerantObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, TolerantClass, TolerantObject, TolerantLine> { }
-    public record TolerantObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<TolerantObjectContent>[] Declarations)
-    {
-        public UntypedObject WithoutErrors()
-        {
-            return new UntypedObject(Classes, Name, Attributes, Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedObjectContent>(
-                _ => throw new Exception(),
-                _ => d.Value.AsT1,
-                _ => d.Value.AsT2.WithoutErrors(),
-                _ => d.Value.AsT3.WithoutErrors(),
-                _ => d.Value.AsT4.WithoutErrors()
-            )).ToArray());
-        }
-    }
-
-    public record TolerantLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, UntypedAttribute[] Attributes)
-    {
-        public UntypedLine WithoutErrors()
-        {
-            return new UntypedLine(Classes, Segments, Attributes);
-        }
-    }
-
-    [GenerateOneOf] public partial class TolerantDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, TolerantClass, TolerantObject, TolerantLine> { }
-    public record TolerantDocument(Parse.Macro<TolerantDocumentContent>[] Declarations)
-    {
-        public UntypedDocument WithoutErrors()
-        {
-            return new UntypedDocument(Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<UntypedDocumentContent>(
-                _ => throw new Exception(),
-                _ => d.Value.AsT1,
-                _ => d.Select(v => v.AsT2.WithoutErrors()),
-                _ => d.Value.AsT3.WithoutErrors(),
-                _ => d.Value.AsT4.WithoutErrors()
-            )).ToArray());
-        }
-    }
 }

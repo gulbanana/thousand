@@ -15,13 +15,13 @@ namespace Thousand.LSP.Analyse
         // XXX add uint version, might help to avoid races
 
         public TokenList? Tokens { get; set; }
-        public TolerantDocument? Syntax { get; set; }
+        public UntypedDocument? Syntax { get; set; }
         public TypedDocument? ValidSyntax { get; set; }
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
-        public List<Reference<TolerantClass?>> ClassReferences { get; } = new();
-        public List<Reference<TolerantObject>> ObjectReferences { get; } = new();
+        public List<Reference<UntypedClass?>> ClassReferences { get; } = new();
+        public List<Reference<UntypedObject>> ObjectReferences { get; } = new();
         public List<UntypedAttribute> Attributes { get; } = new();
 
         public Analysis(DocumentUri uri)
@@ -50,17 +50,17 @@ namespace Thousand.LSP.Analyse
         
 
         // root only
-        public Parse.Macro<TolerantDocumentContent>? FindDeclaration(Position position)
+        public Parse.Macro<UntypedDocumentContent>? FindDeclaration(Position position)
         {
             if (Syntax is null) return null;
             if (FindToken(position) is not Token token) return null;
 
             return Syntax.Declarations.Where(d => !d.Value.IsT0 && d.Sequence().Contains(token)).Select(d => d.Value.Match(
                 _ => throw new System.NotSupportedException(),
-                _ => d.Select(v => (TolerantDocumentContent)v.AsT1),
-                _ => d.Select(v => (TolerantDocumentContent)v.AsT2),
-                _ => d.Select(v => (TolerantDocumentContent)v.AsT3),
-                _ => d.Select(v => (TolerantDocumentContent)v.AsT4)
+                _ => d.Select(v => (UntypedDocumentContent)v.AsT1),
+                _ => d.Select(v => (UntypedDocumentContent)v.AsT2),
+                _ => d.Select(v => (UntypedDocumentContent)v.AsT3),
+                _ => d.Select(v => (UntypedDocumentContent)v.AsT4)
             )).SingleOrDefault();
         }
     }

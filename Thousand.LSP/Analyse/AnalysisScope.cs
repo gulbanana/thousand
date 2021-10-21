@@ -10,8 +10,8 @@ namespace Thousand.LSP.Analyse
     {
         private readonly List<AnalysisScope> children = new();
         public AnalysisScope? Parent { get; private init; }
-        public Dictionary<string, AST.TolerantClass> Classes { get; } = new(StringComparer.OrdinalIgnoreCase);
-        public Dictionary<string, AST.TolerantObject> Objects { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, AST.UntypedClass> Classes { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, AST.UntypedObject> Objects { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public AnalysisScope Push()
         {
@@ -20,13 +20,13 @@ namespace Thousand.LSP.Analyse
             return result;
         }
 
-        public void Pop(AST.TolerantClass c)
+        public void Pop(AST.UntypedClass c)
         {
             Classes.Add(c.Name.Text, c);
             Pop();
         }
 
-        public void Pop(AST.TolerantObject o)
+        public void Pop(AST.UntypedObject o)
         {
             if (o.Name != null && !Objects.ContainsKey(o.Name.Text))
             {
@@ -57,7 +57,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        public AST.TolerantObject? FindObject(Identifier name)
+        public AST.UntypedObject? FindObject(Identifier name)
         {
             if (Objects.ContainsKey(name.Text))
             {
@@ -73,7 +73,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        public AST.TolerantClass? FindClass(Identifier name)
+        public AST.UntypedClass? FindClass(Identifier name)
         {
             if (Classes.ContainsKey(name.Text))
             {

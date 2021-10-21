@@ -25,7 +25,6 @@ namespace Thousand.Tests.Parsing
             Assert.Empty(result.Value.BaseClasses);
         }
 
-
         [Fact]
         public void Empty_Untyped()
         {
@@ -47,7 +46,6 @@ namespace Thousand.Tests.Parsing
             Assert.Equal("foo", result.Value.Name.Text);
             AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "baz");
         }
-
 
         [Fact]
         public void Subclass_Untyped()
@@ -213,7 +211,26 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.NotEmpty(result.Value.Declarations);
+            Assert.Single(result.Value.Declarations.Where(d => d.Value.IsT2));
+        }
+
+        [Fact]
+        public void Template_MacroArg()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo($x) [fill=$x]");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Single(result.Value.Attributes.Where(a => a.Key.Text == "fill"));
+        }
+
+        [Fact]
+        public void Template_MacroBody()
+        {
+            var tokens = tokenizer.Tokenize(@"class foo($x) { object $x }");
+            var result = Untyped.Class(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
         }
     }
 }
