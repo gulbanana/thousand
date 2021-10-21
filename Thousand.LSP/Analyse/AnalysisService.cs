@@ -132,40 +132,32 @@ namespace Thousand.LSP.Analyse
 
             doc.Tokens = untypedTokens.Value;
 
-            // parse the document with a special overlay allowing entire declarations to fail and preserving the valid content
-            var tolerantAST = Untyped.Document(untypedTokens.Value);
-            if (!tolerantAST.HasValue || !tolerantAST.Remainder.IsAtEnd)
+            // parse the document into an error-tolerant structure which preserves errors as well as valid content
+            var untypedAST = Untyped.Document(untypedTokens.Value);
+            if (!untypedAST.HasValue || !untypedAST.Remainder.IsAtEnd)
             {
-                if (!tolerantAST.HasValue)
-                {
-                    var badToken = tolerantAST.Location.IsAtEnd ? untypedTokens.Value.Last() : tolerantAST.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, tolerantAST.FormatErrorMessageFragment());
-                }
+                var badToken = untypedAST.Location.IsAtEnd ? untypedTokens.Value.Last() : untypedAST.Location.First();
+                state.AddError(badToken.Span, ErrorKind.Syntax, untypedAST.FormatErrorMessageFragment());
                 return;
             }
 
-            doc.Syntax = tolerantAST.Value;
-
-            // splice out the bad declarations, recording them as errors as we go
-            var splices = SpliceDocument(state, tolerantAST.Value).ToList();
-
-            var tokensWithoutErrors = untypedTokens.Value;
-            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
-            {
-                tokensWithoutErrors = splice.Apply(tokensWithoutErrors);
-            }
+            doc.Syntax = untypedAST.Value;
 
             // apply the standard multipass parser, supplying a synthetic macro-level token stream with the errors excised
             // we can't simply convert the tolerant AST to an untyped AST, because its macro positions would be wrong
-            if (!Parser.TryParse(tokensWithoutErrors, state, out var typedAST))
+            if (!Preprocessor.TryPreprocess(state, untypedTokens.Value, untypedAST.Value, out var t))
+            {
+                return;
+            }
+
+            if (!Typechecker.TryTypecheck(state, t.Value.tokens, t.Value.syntax, stripErrors: true, out var typedAST))
             {
                 return;
             }
 
             doc.ValidSyntax = typedAST;
 
-            // generate as much of the diagram as possible. according to a crude performance analysis 
-            // on a large diagram, these stages are 10% or less of the analysis cost (~3ms of ~30ms)
+            // generate as much of the diagram as possible
             if (stdlib != null)
             { 
                 if (!Evaluate.Evaluator.TryEvaluate(new[] { stdlib, typedAST }, state, out var rules))
@@ -181,96 +173,6 @@ namespace Thousand.LSP.Analyse
                 }
 
                 doc.Diagram = diagram;
-            }
-        }
-
-        private IEnumerable<Splice> SpliceDocument(GenerationState state, AST.UntypedDocument ast)
-        {
-            foreach (var declaration in ast.Declarations)
-            {
-                if (declaration.Value.IsT0)
-                {
-                    var subTokens = new TokenList<TokenKind>(declaration.Sequence().ToArray());
-                    var error = Untyped.DocumentContent(subTokens);
-                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
-
-                    yield return new Splice(declaration.Range(), Array.Empty<Token<TokenKind>>());
-                }
-                else if (declaration.Value.IsT2)
-                {
-                    foreach (var splice in SpliceClass(state, declaration.Value.AsT2))
-                    {
-                        yield return splice;
-                    }
-                }
-                else if (declaration.Value.IsT3)
-                {
-                    foreach (var splice in SpliceObject(state, declaration.Value.AsT3))
-                    {
-                        yield return splice;
-                    }
-                }
-            }
-        }
-
-        private IEnumerable<Splice> SpliceClass(GenerationState state, AST.UntypedClass ast)
-        {
-            foreach (var declaration in ast.Declarations)
-            {
-                if (declaration.Value.IsT0 && !declaration.Sequence().Any(t => t.Kind == TokenKind.Variable))
-                {
-                    var subTokens = new TokenList<TokenKind>(declaration.Sequence().ToArray());
-                    var error = Untyped.DocumentContent(subTokens);
-                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
-
-                    yield return new Splice(declaration.Range(), Array.Empty<Token<TokenKind>>());
-                }
-                else if (declaration.Value.IsT2)
-                {
-                    foreach (var splice in SpliceClass(state, declaration.Value.AsT2))
-                    {
-                        yield return splice;
-                    }
-                }
-                else if (declaration.Value.IsT3)
-                {
-                    foreach (var splice in SpliceObject(state, declaration.Value.AsT3))
-                    {
-                        yield return splice;
-                    }
-                }
-            }
-        }
-
-        private IEnumerable<Splice> SpliceObject(GenerationState state, AST.UntypedObject ast)
-        {
-            foreach (var declaration in ast.Declarations)
-            {
-                if (declaration.Value.IsT0)
-                {
-                    var subTokens = new TokenList<TokenKind>(declaration.Sequence().ToArray());
-                    var error = Untyped.DocumentContent(subTokens);
-                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
-
-                    yield return new Splice(declaration.Range(), Array.Empty<Token<TokenKind>>());
-                }
-                else if (declaration.Value.IsT2)
-                {
-                    foreach (var splice in SpliceClass(state, declaration.Value.AsT2))
-                    {
-                        yield return splice;
-                    }
-                }
-                else if (declaration.Value.IsT3)
-                {
-                    foreach (var splice in SpliceObject(state, declaration.Value.AsT3))
-                    {
-                        yield return splice;
-                    }
-                }
             }
         }
 
@@ -290,7 +192,7 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    
+                    doc.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
                     WalkClass(doc, root, asClass);

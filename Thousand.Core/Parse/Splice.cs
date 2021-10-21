@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Thousand.Parse
 {
-    public record Splice(Range Location, Token<TokenKind>[] Replacements)
+    record Splice(Range Location, Token<TokenKind>[] Replacements)
     {
         public TokenList<TokenKind> Apply(TokenList<TokenKind> list)
         {
