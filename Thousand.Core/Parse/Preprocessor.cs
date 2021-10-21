@@ -79,15 +79,7 @@ namespace Thousand.Parse
             } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)));
 
             // remove remaining template classes
-            var pass3AST = Untyped.Document(pass2Tokens);
-            if (!pass3AST.HasValue)
-            {
-                var badToken = pass3AST.Location.IsAtEnd ? pass2Tokens.Last() : pass3AST.Location.First();
-                state.AddError(badToken.Span, ErrorKind.Syntax, pass3AST.FormatErrorMessageFragment());
-                return null;
-            }
-
-            var typedAST = new Preprocessor(state, p).Pass3(pass3AST.Value);
+            var typedAST = new Preprocessor(state, p).Pass3(pass2AST.Value);
 
             return typedAST;
         }

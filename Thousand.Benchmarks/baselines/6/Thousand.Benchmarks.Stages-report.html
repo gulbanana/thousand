@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Thousand.Benchmarks.Stages-20211021-225313</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19043.1288 (21H1/May2021Update)
+AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
+Frequency=14318180 Hz, Resolution=69.8413 ns, Timer=HPET
+.NET SDK=6.0.100-preview.5.21302.13
+  [Host]     : .NET 5.0.9 (5.0.921.35908), X64 RyuJIT
+  DefaultJob : .NET 5.0.9 (5.0.921.35908), X64 RyuJIT
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>     Input</th><th> Mean</th><th>Error</th><th>StdDev</th>
+</tr>
+</thead><tbody><tr><td>Parse</td><td>connectors.1000</td><td>8,968.2 &mu;s</td><td>76.36 &mu;s</td><td>71.43 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>connectors.1000</td><td>127.7 &mu;s</td><td>2.12 &mu;s</td><td>1.98 &mu;s</td>
+</tr><tr><td>Compose</td><td>connectors.1000</td><td>1,194.8 &mu;s</td><td>16.97 &mu;s</td><td>14.17 &mu;s</td>
+</tr><tr><td>Render</td><td>connectors.1000</td><td>23,225.0 &mu;s</td><td>210.75 &mu;s</td><td>186.82 &mu;s</td>
+</tr><tr><td>Parse</td><td>tetris.1000</td><td>4,257.9 &mu;s</td><td>51.60 &mu;s</td><td>48.27 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>tetris.1000</td><td>227.3 &mu;s</td><td>0.94 &mu;s</td><td>0.83 &mu;s</td>
+</tr><tr><td>Compose</td><td>tetris.1000</td><td>265.0 &mu;s</td><td>4.00 &mu;s</td><td>3.74 &mu;s</td>
+</tr><tr><td>Render</td><td>tetris.1000</td><td>17,927.3 &mu;s</td><td>197.44 &mu;s</td><td>175.03 &mu;s</td>
+</tr><tr><td>Parse</td><td>underground.1000</td><td>13,200.3 &mu;s</td><td>155.39 &mu;s</td><td>145.35 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>underground.1000</td><td>429.9 &mu;s</td><td>2.37 &mu;s</td><td>2.10 &mu;s</td>
+</tr><tr><td>Compose</td><td>underground.1000</td><td>2,538.4 &mu;s</td><td>16.79 &mu;s</td><td>14.02 &mu;s</td>
+</tr><tr><td>Render</td><td>underground.1000</td><td>50,591.2 &mu;s</td><td>140.28 &mu;s</td><td>109.52 &mu;s</td>
+</tr></tbody></table>
+</body>
+</html>
