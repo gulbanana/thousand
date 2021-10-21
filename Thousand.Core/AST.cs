@@ -1,6 +1,5 @@
 ﻿using OneOf;
 using System;
-using System.Linq;
 using Thousand.Model;
 
 // Intermediate representation shared between Parse and Canonicalise stages
@@ -44,8 +43,8 @@ namespace Thousand.AST
     public record RegionJustifyAttribute(AlignmentKind Columns, AlignmentKind Rows) : RegionAttribute;
 
     public abstract record PositionAttribute;
-    public record PositionAnchorAttribute(CompassKind Placement) : PositionAttribute;
-    public record PositionOffsetAttribute(Point Offset) : PositionAttribute;
+    public record PositionAnchorAttribute(Anchor Start, Anchor End) : PositionAttribute;
+    public record PositionOffsetAttribute(Point Start, Point End) : PositionAttribute;
 
     public abstract record NodeAttribute;
     public record NodeLabelContentAttribute(Text Text) : NodeAttribute;
@@ -63,13 +62,11 @@ namespace Thousand.AST
     public record NodeMarginAttribute(Border Value) : NodeAttribute;
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
-    public abstract record ArrowAttribute;
+    public abstract record ArrowAttribute : PositionAttribute;
     public record ArrowAnchorStartAttribute(Anchor Anchor) : ArrowAttribute;
     public record ArrowAnchorEndAttribute(Anchor Anchor) : ArrowAttribute;
-    public record ArrowAnchorAttribute(Anchor Start, Anchor End) : ArrowAttribute;
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
-    public record ArrowOffsetAttribute(Point Start, Point End) : ArrowAttribute;
 
     [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, LineAttribute> { }
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }

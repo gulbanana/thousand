@@ -82,7 +82,7 @@ namespace Thousand.Parse
         }
 
         private static readonly Regex uncameller = new("(?<first>[A-Z])(?<second>[A-Z])(?<lower>[a-z])|(?<lEnd>[a-z])(?<uStart>[A-Z])", RegexOptions.Compiled);
-        private static string UnCamel(string val)
+        public static string UnCamel(string val)
         {
             // convert lowerCamelCase to UpperCamelCase
             if (val.Length > 0)

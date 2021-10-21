@@ -6,13 +6,13 @@ namespace Thousand.Parse
     {
         public static bool TryParse(string text, GenerationState state, [NotNullWhen(true)] out AST.TypedDocument? outputSyntax)
         {
-            if (!Preprocessor.TryPreprocess(state, text, out var t))
+            if (!Preprocessor.TryPreprocess(state, text, out var syntax))
             {
                 outputSyntax = null;
                 return false;
             }
 
-            if (!Typechecker.TryTypecheck(state, t.Value.tokens, t.Value.syntax, stripErrors: false, out outputSyntax))
+            if (!Typechecker.TryTypecheck(state, syntax, allowErrors: false, out outputSyntax))
             {
                 return false;
             }

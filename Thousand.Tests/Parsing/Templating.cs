@@ -39,7 +39,7 @@ foo(1) bar
         public void InstantiateLineTemplate()
         {
             var source = @"
-class foo($s) [stroke=$s, anchor=none]
+class foo($s) [stroke=$s, anchor-start=none]
 object a; object b
 foo(2) a--b
 ";

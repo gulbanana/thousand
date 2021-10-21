@@ -10,21 +10,21 @@ namespace Thousand.Parse
 {
     public sealed class Preprocessor
     {
-        public static bool TryPreprocess(GenerationState state, string inputText, [NotNullWhen(true)] out (TokenList tokens, AST.UntypedDocument syntax)? output)
+        public static bool TryPreprocess(GenerationState state, string inputText, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
         {
             var errors = state.ErrorCount();
-            output = Preprocess(state, inputText);
+            outputSyntax = Preprocess(state, inputText);
             return state.ErrorCount() == errors;
         }
 
-        public static bool TryPreprocess(GenerationState state, TokenList inputTokens, AST.UntypedDocument inputSyntax, [NotNullWhen(true)] out (TokenList tokens, AST.UntypedDocument syntax)? output)
+        public static bool TryPreprocess(GenerationState state, TokenList inputTokens, AST.UntypedDocument inputSyntax, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
         {
             var errors = state.ErrorCount();
-            output = Preprocess(state, inputTokens, inputSyntax);
+            outputSyntax = Preprocess(state, inputTokens, inputSyntax);
             return state.ErrorCount() == errors;
         }
 
-        private static (TokenList, AST.UntypedDocument)? Preprocess(GenerationState state, string text)
+        private static AST.UntypedDocument? Preprocess(GenerationState state, string text)
         {
             var tokenizer = Tokenizer.Build();
 
@@ -46,7 +46,7 @@ namespace Thousand.Parse
             return Preprocess(state, untypedTokens.Value, untypedAST.Value);
         }
 
-        private static (TokenList, AST.UntypedDocument)? Preprocess(GenerationState state, TokenList pass1Tokens, AST.UntypedDocument pass1AST)
+        private static AST.UntypedDocument? Preprocess(GenerationState state, TokenList pass1Tokens, AST.UntypedDocument pass1AST)
         {
             // resolve objects and lines with template base classes (turning those classes concrete)
             var errors = state.ErrorCount();
@@ -94,6 +94,7 @@ namespace Thousand.Parse
                 return null;
             }
 
+            // XXX we had to create this just to return it. the obvious next improvement is to transform the pass 3 AST into final output...
             var typedAST = Untyped.Document(typedTokens);
             if (!typedAST.HasValue)
             {
@@ -102,7 +103,7 @@ namespace Thousand.Parse
                 return null;
             }
 
-            return (typedTokens, typedAST.Value);
+            return typedAST.Value;
         }
 
         private static bool Resolveable(AST.UntypedClass klass)
@@ -229,7 +230,7 @@ namespace Thousand.Parse
                 {
                     if (!names.Add(v.Name.Text))
                     {
-                        state.AddError(v.Name, ErrorKind.Reference, "parameter {0} has already been declared", v.Name);
+                        state.AddError(v.Name, ErrorKind.Reference, "parameter {0} has already been defined", v.Name);
                         return false;
                     }
 

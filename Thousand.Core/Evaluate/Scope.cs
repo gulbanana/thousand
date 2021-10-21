@@ -34,7 +34,7 @@ namespace Thousand.Evaluate
             }
             else
             {
-                state.AddError(b, ErrorKind.Type, $"class {{0}} is not defined in scope `{RecursiveName()}`", b);
+                state.AddError(b, ErrorKind.Reference, $"class {{0}} is not defined in scope `{RecursiveName()}`", b);
                 return false;
             }
         }

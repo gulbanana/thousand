@@ -144,6 +144,14 @@ namespace Thousand.Evaluate
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, Scope scope)
         {
+            var name = node.Name;
+            if (name == null)
+            {
+                var classExpression = string.Join('.', node.Classes.Select(c => c.Text));
+                var firstClass = node.Classes.First().Span;
+                name = new Parse.Identifier(classExpression) { Span = new(firstClass.Source!, firstClass.Position, firstClass.Length) }; // XXX use all sources
+            }
+            
             var regionConfig = new IR.Config(null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             
             var label = new Text(node.Name?.Text); // names are a separate thing, but if a node has one, it is also the default label
@@ -176,11 +184,27 @@ namespace Thousand.Evaluate
                     switch (e)
                     {
                         case AST.PositionAnchorAttribute eaa:
-                            anchor = eaa.Placement;
+                            if (eaa.Start is SpecificAnchor { Kind: var placement } && eaa.End.Equals(eaa.Start))
+                            {
+                                anchor = placement;
+                            }
+                            else
+                            {
+                                // XXX save attr identifiers in the final AST
+                                state.AddError(name, ErrorKind.Type, "object {0} has too many anchors (expected compass direction)", name);
+                            }
                             break;
 
                         case AST.PositionOffsetAttribute eoa:
-                            offset = eoa.Offset;
+                            if (eoa.End.Equals(eoa.Start))
+                            {
+                                offset = eoa.Start;
+                            }
+                            else 
+                            {
+                                // XXX save attr identifiers in the final AST
+                                state.AddError(name, ErrorKind.Type, "object {0} has too many offsets (expected point)", name);
+                            }
                             break;
                     }
                 }, n =>
@@ -273,7 +297,7 @@ namespace Thousand.Evaluate
             }
 
             var result = new IR.Object(
-                node.Name ?? node.Classes.First(), // XXX
+                name,
                 new IR.Region(regionConfig, childObjects), 
                 label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), 
                 alignment, margin, width, height, 
@@ -302,14 +326,13 @@ namespace Thousand.Evaluate
                     switch (entity)
                     {
                         case AST.PositionAnchorAttribute eaa:
-                            var anchor = new SpecificAnchor(eaa.Placement);
-                            anchorStart = anchor;
-                            anchorEnd = anchor;
+                            anchorStart = eaa.Start;
+                            anchorEnd = eaa.End;
                             break;
 
                         case AST.PositionOffsetAttribute eoa:
-                            offsetStart = eoa.Offset;
-                            offsetEnd = eoa.Offset;
+                            offsetStart = eoa.Start;
+                            offsetEnd = eoa.End;
                             break;
                     }
                 }, arrow =>
@@ -324,22 +347,12 @@ namespace Thousand.Evaluate
                             anchorEnd = aaea.Anchor;
                             break;
 
-                        case AST.ArrowAnchorAttribute aaa:
-                            anchorStart = aaa.Start;
-                            anchorEnd = aaa.End;
-                            break;
-
                         case AST.ArrowOffsetStartAttribute aosa:
                             offsetStart = aosa.Offset;
                             break;
 
                         case AST.ArrowOffsetEndAttribute aoea:
                             offsetEnd = aoea.Offset; ;
-                            break;
-
-                        case AST.ArrowOffsetAttribute aoa:
-                            offsetStart = aoa.Start;
-                            offsetEnd = aoa.End;
                             break;
                     }
                 }, line => stroke = ApplyStrokeAttributes(stroke, line));

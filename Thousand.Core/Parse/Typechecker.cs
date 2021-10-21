@@ -1,136 +1,173 @@
-﻿using System;
+﻿using Superpower.Model;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
-using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
 namespace Thousand.Parse
 {
+    // Invariant: accepts only untyped AST which has already been preprocessed. Will fail hard on unpreprocessed input!
     public class Typechecker
     {
-        private readonly GenerationState state;
-
-        public static bool TryTypecheck(GenerationState state, TokenList inputTokens, AST.UntypedDocument inputAST, bool stripErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
+        public static bool TryTypecheck(GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, out AST.TypedDocument outputAST)
         {
-            if (stripErrors)
-            {
-                var splices = new Typechecker(state).StripDocumentErrors(inputAST).ToList();
-                foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
-                {
-                    inputTokens = splice.Apply(inputTokens);
-                }
-            }
-
-            var typedAST = Typed.Document(inputTokens);
-            if (!typedAST.HasValue)
-            {
-                var badToken = typedAST.Location.IsAtEnd ? inputTokens.Last() : typedAST.Location.First();
-                state.AddError(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment());
-
-                outputAST = null;
-                return false;
-            }
-            else
-            {
-                outputAST = typedAST.Value;
-                return true;
-            }
+            var errors = state.ErrorCount();
+            outputAST = new Typechecker(state).TypecheckDocument(inputAST);
+            return allowErrors || state.ErrorCount() == errors;
         }
+
+        private readonly GenerationState state;
+        private readonly HashSet<string> linesOnly;
+        private readonly HashSet<string> objectsOnly;
 
         private Typechecker(GenerationState state)
         {
             this.state = state;
+
+            linesOnly = Enum.GetNames<Attributes.ArrowAttributeKind>()
+                .Select(Identifier.UnCamel)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            objectsOnly = Enum.GetNames<Attributes.NodeAttributeKind>()
+                .Concat(Enum.GetNames<Attributes.RegionAttributeKind>())
+                .Concat(Enum.GetNames<Attributes.TextAttributeKind>())
+                .Select(Identifier.UnCamel)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
 
-        private IEnumerable<Splice> StripDocumentErrors(AST.UntypedDocument ast)
+        private AST.TypedDocument TypecheckDocument(AST.UntypedDocument ast)
         {
-            foreach (var declaration in ast.Declarations)
+            foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                if (declaration.Value.IsT0)
-                {
-                    var subTokens = new TokenList(declaration.Sequence().ToArray());
-                    var error = Untyped.DocumentContent(subTokens);
-                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
-
-                    yield return new Splice(declaration.Range(), Array.Empty<Token>());
-                }
-                else if (declaration.Value.IsT2)
-                {
-                    foreach (var splice in StripClassErrors(declaration.Value.AsT2))
-                    {
-                        yield return splice;
-                    }
-                }
-                else if (declaration.Value.IsT3)
-                {
-                    foreach (var splice in StripObjectErrors(declaration.Value.AsT3))
-                    {
-                        yield return splice;
-                    }
-                }
+                RecordError(Typed.DocumentContent(invalidDeclaration.Location));
             }
+
+            return new AST.TypedDocument(
+                ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedDocumentContent>(
+                    _ => throw new NotSupportedException(), 
+                    x => TypecheckDocumentAttribute(x), 
+                    x => TypecheckClass(x), 
+                    x => TypecheckObject(x), 
+                    x => TypecheckLine(x)
+                )).ToArray()
+            );
         }
 
-        private IEnumerable<Splice> StripClassErrors(AST.UntypedClass ast)
+        private AST.DiagramAttribute TypecheckDocumentAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var declaration in ast.Declarations)
-            {
-                if (declaration.Value.IsT0)
-                {
-                    var subTokens = new TokenList(declaration.Sequence().ToArray());
-                    var error = Untyped.DocumentContent(subTokens);
-                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
-
-                    yield return new Splice(declaration.Range(), Array.Empty<Token>());
-                }
-                else if (declaration.Value.IsT2)
-                {
-                    foreach (var splice in StripClassErrors(declaration.Value.AsT2))
-                    {
-                        yield return splice;
-                    }
-                }
-                else if (declaration.Value.IsT3)
-                {
-                    foreach (var splice in StripObjectErrors(declaration.Value.AsT3))
-                    {
-                        yield return splice;
-                    }
-                }
-            }
+            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
+            return Typed.DiagramAttribute(new(tokens)).Value;
         }
 
-        private IEnumerable<Splice> StripObjectErrors(AST.UntypedObject ast)
+        private AST.ObjectAttribute TypecheckObjectAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var declaration in ast.Declarations)
-            {
-                if (declaration.Value.IsT0)
-                {
-                    var subTokens = new TokenList(declaration.Sequence().ToArray());
-                    var error = Untyped.DocumentContent(subTokens);
-                    var badToken = error.Location.IsAtEnd ? subTokens.Last() : error.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, error.FormatErrorMessageFragment());
+            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
+            return Typed.ObjectAttribute(new(tokens)).Value;
+        }
 
-                    yield return new Splice(declaration.Range(), Array.Empty<Token>());
-                }
-                else if (declaration.Value.IsT2)
+        private AST.SegmentAttribute TypecheckLineAttribute(AST.UntypedAttribute ast)
+        {
+            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
+            return Typed.SegmentAttribute(new(tokens)).Value;
+        }
+
+        private AST.EntityAttribute TypecheckEntityAttribute(AST.UntypedAttribute ast)
+        {
+            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
+            return Typed.EntityAttribute(new(tokens)).Value;
+        }
+
+        private AST.TypedClass TypecheckClass(AST.UntypedClass ast)
+        {
+            foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
+            {
+                RecordError(Typed.ObjectContent(invalidDeclaration.Location));
+            }
+
+            if (ast.Declarations.Any())
+            {
+                return new AST.ObjectClass(
+                    ast.Name,
+                    ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                    ast.Attributes.Select(TypecheckObjectAttribute).ToArray(),
+                    ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedObjectContent>(
+                        _ => throw new NotSupportedException(),
+                        x => TypecheckObjectAttribute(x),
+                        x => TypecheckClass(x),
+                        x => TypecheckObject(x),
+                        x => TypecheckLine(x)
+                    )).ToArray()
+                );
+            }
+
+            foreach (var attr in ast.Attributes)
+            {
+                if (linesOnly.Contains(attr.Key.Text)) 
                 {
-                    foreach (var splice in StripClassErrors(declaration.Value.AsT2))
-                    {
-                        yield return splice;
-                    }
+                    return new AST.LineClass(
+                        ast.Name,
+                        ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                        ast.Attributes.Select(TypecheckLineAttribute).ToArray()
+                    );
                 }
-                else if (declaration.Value.IsT3)
+                else if (objectsOnly.Contains(attr.Key.Text))
                 {
-                    foreach (var splice in StripObjectErrors(declaration.Value.AsT3))
-                    {
-                        yield return splice;
-                    }
+                    return new AST.ObjectClass(
+                        ast.Name,
+                        ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                        ast.Attributes.Select(TypecheckObjectAttribute).ToArray(),
+                        ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedObjectContent>(
+                            _ => throw new NotSupportedException(),
+                            x => TypecheckObjectAttribute(x),
+                            x => TypecheckClass(x),
+                            x => TypecheckObject(x),
+                            x => TypecheckLine(x)
+                        )).ToArray()
+                    );
                 }
             }
+
+            return new AST.ObjectOrLineClass(
+                ast.Name,
+                ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                ast.Attributes.Select(TypecheckEntityAttribute).ToArray()
+            );
+        }
+
+        private AST.TypedObject TypecheckObject(AST.UntypedObject ast)
+        {
+            foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
+            {
+                RecordError(Typed.ObjectContent(invalidDeclaration.Location));
+            }
+
+            return new AST.TypedObject(
+                ast.Classes.Select(c => c.Value.Name).ToArray(),
+                ast.Name,
+                ast.Attributes.Select(TypecheckObjectAttribute).ToArray(),
+                ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedObjectContent>(
+                    _ => throw new NotSupportedException(),
+                    x => TypecheckObjectAttribute(x),
+                    x => TypecheckClass(x),
+                    x => TypecheckObject(x),
+                    x => TypecheckLine(x)
+                )).ToArray()
+            );
+        }
+
+        private AST.TypedLine TypecheckLine(AST.UntypedLine ast)
+        {
+            return new AST.TypedLine(
+                ast.Classes.Select(c => c.Value.Name).ToArray(),
+                ast.Segments,
+                ast.Attributes.Select(TypecheckLineAttribute).ToArray()
+            );
+        }
+
+        private void RecordError<T>(TokenListParserResult<TokenKind, T> error)
+        {
+            var badSpan = error.Location.IsAtEnd ? TextSpan.Empty : error.Location.First().Span;
+            state.AddError(badSpan, ErrorKind.Syntax, error.FormatErrorMessageFragment());
         }
     }
 }

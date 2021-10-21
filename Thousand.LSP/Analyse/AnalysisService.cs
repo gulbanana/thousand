@@ -143,14 +143,13 @@ namespace Thousand.LSP.Analyse
 
             doc.Syntax = untypedAST.Value;
 
-            // apply the standard multipass parser, supplying a synthetic macro-level token stream with the errors excised
-            // we can't simply convert the tolerant AST to an untyped AST, because its macro positions would be wrong
-            if (!Preprocessor.TryPreprocess(state, untypedTokens.Value, untypedAST.Value, out var t))
+            // apply the next stages of parsing, jumping into the pipeline mid-stream
+            if (!Preprocessor.TryPreprocess(state, untypedTokens.Value, untypedAST.Value, out var syntax))
             {
                 return;
             }
 
-            if (!Typechecker.TryTypecheck(state, t.Value.tokens, t.Value.syntax, stripErrors: true, out var typedAST))
+            if (!Typechecker.TryTypecheck(state, syntax, allowErrors: true, out var typedAST))
             {
                 return;
             }
