@@ -87,23 +87,9 @@ namespace Thousand.Parse
                 return null;
             }
 
-            errors = state.ErrorCount();
-            var typedTokens = new Preprocessor(state, p).Pass3(pass2Tokens, pass3AST.Value);
-            if (state.ErrorCount() > errors)
-            {
-                return null;
-            }
+            var typedAST = new Preprocessor(state, p).Pass3(pass3AST.Value);
 
-            // XXX we had to create this just to return it. the obvious next improvement is to transform the pass 3 AST into final output...
-            var typedAST = Untyped.Document(typedTokens);
-            if (!typedAST.HasValue)
-            {
-                var badToken = typedAST.Location.IsAtEnd ? typedTokens.Last() : typedAST.Location.First();
-                state.AddError(badToken.Span, ErrorKind.Syntax, typedAST.FormatErrorMessageFragment());
-                return null;
-            }
-
-            return typedAST.Value;
+            return typedAST;
         }
 
         private static bool Resolveable(AST.UntypedClass klass)
@@ -180,24 +166,9 @@ namespace Thousand.Parse
         }
 
         // remove unused templates (which may have been used in previous passes)
-        public TokenList Pass3(TokenList untypedTokens, AST.UntypedDocument untypedAST)
+        public AST.UntypedDocument Pass3(AST.UntypedDocument untypedAST)
         {
-            if (!GatherTemplates(untypedAST))
-            {
-                return untypedTokens;
-            }
-
-            foreach (var cg in templates.Values.GroupBy(c => c.Range()))
-            {
-                splices.Add(new(cg.Key, Array.Empty<Token>()));
-            }
-
-            foreach (var splice in splices.OrderByDescending(s => s.Location.Start.Value))
-            {
-                untypedTokens = splice.Apply(untypedTokens);
-            }
-
-            return untypedTokens;
+            return RemoveDocumentTemplates(untypedAST);
         }
 
         // XXX find a way to reuse this information across passes
@@ -448,6 +419,49 @@ namespace Thousand.Parse
                 }
                 splices.Add(new(kvpg.Key, replacements.ToArray()));
             }
+        }
+
+        private AST.UntypedDocument RemoveDocumentTemplates(AST.UntypedDocument ast)
+        {
+            return new AST.UntypedDocument(
+                ast.Declarations
+                    .Where(d => !d.Value.IsT2 || d.Value.AsT2.Arguments.Value.Length == 0)
+                    .Select(d => d.Value.IsT2 ? d.Select(x => (AST.UntypedDocumentContent)RemoveClassTemplates(x.AsT2))
+                               : d.Value.IsT3 ? d.Select(x => (AST.UntypedDocumentContent)RemoveObjectTemplates(x.AsT3))
+                               : d)
+                    .ToArray()
+            );
+        }
+
+        private AST.UntypedClass RemoveClassTemplates(AST.UntypedClass ast)
+        {
+            return new AST.UntypedClass(
+                ast.Name,
+                ast.Arguments,
+                ast.BaseClasses,
+                ast.Attributes,
+                ast.Declarations
+                    .Where(d => !d.Value.IsT2 || d.Value.AsT2.Arguments.Value.Length == 0)
+                    .Select(d => d.Value.IsT2 ? d.Select(x => (AST.UntypedObjectContent)RemoveClassTemplates(x.AsT2))
+                               : d.Value.IsT3 ? d.Select(x => (AST.UntypedObjectContent)RemoveObjectTemplates(x.AsT3))
+                               : d)
+                    .ToArray()
+            );
+        }
+
+        private AST.UntypedObject RemoveObjectTemplates(AST.UntypedObject ast)
+        {
+            return new AST.UntypedObject(
+                ast.Classes,
+                ast.Name,
+                ast.Attributes,
+                ast.Declarations
+                    .Where(d => !d.Value.IsT2 || d.Value.AsT2.Arguments.Value.Length == 0)
+                    .Select(d => d.Value.IsT2 ? d.Select(x => (AST.UntypedObjectContent)RemoveClassTemplates(x.AsT2))
+                               : d.Value.IsT3 ? d.Select(x => (AST.UntypedObjectContent)RemoveObjectTemplates(x.AsT3))
+                               : d)
+                    .ToArray()
+            );
         }
     }
 }
