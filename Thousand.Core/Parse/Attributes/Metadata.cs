@@ -47,6 +47,7 @@ namespace Thousand.Parse.Attributes
 
             Entities = Enum.GetNames<LineAttributeKind>()
                 .Concat(Enum.GetNames<PositionAttributeKind>())
+                .Select(Key)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
 

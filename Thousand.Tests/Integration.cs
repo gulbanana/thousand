@@ -121,5 +121,12 @@ namespace Thousand.Tests
             Assert.Equal(new AnyAnchor(), line.FromAnchor);
             Assert.Equal(new AnyAnchor(), line.ToAnchor);
         }
+
+
+        [Fact]
+        public void Regression_MultiwordEntityAttribute_UsingASTTypechecker()
+        {
+            Assert.True(Parser.TryParse(@"class x [stroke-colour=black]", state, out var document), state.JoinErrors());
+        }
     }
 }
