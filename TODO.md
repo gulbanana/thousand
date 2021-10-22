@@ -18,12 +18,15 @@ TO DO
 * feature: reverse flow - this would also start the grid at the far side of its containing box
 * feature: *parent* flow - instead of defaulting to row, default to "row unless i contain rows"
 * extension: download the language server automatically instead of requiring people to dotnet tool install --global Thousand.LSP
+* extension: basic browser entry point.. maybe. it wouldn't do much without the language server
 * website: fix monaco errors failing to clear
 * website: docs - generated for attrs? or just handwrite it all?
 * website: web components lib (e.g. make it easy to do a lot of previews in the docs)
 * website: attempt wasm. this does make font support an issue, and might require the latest skia, but it seems possible
-* language server: hovers for attribute keys
-* language server: completions for class names, object names and attribute keys
+* website: get some of the analysis features in - monaco supports a lot of it
+* language server: inline doc (hovers for attribute keys?)
+* language server: completion features 
+* language server: definition/declaration features
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
