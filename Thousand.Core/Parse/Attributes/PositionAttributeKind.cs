@@ -1,6 +1,6 @@
 ﻿namespace Thousand.Parse.Attributes
 {
-    public enum EntityAttributeKind
+    public enum PositionAttributeKind
     {
         Anchor,        
         Offset,

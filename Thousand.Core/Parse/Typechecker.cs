@@ -1,87 +1,138 @@
-﻿using Superpower.Model;
+﻿using Superpower;
+using Superpower.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
+using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
 namespace Thousand.Parse
 {
     // Invariant: accepts only untyped AST which has already been preprocessed. Will fail hard on unpreprocessed input!
     public class Typechecker
     {
-        public static bool TryTypecheck(GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, out AST.TypedDocument outputAST)
+        public static bool TryTypecheck(Attributes.Metadata metadata, GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
         {
-            var errors = state.ErrorCount();
-            outputAST = new Typechecker(state).TypecheckDocument(inputAST);
-            return allowErrors || state.ErrorCount() == errors;
+            try
+            {
+                var errors = state.ErrorCount();
+                outputAST = new Typechecker(metadata, state).CheckDocument(inputAST);
+                return allowErrors || state.ErrorCount() == errors;
+            }
+            catch (Exception e)
+            {
+                state.AddError(e);
+
+                outputAST = null;
+                return false;
+            }
         }
 
+        private readonly Attributes.Metadata metadata;
         private readonly GenerationState state;
-        private readonly HashSet<string> linesOnly;
-        private readonly HashSet<string> objectsOnly;
 
-        private Typechecker(GenerationState state)
+        private Typechecker(Attributes.Metadata metadata, GenerationState state)
         {
+            this.metadata = metadata;
             this.state = state;
-
-            linesOnly = Enum.GetNames<Attributes.ArrowAttributeKind>()
-                .Select(Identifier.UnCamel)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            objectsOnly = Enum.GetNames<Attributes.NodeAttributeKind>()
-                .Concat(Enum.GetNames<Attributes.RegionAttributeKind>())
-                .Concat(Enum.GetNames<Attributes.TextAttributeKind>())
-                .Select(Identifier.UnCamel)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
 
-        private AST.TypedDocument TypecheckDocument(AST.UntypedDocument ast)
+        private T? CheckAttribute<T>(AST.UntypedAttribute ast, TokenListParser<TokenKind, T> pT) where T : class
+        {
+            if (ast.Value.Location.Position == ast.Value.Remainder.Position)
+            {
+                state.AddError(ast.Key.Span, ErrorKind.Syntax, $"attribute has no value");
+                return null;
+            }
+
+            var tokens = new TokenList(ast.Value.Location.Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray());
+            var parse = pT(tokens);
+            if (parse.HasValue)
+            {
+                if (parse.Remainder.Position <= ast.Value.Remainder.Position)
+                {
+                    return parse.Value;
+                }
+                else
+                {
+                    var badToken = parse.Remainder.First();
+                    state.AddError(parse.Remainder.First().Span, ErrorKind.Syntax, $"unexpected `{badToken.ToStringValue()}`, expected `,` or `]`");
+                    return null;
+                }
+            }
+            else
+            {
+                state.AddError(tokens, parse);
+                return null;
+            }
+        }
+
+        private AST.DiagramAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
+        {
+            if (!metadata.Documents.Contains(ast.Key.Text))
+            {
+                var validAttributes = string.Join(", ", metadata.Documents.Select(a => $"`{a}`").OrderBy(x => x));
+                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+                return null;
+            }
+
+            return CheckAttribute(ast, Typed.DiagramAttribute);
+        }
+
+        private AST.ObjectAttribute? CheckObjectAttribute(AST.UntypedAttribute ast)
+        {
+            if (!metadata.Objects.Contains(ast.Key.Text))
+            {
+                var validAttributes = string.Join(", ", metadata.Objects.Select(a => $"`{a}`").OrderBy(x => x));
+                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+                return null;
+            }
+
+            return CheckAttribute(ast, Typed.ObjectAttribute);
+        }
+
+        private AST.SegmentAttribute? CheckLineAttribute(AST.UntypedAttribute ast)
+        {
+            if (!metadata.Lines.Contains(ast.Key.Text))
+            {
+                var validAttributes = string.Join(", ", metadata.Lines.Select(a => $"`{a}`").OrderBy(x => x));
+                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+                return null;
+            }
+
+            return CheckAttribute(ast, Typed.SegmentAttribute);
+        }
+
+        private AST.EntityAttribute? CheckEntityAttribute(AST.UntypedAttribute ast)
+        {
+            if (!metadata.Entities.Contains(ast.Key.Text))
+            {
+                var validAttributes = string.Join(", ", metadata.Objects.Concat(metadata.Lines).Distinct().Select(a => $"`{a}`").OrderBy(x => x));
+                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+                return null;
+            }
+
+            return CheckAttribute(ast, Typed.EntityAttribute);
+        }
+
+        private AST.TypedDocument CheckDocument(AST.UntypedDocument ast)
         {
             foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                RecordError(Typed.DocumentContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, Typed.DocumentContent(invalidDeclaration.Location));
             }
 
             return new AST.TypedDocument(
-                ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedDocumentContent>(
-                    _ => throw new NotSupportedException(), 
-                    x => TypecheckDocumentAttribute(x), 
-                    x => TypecheckClass(x), 
-                    x => TypecheckObject(x), 
-                    x => TypecheckLine(x)
-                )).ToArray()
+                ast.Declarations.SelectMany(CheckDocumentContent).ToArray()
             );
         }
 
-        private AST.DiagramAttribute TypecheckDocumentAttribute(AST.UntypedAttribute ast)
-        {
-            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
-            return Typed.DiagramAttribute(new(tokens)).Value;
-        }
-
-        private AST.ObjectAttribute TypecheckObjectAttribute(AST.UntypedAttribute ast)
-        {
-            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
-            return Typed.ObjectAttribute(new(tokens)).Value;
-        }
-
-        private AST.SegmentAttribute TypecheckLineAttribute(AST.UntypedAttribute ast)
-        {
-            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
-            return Typed.SegmentAttribute(new(tokens)).Value;
-        }
-
-        private AST.EntityAttribute TypecheckEntityAttribute(AST.UntypedAttribute ast)
-        {
-            var tokens = ast.Value.Sequence().Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray();
-            return Typed.EntityAttribute(new(tokens)).Value;
-        }
-
-        private AST.TypedClass TypecheckClass(AST.UntypedClass ast)
+        private AST.TypedClass CheckClass(AST.UntypedClass ast)
         {
             foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                RecordError(Typed.ObjectContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, Typed.ObjectContent(invalidDeclaration.Location));
             }
 
             if (ast.Declarations.Any())
@@ -89,40 +140,28 @@ namespace Thousand.Parse
                 return new AST.ObjectClass(
                     ast.Name,
                     ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
-                    ast.Attributes.Select(TypecheckObjectAttribute).ToArray(),
-                    ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedObjectContent>(
-                        _ => throw new NotSupportedException(),
-                        x => TypecheckObjectAttribute(x),
-                        x => TypecheckClass(x),
-                        x => TypecheckObject(x),
-                        x => TypecheckLine(x)
-                    )).ToArray()
+                    ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
+                    ast.Declarations.SelectMany(CheckObjectContent).ToArray()
                 );
             }
 
             foreach (var attr in ast.Attributes)
             {
-                if (linesOnly.Contains(attr.Key.Text)) 
+                if (metadata.LinesOnly.Contains(attr.Key.Text)) 
                 {
                     return new AST.LineClass(
                         ast.Name,
                         ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
-                        ast.Attributes.Select(TypecheckLineAttribute).ToArray()
+                        ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
                     );
                 }
-                else if (objectsOnly.Contains(attr.Key.Text))
+                else if (metadata.ObjectsOnly.Contains(attr.Key.Text))
                 {
                     return new AST.ObjectClass(
                         ast.Name,
                         ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
-                        ast.Attributes.Select(TypecheckObjectAttribute).ToArray(),
-                        ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedObjectContent>(
-                            _ => throw new NotSupportedException(),
-                            x => TypecheckObjectAttribute(x),
-                            x => TypecheckClass(x),
-                            x => TypecheckObject(x),
-                            x => TypecheckLine(x)
-                        )).ToArray()
+                        ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
+                        ast.Declarations.SelectMany(CheckObjectContent).ToArray()
                     );
                 }
             }
@@ -130,44 +169,48 @@ namespace Thousand.Parse
             return new AST.ObjectOrLineClass(
                 ast.Name,
                 ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
-                ast.Attributes.Select(TypecheckEntityAttribute).ToArray()
+                ast.Attributes.Select(CheckEntityAttribute).WhereNotNull().ToArray()
             );
         }
 
-        private AST.TypedObject TypecheckObject(AST.UntypedObject ast)
+        private AST.TypedObject CheckObject(AST.UntypedObject ast)
         {
             foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                RecordError(Typed.ObjectContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, Typed.ObjectContent(invalidDeclaration.Location));
             }
 
             return new AST.TypedObject(
                 ast.Classes.Select(c => c.Value.Name).ToArray(),
                 ast.Name,
-                ast.Attributes.Select(TypecheckObjectAttribute).ToArray(),
-                ast.Declarations.Where(d => !d.Value.IsT0).Select(d => d.Value.Match<AST.TypedObjectContent>(
-                    _ => throw new NotSupportedException(),
-                    x => TypecheckObjectAttribute(x),
-                    x => TypecheckClass(x),
-                    x => TypecheckObject(x),
-                    x => TypecheckLine(x)
-                )).ToArray()
+                ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
+                ast.Declarations.SelectMany(CheckObjectContent).ToArray()
             );
         }
 
-        private AST.TypedLine TypecheckLine(AST.UntypedLine ast)
+        private AST.TypedLine CheckLine(AST.UntypedLine ast)
         {
             return new AST.TypedLine(
                 ast.Classes.Select(c => c.Value.Name).ToArray(),
                 ast.Segments,
-                ast.Attributes.Select(TypecheckLineAttribute).ToArray()
+                ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
             );
         }
 
-        private void RecordError<T>(TokenListParserResult<TokenKind, T> error)
-        {
-            var badSpan = error.Location.IsAtEnd ? TextSpan.Empty : error.Location.First().Span;
-            state.AddError(badSpan, ErrorKind.Syntax, error.FormatErrorMessageFragment());
-        }
+        private IEnumerable<AST.TypedDocumentContent> CheckDocumentContent(Macro<AST.UntypedDocumentContent> declaration) => declaration.Value.Match(
+            _ => Array.Empty<AST.TypedDocumentContent>(),
+            x => CheckDocumentAttribute(x) is AST.DiagramAttribute a ? new AST.TypedDocumentContent[] { a } : Array.Empty<AST.TypedDocumentContent>(),
+            x => new AST.TypedDocumentContent[] { CheckClass(x) },
+            x => new AST.TypedDocumentContent[] { CheckObject(x) },
+            x => new AST.TypedDocumentContent[] { CheckLine(x) }
+        );
+
+        private IEnumerable<AST.TypedObjectContent> CheckObjectContent(Macro<AST.UntypedObjectContent> declaration) => declaration.Value.Match(
+            _ => Array.Empty<AST.TypedObjectContent>(),
+            x => CheckObjectAttribute(x) is AST.ObjectAttribute a ? new AST.TypedObjectContent[] { a } : Array.Empty<AST.TypedObjectContent>(),
+            x => new AST.TypedObjectContent[] { CheckClass(x) },
+            x => new AST.TypedObjectContent[] { CheckObject(x) },
+            x => new AST.TypedObjectContent[] { CheckLine(x) }
+        );
     }
 }

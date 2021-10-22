@@ -11,8 +11,9 @@ namespace Thousand.Parse
     {
         public static TokenListParser<TokenKind, AST.UntypedAttribute> Attribute { get; } =
             from key in Identifier.Any.Named("attribute name")
-            from _ in Token.EqualTo(TokenKind.EqualsSign)
-            from value in Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace)
+            from value in Token.EqualTo(TokenKind.EqualsSign)
+                               .IgnoreThen(Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace, TokenKind.LineSeparator))
+                               .Or(Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace, TokenKind.LineSeparator))
             select new AST.UntypedAttribute(key, value);
 
         /***********************************************************************************************

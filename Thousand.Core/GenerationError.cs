@@ -5,7 +5,7 @@ namespace Thousand
 {
     public record GenerationError(TextSpan Span, ErrorKind Kind, string Message, string? Details = null)
     {
-        public GenerationError(Exception e) : this(new TextSpan(), ErrorKind.Internal, e.Message, e.ToString()) { }
+        public GenerationError(TextSpan span, Exception e) : this(span, ErrorKind.Internal, e.Message, e.ToString()) { }
 
         public override string ToString()
         {

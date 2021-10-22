@@ -100,7 +100,7 @@ namespace Thousand
             }
             catch (Exception ex)
             {
-                return new GenerationError[] { new(ex) };
+                return new GenerationError[] { new(Superpower.Model.TextSpan.Empty, ex) };
             }
         }
     }

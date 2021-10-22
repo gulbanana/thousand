@@ -55,7 +55,7 @@ namespace Thousand
 
         public void AddError(Exception e)
         {
-            errors.Add(new(e));
+            errors.Add(new(TextSpan.Empty, e));
         }
 
         public void AddError(TextSpan span, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
@@ -80,9 +80,15 @@ namespace Thousand
             AddErrorEx(source.Span, kind, message, identifiers);
         }
 
+        public void AddError<T>(TokenList<Parse.TokenKind> tokens, TokenListParserResult<Parse.TokenKind, T> error)
+        {
+            var badSpan = error.Location.IsAtEnd ? tokens.Last().Span : error.Location.First().Span;
+            AddError(badSpan, ErrorKind.Syntax, error.FormatErrorMessageFragment());
+        }
+
         public void AddWarning(Exception e)
         {
-            warnings.Add(new(e));
+            warnings.Add(new(TextSpan.Empty, e));
         }
 
         public void AddWarning(TextSpan span, ErrorKind kind, string message, params Parse.Identifier[] identifiers)

@@ -36,3 +36,4 @@ TO DO
 * do a defaults pass, picking values which produce a nice appearance without customisation
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
+* better errors for missing attributes in lists ("just typed ,") 

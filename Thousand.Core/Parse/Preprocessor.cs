@@ -28,6 +28,7 @@ namespace Thousand.Parse
         {
             var tokenizer = Tokenizer.Build();
 
+            // XXX consider merging this with the version in AnalysisService (and they could both use Tokenizer?)
             var untypedTokens = tokenizer.TryTokenize(text);
             if (!untypedTokens.HasValue)
             {
@@ -38,8 +39,7 @@ namespace Thousand.Parse
             var untypedAST = Untyped.Document(untypedTokens.Value);
             if (!untypedAST.HasValue)
             {
-                var badToken = untypedAST.Location.IsAtEnd ? untypedTokens.Value.Last() : untypedAST.Location.First();
-                state.AddError(badToken.Span, ErrorKind.Syntax, untypedAST.FormatErrorMessageFragment());
+                state.AddError(untypedTokens.Value, untypedAST);
                 return null;
             }
 
@@ -63,8 +63,7 @@ namespace Thousand.Parse
             {
                 if (!pass2AST.HasValue)
                 {
-                    var badToken = pass2AST.Location.IsAtEnd ? pass2Tokens.Last() : pass2AST.Location.First();
-                    state.AddError(badToken.Span, ErrorKind.Syntax, pass2AST.FormatErrorMessageFragment());
+                    state.AddError(pass2Tokens, pass2AST);
                     return null;
                 }
 

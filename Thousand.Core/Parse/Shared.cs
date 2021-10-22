@@ -12,7 +12,7 @@ namespace Thousand.Parse
     {
         public static TokenListParser<TokenKind, TA[]> List<TA>(TokenListParser<TokenKind, TA> attributeParser) =>
             from begin in Token.EqualTo(TokenKind.LeftBracket)
-            from values in attributeParser.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from values in attributeParser.ManyDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 

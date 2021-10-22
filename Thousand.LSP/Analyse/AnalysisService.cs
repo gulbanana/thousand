@@ -18,7 +18,10 @@ namespace Thousand.LSP.Analyse
         private readonly BufferService documentService;
         private readonly IDiagnosticService diagnosticService;
         private readonly IGenerationService generationService;
+
         private readonly Tokenizer<TokenKind> tokenizer;
+        private readonly Parse.Attributes.Metadata metadata;
+
         private readonly AST.TypedDocument? stdlib;
 
         public AnalysisService(ILogger<AnalysisService> logger, BufferService documentService, IDiagnosticService diagnosticService, IGenerationService generationService)
@@ -27,6 +30,8 @@ namespace Thousand.LSP.Analyse
             this.documentService = documentService;
             this.diagnosticService = diagnosticService;
             this.generationService = generationService;
+
+            this.metadata = new Parse.Attributes.Metadata();
             this.tokenizer = Tokenizer.Build();
 
             var stdlibState = new GenerationState();
@@ -136,8 +141,7 @@ namespace Thousand.LSP.Analyse
             var untypedAST = Untyped.Document(untypedTokens.Value);
             if (!untypedAST.HasValue || !untypedAST.Remainder.IsAtEnd)
             {
-                var badToken = untypedAST.Location.IsAtEnd ? untypedTokens.Value.Last() : untypedAST.Location.First();
-                state.AddError(badToken.Span, ErrorKind.Syntax, untypedAST.FormatErrorMessageFragment());
+                state.AddError(untypedTokens.Value, untypedAST);
                 return;
             }
 
@@ -149,7 +153,7 @@ namespace Thousand.LSP.Analyse
                 return;
             }
 
-            if (!Typechecker.TryTypecheck(state, syntax, allowErrors: true, out var typedAST))
+            if (!Typechecker.TryTypecheck(metadata, state, syntax, allowErrors: true, out var typedAST))
             {
                 return;
             }

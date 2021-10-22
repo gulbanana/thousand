@@ -152,13 +152,13 @@ namespace Thousand.Parse
                 .Or(ArrowOffsetEndAttribute);
 
         public static TokenListParser<TokenKind, AST.PositionAttribute> ArrowOnlyAnchorAttribute { get; } =
-            from key in Key(EntityAttributeKind.Anchor)
+            from key in Key(PositionAttributeKind.Anchor)
             from start in Value.Anchor
             from end in Value.Anchor
             select new AST.PositionAnchorAttribute(start, end) as AST.PositionAttribute;
 
         public static TokenListParser<TokenKind, AST.PositionAttribute> ArrowOnlyOffsetAttribute { get; } =
-            from key in Key(EntityAttributeKind.Offset)
+            from key in Key(PositionAttributeKind.Offset)
             from start in Value.Point
             from end in Value.Point
             select new AST.PositionOffsetAttribute(start, end) as AST.PositionAttribute;
@@ -174,7 +174,7 @@ namespace Thousand.Parse
 
         #region doc group, used only by diagrams
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentScaleAttribute { get; } =
-            from key in Key(DocumentAttributeKind.Scale)
+            from key in Key(DiagramAttributeKind.Scale)
             from value in Value.CountingDecimal
             select new AST.DocumentScaleAttribute(value) as AST.DocumentAttribute;
 
@@ -213,12 +213,12 @@ namespace Thousand.Parse
 
         #region entity position group, used by objects and lines (edges)
         public static TokenListParser<TokenKind, AST.PositionAttribute> PositionAnchorAttribute { get; } =
-            from key in Key(EntityAttributeKind.Anchor)
+            from key in Key(PositionAttributeKind.Anchor)
             from startAndEnd in Value.Anchor.Twice()
             select new AST.PositionAnchorAttribute(startAndEnd.first, startAndEnd.second) as AST.PositionAttribute;
 
         public static TokenListParser<TokenKind, AST.PositionAttribute> PositionOffsetAttribute { get; } =
-            from key in Key(EntityAttributeKind.Offset)
+            from key in Key(PositionAttributeKind.Offset)
             from startAndEnd in Value.Point.Twice()
             select new AST.PositionOffsetAttribute(startAndEnd.first, startAndEnd.second) as AST.PositionAttribute;
 
