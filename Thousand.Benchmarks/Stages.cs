@@ -15,8 +15,10 @@ namespace Thousand.Benchmarks
 
         private readonly SkiaRenderer renderer;
         private string source;
-        private AST.TypedDocument stdlib;
-        private AST.TypedDocument ast;
+        private Parse.Attributes.Metadata metadata;
+        private AST.TypedDocument stdlibAST;
+        private AST.UntypedDocument preprocessedAST;
+        private AST.TypedDocument typedAST;
         private IR.Root rules;
         private Layout.Diagram diagram;
         
@@ -30,10 +32,15 @@ namespace Thousand.Benchmarks
         {
             source = File.ReadAllText(Input);
 
+            metadata = new Parse.Attributes.Metadata();
             var state = new GenerationState();
-            Parser.TryParse(DiagramGenerator.ReadStdlib(), state, out stdlib);
-            Parser.TryParse(source, state, out ast);
-            Evaluator.TryEvaluate(new[] { stdlib, ast }, state, out rules);
+
+            Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);
+            Typechecker.TryTypecheck(metadata, state, stdlibMacros, false, out stdlibAST);
+
+            Preprocessor.TryPreprocess(state, source, out preprocessedAST);
+            Typechecker.TryTypecheck(metadata, state, preprocessedAST, false, out typedAST);
+            Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, state, out rules);
             Composer.TryCompose(rules, state, out diagram);
 
             if (state.HasErrors())
@@ -43,15 +50,21 @@ namespace Thousand.Benchmarks
         }
 
         [Benchmark]
-        public bool Parse()
+        public bool Preprocess()
         {
-            return Parser.TryParse(source, new GenerationState(), out _);
+            return Preprocessor.TryPreprocess(new GenerationState(), source, out _);
+        }
+
+        [Benchmark]
+        public bool Typecheck()
+        {
+            return Typechecker.TryTypecheck(metadata, new GenerationState(), preprocessedAST, false, out _);
         }
 
         [Benchmark]
         public bool Evaluate()
         {
-            return Evaluator.TryEvaluate(new[] { stdlib, ast }, new GenerationState(), out _);
+            return Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, new GenerationState(), out _);
         }
 
         [Benchmark]

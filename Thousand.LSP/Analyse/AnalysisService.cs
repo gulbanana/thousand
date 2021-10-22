@@ -35,7 +35,7 @@ namespace Thousand.LSP.Analyse
             this.tokenizer = Tokenizer.Build();
 
             var stdlibState = new GenerationState();
-            if (!Parser.TryParse(DiagramGenerator.ReadStdlib(), stdlibState, out stdlib))
+            if (!Preprocessor.TryPreprocess(stdlibState, DiagramGenerator.ReadStdlib(), out var syntax) || !Typechecker.TryTypecheck(metadata, stdlibState, syntax, allowErrors: false, out stdlib))
             {
                 logger.LogError($"Failed to parse stdlib: {stdlibState.JoinErrors()}");
             }

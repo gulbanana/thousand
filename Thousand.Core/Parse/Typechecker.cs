@@ -68,23 +68,52 @@ namespace Thousand.Parse
             }
         }
 
-        private AST.DiagramAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
+        private T? CheckAttributeValue<T>(AST.UntypedAttribute ast, TokenListParser<TokenKind, T> pT) where T : class
         {
-            if (!metadata.Documents.Contains(ast.Key.Text))
+            if (ast.Value.Location.Position == ast.Value.Remainder.Position)
             {
-                var validAttributes = string.Join(", ", metadata.Documents.Select(a => $"`{a}`").OrderBy(x => x));
+                state.AddError(ast.Key.Span, ErrorKind.Syntax, $"attribute has no value");
+                return null;
+            }
+
+            var parse = pT(ast.Value.Location);
+            if (parse.HasValue)
+            {
+                if (parse.Remainder.Position <= ast.Value.Remainder.Position)
+                {
+                    return parse.Value;
+                }
+                else
+                {
+                    var badToken = parse.Remainder.First();
+                    state.AddError(parse.Remainder.First().Span, ErrorKind.Syntax, $"unexpected `{badToken.ToStringValue()}`, expected `,` or `]`");
+                    return null;
+                }
+            }
+            else
+            {
+                state.AddError(ast.Value.Location, parse);
+                return null;
+            }
+        }
+
+        private AST.DocumentAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
+        {
+            if (!metadata.DocumentNames.Contains(ast.Key.Text))
+            {
+                var validAttributes = string.Join(", ", metadata.DocumentNames.Select(a => $"`{a}`").OrderBy(x => x));
                 state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
                 return null;
             }
 
-            return CheckAttribute(ast, Typed.DiagramAttribute);
+            return CheckAttribute(ast, Typed.DocumentAttribute);
         }
 
         private AST.ObjectAttribute? CheckObjectAttribute(AST.UntypedAttribute ast)
         {
-            if (!metadata.Objects.Contains(ast.Key.Text))
+            if (!metadata.ObjectNames.Contains(ast.Key.Text))
             {
-                var validAttributes = string.Join(", ", metadata.Objects.Select(a => $"`{a}`").OrderBy(x => x));
+                var validAttributes = string.Join(", ", metadata.ObjectNames.Select(a => $"`{a}`").OrderBy(x => x));
                 state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
                 return null;
             }
@@ -92,28 +121,34 @@ namespace Thousand.Parse
             return CheckAttribute(ast, Typed.ObjectAttribute);
         }
 
-        private AST.SegmentAttribute? CheckLineAttribute(AST.UntypedAttribute ast)
+        private AST.LineAttribute? CheckLineAttribute(AST.UntypedAttribute ast)
         {
-            if (!metadata.Lines.Contains(ast.Key.Text))
+            foreach (var attr in metadata.LineAttributes)
             {
-                var validAttributes = string.Join(", ", metadata.Lines.Select(a => $"`{a}`").OrderBy(x => x));
-                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-                return null;
+                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
+                {
+                    return CheckAttributeValue(ast, attr.ValueParser);
+                }
             }
 
-            return CheckAttribute(ast, Typed.SegmentAttribute);
+            var validAttributes = string.Join(", ", metadata.LineNames.Select(a => $"`{a}`").OrderBy(x => x));
+            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+            return null;
         }
 
         private AST.EntityAttribute? CheckEntityAttribute(AST.UntypedAttribute ast)
         {
-            if (!metadata.Entities.Contains(ast.Key.Text))
+            foreach (var attr in metadata.EntityAttributes)
             {
-                var validAttributes = string.Join(", ", metadata.Objects.Concat(metadata.Lines).Distinct().Select(a => $"`{a}`").OrderBy(x => x));
-                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-                return null;
+                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
+                {
+                    return CheckAttributeValue(ast, attr.ValueParser);
+                }
             }
 
-            return CheckAttribute(ast, Typed.EntityAttribute);
+            var validAttributes = string.Join(", ", metadata.ObjectNames.Concat(metadata.LineNames).Distinct().Select(a => $"`{a}`").OrderBy(x => x));
+            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+            return null;
         }
 
         private AST.TypedDocument CheckDocument(AST.UntypedDocument ast)
@@ -147,7 +182,7 @@ namespace Thousand.Parse
 
             foreach (var attr in ast.Attributes)
             {
-                if (metadata.LinesOnly.Contains(attr.Key.Text)) 
+                if (metadata.LineOnlyNames.Contains(attr.Key.Text)) 
                 {
                     return new AST.LineClass(
                         ast.Name,
@@ -155,7 +190,7 @@ namespace Thousand.Parse
                         ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
                     );
                 }
-                else if (metadata.ObjectsOnly.Contains(attr.Key.Text))
+                else if (metadata.ObjectOnlyNames.Contains(attr.Key.Text))
                 {
                     return new AST.ObjectClass(
                         ast.Name,
@@ -199,7 +234,7 @@ namespace Thousand.Parse
 
         private IEnumerable<AST.TypedDocumentContent> CheckDocumentContent(Macro<AST.UntypedDocumentContent> declaration) => declaration.Value.Match(
             _ => Array.Empty<AST.TypedDocumentContent>(),
-            x => CheckDocumentAttribute(x) is AST.DiagramAttribute a ? new AST.TypedDocumentContent[] { a } : Array.Empty<AST.TypedDocumentContent>(),
+            x => CheckDocumentAttribute(x) is AST.DocumentAttribute a ? new AST.TypedDocumentContent[] { a } : Array.Empty<AST.TypedDocumentContent>(),
             x => new AST.TypedDocumentContent[] { CheckClass(x) },
             x => new AST.TypedDocumentContent[] { CheckObject(x) },
             x => new AST.TypedDocumentContent[] { CheckLine(x) }

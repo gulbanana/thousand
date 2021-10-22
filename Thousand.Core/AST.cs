@@ -8,8 +8,8 @@ namespace Thousand.AST
     /**********************************
      * Shared AST - mostly attributes *
      **********************************/
-    public abstract record DocumentAttribute;
-    public record DocumentScaleAttribute(decimal Value) : DocumentAttribute;
+    public abstract record DiagramAttribute;
+    public record DiagramScaleAttribute(decimal Value) : DiagramAttribute;
 
     public abstract record TextAttribute;
     public record TextFontFamilyAttribute(string Name) : TextAttribute;
@@ -17,11 +17,11 @@ namespace Thousand.AST
     public record TextFontColourAttribute(Colour Colour) : TextAttribute;
     public record TextFontAttribute(string? Family, int? Size, Colour? Colour) : TextAttribute;
 
-    public abstract record LineAttribute;
-    public record LineStrokeColourAttribute(Colour Colour) : LineAttribute;
-    public record LineStrokeStyleAttribute(StrokeKind Kind) : LineAttribute;
-    public record LineStrokeWidthAttribute(Width Value) : LineAttribute;
-    public record LineStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : LineAttribute;
+    public abstract record StrokeAttribute;
+    public record StrokeColourAttribute(Colour Colour) : StrokeAttribute;
+    public record StrokeStyleAttribute(StrokeKind Kind) : StrokeAttribute;
+    public record StrokeWidthAttribute(Width Value) : StrokeAttribute;
+    public record StrokeShorthandAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : StrokeAttribute;
 
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
@@ -68,10 +68,10 @@ namespace Thousand.AST
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, LineAttribute> { }
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, LineAttribute> { }
-    [GenerateOneOf] public partial class SegmentAttribute : OneOfBase<PositionAttribute, ArrowAttribute, LineAttribute> { }
-    [GenerateOneOf] public partial class DiagramAttribute : OneOfBase<DocumentAttribute, RegionAttribute, TextAttribute> { }
+    [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, StrokeAttribute> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, StrokeAttribute> { }
+    [GenerateOneOf] public partial class LineAttribute : OneOfBase<PositionAttribute, ArrowAttribute, StrokeAttribute> { }
+    [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<DiagramAttribute, RegionAttribute, TextAttribute> { }
 
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
     public record LineSegment(Parse.Identifier Target, ArrowKind? Direction)
@@ -104,9 +104,9 @@ namespace Thousand.AST
     {
         public ObjectClass(string name, params ObjectAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs, Array.Empty<TypedObjectContent>()) { }
     }
-    public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, SegmentAttribute[] Attributes) : TypedClass(Name, BaseClasses)
+    public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses)
     {
-        public LineClass(string name, params SegmentAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs) { }
+        public LineClass(string name, params LineAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs) { }
     }
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
 
@@ -117,11 +117,11 @@ namespace Thousand.AST
         public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedObjectContent>()) { }
     }
 
-    public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, SegmentAttribute[] Attributes)
+    public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, LineAttribute[] Attributes)
     {
-        public TypedLine(string klass, params LineSegment[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<SegmentAttribute>()) { }
+        public TypedLine(string klass, params LineSegment[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<LineAttribute>()) { }
     }
 
-    [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DiagramAttribute, TypedClass, TypedObject, TypedLine> { }
+    [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DocumentAttribute, TypedClass, TypedObject, TypedLine> { }
     public record TypedDocument(TypedDocumentContent[] Declarations);
 }

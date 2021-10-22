@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Thousand.Parse;
+using Thousand.Parse.Attributes;
 
-namespace Thousand.Parse
+namespace Thousand.Tests
 {
-    public sealed class Parser
+    static class Facade
     {
-        // XXX this facade is convenient, but misleading. maybe it should only be for tests
         public static bool TryParse(string text, GenerationState state, [NotNullWhen(true)] out AST.TypedDocument? outputSyntax)
         {
             if (!Preprocessor.TryPreprocess(state, text, out var syntax))
@@ -13,7 +14,7 @@ namespace Thousand.Parse
                 return false;
             }
 
-            if (!Typechecker.TryTypecheck(new Attributes.Metadata(), state, syntax, allowErrors: false, out outputSyntax))
+            if (!Typechecker.TryTypecheck(new Metadata(), state, syntax, allowErrors: false, out outputSyntax))
             {
                 return false;
             }

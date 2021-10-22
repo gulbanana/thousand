@@ -20,7 +20,7 @@ namespace Thousand.Tests
         {
             var document = new AST.TypedDocument(new AST.TypedDocumentContent[]
             {
-                new AST.DiagramAttribute(new AST.RegionFillAttribute(Colour.Blue)),
+                new AST.DocumentAttribute(new AST.RegionFillAttribute(Colour.Blue)),
 
                 new AST.ObjectClass("object"),
                 new AST.LineClass("line"),

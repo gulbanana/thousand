@@ -50,7 +50,7 @@ namespace Thousand.Tests
         [Fact]
         public void EntityOffsetAsObject()
         {
-            Assert.True(Parser.TryParse(@"class foo [offset=1 1]; foo bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class foo [offset=1 1]; foo bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var objekt = rules!.Region.Objects.Single();
@@ -60,7 +60,7 @@ namespace Thousand.Tests
         [Fact]
         public void EntityOffsetAsLine()
         {
-            Assert.True(Parser.TryParse(@"class object; class foo [offset=1 1]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class object; class foo [offset=1 1]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
@@ -71,7 +71,7 @@ namespace Thousand.Tests
         [Fact]
         public void LineOffsetAsLine()
         {
-            Assert.True(Parser.TryParse(@"class object; class foo [offset=1 1 2 2]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class object; class foo [offset=1 1 2 2]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
@@ -82,7 +82,7 @@ namespace Thousand.Tests
         [Fact]
         public void EntityAnchorAsObject()
         {
-            Assert.True(Parser.TryParse(@"class foo [anchor=n]; foo bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class foo [anchor=n]; foo bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var objekt = rules!.Region.Objects.Single();
@@ -92,7 +92,7 @@ namespace Thousand.Tests
         [Fact]
         public void EntityAnchorAsLine()
         {
-            Assert.True(Parser.TryParse(@"class object; class foo [anchor=n]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class object; class foo [anchor=n]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
@@ -103,7 +103,7 @@ namespace Thousand.Tests
         [Fact]
         public void LineAnchorAsLine_Twice()
         {
-            Assert.True(Parser.TryParse(@"class object; class foo [anchor=n e]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class object; class foo [anchor=n e]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
@@ -114,7 +114,7 @@ namespace Thousand.Tests
         [Fact]
         public void LineAnchorAsLine_Group()
         {
-            Assert.True(Parser.TryParse(@"class object; class foo [anchor=any]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class object; class foo [anchor=any]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
@@ -126,7 +126,7 @@ namespace Thousand.Tests
         [Fact]
         public void Regression_MultiwordEntityAttribute_UsingASTTypechecker()
         {
-            Assert.True(Parser.TryParse(@"class x [stroke-colour=black]", state, out var document), state.JoinErrors());
+            Assert.True(Facade.TryParse(@"class x [stroke-colour=black]", state, out var document), state.JoinErrors());
         }
     }
 }

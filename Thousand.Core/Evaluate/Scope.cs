@@ -74,7 +74,7 @@ namespace Thousand.Evaluate
 
         public LineContent FindLineClass(Parse.Identifier name, bool warn)
         {
-            var result = new LineContent(false, Array.Empty<AST.SegmentAttribute>());
+            var result = new LineContent(false, Array.Empty<AST.LineAttribute>());
 
             if (lineClasses.TryGetValue(name.Text, out var newResult))
             {

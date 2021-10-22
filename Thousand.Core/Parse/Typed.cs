@@ -15,22 +15,22 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
             AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
                 .Or(AttributeParsers.RegionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.LineAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.ObjectAttribute)x))
                 .Or(AttributeParsers.PositionAttribute.Select(x => (AST.ObjectAttribute)x))
                 .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.SegmentAttribute> SegmentAttribute { get; } =
-            AttributeParsers.ArrowAttribute.Select(x => (AST.SegmentAttribute)x)
-                .Or(AttributeParsers.LineAttribute.Select(x => (AST.SegmentAttribute)x))
-                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.SegmentAttribute)x));
+        public static TokenListParser<TokenKind, AST.LineAttribute> SegmentAttribute { get; } =
+            AttributeParsers.ArrowAttribute.Select(x => (AST.LineAttribute)x)
+                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.LineAttribute)x))
+                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.LineAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
-            AttributeParsers.DocumentAttribute.Select(x => (AST.DiagramAttribute)x)
-                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DiagramAttribute)x))
-                .Or(AttributeParsers.TextAttribute.Select(x => (AST.DiagramAttribute)x));
+        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
+            AttributeParsers.DiagramAttribute.Select(x => (AST.DocumentAttribute)x)
+                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DocumentAttribute)x))
+                .Or(AttributeParsers.TextAttribute.Select(x => (AST.DocumentAttribute)x));
 
         public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } =
-            AttributeParsers.LineAttribute.Select(x => (AST.EntityAttribute)x)
+            AttributeParsers.StrokeAttribute.Select(x => (AST.EntityAttribute)x)
                 .Or(AttributeParsers.PositionAttribute.Select(x => (AST.EntityAttribute)x));
 
         /**********************************************************************
@@ -43,7 +43,7 @@ namespace Thousand.Parse
             select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
+            Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
             Shared.List(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
@@ -197,7 +197,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
             from chain in Shared.Edges
-            from attrs in Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.SegmentAttribute>())
+            from attrs in Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
             select new AST.TypedLine(classes, chain.ToArray(), attrs);
 
         /***************************************************************************
@@ -223,7 +223,7 @@ namespace Thousand.Parse
                 }
                 if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
                 {
-                    return DiagramAttribute.Select(x => (AST.TypedDocumentContent)x)(input);
+                    return DocumentAttribute.Select(x => (AST.TypedDocumentContent)x)(input);
                 }
                 else // could still be an object or a line
                 {

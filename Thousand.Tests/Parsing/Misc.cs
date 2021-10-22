@@ -161,7 +161,7 @@ bar""");
             var result = Typed.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Attributes, new AST.LineStrokeColourAttribute(new Colour(0, 0, 0)));
+            AssertEx.Sequence(result.Value.Attributes, new AST.StrokeColourAttribute(new Colour(0, 0, 0)));
         }
 
         [Fact]

@@ -124,41 +124,49 @@ namespace Thousand.Parse
             AlignRowOnly.Or(Identifier.Enum<AlignmentKind>());
         #endregion
 
-        #region arrow group, used only by edges
+        // arrow group, used only by edges
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
+            Attribute.From(ArrowAttributes.All());
+
+        #region legacy versions used for the syntactically type-determining parser
+        private enum ArrowOnlyAttributeKind
+        {
+            Anchor,
+            Offset,
+            AnchorStart,
+            AnchorEnd,
+            OffsetStart,
+            OffsetEnd,
+        }
+
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorStartAttribute { get; } =
-            from key in Key(ArrowAttributeKind.AnchorStart)
+            from key in Key(ArrowOnlyAttributeKind.AnchorStart)
             from value in Value.Anchor
             select new AST.ArrowAnchorStartAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAnchorEndAttribute { get; } =
-            from key in Key(ArrowAttributeKind.AnchorEnd)
+            from key in Key(ArrowOnlyAttributeKind.AnchorEnd)
             from value in Value.Anchor
             select new AST.ArrowAnchorEndAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetStartAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetStart)
+            from key in Key(ArrowOnlyAttributeKind.OffsetStart)
             from value in Value.Point
             select new AST.ArrowOffsetStartAttribute(value) as AST.ArrowAttribute;
 
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowOffsetEndAttribute { get; } =
-            from key in Key(ArrowAttributeKind.OffsetEnd)
+            from key in Key(ArrowOnlyAttributeKind.OffsetEnd)
             from value in Value.Point
             select new AST.ArrowOffsetEndAttribute(value) as AST.ArrowAttribute;
 
-        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } =
-            ArrowAnchorStartAttribute
-                .Or(ArrowAnchorEndAttribute)
-                .Or(ArrowOffsetStartAttribute)
-                .Or(ArrowOffsetEndAttribute);
-
         public static TokenListParser<TokenKind, AST.PositionAttribute> ArrowOnlyAnchorAttribute { get; } =
-            from key in Key(PositionAttributeKind.Anchor)
+            from key in Key(ArrowOnlyAttributeKind.Anchor)
             from start in Value.Anchor
             from end in Value.Anchor
             select new AST.PositionAnchorAttribute(start, end) as AST.PositionAttribute;
 
         public static TokenListParser<TokenKind, AST.PositionAttribute> ArrowOnlyOffsetAttribute { get; } =
-            from key in Key(PositionAttributeKind.Offset)
+            from key in Key(ArrowOnlyAttributeKind.Offset)
             from start in Value.Point
             from end in Value.Point
             select new AST.PositionOffsetAttribute(start, end) as AST.PositionAttribute;
@@ -173,59 +181,23 @@ namespace Thousand.Parse
         #endregion
 
         #region doc group, used only by diagrams
-        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentScaleAttribute { get; } =
+        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramScaleAttribute { get; } =
             from key in Key(DiagramAttributeKind.Scale)
             from value in Value.CountingDecimal
-            select new AST.DocumentScaleAttribute(value) as AST.DocumentAttribute;
+            select new AST.DiagramScaleAttribute(value) as AST.DiagramAttribute;
 
-        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
-            DocumentScaleAttribute;
+        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } =
+            DiagramScaleAttribute;
         #endregion
 
         // XXX these could be merged
-        #region line (drawing) group, used by objects and lines (edges)
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeColourAttribute { get; } =
-            from key in Key(LineAttributeKind.StrokeColour)
-            from value in Value.Colour
-            select new AST.LineStrokeColourAttribute(value) as AST.LineAttribute;
+        // line (drawing) group, used by objects and lines (edges)
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeAttribute { get; } =
+            Attribute.From(StrokeAttributes.All());
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeWidthAttribute { get; } =
-            from key in Key(LineAttributeKind.StrokeWidth)
-            from value in Value.Width
-            select new AST.LineStrokeWidthAttribute(value) as AST.LineAttribute;
-
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeStyleAttribute { get; } =
-            from key in Key(LineAttributeKind.StrokeStyle)
-            from value in Identifier.Enum<StrokeKind>()
-            select new AST.LineStrokeStyleAttribute(value) as AST.LineAttribute;
-
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineStrokeAttribute { get; } =
-            from key in Key(LineAttributeKind.Stroke)
-            from values in Shorthand(Value.Colour, Value.Width, Identifier.Enum<StrokeKind>())
-            select values switch { (var c, var w, var s) => new AST.LineStrokeAttribute(c, s, w) as AST.LineAttribute };
-
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
-            LineStrokeAttribute
-                .Or(LineStrokeColourAttribute)
-                .Or(LineStrokeWidthAttribute)
-                .Or(LineStrokeStyleAttribute);
-        #endregion
-
-        #region entity position group, used by objects and lines (edges)
-        public static TokenListParser<TokenKind, AST.PositionAttribute> PositionAnchorAttribute { get; } =
-            from key in Key(PositionAttributeKind.Anchor)
-            from startAndEnd in Value.Anchor.Twice()
-            select new AST.PositionAnchorAttribute(startAndEnd.first, startAndEnd.second) as AST.PositionAttribute;
-
-        public static TokenListParser<TokenKind, AST.PositionAttribute> PositionOffsetAttribute { get; } =
-            from key in Key(PositionAttributeKind.Offset)
-            from startAndEnd in Value.Point.Twice()
-            select new AST.PositionOffsetAttribute(startAndEnd.first, startAndEnd.second) as AST.PositionAttribute;
-
+        // entity position group, used by objects and lines (edges)
         public static TokenListParser<TokenKind, AST.PositionAttribute> PositionAttribute { get; } =
-            PositionAnchorAttribute
-                .Or(PositionOffsetAttribute);
-        #endregion
+            Attribute.From(PositionAttributes.All());
 
         #region text group, used only by objects (so far)
         public static TokenListParser<TokenKind, AST.TextAttribute> TextFontSizeAttribute { get; } =

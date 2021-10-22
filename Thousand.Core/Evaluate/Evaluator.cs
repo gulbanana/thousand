@@ -61,7 +61,7 @@ namespace Thousand.Evaluate
                 {
                     switch (doc)
                     {
-                        case AST.DocumentScaleAttribute dsa:
+                        case AST.DiagramScaleAttribute dsa:
                             Scale = dsa.Value;
                             break;
                     }
@@ -129,8 +129,8 @@ namespace Thousand.Evaluate
                 var localAttrs = c switch
                 {
                     AST.LineClass lc => lc.Attributes,
-                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.SegmentAttribute(ea.AsT0) : new AST.SegmentAttribute(ea.AsT1)),
-                    _ => Enumerable.Empty<AST.SegmentAttribute>()
+                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.LineAttribute(ea.AsT0) : new AST.LineAttribute(ea.AsT1)),
+                    _ => Enumerable.Empty<AST.LineAttribute>()
                 };
 
                 var allAttrs = c.BaseClasses
@@ -433,14 +433,14 @@ namespace Thousand.Evaluate
             };
         }
 
-        private Stroke ApplyStrokeAttributes(Stroke stroke, AST.LineAttribute attribute)
+        private Stroke ApplyStrokeAttributes(Stroke stroke, AST.StrokeAttribute attribute)
         {
             return attribute switch
             {
-                AST.LineStrokeColourAttribute lsca => stroke with { Colour = lsca.Colour },
-                AST.LineStrokeWidthAttribute lswa => stroke with { Width = lswa.Value },
-                AST.LineStrokeStyleAttribute lssa => stroke with { Style = lssa.Kind },
-                AST.LineStrokeAttribute lsa => new Stroke
+                AST.StrokeColourAttribute lsca => stroke with { Colour = lsca.Colour },
+                AST.StrokeWidthAttribute lswa => stroke with { Width = lswa.Value },
+                AST.StrokeStyleAttribute lssa => stroke with { Style = lssa.Kind },
+                AST.StrokeShorthandAttribute lsa => new Stroke
                 {
                     Colour = lsa.Colour ?? stroke.Colour,
                     Width = lsa.Width ?? stroke.Width,
