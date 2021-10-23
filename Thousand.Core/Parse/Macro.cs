@@ -58,21 +58,22 @@ namespace Thousand.Parse
             {
                 return TextSpan.Empty;
             }
-            
-            var start = Location.First().Span;
-            if (start.Source == null)
+
+            var first = Location.First().Span;
+            if (first.Source == null)
             {
                 return TextSpan.Empty;
             }
 
             if (Remainder.IsAtEnd)
             {
-                return new TextSpan(start.Source, start.Position, start.Source.Length - start.Position.Absolute);
+                return new TextSpan(first.Source, first.Position, first.Source.Length - first.Position.Absolute);
             }
             else
             {
-                var end = Remainder.First().Span;
-                return start.Until(end);
+                var tokenDiff = Remainder.Position - Location.Position;
+                var last = Location.ElementAt(tokenDiff - 1).Span;
+                return new TextSpan(first.Source, first.Position, last.Position.Absolute - first.Position.Absolute + last.Length);
             }
         }
     }

@@ -122,6 +122,18 @@ bar""");
             Assert.True(result.HasValue, result.ToString());
         }
 
+
+        [Fact]
+        public void Object_TypeSpan()
+        {
+            var tokens = tokenizer.Tokenize(@"foo bar");
+            var result = Untyped.Object(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal("foo", result.Value.Classes.First()?.Value.Name.Text);
+            Assert.Equal(3, result.Value.Classes.First()?.Span().Length);
+        }
+
         [Fact]
         public void Line_Bare()
         {
