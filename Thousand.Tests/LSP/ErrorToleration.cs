@@ -22,36 +22,35 @@ namespace Thousand.Tests.LSP
             semantics = new AnalysisService(NullLogger<AnalysisService>.Instance, buffers, diagnostics, new MockGenerationService());
         }
 
-        private Task<Analysis> ParseAsync(string source)
+        private Analysis Parse(string source)
         {
             var key = DocumentUri.From("file://test.1000");
             buffers.Add(key, source);
-            semantics.Reparse(key);
-            return semantics.GetAnalysisAsync(key);
+            return semantics.Analyse(new ServerOptions(), key);
         }
 
         [Fact]
-        public async Task CorrectSimpleDocument()
+        public void CorrectSimpleDocument()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class foo
 foo bar [fill=red]
 foo baz [stroke=red]
 line bar -- baz [stroke=blue]");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(4, document.Syntax!.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(4, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
         }
 
         [Fact]
-        public async Task CorrectComplexDocument()
+        public void CorrectComplexDocument()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class object
 class template($x) [stroke=$x]
 object a {
@@ -61,18 +60,18 @@ template(red)
 template(1) a -- b");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(5, document.Syntax!.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(5, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
         }
 
         [Fact]
-        public async Task CorrectTemplatedDocument()
+        public void CorrectTemplatedDocument()
         {
-            var document = await ParseAsync(@"
+            var document = Parse(@"
 class foo($x) {
     object $x
 }
@@ -80,7 +79,7 @@ foo(""bar"")
 ");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
@@ -90,101 +89,101 @@ foo(""bar"")
         }
 
         [Fact]
-        public async Task ReadUpToInvalidToken()
+        public void ReadUpToInvalidToken()
         {
-            var document = await ParseAsync(@"
+            var document = Parse(@"
 object a
 !nonsense!");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Syntax!.Declarations);
+            Assert.Single(document.Main!.Syntax.Declarations);
         }
 
         [Fact(Skip = "not yet implemented")]
-        public async Task ReadAfterInvalidToken()
+        public void ReadAfterInvalidToken()
         {
-            var document = await ParseAsync(@"
+            var document = Parse(@"
 !nonsense!
 object b");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Syntax!.Declarations);
+            Assert.Single(document.Main!.Syntax.Declarations);
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration()
+        public void IgnoreBadDeclaration()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class foo                   // good
 foo bar [fill=red]            // good
 [why=an=attribute=here]       // bad
 line bar -- bar [stroke=blue] // good");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(3, document.Syntax!.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
             Assert.Equal(3, document.ValidSyntax!.Declarations.Count());
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration_SyntacticallyValid_MissingObject()
+        public void IgnoreBadDeclaration_SyntacticallyValid_MissingObject()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class foo                   // good
 foo bar [fill=red]            // good
 [why=an=attribute=here]       // bad
 line bar -- baz [stroke=blue] // good");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(3, document.Syntax!.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
             Assert.Equal(3, document.ValidSyntax!.Declarations.Count());
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration_SingleLine()
+        public void IgnoreBadDeclaration_SingleLine()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"object a; []; object c { object }");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(2, document.Syntax!.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(2, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration_NestInObject()
+        public void IgnoreBadDeclaration_NestInObject()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"object {
     []
     object 
 }");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
@@ -194,16 +193,16 @@ line bar -- baz [stroke=blue] // good");
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration_NestInClass()
+        public void IgnoreBadDeclaration_NestInClass()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class a [align=start] {
     []    
 }
 a");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
@@ -212,9 +211,9 @@ a");
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration_NestInObjectInClass()
+        public void IgnoreBadDeclaration_NestInObjectInClass()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class foo {
     object {
         []
@@ -224,7 +223,7 @@ a");
 foo");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
@@ -235,28 +234,29 @@ foo");
         }
 
         [Fact]
-        public async Task IgnoreBadDeclaration_IncompleteDocContent()
+        public void IgnoreBadDeclaration_IncompleteDocContent()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class foo [fill=red]
 class bar [");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);
         }
 
-        public async Task IgnoreBadDeclaration_IncompleteObjContent()
+        [Fact]
+        public void IgnoreBadDeclaration_IncompleteObjContent()
         {
-            var document = await ParseAsync(
+            var document = Parse(
 @"class foo [fill=red] {
     class bar [
 }");
 
             Assert.NotNull(document.Tokens);
-            Assert.NotNull(document.Syntax);
+            Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
             Assert.NotNull(document.Rules);
             Assert.NotNull(document.Diagram);

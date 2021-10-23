@@ -26,26 +26,26 @@ namespace Thousand.LSP.Handlers
         {
             var analysis = await analysisService.GetAnalysisAsync(request.TextDocument.Uri);
 
-            foreach (var (loc, ast) in analysis.ObjectReferences)
+            foreach (var (uri, loc, ast) in analysis.ObjectReferences)
             {
                 if (loc.Contains(request.Position))
                 {
                     var refs = analysis.ObjectReferences
                         .Where(r => ReferenceEquals(r.Value, ast))
-                        .Select(r => new Location { Uri = analysis.Uri, Range = r.Range })
+                        .Select(r => new Location { Uri = uri, Range = r.Range })
                         .ToArray();
 
                     return new LocationContainer(refs);
                 }
             }
 
-            foreach (var (loc, ast) in analysis.ClassReferences)
+            foreach (var (uri, loc, ast) in analysis.ClassReferences)
             {
                 if (loc.Contains(request.Position))
                 {
                     var refs = analysis.ClassReferences
                         .Where(r => ReferenceEquals(r.Value, ast))
-                        .Select(r => new Location { Uri = analysis.Uri, Range = r.Range })
+                        .Select(r => new Location { Uri = uri, Range = r.Range })
                         .ToArray();
 
                     return new LocationContainer(refs);

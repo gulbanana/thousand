@@ -27,6 +27,7 @@ TO DO
 * language server: inline doc (hovers for attribute keys?)
 * language server: completion features 
 * language server: definition/declaration features
+* language server: outline provider
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it

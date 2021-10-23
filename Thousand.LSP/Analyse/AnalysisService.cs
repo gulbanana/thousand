@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Superpower;
 using Superpower.Model;
 using System;
@@ -22,7 +23,8 @@ namespace Thousand.LSP.Analyse
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly Parse.Attributes.API api;
 
-        private readonly AST.TypedDocument? stdlib;
+        private readonly ParsedDocument? stdlib;
+        private readonly AST.TypedDocument? typedStdlib;
 
         public AnalysisService(ILogger<AnalysisService> logger, BufferService documentService, IDiagnosticService diagnosticService, IGenerationService generationService)
         {
@@ -35,32 +37,37 @@ namespace Thousand.LSP.Analyse
             this.tokenizer = Tokenizer.Build();
 
             var stdlibState = new GenerationState();
-            if (!Preprocessor.TryPreprocess(stdlibState, DiagramGenerator.ReadStdlib(), out var syntax) || !Typechecker.TryTypecheck(api, stdlibState, syntax, allowErrors: false, out stdlib))
+            var stdlibSource = DiagramGenerator.ReadStdlib();
+            if (!Preprocessor.TryPreprocess(stdlibState, DiagramGenerator.ReadStdlib(), out var stdlibSyntax) || !Typechecker.TryTypecheck(api, stdlibState, stdlibSyntax, allowErrors: false, out typedStdlib))
             {
                 logger.LogError($"Failed to parse stdlib: {stdlibState.JoinErrors()}");
             }
+            else
+            {
+                stdlib = new ParsedDocument(new DocumentUri("thousand", null, "stdlib.1000", null, null), stdlibSource, stdlibSyntax);
+            }
         }
 
-        public void Reparse(DocumentUri key)
+        public void Reparse(DocumentUri key, ServerOptions options)
         {
             lock (analyses)
             {
                 if (!analyses.TryGetValue(key, out var t))
                 {
-                    analyses[key] = Task.Run(() => Analyse(key));
+                    analyses[key] = Task.Run(() => Analyse(options, key));
                 }
                 else
                 {
                     if (t.IsCompleted)
                     {
-                        analyses[key] = Task.Run(() => Analyse(key));
+                        analyses[key] = Task.Run(() => Analyse(options, key));
                     }
                     else
                     {
                         analyses[key] = Task.Run(async () =>
                         {
                             await t;
-                            return Analyse(key);
+                            return Analyse(options, key);
                         });
                     }
                 }
@@ -72,17 +79,17 @@ namespace Thousand.LSP.Analyse
             return analyses[key];
         }
 
-        public Analysis Analyse(DocumentUri key)
+        public Analysis Analyse(ServerOptions options, DocumentUri key)
         {
             var stopwatch = Stopwatch.StartNew();
 
             var source = documentService.GetText(key); // XXX is this a race condition?
             var state = new GenerationState();
-            var doc = new Analysis(key);
+            var doc = new Analysis();
 
             try
             {
-                AnalyseSyntax(doc, state, source);
+                AnalyseSyntax(options, state, doc, key, source);
             }
             catch (Exception e)
             {
@@ -111,7 +118,7 @@ namespace Thousand.LSP.Analyse
             return doc;
         }
 
-        private void AnalyseSyntax(Analysis doc, GenerationState state, string source)
+        private void AnalyseSyntax(ServerOptions options, GenerationState state, Analysis analysis, DocumentUri uri, string source)
         {
             // tokenize the whole document. unlike parsing, this is not line-by-line, so a single
             // ! will result in untypedTokens.Location extending to the end of the document
@@ -135,7 +142,7 @@ namespace Thousand.LSP.Analyse
                 }
             }
 
-            doc.Tokens = untypedTokens.Value;
+            analysis.Tokens = untypedTokens.Value;
 
             // parse the document into an error-tolerant structure which preserves errors as well as valid content
             var untypedAST = Untyped.Document(untypedTokens.Value);
@@ -145,7 +152,7 @@ namespace Thousand.LSP.Analyse
                 return;
             }
 
-            doc.Syntax = untypedAST.Value;
+            analysis.Main = new ParsedDocument(uri, source, untypedAST.Value);
 
             // apply the next stages of parsing, jumping into the pipeline mid-stream
             if (!Preprocessor.TryPreprocess(state, untypedTokens.Value, untypedAST.Value, out var syntax))
@@ -158,80 +165,107 @@ namespace Thousand.LSP.Analyse
                 return;
             }
 
-            doc.ValidSyntax = typedAST;
+            analysis.ValidSyntax = typedAST;
 
             // generate as much of the diagram as possible
-            if (stdlib != null)
-            { 
-                if (!Evaluate.Evaluator.TryEvaluate(new[] { stdlib, typedAST }, state, out var rules))
+            if (options.NoStandardLibrary)
+            {
+                if (!Evaluate.Evaluator.TryEvaluate(new[] { typedAST }, state, out var rules))
                 {
                     return;
                 }
 
-                doc.Rules = rules;
+                analysis.Rules = rules;
 
                 if (!Compose.Composer.TryCompose(rules, state, out var diagram))
                 {
                     return;
                 }
 
-                doc.Diagram = diagram;
+                analysis.Diagram = diagram;
             }
-        }
-
-        private void AnalyseSemantics(Analysis doc)
-        {
-            if (doc.Syntax != null)
+            else if (typedStdlib != null)
             {
-                WalkDocument(doc, doc.Syntax);
+                analysis.Stdlib = stdlib;
+
+                if (!Evaluate.Evaluator.TryEvaluate(new[] { typedStdlib, typedAST }, state, out var rules))
+                {
+                    return;
+                }
+
+                analysis.Rules = rules;
+
+                if (!Compose.Composer.TryCompose(rules, state, out var diagram))
+                {
+                    return;
+                }
+
+                analysis.Diagram = diagram;
             }
         }
 
-        private void WalkDocument(Analysis doc, AST.UntypedDocument ast)
+        private void AnalyseSemantics(Analysis analysis)
         {
             var root = new AnalysisScope();
 
-            foreach (var dec in ast.Declarations)
+            if (analysis.Stdlib != null)
+            {
+                WalkDocument(analysis, analysis.Stdlib, root);
+            }
+
+            if (analysis.Main != null)
+            {
+                WalkDocument(analysis, analysis.Main, root);
+            }
+        }
+
+        private void WalkDocument(Analysis analysis, ParsedDocument doc, AnalysisScope root)
+        {
+            foreach (var dec in doc.Syntax.Declarations)
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    doc.Attributes.Add(asAttribute);
+                    analysis.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
-                    WalkClass(doc, root, asClass);
+                    WalkClass(analysis, doc.Uri, root, asClass);
                     root.Pop(asClass);
                 }, asObject =>
                 {
-                    WalkObject(doc, root, asObject);
+                    WalkObject(analysis, doc.Uri, root, asObject);
                     root.Pop(asObject);
                 }, asLine =>
                 {
-                    WalkLine(doc, root, asLine);
+                    WalkLine(analysis, doc.Uri, root, asLine);
                 });
             }
         }
 
-        private void WalkClass(Analysis doc, AnalysisScope scope, AST.UntypedClass ast)
+        private void WalkClass(Analysis analysis, DocumentUri uri, AnalysisScope scope, AST.UntypedClass ast)
         {
-            doc.ClassDefinitions[ast] = ast.Name.Span.AsRange();
+            analysis.ClassDefinitions[ast] = new Location { Uri = uri, Range = ast.Name.Span.AsRange()};
 
-            doc.ClassReferences.Add(new(ast.Name, ast));
+            analysis.ClassReferences.Add(new(uri, ast.Name, ast));
 
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.BaseClasses)
             {
                 var klass = scope.FindClass(callMacro.Value.Name);
-                doc.ClassReferences.Add(new(callMacro, klass));
+                analysis.ClassReferences.Add(new(uri, callMacro, klass));
                 if (klass is not null)
                 {
                     classes.Add(klass);
                 }
             }
-            doc.ClassClasses[ast] = classes;
+            analysis.ClassClasses[ast] = classes;
 
-            foreach (var attribute in ast.Attributes)
+            // XXX if we do proper imports, we need to store what document attributes came from
+            if (uri.Scheme != "thousand")
             {
-                doc.Attributes.Add(attribute);
+                foreach (var attribute in ast.Attributes)
+                {
+                    analysis.Attributes.Add(attribute);
+                }
             }
 
             var contents = scope.Push();
@@ -240,44 +274,44 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    doc.Attributes.Add(asAttribute);
+                    analysis.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
-                    WalkClass(doc, contents, asClass);
+                    WalkClass(analysis, uri, contents, asClass);
                     contents.Pop(asClass);
                 }, asObject =>
                 {
-                    WalkObject(doc, contents, asObject);
+                    WalkObject(analysis, uri, contents, asObject);
                     contents.Pop(asObject);
                 }, asLine =>
                 {
-                    WalkLine(doc, contents, asLine);
+                    WalkLine(analysis, uri, contents, asLine);
                 });
             }
         }
 
-        private void WalkObject(Analysis doc, AnalysisScope scope, AST.UntypedObject ast)
+        private void WalkObject(Analysis analysis, DocumentUri uri, AnalysisScope scope, AST.UntypedObject ast)
         {
             if (ast.Name != null)
             {
-                doc.ObjectReferences.Add(new(ast.Name, ast));
+                analysis.ObjectReferences.Add(new(uri, ast.Name, ast));
             }
 
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.Classes)
             {
                 var klass = scope.FindClass(callMacro.Value.Name);
-                doc.ClassReferences.Add(new(callMacro, klass));
+                analysis.ClassReferences.Add(new(uri, callMacro, klass));
                 if (klass is not null)
                 {
                     classes.Add(klass);
                 }
             }
-            doc.ObjectClasses[ast] = classes;
+            analysis.ObjectClasses[ast] = classes;
 
             foreach (var attribute in ast.Attributes)
             {
-                doc.Attributes.Add(attribute);
+                analysis.Attributes.Add(attribute);
             }
 
             var contents = scope.Push();
@@ -286,40 +320,40 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    doc.Attributes.Add(asAttribute);
+                    analysis.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
-                    WalkClass(doc, contents, asClass);
+                    WalkClass(analysis, uri, contents, asClass);
                     contents.Pop(asClass);
                 }, asObject =>
                 {
-                    WalkObject(doc, contents, asObject);
+                    WalkObject(analysis, uri, contents, asObject);
                     contents.Pop(asObject);
                 }, asLine =>
                 {
-                    WalkLine(doc, contents, asLine);
+                    WalkLine(analysis, uri, contents, asLine);
                 });
             }
         }
 
-        private void WalkLine(Analysis doc, AnalysisScope  scope, AST.UntypedLine ast)
+        private void WalkLine(Analysis analysis, DocumentUri uri, AnalysisScope  scope, AST.UntypedLine ast)
         {
             foreach (var attribute in ast.Attributes)
             {
-                doc.Attributes.Add(attribute);
+                analysis.Attributes.Add(attribute);
             }
 
             foreach (var segment in ast.Segments)
             {
                 if (scope.FindObject(segment.Target) is AST.UntypedObject objekt)
                 {
-                    doc.ObjectReferences.Add(new(segment.Target, objekt));
+                    analysis.ObjectReferences.Add(new(uri, segment.Target, objekt));
                 }               
             }
 
             foreach (var callMacro in ast.Classes)
             {
-                doc.ClassReferences.Add(new(callMacro, scope.FindClass(callMacro.Value.Name)));
+                analysis.ClassReferences.Add(new(uri, callMacro, scope.FindClass(callMacro.Value.Name)));
             }
         }
     }

@@ -42,10 +42,13 @@ namespace Thousand.LSP.Handlers
             
             // despite what the API implies, deltas may only be positive
             var builderBuilder = new List<(Range r, int t)>();
-
-            foreach (var (cref, _) in document.ClassReferences)
+            
+            foreach (var (uri, cref, _) in document.ClassReferences)
             {
-                builderBuilder.Add((cref, 0));
+                if (uri == identifier.TextDocument.Uri)
+                {
+                    builderBuilder.Add((cref, 0));
+                }
             }
 
             foreach (var attribute in document.Attributes)

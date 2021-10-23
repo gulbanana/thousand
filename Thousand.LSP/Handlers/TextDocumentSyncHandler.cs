@@ -50,7 +50,7 @@ namespace Thousand.LSP.Handlers
             documentService.Add(request.TextDocument.Uri, request.TextDocument.Text);
             if (options.PreviewDiagrams) generationService.Track(request.TextDocument.Uri);
             diagnosticService.Track(request.TextDocument.Uri);
-            semanticService.Reparse(request.TextDocument.Uri);
+            semanticService.Reparse(request.TextDocument.Uri, options);
 
             return Unit.Value;
         }
@@ -69,8 +69,12 @@ namespace Thousand.LSP.Handlers
             return Unit.Task;
         }
 
-        public override Task<Unit> Handle(DidChangeTextDocumentParams request, CancellationToken cancellationToken)
+        public override async Task<Unit> Handle(DidChangeTextDocumentParams request, CancellationToken cancellationToken)
         {
+            var config = await configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
+            var options = new ServerOptions();
+            config.GetSection("thousand").GetSection("server").Bind(options);
+
             foreach (var change in request.ContentChanges)
             {
                 if (change.Range != null)
@@ -83,9 +87,9 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            semanticService.Reparse(request.TextDocument.Uri);
+            semanticService.Reparse(request.TextDocument.Uri, options);
 
-            return Unit.Task;
+            return Unit.Value;
         }
 
         public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken)

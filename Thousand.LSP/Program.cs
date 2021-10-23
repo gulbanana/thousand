@@ -34,6 +34,7 @@ namespace Thousand.LSP
                 .WithHandler<SemanticTokensHandler>()
                 .WithHandler<ReferencesHandler>()
                 .WithHandler<TypeDefinitionHandler>() // of questionable utility
+                .WithHandler<VFSHandler>()
                 .WithServices(ConfigureServices);
         }
 

@@ -17,12 +17,14 @@ namespace Thousand.Benchmarks
         private readonly DiagramGenerator generator;
         private readonly BufferService bufferService;
         private readonly AnalysisService analysisService;
+        private readonly ServerOptions options;
 
         public Compilation()
         {
             generator = new DiagramGenerator();
             bufferService = new BufferService();
             analysisService = new AnalysisService(NullLogger<AnalysisService>.Instance, bufferService, new MockDiagnosticService(), new MockGenerationService());
+            options = new ServerOptions();
         }
 
         [GlobalSetup]
@@ -42,7 +44,7 @@ namespace Thousand.Benchmarks
         [Benchmark]
         public Analysis Interactive()
         {
-            return analysisService.Analyse(key);
+            return analysisService.Analyse(options, key: key);
         }
     }
 }

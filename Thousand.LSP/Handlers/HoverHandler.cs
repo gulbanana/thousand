@@ -32,7 +32,7 @@ namespace Thousand.LSP.Handlers
 
             var analysis = await semanticService.GetAnalysisAsync(request.TextDocument.Uri);
 
-            foreach (var (loc, ast) in analysis.ObjectReferences)
+            foreach (var (_, loc, ast) in analysis.ObjectReferences)
             {
                 if (loc.Contains(request.Position))
                 {
@@ -46,7 +46,7 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            foreach (var (loc, ast) in analysis.ClassReferences)
+            foreach (var (_, loc, ast) in analysis.ClassReferences)
             {
                 if (ast is null)
                 {
