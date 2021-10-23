@@ -17,6 +17,13 @@ namespace Thousand.Parse
             return state.ErrorCount() == errors;
         }
 
+        public static bool TryPreprocess(GenerationState state, TokenList inputTokens, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
+        {
+            var errors = state.ErrorCount();
+            outputSyntax = Preprocess(state, inputTokens);
+            return state.ErrorCount() == errors;
+        }
+
         public static bool TryPreprocess(GenerationState state, TokenList inputTokens, AST.UntypedDocument inputSyntax, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
         {
             var errors = state.ErrorCount();
@@ -36,14 +43,19 @@ namespace Thousand.Parse
                 return null;
             }
 
-            var untypedAST = Untyped.Document(untypedTokens.Value);
+            return Preprocess(state, untypedTokens.Value);
+        }
+
+        private static AST.UntypedDocument? Preprocess(GenerationState state, TokenList untypedTokens)
+        {
+            var untypedAST = Untyped.Document(untypedTokens);
             if (!untypedAST.HasValue)
             {
-                state.AddError(untypedTokens.Value, untypedAST);
+                state.AddError(untypedTokens, untypedAST);
                 return null;
             }
 
-            return Preprocess(state, untypedTokens.Value, untypedAST.Value);
+            return Preprocess(state, untypedTokens, untypedAST.Value);
         }
 
         private static AST.UntypedDocument? Preprocess(GenerationState state, TokenList pass1Tokens, AST.UntypedDocument pass1AST)

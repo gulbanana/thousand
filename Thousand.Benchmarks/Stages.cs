@@ -1,4 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Superpower;
+using Superpower.Model;
 using System;
 using System.IO;
 using Thousand.Compose;
@@ -13,6 +15,7 @@ namespace Thousand.Benchmarks
         [Params("connectors.1000", "tetris.1000", "underground.1000")]
         public string Input { get; set; } = default!;
 
+        private readonly Tokenizer<TokenKind> tokenizer;
         private readonly SVGRenderer renderer;
         private string source;
         private Parse.Attributes.API api;
@@ -21,9 +24,11 @@ namespace Thousand.Benchmarks
         private AST.TypedDocument typedAST;
         private IR.Root rules;
         private Layout.Diagram diagram;
-        
+        private TokenList<TokenKind> tokens;
+
         public Stages()
         {
+            tokenizer = Tokenizer.Build();
             renderer = new SVGRenderer();
         }
 
@@ -38,6 +43,7 @@ namespace Thousand.Benchmarks
             Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);
             Typechecker.TryTypecheck(api, state, stdlibMacros, false, out stdlibAST);
 
+            tokens = tokenizer.Tokenize(source);
             Preprocessor.TryPreprocess(state, source, out preprocessedAST);
             Typechecker.TryTypecheck(api, state, preprocessedAST, false, out typedAST);
             Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, state, out rules);
@@ -50,9 +56,15 @@ namespace Thousand.Benchmarks
         }
 
         [Benchmark]
+        public TokenList<TokenKind> Tokenize()
+        {
+            return tokenizer.Tokenize(source);
+        }
+
+        [Benchmark]
         public bool Preprocess()
         {
-            return Preprocessor.TryPreprocess(new GenerationState(), source, out _);
+            return Preprocessor.TryPreprocess(new GenerationState(), tokens, out _);
         }
 
         [Benchmark]

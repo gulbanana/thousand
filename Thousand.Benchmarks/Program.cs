@@ -40,6 +40,7 @@ namespace Thousand.Benchmarks
             foreach (var baseline in baselines)
             {
                 var compilationReport = Path.Combine(baseline.ReportDirectory, "Thousand.Benchmarks.Compilation-report.csv");
+                if (File.Exists(compilationReport))
                 {
                     using var reader = new StreamReader(compilationReport);
                     using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -47,6 +48,7 @@ namespace Thousand.Benchmarks
                 }
 
                 var stagesReport = Path.Combine(baseline.ReportDirectory, "Thousand.Benchmarks.Stages-report.csv");
+                if (File.Exists(stagesReport))
                 {
                     using var reader = new StreamReader(stagesReport);
                     using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -71,7 +73,7 @@ namespace Thousand.Benchmarks
             }
             csv.NextRecord();
 
-            foreach (var baseline in baselines)
+            foreach (var baseline in baselines.Where(data.ContainsKey))
             {
                 csv.WriteField(baseline.Title);
                 foreach (var rec in data[baseline])
@@ -98,7 +100,7 @@ namespace Thousand.Benchmarks
             }
             csv.NextRecord();
 
-            foreach (var baseline in baselines)
+            foreach (var baseline in baselines.Where(data.ContainsKey))
             {
                 csv.WriteField(baseline.Title);
                 foreach (var pair in pairs)
@@ -119,6 +121,7 @@ namespace Thousand.Benchmarks
 
         private enum Stages
         {
+            Tokenize,
             Preprocess,
             Typecheck,
             Parse,                       

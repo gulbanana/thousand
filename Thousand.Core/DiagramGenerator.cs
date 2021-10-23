@@ -17,10 +17,12 @@ namespace Thousand
         }
 
         private readonly Parse.Attributes.API api;
+        private readonly Superpower.Tokenizer<Parse.TokenKind> tokenizer;
 
         public DiagramGenerator()
         {
             api = new();
+            tokenizer = Parse.Tokenizer.Build();
         }
 
         /// <summary>Create a diagram from source code.</summary>
@@ -37,9 +39,17 @@ namespace Thousand
             var documents = new List<AST.TypedDocument>();
             foreach (var s in sources)
             {
-                if (Parse.Preprocessor.TryPreprocess(state, s, out var syntax) && Parse.Typechecker.TryTypecheck(api, state, syntax, allowErrors: false, out var document))
+                var tokens = tokenizer.TryTokenize(s);
+                if (tokens.HasValue)
                 {
-                    documents.Add(document);
+                    if (Parse.Preprocessor.TryPreprocess(state, tokens.Value, out var syntax) && Parse.Typechecker.TryTypecheck(api, state, syntax, allowErrors: false, out var document))
+                    {
+                        documents.Add(document);
+                    }
+                }
+                else
+                {
+                    state.AddError(tokens.Location, ErrorKind.Syntax, tokens.FormatErrorMessageFragment());
                 }
             }
 
