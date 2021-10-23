@@ -1,23 +1,17 @@
-﻿using Superpower;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.ArrowAttribute>;
 
 namespace Thousand.Parse.Attributes
 {
     static class ArrowAttributes
     {
-        public static IEnumerable<AttributeDefinition<AST.ArrowAttribute>> All()
+        public static IEnumerable<Definition> All()
         {
-            yield return new("anchor-start", from anchor in Value.Anchor
-                                             select new AST.ArrowAnchorStartAttribute(anchor) as AST.ArrowAttribute);
+            yield return Definition.Create("anchor-start", Value.Anchor, anchor => new AST.ArrowAnchorStartAttribute(anchor));
+            yield return Definition.Create("anchor-end", Value.Anchor, anchor => new AST.ArrowAnchorEndAttribute(anchor));
 
-            yield return new("anchor-end", from anchor in Value.Anchor
-                                           select new AST.ArrowAnchorEndAttribute(anchor) as AST.ArrowAttribute);
-
-            yield return new("offset-start", from point in Value.Point
-                                             select new AST.ArrowOffsetStartAttribute(point) as AST.ArrowAttribute);
-
-            yield return new("offset-end", from anchor in Value.Point
-                                           select new AST.ArrowOffsetEndAttribute(anchor) as AST.ArrowAttribute);
+            yield return Definition.Create("offset-start", Value.Point, point => new AST.ArrowOffsetStartAttribute(point));
+            yield return Definition.Create("offset-end", Value.Point, point => new AST.ArrowOffsetEndAttribute(point));
         }
     }
 }

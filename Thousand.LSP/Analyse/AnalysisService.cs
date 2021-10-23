@@ -20,7 +20,7 @@ namespace Thousand.LSP.Analyse
         private readonly IGenerationService generationService;
 
         private readonly Tokenizer<TokenKind> tokenizer;
-        private readonly Parse.Attributes.Metadata metadata;
+        private readonly Parse.Attributes.API api;
 
         private readonly AST.TypedDocument? stdlib;
 
@@ -31,11 +31,11 @@ namespace Thousand.LSP.Analyse
             this.diagnosticService = diagnosticService;
             this.generationService = generationService;
 
-            this.metadata = new Parse.Attributes.Metadata();
+            this.api = new Parse.Attributes.API();
             this.tokenizer = Tokenizer.Build();
 
             var stdlibState = new GenerationState();
-            if (!Preprocessor.TryPreprocess(stdlibState, DiagramGenerator.ReadStdlib(), out var syntax) || !Typechecker.TryTypecheck(metadata, stdlibState, syntax, allowErrors: false, out stdlib))
+            if (!Preprocessor.TryPreprocess(stdlibState, DiagramGenerator.ReadStdlib(), out var syntax) || !Typechecker.TryTypecheck(api, stdlibState, syntax, allowErrors: false, out stdlib))
             {
                 logger.LogError($"Failed to parse stdlib: {stdlibState.JoinErrors()}");
             }
@@ -153,7 +153,7 @@ namespace Thousand.LSP.Analyse
                 return;
             }
 
-            if (!Typechecker.TryTypecheck(metadata, state, syntax, allowErrors: true, out var typedAST))
+            if (!Typechecker.TryTypecheck(api, state, syntax, allowErrors: true, out var typedAST))
             {
                 return;
             }

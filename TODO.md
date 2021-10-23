@@ -4,7 +4,7 @@ TO DO
 * bug: use fill-opacity for SVG transparency (https://gitlab.com/inkscape/inbox/-/issues/1195)
 * bug: using diamond as a container seems to be broken somehow
 * bug: (line) anchors and offsets probably don't combine correctly
-* syntax: possible scope changes - alists should be line scopes; clists should be available for lines and *maybe* the only form
+* syntax: possible big redo with class->style, possible scope changes - alists should be line scopes; clists should be available for lines and *maybe* the only form. = is : and : is basedon, etc
 * syntax: path names (perhaps use [] for anon)
 * syntax: class contents placeholder inserts - right now it's all prepended (but how would this work with a classlist?)
 * syntax: import files?
@@ -37,3 +37,4 @@ TO DO
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
 * better errors for missing attributes in lists ("just typed ,") 
+* reconsider space/gutter/gap

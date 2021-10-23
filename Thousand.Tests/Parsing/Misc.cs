@@ -19,7 +19,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Single()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square]");
-            var result = Shared.List(AttributeParsers.NodeAttribute)(tokens);
+            var result = Shared.List(Typed.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -29,7 +29,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Multiple()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval]");
-            var result = Shared.List(AttributeParsers.NodeAttribute)(tokens);
+            var result = Shared.List(Typed.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Ellipse));
@@ -39,7 +39,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Whitespace()
         {
             var tokens = tokenizer.Tokenize(@"[ shape=square,shape = square, shape=square]");
-            var result = Shared.List(AttributeParsers.NodeAttribute)(tokens);
+            var result = Shared.List(Typed.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square));

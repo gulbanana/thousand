@@ -2,41 +2,49 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Thousand.AST;
 
 namespace Thousand.Parse.Attributes
 {
-    public class Metadata
+    // metadata constructed from various attribute definition groups. this is a 
+    // relatively expensive process, but it can be done once and reused repeatedly
+    public class API
     {
+        public List<AttributeDefinition<AST.DocumentAttribute>> DocumentAttributes { get; }
         public HashSet<string> DocumentNames { get; }
+        public List<AttributeDefinition<AST.ObjectAttribute>> ObjectAttributes { get; }
         public HashSet<string> ObjectNames { get; }
         public HashSet<string> ObjectOnlyNames { get; }
-        public List<AttributeDefinition<LineAttribute>> LineAttributes { get; }
+        public List<AttributeDefinition<AST.LineAttribute>> LineAttributes { get; }
         public HashSet<string> LineNames { get; }
         public HashSet<string> LineOnlyNames { get; }
-        public HashSet<string> EntityNames { get; }
         public List<AttributeDefinition<AST.EntityAttribute>> EntityAttributes { get; }
+        public HashSet<string> EntityNames { get; }        
 
-        public Metadata()
+        public API()
         {
-            DocumentNames = Enum.GetNames<DiagramAttributeKind>()
-                .Concat(Enum.GetNames<RegionAttributeKind>())
-                .Concat(Enum.GetNames<TextAttributeKind>())
-                .Select(Key)
+            DocumentAttributes = DiagramAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2))
+                .Concat(RegionAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2)))
+                .Concat(TextAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2)))
+                .ToList();
+
+            DocumentNames = DocumentAttributes
+                .SelectMany(a => a.Names)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            ObjectNames = Enum.GetNames<NodeAttributeKind>()
-                .Concat(Enum.GetNames<RegionAttributeKind>())
-                .Concat(Enum.GetNames<TextAttributeKind>())
-                .Concat(Enum.GetNames<StrokeAttributeKind>())
-                .Concat(Enum.GetNames<PositionAttributeKind>())
-                .Select(Key)
+            ObjectAttributes = NodeAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2))
+                .Concat(RegionAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
+                .Concat(TextAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
+                .Concat(StrokeAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
+                .Concat(PositionAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
+                .ToList();
+
+            ObjectNames = ObjectAttributes
+                .SelectMany(a => a.Names)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            ObjectOnlyNames = Enum.GetNames<NodeAttributeKind>()
-                .Concat(Enum.GetNames<RegionAttributeKind>())
-                .Concat(Enum.GetNames<TextAttributeKind>())
-                .Select(Key)
+            ObjectOnlyNames = NodeAttributes.All().SelectMany(a => a.Names)
+                .Concat(RegionAttributes.All().SelectMany(a => a.Names))
+                .Concat(TextAttributes.All().SelectMany(a => a.Names))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             LineAttributes = ArrowAttributes.All().Select(x => x.Select(x2 => (AST.LineAttribute)x2))

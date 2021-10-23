@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Thousand.Model;
 using Thousand.Parse;
+using Thousand.Parse.Attributes;
 using Xunit;
 
 namespace Thousand.Tests.Parsing
@@ -128,7 +129,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_InvalidKeyword()
         {
             var tokens = tokenizer.Tokenize(@"stroke=square");
-            var result = AttributeParsers.StrokeAttribute(tokens);
+            var result = Typed.StrokeAttribute(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -137,7 +138,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleColour(string c)
         {
             var tokens = tokenizer.Tokenize($"stroke={c}");
-            var result = AttributeParsers.StrokeAttribute(tokens);
+            var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -152,7 +153,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleWidth()
         {
             var tokens = tokenizer.Tokenize($"stroke=none");
-            var result = AttributeParsers.StrokeAttribute(tokens);
+            var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -167,7 +168,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleStyle()
         {
             var tokens = tokenizer.Tokenize($"stroke=short-dash");
-            var result = AttributeParsers.StrokeAttribute(tokens);
+            var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -182,7 +183,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_Multiple()
         {
             var tokens = tokenizer.Tokenize($"stroke=2 black");
-            var result = AttributeParsers.StrokeAttribute(tokens);
+            var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -202,7 +203,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_All()
         {
             var tokens = tokenizer.Tokenize($"stroke=solid green hairline");
-            var result = AttributeParsers.StrokeAttribute(tokens);
+            var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
@@ -236,19 +237,6 @@ namespace Thousand.Tests.Parsing
             Assert.NotNull(lsa.Style);
         }
 
-        [Fact]
-        public void EnumAlias()
-        {
-            var tokens1 = tokenizer.Tokenize(@"shape=rect");
-            var tokens2 = tokenizer.Tokenize(@"shape=rectangle");
-            var result1 = AttributeParsers.NodeShapeAttribute(tokens1);
-            var result2 = AttributeParsers.NodeShapeAttribute(tokens2);
-
-            Assert.True(result1.HasValue, result1.ToString());
-            Assert.True(result2.HasValue, result2.ToString());
-            Assert.Equal(result1.Value, result2.Value);
-        }
-
         [Theory]
         [InlineData("start start", AlignmentKind.Start, AlignmentKind.Start)]   // two explicit tracks
         [InlineData("end", AlignmentKind.End, AlignmentKind.End)]               // two implicit tracks
@@ -259,12 +247,12 @@ namespace Thousand.Tests.Parsing
         [InlineData("start top", AlignmentKind.Start, AlignmentKind.Start)]     // one explicit track, one explicit row
         public void JustifyShorthand(string value, AlignmentKind expectedHorizontal, AlignmentKind expectedVertical)
         {
-            var tokens = tokenizer.Tokenize($"justify={value}");
-            var result = AttributeParsers.RegionJustifyAttribute(tokens);
+            var tokens = tokenizer.Tokenize(value);
+            var result = RegionAttributes.Justification(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(expectedHorizontal, ((AST.RegionJustifyAttribute)result.Value).Columns);
-            Assert.Equal(expectedVertical, ((AST.RegionJustifyAttribute)result.Value).Rows);
+            Assert.Equal(expectedHorizontal, result.Value.columns);
+            Assert.Equal(expectedVertical, result.Value.rows);
         }
 
         [Theory]
@@ -280,12 +268,12 @@ namespace Thousand.Tests.Parsing
         [InlineData("none top", null, AlignmentKind.Start)]                     // one explicit null, one explicit row
         public void AlignShorthand(string value, AlignmentKind? expectedHorizontal, AlignmentKind? expectedVertical)
         {
-            var tokens = tokenizer.Tokenize($"align={value}");
-            var result = AttributeParsers.NodeAlignAttribute(tokens);
+            var tokens = tokenizer.Tokenize(value);
+            var result = NodeAttributes.Alignment(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(expectedHorizontal, ((AST.NodeAlignAttribute)result.Value).Columns);
-            Assert.Equal(expectedVertical, ((AST.NodeAlignAttribute)result.Value).Rows);
+            Assert.Equal(expectedHorizontal, result.Value.horizontal);
+            Assert.Equal(expectedVertical, result.Value.vertical);
         }
     }
 }

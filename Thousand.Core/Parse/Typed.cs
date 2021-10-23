@@ -3,35 +3,52 @@ using Superpower.Model;
 using Superpower.Parsers;
 using System;
 using System.Linq;
+using Thousand.Parse.Attributes;
 using static Superpower.Parse;
 
 namespace Thousand.Parse
 {
-    /**********************************************************************
-     * The typed AST is syntactically complete, with all macros resolved. *
-     **********************************************************************/
+    /*************************************************************************************
+     * The typed AST is syntactically complete, with macros resolved and errors removed. *
+     * This is a reference parser used for testing and error message generation.         *
+     * In production, the untyped AST is typechecked into a valid AST without reparsing. *
+     *************************************************************************************/
     public static class Typed
     {
+        /************************************************************
+         * Base attribute groups, delegated to metadata definitions *
+         ************************************************************/
+        public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } = Attribute.From(ArrowAttributes.All());
+        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeAttribute { get; } = Attribute.From(StrokeAttributes.All());
+        public static TokenListParser<TokenKind, AST.PositionAttribute> PositionAttribute { get; } = Attribute.From(PositionAttributes.All());
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } = Attribute.From(RegionAttributes.All());
+        public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } = Attribute.From(TextAttributes.All());
+        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } = Attribute.From(DiagramAttributes.All());
+        public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } = Attribute.From(NodeAttributes.All());
+
+        /******************************************************************************
+         * Attribute group combinations which apply to each class of document entity. *
+         ******************************************************************************/
         public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
-            AttributeParsers.NodeAttribute.Select(x => (AST.ObjectAttribute)x)
-                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(AttributeParsers.TextAttribute.Select(x => (AST.ObjectAttribute)x));
+            NodeAttribute.Select(x => (AST.ObjectAttribute)x)
+                .Or(RegionAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(StrokeAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(PositionAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(TextAttribute.Select(x => (AST.ObjectAttribute)x));
 
-        public static TokenListParser<TokenKind, AST.LineAttribute> SegmentAttribute { get; } =
-            AttributeParsers.ArrowAttribute.Select(x => (AST.LineAttribute)x)
-                .Or(AttributeParsers.StrokeAttribute.Select(x => (AST.LineAttribute)x))
-                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.LineAttribute)x));
-
-        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
-            AttributeParsers.DiagramAttribute.Select(x => (AST.DocumentAttribute)x)
-                .Or(AttributeParsers.RegionAttribute.Select(x => (AST.DocumentAttribute)x))
-                .Or(AttributeParsers.TextAttribute.Select(x => (AST.DocumentAttribute)x));
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
+            ArrowAttribute.Select(x => (AST.LineAttribute)x)
+                .Or(StrokeAttribute.Select(x => (AST.LineAttribute)x))
+                .Or(PositionAttribute.Select(x => (AST.LineAttribute)x));
 
         public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } =
-            AttributeParsers.StrokeAttribute.Select(x => (AST.EntityAttribute)x)
-                .Or(AttributeParsers.PositionAttribute.Select(x => (AST.EntityAttribute)x));
+            StrokeAttribute.Select(x => (AST.EntityAttribute)x)
+                .Or(PositionAttribute.Select(x => (AST.EntityAttribute)x));
+
+        public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
+            DiagramAttribute.Select(x => (AST.DocumentAttribute)x)
+                .Or(RegionAttribute.Select(x => (AST.DocumentAttribute)x))
+                .Or(TextAttribute.Select(x => (AST.DocumentAttribute)x));
 
         /**********************************************************************
          * Classes, the key unit of abstraction, shared by objects and lines. *
@@ -43,7 +60,7 @@ namespace Thousand.Parse
             select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
+            Shared.List(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
             Shared.List(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
@@ -65,31 +82,37 @@ namespace Thousand.Parse
 
             var remainder = beginAttrs.Remainder;
             while (true)
-            {
-                var lineOnlyAttr = AttributeParsers.ArrowOnlyAttribute(remainder);
+            {                
                 var eitherAttr = EntityAttribute(remainder);
-                if (eitherAttr.HasValue && !lineOnlyAttr.HasValue)
+                if (eitherAttr.HasValue)
                 {
-                    remainder = eitherAttr.Remainder;
-                    var next = remainder.ConsumeToken();
+                    if (eitherAttr.Value.IsT0 && eitherAttr.Value.AsT0.IsLineOnly())
+                    {
+                        return LineClassBody(name, bases)(input);
+                    }
+                    else
+                    {
+                        remainder = eitherAttr.Remainder;
+                        var next = remainder.ConsumeToken();
 
-                    if (!next.HasValue)
-                    {
-                        return ObjectOrLineClassBody(name, bases)(input);
-                    }
-                    else if (next.Value.Kind == TokenKind.Comma)
-                    {
-                        remainder = next.Remainder;
-                        continue;
-                    }
-                    else if (next.Value.Kind == TokenKind.RightBracket)
-                    {
-                        remainder = next.Remainder;
-                        break;
+                        if (!next.HasValue)
+                        {
+                            return ObjectOrLineClassBody(name, bases)(input);
+                        }
+                        else if (next.Value.Kind == TokenKind.Comma)
+                        {
+                            remainder = next.Remainder;
+                            continue;
+                        }
+                        else if (next.Value.Kind == TokenKind.RightBracket)
+                        {
+                            remainder = next.Remainder;
+                            break;
+                        }
                     }
                 }
 
-                var lineAttr = SegmentAttribute(remainder);
+                var lineAttr = LineAttribute(remainder);
                 if (lineAttr.HasValue)
                 {
                     return LineClassBody(name, bases)(input);
@@ -101,7 +124,7 @@ namespace Thousand.Parse
                     return ObjectClassBody(name, bases)(input);
                 }
 
-                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(ObjectAttribute.Value(Unit.Value).Or(SegmentAttribute.Value(Unit.Value))(remainder));
+                return TokenListParserResult.CastEmpty<TokenKind, Unit, AST.TypedClass>(ObjectAttribute.Value(Unit.Value).Or(LineAttribute.Value(Unit.Value))(remainder));
             }
 
             if (remainder.ConsumeToken() is { HasValue: true, Value: { Kind: TokenKind.LeftBrace } })
@@ -197,7 +220,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
             from chain in Shared.Edges
-            from attrs in Shared.List(SegmentAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
+            from attrs in Shared.List(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
             select new AST.TypedLine(classes, chain.ToArray(), attrs);
 
         /***************************************************************************

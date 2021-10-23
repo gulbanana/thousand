@@ -12,12 +12,12 @@ namespace Thousand.Parse
     // Invariant: accepts only untyped AST which has already been preprocessed. Will fail hard on unpreprocessed input!
     public class Typechecker
     {
-        public static bool TryTypecheck(Attributes.Metadata metadata, GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
+        public static bool TryTypecheck(Attributes.API api, GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
         {
             try
             {
                 var errors = state.ErrorCount();
-                outputAST = new Typechecker(metadata, state).CheckDocument(inputAST);
+                outputAST = new Typechecker(api, state).CheckDocument(inputAST);
                 return allowErrors || state.ErrorCount() == errors;
             }
             catch (Exception e)
@@ -29,46 +29,16 @@ namespace Thousand.Parse
             }
         }
 
-        private readonly Attributes.Metadata metadata;
+        private readonly Attributes.API api;
         private readonly GenerationState state;
 
-        private Typechecker(Attributes.Metadata metadata, GenerationState state)
+        private Typechecker(Attributes.API metadata, GenerationState state)
         {
-            this.metadata = metadata;
+            this.api = metadata;
             this.state = state;
         }
 
         private T? CheckAttribute<T>(AST.UntypedAttribute ast, TokenListParser<TokenKind, T> pT) where T : class
-        {
-            if (ast.Value.Location.Position == ast.Value.Remainder.Position)
-            {
-                state.AddError(ast.Key.Span, ErrorKind.Syntax, $"attribute has no value");
-                return null;
-            }
-
-            var tokens = new TokenList(ast.Value.Location.Prepend(new Token(TokenKind.EqualsSign, new TextSpan("="))).Prepend(new Token(TokenKind.Identifier, ast.Key.Span)).ToArray());
-            var parse = pT(tokens);
-            if (parse.HasValue)
-            {
-                if (parse.Remainder.Position <= ast.Value.Remainder.Position)
-                {
-                    return parse.Value;
-                }
-                else
-                {
-                    var badToken = parse.Remainder.First();
-                    state.AddError(parse.Remainder.First().Span, ErrorKind.Syntax, $"unexpected `{badToken.ToStringValue()}`, expected `,` or `]`");
-                    return null;
-                }
-            }
-            else
-            {
-                state.AddError(tokens, parse);
-                return null;
-            }
-        }
-
-        private T? CheckAttributeValue<T>(AST.UntypedAttribute ast, TokenListParser<TokenKind, T> pT) where T : class
         {
             if (ast.Value.Location.Position == ast.Value.Remainder.Position)
             {
@@ -99,54 +69,60 @@ namespace Thousand.Parse
 
         private AST.DocumentAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
         {
-            if (!metadata.DocumentNames.Contains(ast.Key.Text))
+            foreach (var attr in api.DocumentAttributes)
             {
-                var validAttributes = string.Join(", ", metadata.DocumentNames.Select(a => $"`{a}`").OrderBy(x => x));
-                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-                return null;
+                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
+                {
+                    return CheckAttribute(ast, attr.ValueParser);
+                }
             }
 
-            return CheckAttribute(ast, Typed.DocumentAttribute);
+            var validAttributes = string.Join(", ", api.DocumentNames.Select(a => $"`{a}`").OrderBy(x => x));
+            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+            return null;
         }
 
         private AST.ObjectAttribute? CheckObjectAttribute(AST.UntypedAttribute ast)
         {
-            if (!metadata.ObjectNames.Contains(ast.Key.Text))
+            foreach (var attr in api.ObjectAttributes)
             {
-                var validAttributes = string.Join(", ", metadata.ObjectNames.Select(a => $"`{a}`").OrderBy(x => x));
-                state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-                return null;
+                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
+                {
+                    return CheckAttribute(ast, attr.ValueParser);
+                }
             }
 
-            return CheckAttribute(ast, Typed.ObjectAttribute);
+            var validAttributes = string.Join(", ", api.ObjectNames.Select(a => $"`{a}`").OrderBy(x => x));
+            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
+            return null;
         }
 
         private AST.LineAttribute? CheckLineAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var attr in metadata.LineAttributes)
+            foreach (var attr in api.LineAttributes)
             {
                 if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
                 {
-                    return CheckAttributeValue(ast, attr.ValueParser);
+                    return CheckAttribute(ast, attr.ValueParser);
                 }
             }
 
-            var validAttributes = string.Join(", ", metadata.LineNames.Select(a => $"`{a}`").OrderBy(x => x));
+            var validAttributes = string.Join(", ", api.LineNames.Select(a => $"`{a}`").OrderBy(x => x));
             state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
             return null;
         }
 
         private AST.EntityAttribute? CheckEntityAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var attr in metadata.EntityAttributes)
+            foreach (var attr in api.EntityAttributes)
             {
                 if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
                 {
-                    return CheckAttributeValue(ast, attr.ValueParser);
+                    return CheckAttribute(ast, attr.ValueParser);
                 }
             }
 
-            var validAttributes = string.Join(", ", metadata.ObjectNames.Concat(metadata.LineNames).Distinct().Select(a => $"`{a}`").OrderBy(x => x));
+            var validAttributes = string.Join(", ", api.ObjectNames.Concat(api.LineNames).Distinct().Select(a => $"`{a}`").OrderBy(x => x));
             state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
             return null;
         }
@@ -182,7 +158,7 @@ namespace Thousand.Parse
 
             foreach (var attr in ast.Attributes)
             {
-                if (metadata.LineOnlyNames.Contains(attr.Key.Text)) 
+                if (api.LineOnlyNames.Contains(attr.Key.Text)) 
                 {
                     return new AST.LineClass(
                         ast.Name,
@@ -190,7 +166,7 @@ namespace Thousand.Parse
                         ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
                     );
                 }
-                else if (metadata.ObjectOnlyNames.Contains(attr.Key.Text))
+                else if (api.ObjectOnlyNames.Contains(attr.Key.Text))
                 {
                     return new AST.ObjectClass(
                         ast.Name,

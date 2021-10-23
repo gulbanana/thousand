@@ -16,11 +16,11 @@ namespace Thousand
             return reader.ReadToEnd();
         }
 
-        private readonly Parse.Attributes.Metadata metadata;
+        private readonly Parse.Attributes.API api;
 
         public DiagramGenerator()
         {
-            metadata = new();
+            api = new();
         }
 
         /// <summary>Create a diagram from source code.</summary>
@@ -37,7 +37,7 @@ namespace Thousand
             var documents = new List<AST.TypedDocument>();
             foreach (var s in sources)
             {
-                if (Parse.Preprocessor.TryPreprocess(state, s, out var syntax) && Parse.Typechecker.TryTypecheck(metadata, state, syntax, allowErrors: false, out var document))
+                if (Parse.Preprocessor.TryPreprocess(state, s, out var syntax) && Parse.Typechecker.TryTypecheck(api, state, syntax, allowErrors: false, out var document))
                 {
                     documents.Add(document);
                 }

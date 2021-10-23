@@ -3,6 +3,7 @@ using Superpower.Model;
 using Superpower.Parsers;
 using System.Collections.Generic;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand.Parse
 {
@@ -115,5 +116,19 @@ namespace Thousand.Parse
         {
             return definitions.Select(From).Aggregate((left, right) => left.Or(right));
         }
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignColumnOnly { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "left").Value(AlignmentKind.Start)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "right").Value(AlignmentKind.End));
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignColumn { get; } =
+            AlignColumnOnly.Or(Identifier.Enum<AlignmentKind>());
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignRowOnly { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "top").Value(AlignmentKind.Start)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "bottom").Value(AlignmentKind.End));
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignRow { get; } =
+            AlignRowOnly.Or(Identifier.Enum<AlignmentKind>());
     }
 }

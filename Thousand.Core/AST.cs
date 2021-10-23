@@ -42,9 +42,18 @@ namespace Thousand.AST
     public record RegionJustifyRowsAttribute(AlignmentKind Kind) : RegionAttribute;
     public record RegionJustifyAttribute(AlignmentKind Columns, AlignmentKind Rows) : RegionAttribute;
 
-    public abstract record PositionAttribute;
-    public record PositionAnchorAttribute(Anchor Start, Anchor End) : PositionAttribute;
-    public record PositionOffsetAttribute(Point Start, Point End) : PositionAttribute;
+    public abstract record PositionAttribute
+    {
+        public abstract bool IsLineOnly();
+    }
+    public record PositionAnchorAttribute(Anchor Start, Anchor End) : PositionAttribute
+    {
+        public override bool IsLineOnly() => Start is not SpecificAnchor || !Start.Equals(End);
+    }
+    public record PositionOffsetAttribute(Point Start, Point End) : PositionAttribute
+    {
+        public override bool IsLineOnly() => !Start.Equals(End);
+    }
 
     public abstract record NodeAttribute;
     public record NodeLabelContentAttribute(Text Text) : NodeAttribute;
@@ -62,7 +71,7 @@ namespace Thousand.AST
     public record NodeMarginAttribute(Border Value) : NodeAttribute;
     public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
-    public abstract record ArrowAttribute : PositionAttribute;
+    public abstract record ArrowAttribute;
     public record ArrowAnchorStartAttribute(Anchor Anchor) : ArrowAttribute;
     public record ArrowAnchorEndAttribute(Anchor Anchor) : ArrowAttribute;
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;

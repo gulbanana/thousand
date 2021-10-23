@@ -34,14 +34,14 @@ namespace Thousand.Benchmarks
         {
             source = File.ReadAllText(Input);
 
-            var metadata = new Parse.Attributes.Metadata();
+            var api = new Parse.Attributes.API();
             var state = new GenerationState();
 
             Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);
-            Typechecker.TryTypecheck(metadata, state, stdlibMacros, false, out stdlib);
+            Typechecker.TryTypecheck(api, state, stdlibMacros, false, out stdlib);
 
             Preprocessor.TryPreprocess(state, source, out var macros);
-            Typechecker.TryTypecheck(metadata, state, macros, false, out ast);
+            Typechecker.TryTypecheck(api, state, macros, false, out ast);
             Evaluator.TryEvaluate(new[] { stdlib, ast }, state, out rules);
             Composer.TryCompose(rules, state, out diagram);
 

@@ -15,7 +15,7 @@ namespace Thousand.Benchmarks
 
         private readonly SVGRenderer renderer;
         private string source;
-        private Parse.Attributes.Metadata metadata;
+        private Parse.Attributes.API api;
         private AST.TypedDocument stdlibAST;
         private AST.UntypedDocument preprocessedAST;
         private AST.TypedDocument typedAST;
@@ -32,14 +32,14 @@ namespace Thousand.Benchmarks
         {
             source = File.ReadAllText(Input);
 
-            metadata = new Parse.Attributes.Metadata();
+            api = new Parse.Attributes.API();
             var state = new GenerationState();
 
             Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);
-            Typechecker.TryTypecheck(metadata, state, stdlibMacros, false, out stdlibAST);
+            Typechecker.TryTypecheck(api, state, stdlibMacros, false, out stdlibAST);
 
             Preprocessor.TryPreprocess(state, source, out preprocessedAST);
-            Typechecker.TryTypecheck(metadata, state, preprocessedAST, false, out typedAST);
+            Typechecker.TryTypecheck(api, state, preprocessedAST, false, out typedAST);
             Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, state, out rules);
             Composer.TryCompose(rules, state, out diagram);
 
@@ -58,7 +58,7 @@ namespace Thousand.Benchmarks
         [Benchmark]
         public bool Typecheck()
         {
-            return Typechecker.TryTypecheck(metadata, new GenerationState(), preprocessedAST, false, out _);
+            return Typechecker.TryTypecheck(api, new GenerationState(), preprocessedAST, false, out _);
         }
 
         [Benchmark]
