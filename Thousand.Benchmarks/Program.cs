@@ -23,7 +23,7 @@ namespace Thousand.Benchmarks
             }
         }
 
-        record Baseline(string ReportFile, string Index, string Sha1, string Title);
+        record Baseline(string ReportDirectory, string Index, string Sha1, string Title);
         record BDNRecord(string Method, string Input, string Mean, string Error, string StdDev);
         record SummaryRecord(string Baseline, string Mean);
 
@@ -31,39 +31,89 @@ namespace Thousand.Benchmarks
         {
             var baselines = Directory.EnumerateDirectories(@"../../../baselines").Select(dir =>
             {
-                var report = Path.Combine(dir, "Thousand.Benchmarks.Compilation-report.csv");
-                var baseline = Path.GetDirectoryName(report).Split("-");
-                return new Baseline(report, baseline[0], baseline[1], baseline[2]);
+                var baseline = Path.GetFileName(dir).Split("-");
+                return new Baseline(dir, baseline[0], baseline[1], baseline[2]);
             }).OrderBy(b => b.Index).ToList(); ;
             
-            var data = new Dictionary<Baseline, BDNRecord[]>();
+            var compilationData = new Dictionary<Baseline, BDNRecord[]>();
+            var stagesData = new Dictionary<Baseline, BDNRecord[]>();
             foreach (var baseline in baselines)
             {
-                using var reader = new StreamReader(baseline.ReportFile);
-                using var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
+                var compilationReport = Path.Combine(baseline.ReportDirectory, "Thousand.Benchmarks.Compilation-report.csv");
+                {
+                    using var reader = new StreamReader(compilationReport);
+                    using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                    compilationData[baseline] = csv.GetRecords<BDNRecord>().ToArray();
+                }
 
-                data[baseline] = csvReader.GetRecords<BDNRecord>().ToArray();
+                var stagesReport = Path.Combine(baseline.ReportDirectory, "Thousand.Benchmarks.Stages-report.csv");
+                {
+                    using var reader = new StreamReader(stagesReport);
+                    using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                    stagesData[baseline] = csv.GetRecords<BDNRecord>().ToArray();
+                }
             }
 
-            using var file = File.Open("../../../baselines/summary.csv", FileMode.Create, FileAccess.Write);
-            using var writer = new StreamWriter(file);
-            using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+            SummariseCompilation(baselines, compilationData);
+            SummariseStages(baselines, stagesData);
+        }
 
-            csvWriter.WriteField("Baseline");            
+        static void SummariseCompilation(List<Baseline> baselines, Dictionary<Baseline, BDNRecord[]> data)
+        {
+            using var file = File.Open("../../../baselines/Compilation.csv", FileMode.Create, FileAccess.Write);
+            using var writer = new StreamWriter(file);
+            using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+            csv.WriteField("Baseline");
             foreach (var rec in data[baselines.First()])
             {
-                csvWriter.WriteField($"{rec.Input}({rec.Method})");
+                csv.WriteField($"{rec.Input}({rec.Method})");
             }
-            csvWriter.NextRecord();
+            csv.NextRecord();
 
             foreach (var baseline in baselines)
             {
-                csvWriter.WriteField(baseline.Title);
+                csv.WriteField(baseline.Title);
                 foreach (var rec in data[baseline])
                 {
-                    csvWriter.WriteField(rec.Mean[..^3]);
+                    csv.WriteField(rec.Mean[..^3]);
                 }
-                csvWriter.NextRecord();
+                csv.NextRecord();
+            }
+        }
+
+        static void SummariseStages(List<Baseline> baselines, Dictionary<Baseline, BDNRecord[]> data)
+        {
+            using var file = File.Open("../../../baselines/Stages.csv", FileMode.Create, FileAccess.Write);
+            using var writer = new StreamWriter(file);
+            using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+            csv.WriteField("Baseline");
+            var inputs = data.Values.SelectMany(r => r).Select(r => r.Input).Distinct();
+            var methods = data.Values.SelectMany(r => r).Select(r => r.Method).Distinct();
+            var pairs = inputs.SelectMany(input => methods.Select(method => (input, method))).Distinct();
+            foreach (var pair in pairs)
+            {
+                csv.WriteField($"{pair.input}({pair.method})");
+            }
+            csv.NextRecord();
+
+            foreach (var baseline in baselines)
+            {
+                csv.WriteField(baseline.Title);
+                foreach (var pair in pairs)
+                {
+                    var rec = data[baseline].SingleOrDefault(r => r.Input == pair.input && r.Method == pair.method);
+                    if (rec == null)
+                    {
+                        csv.WriteField("");
+                    }
+                    else
+                    {
+                        csv.WriteField(rec.Mean[..^3]);
+                    }
+                }
+                csv.NextRecord();
             }
         }
     }
