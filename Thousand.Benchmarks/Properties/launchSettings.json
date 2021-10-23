@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Thousand.Benchmarks": {
+      "commandName": "Project",
+      "commandLineArgs": "summarise"
+    }
+  }
+}

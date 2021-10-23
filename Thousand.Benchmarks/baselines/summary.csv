@@ -1,0 +1,8 @@
+Baseline,connectors.1000(Batch),connectors.1000(Interactive),tetris.1000(Batch),tetris.1000(Interactive),underground.1000(Batch),underground.1000(Interactive)
+baseline,15.507,15.459,7.929,7.615,22.556,24.630
+merge parsers,15.296,15.343,8.057,7.756,23.216,25.206
+reuse analysis ast,17.008,15.848,9.081,7.803,25.326,25.482
+typed ast from untyped,15.392,14.214,7.513,6.571,22.227,21.953
+pass3 ast without reparse,13.184,12.561,6.721,5.875,19.949,19.511
+remove pointless reparse,11.290,10.631,5.736,4.872,17.010,16.854
+improve attr errors,13.273,12.747,5.948,5.169,20.176,19.455
