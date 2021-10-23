@@ -25,6 +25,7 @@ namespace Thousand.LSP
                     .WithHandler<TextDocumentSyncHandler>()
                     .WithHandler<HoverHandler>()
                     .WithHandler<SemanticTokensHandler>()
+                    .WithHandler<ReferencesHandler>()
                     .WithServices(ConfigureServices)
             );
 
