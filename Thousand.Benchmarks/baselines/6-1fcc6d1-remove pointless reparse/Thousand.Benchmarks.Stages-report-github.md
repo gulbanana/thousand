@@ -9,17 +9,20 @@ Frequency=14318180 Hz, Resolution=69.8413 ns, Timer=HPET
 
 
 ```
-|   Method |            Input |        Mean |     Error |    StdDev |
-|--------- |----------------- |------------:|----------:|----------:|
-|    **Parse** |  **connectors.1000** |  **8,968.2 μs** |  **76.36 μs** |  **71.43 μs** |
-| Evaluate |  connectors.1000 |    127.7 μs |   2.12 μs |   1.98 μs |
-|  Compose |  connectors.1000 |  1,194.8 μs |  16.97 μs |  14.17 μs |
-|   Render |  connectors.1000 | 23,225.0 μs | 210.75 μs | 186.82 μs |
-|    **Parse** |      **tetris.1000** |  **4,257.9 μs** |  **51.60 μs** |  **48.27 μs** |
-| Evaluate |      tetris.1000 |    227.3 μs |   0.94 μs |   0.83 μs |
-|  Compose |      tetris.1000 |    265.0 μs |   4.00 μs |   3.74 μs |
-|   Render |      tetris.1000 | 17,927.3 μs | 197.44 μs | 175.03 μs |
-|    **Parse** | **underground.1000** | **13,200.3 μs** | **155.39 μs** | **145.35 μs** |
-| Evaluate | underground.1000 |    429.9 μs |   2.37 μs |   2.10 μs |
-|  Compose | underground.1000 |  2,538.4 μs |  16.79 μs |  14.02 μs |
-|   Render | underground.1000 | 50,591.2 μs | 140.28 μs | 109.52 μs |
+|     Method |            Input |        Mean |     Error |    StdDev |
+|----------- |----------------- |------------:|----------:|----------:|
+| **Preprocess** |  **connectors.1000** |  **6,371.0 μs** |  **24.06 μs** |  **20.09 μs** |
+|  Typecheck |  connectors.1000 |  2,365.1 μs |  25.48 μs |  23.84 μs |
+|   Evaluate |  connectors.1000 |    127.5 μs |   0.75 μs |   0.70 μs |
+|    Compose |  connectors.1000 |  1,169.2 μs |   6.33 μs |   5.92 μs |
+|     Render |  connectors.1000 |    141.8 μs |   0.40 μs |   0.34 μs |
+| **Preprocess** |      **tetris.1000** |  **3,512.9 μs** |  **17.22 μs** |  **15.27 μs** |
+|  Typecheck |      tetris.1000 |    625.2 μs |   1.46 μs |   1.22 μs |
+|   Evaluate |      tetris.1000 |    226.8 μs |   1.13 μs |   0.94 μs |
+|    Compose |      tetris.1000 |    264.9 μs |   1.10 μs |   1.03 μs |
+|     Render |      tetris.1000 |    158.1 μs |   0.42 μs |   0.40 μs |
+| **Preprocess** | **underground.1000** | **10,715.8 μs** | **130.10 μs** | **121.69 μs** |
+|  Typecheck | underground.1000 |  2,094.0 μs |   6.73 μs |   6.29 μs |
+|   Evaluate | underground.1000 |    419.4 μs |   1.20 μs |   1.00 μs |
+|    Compose | underground.1000 |  2,546.6 μs |  10.10 μs |   8.43 μs |
+|     Render | underground.1000 |    513.4 μs |   1.71 μs |   1.52 μs |

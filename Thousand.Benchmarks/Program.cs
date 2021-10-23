@@ -91,7 +91,7 @@ namespace Thousand.Benchmarks
             csv.WriteField("Baseline");
             var inputs = data.Values.SelectMany(r => r).Select(r => r.Input).Distinct();
             var methods = data.Values.SelectMany(r => r).Select(r => r.Method).Distinct();
-            var pairs = inputs.SelectMany(input => methods.Select(method => (input, method))).Distinct();
+            var pairs = inputs.SelectMany(input => methods.Select(method => (input, method))).Distinct().OrderBy(p => p.input).ThenBy(p => Enum.Parse<Stages>(p.method));
             foreach (var pair in pairs)
             {
                 csv.WriteField($"{pair.input}({pair.method})");
@@ -115,6 +115,16 @@ namespace Thousand.Benchmarks
                 }
                 csv.NextRecord();
             }
+        }
+
+        private enum Stages
+        {
+            Preprocess,
+            Typecheck,
+            Parse,                       
+            Evaluate,
+            Compose,
+            Render,
         }
     }
 }

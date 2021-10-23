@@ -13,7 +13,7 @@ namespace Thousand.Benchmarks
         [Params("connectors.1000", "tetris.1000", "underground.1000")]
         public string Input { get; set; } = default!;
 
-        private readonly SkiaRenderer renderer;
+        private readonly SVGRenderer renderer;
         private string source;
         private Parse.Attributes.Metadata metadata;
         private AST.TypedDocument stdlibAST;
@@ -24,7 +24,7 @@ namespace Thousand.Benchmarks
         
         public Stages()
         {
-            renderer = new SkiaRenderer();
+            renderer = new SVGRenderer();
         }
 
         [GlobalSetup]
@@ -74,9 +74,9 @@ namespace Thousand.Benchmarks
         }
 
         [Benchmark]
-        public SkiaSharp.SKData Render()
+        public string Render()
         {
-            return renderer.Render(diagram).Encode();
+            return renderer.Render(diagram).ToString();
         }
     }
 }

@@ -2,7 +2,7 @@
 <html lang='en'>
 <head>
 <meta charset='utf-8' />
-<title>Thousand.Benchmarks.Stages-20211021-220825</title>
+<title>Thousand.Benchmarks.Stages-20211023-162629</title>
 
 <style type="text/css">
 	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
@@ -25,18 +25,21 @@ Frequency=14318180 Hz, Resolution=69.8413 ns, Timer=HPET
 <table>
 <thead><tr><th>Method</th><th>     Input</th><th> Mean</th><th>Error</th><th>StdDev</th>
 </tr>
-</thead><tbody><tr><td>Parse</td><td>connectors.1000</td><td>11,760.3 &mu;s</td><td>33.54 &mu;s</td><td>28.01 &mu;s</td>
-</tr><tr><td>Evaluate</td><td>connectors.1000</td><td>129.0 &mu;s</td><td>0.71 &mu;s</td><td>0.66 &mu;s</td>
-</tr><tr><td>Compose</td><td>connectors.1000</td><td>1,177.7 &mu;s</td><td>6.48 &mu;s</td><td>5.74 &mu;s</td>
-</tr><tr><td>Render</td><td>connectors.1000</td><td>23,009.9 &mu;s</td><td>180.23 &mu;s</td><td>168.59 &mu;s</td>
-</tr><tr><td>Parse</td><td>tetris.1000</td><td>5,886.7 &mu;s</td><td>19.92 &mu;s</td><td>18.64 &mu;s</td>
-</tr><tr><td>Evaluate</td><td>tetris.1000</td><td>228.8 &mu;s</td><td>0.83 &mu;s</td><td>0.77 &mu;s</td>
-</tr><tr><td>Compose</td><td>tetris.1000</td><td>269.1 &mu;s</td><td>1.40 &mu;s</td><td>1.31 &mu;s</td>
-</tr><tr><td>Render</td><td>tetris.1000</td><td>17,635.0 &mu;s</td><td>52.77 &mu;s</td><td>49.36 &mu;s</td>
-</tr><tr><td>Parse</td><td>underground.1000</td><td>18,226.3 &mu;s</td><td>241.16 &mu;s</td><td>225.58 &mu;s</td>
-</tr><tr><td>Evaluate</td><td>underground.1000</td><td>439.1 &mu;s</td><td>3.17 &mu;s</td><td>2.81 &mu;s</td>
-</tr><tr><td>Compose</td><td>underground.1000</td><td>2,618.0 &mu;s</td><td>26.39 &mu;s</td><td>24.69 &mu;s</td>
-</tr><tr><td>Render</td><td>underground.1000</td><td>51,378.0 &mu;s</td><td>569.19 &mu;s</td><td>504.58 &mu;s</td>
+</thead><tbody><tr><td>Preprocess</td><td>connectors.1000</td><td>9,314.7 &mu;s</td><td>96.82 &mu;s</td><td>90.56 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>connectors.1000</td><td>2,367.3 &mu;s</td><td>18.94 &mu;s</td><td>16.79 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>connectors.1000</td><td>128.2 &mu;s</td><td>1.19 &mu;s</td><td>1.11 &mu;s</td>
+</tr><tr><td>Compose</td><td>connectors.1000</td><td>1,192.4 &mu;s</td><td>18.65 &mu;s</td><td>17.44 &mu;s</td>
+</tr><tr><td>Render</td><td>connectors.1000</td><td>147.8 &mu;s</td><td>1.35 &mu;s</td><td>1.27 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>tetris.1000</td><td>5,140.8 &mu;s</td><td>38.70 &mu;s</td><td>36.20 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>tetris.1000</td><td>641.0 &mu;s</td><td>4.58 &mu;s</td><td>4.29 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>tetris.1000</td><td>224.2 &mu;s</td><td>1.44 &mu;s</td><td>1.35 &mu;s</td>
+</tr><tr><td>Compose</td><td>tetris.1000</td><td>274.1 &mu;s</td><td>2.69 &mu;s</td><td>2.25 &mu;s</td>
+</tr><tr><td>Render</td><td>tetris.1000</td><td>167.9 &mu;s</td><td>1.55 &mu;s</td><td>1.45 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>underground.1000</td><td>15,791.9 &mu;s</td><td>200.61 &mu;s</td><td>187.65 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>underground.1000</td><td>2,125.5 &mu;s</td><td>5.50 &mu;s</td><td>4.59 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>underground.1000</td><td>431.8 &mu;s</td><td>1.70 &mu;s</td><td>1.50 &mu;s</td>
+</tr><tr><td>Compose</td><td>underground.1000</td><td>2,634.6 &mu;s</td><td>36.16 &mu;s</td><td>33.82 &mu;s</td>
+</tr><tr><td>Render</td><td>underground.1000</td><td>511.6 &mu;s</td><td>1.83 &mu;s</td><td>1.71 &mu;s</td>
 </tr></tbody></table>
 </body>
 </html>
