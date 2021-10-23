@@ -34,7 +34,7 @@ namespace Thousand.LSP
                 .WithHandler<SemanticTokensHandler>()
                 .WithHandler<ReferencesHandler>()
                 .WithHandler<DefinitionHandler>()
-                .WithHandler<TypeDefinitionHandler>() // of questionable utility
+                // .WithHandler<TypeDefinitionHandler>() // of questionable utility
                 .WithHandler<HoverHandler>()                
                 .WithServices(ConfigureServices);
         }
