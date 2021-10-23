@@ -213,15 +213,21 @@ namespace Thousand.LSP.Analyse
 
         private void WalkClass(Analysis doc, AnalysisScope scope, AST.UntypedClass ast)
         {
-            if (ast.Name != null)
-            {
-                doc.ClassReferences.Add(new(ast.Name, ast));
-            }
+            doc.ClassDefinitions[ast] = ast.Name.Span.AsRange();
 
+            doc.ClassReferences.Add(new(ast.Name, ast));
+
+            var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.BaseClasses)
             {
-                doc.ClassReferences.Add(new(callMacro, scope.FindClass(callMacro.Value.Name)));
+                var klass = scope.FindClass(callMacro.Value.Name);
+                doc.ClassReferences.Add(new(callMacro, klass));
+                if (klass is not null)
+                {
+                    classes.Add(klass);
+                }
             }
+            doc.ClassClasses[ast] = classes;
 
             foreach (var attribute in ast.Attributes)
             {
@@ -257,10 +263,17 @@ namespace Thousand.LSP.Analyse
                 doc.ObjectReferences.Add(new(ast.Name, ast));
             }
 
+            var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.Classes)
             {
-                doc.ClassReferences.Add(new(callMacro, scope.FindClass(callMacro.Value.Name)));
+                var klass = scope.FindClass(callMacro.Value.Name);
+                doc.ClassReferences.Add(new(callMacro, klass));
+                if (klass is not null)
+                {
+                    classes.Add(klass);
+                }
             }
+            doc.ObjectClasses[ast] = classes;
 
             foreach (var attribute in ast.Attributes)
             {

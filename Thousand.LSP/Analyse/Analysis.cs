@@ -20,9 +20,12 @@ namespace Thousand.LSP.Analyse
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
-        public List<Reference<UntypedClass?>> ClassReferences { get; } = new();
-        public List<Reference<UntypedObject>> ObjectReferences { get; } = new();
         public List<UntypedAttribute> Attributes { get; } = new();
+        public List<Reference<UntypedClass?>> ClassReferences { get; } = new();
+        public Dictionary<UntypedClass, List<UntypedClass>> ClassClasses { get; } = new();
+        public Dictionary<UntypedClass, Range> ClassDefinitions { get; } = new();
+        public List<Reference<UntypedObject>> ObjectReferences { get; } = new();
+        public Dictionary<UntypedObject, List<UntypedClass>> ObjectClasses { get; } = new();
 
         public Analysis(DocumentUri uri)
         {

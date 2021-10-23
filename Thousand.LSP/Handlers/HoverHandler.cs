@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Thousand.LSP.Analyse;
 
-namespace Thousand.LSP
+namespace Thousand.LSP.Handlers
 {
     class HoverHandler : HoverHandlerBase
     {

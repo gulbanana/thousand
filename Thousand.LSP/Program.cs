@@ -5,6 +5,7 @@ using OmniSharp.Extensions.LanguageServer.Server;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Thousand.LSP.Handlers;
 
 namespace Thousand.LSP
 {
@@ -17,19 +18,23 @@ namespace Thousand.LSP
                 System.Diagnostics.Debugger.Launch();
             }
 
-            var server = await LanguageServer.From(options =>
-                options
-                    .WithInput(Console.OpenStandardInput())
-                    .WithOutput(Console.OpenStandardOutput())
-                    .ConfigureLogging(builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(LogLevel.Debug))
-                    .WithHandler<TextDocumentSyncHandler>()
-                    .WithHandler<HoverHandler>()
-                    .WithHandler<SemanticTokensHandler>()
-                    .WithHandler<ReferencesHandler>()
-                    .WithServices(ConfigureServices)
-            );
+            var server = await LanguageServer.From(Configure);
 
             await server.WaitForExit;
+        }
+
+        private static void Configure(LanguageServerOptions options)
+        {
+            options
+                .WithInput(Console.OpenStandardInput())
+                .WithOutput(Console.OpenStandardOutput())
+                .ConfigureLogging(builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(LogLevel.Debug))
+                .WithHandler<TextDocumentSyncHandler>()
+                .WithHandler<HoverHandler>()
+                .WithHandler<SemanticTokensHandler>()
+                .WithHandler<ReferencesHandler>()
+                .WithHandler<TypeDefinitionHandler>() // of questionable utility
+                .WithServices(ConfigureServices);
         }
 
         private static void ConfigureServices(IServiceCollection services)
