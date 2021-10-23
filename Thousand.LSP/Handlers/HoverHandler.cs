@@ -68,21 +68,22 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            foreach (var (uri, ast) in analysis.Attributes)
-            {
-                if (uri == request.TextDocument.Uri)
-                {
-                    var loc = ast.Key.Span.AsRange();
-                    if (loc.Contains(request.Position) && api.Documentation.ContainsKey(ast.Key.Text))
-                    {
-                        return new Hover
-                        {
-                            Range = ast.Key.Span.AsRange(),
-                            Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[ast.Key.Text] })
-                        };
-                    }
-                }
-            }
+            // XXX reenable once we have reasonable coverage
+            //foreach (var (uri, ast) in analysis.Attributes)
+            //{
+            //    if (uri == request.TextDocument.Uri)
+            //    {
+            //        var loc = ast.Key.Span.AsRange();
+            //        if (loc.Contains(request.Position) && api.Documentation.ContainsKey(ast.Key.Text))
+            //        {
+            //            return new Hover
+            //            {
+            //                Range = ast.Key.Span.AsRange(),
+            //                Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[ast.Key.Text] })
+            //            };
+            //        }
+            //    }
+            //}
 
             return null;
         }
