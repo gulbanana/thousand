@@ -225,7 +225,7 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    analysis.Attributes.Add(asAttribute);
+                    analysis.Attributes.Add(new(doc.Uri, asAttribute));
                 }, asClass =>
                 {
                     WalkClass(analysis, doc.Uri, root, asClass);
@@ -245,13 +245,13 @@ namespace Thousand.LSP.Analyse
         {
             analysis.ClassDefinitions[ast] = new Location { Uri = uri, Range = ast.Name.Span.AsRange()};
 
-            analysis.ClassReferences.Add(new(uri, ast.Name, ast));
+            analysis.ClassReferences.Add(new(uri, ast, ast.Name));
 
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.BaseClasses)
             {
                 var klass = scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(uri, callMacro, klass));
+                analysis.ClassReferences.Add(new(uri, klass, callMacro));
                 if (klass is not null)
                 {
                     classes.Add(klass);
@@ -259,13 +259,9 @@ namespace Thousand.LSP.Analyse
             }
             analysis.ClassClasses[ast] = classes;
 
-            // XXX if we do proper imports, we need to store what document attributes came from
-            if (uri.Scheme != "thousand")
+            foreach (var attribute in ast.Attributes)
             {
-                foreach (var attribute in ast.Attributes)
-                {
-                    analysis.Attributes.Add(attribute);
-                }
+                analysis.Attributes.Add(new(uri, attribute));
             }
 
             var contents = scope.Push();
@@ -274,7 +270,7 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    analysis.Attributes.Add(asAttribute);
+                    analysis.Attributes.Add(new(uri, asAttribute));
                 }, asClass =>
                 {
                     WalkClass(analysis, uri, contents, asClass);
@@ -305,14 +301,14 @@ namespace Thousand.LSP.Analyse
 
             if (ast.Name != null)
             {
-                analysis.ObjectReferences.Add(new(uri, ast.Name, ast));
+                analysis.ObjectReferences.Add(new(uri, ast, ast.Name));
             }
 
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.Classes)
             {
                 var klass = scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(uri, callMacro, klass));
+                analysis.ClassReferences.Add(new(uri, klass, callMacro));
                 if (klass is not null)
                 {
                     classes.Add(klass);
@@ -322,7 +318,7 @@ namespace Thousand.LSP.Analyse
 
             foreach (var attribute in ast.Attributes)
             {
-                analysis.Attributes.Add(attribute);
+                analysis.Attributes.Add(new(uri, attribute));
             }
 
             var contents = scope.Push();
@@ -331,7 +327,7 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    analysis.Attributes.Add(asAttribute);
+                    analysis.Attributes.Add(new(uri, asAttribute));
                 }, asClass =>
                 {
                     WalkClass(analysis, uri, contents, asClass);
@@ -351,20 +347,20 @@ namespace Thousand.LSP.Analyse
         {
             foreach (var attribute in ast.Attributes)
             {
-                analysis.Attributes.Add(attribute);
+                analysis.Attributes.Add(new(uri, attribute));
             }
 
             foreach (var segment in ast.Segments)
             {
                 if (scope.FindObject(segment.Target) is AST.UntypedObject objekt)
                 {
-                    analysis.ObjectReferences.Add(new(uri, segment.Target, objekt));
+                    analysis.ObjectReferences.Add(new(uri, objekt, segment.Target));
                 }               
             }
 
             foreach (var callMacro in ast.Classes)
             {
-                analysis.ClassReferences.Add(new(uri, callMacro, scope.FindClass(callMacro.Value.Name)));
+                analysis.ClassReferences.Add(new(uri, scope.FindClass(callMacro.Value.Name), callMacro));
             }
         }
     }

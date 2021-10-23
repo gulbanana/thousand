@@ -25,7 +25,7 @@ namespace Thousand.LSP.Handlers
         {
             var analysis = await analysisService.GetAnalysisAsync(request.TextDocument.Uri);
 
-            foreach (var (uri, range, ast) in analysis.ObjectReferences)
+            foreach (var (_, range, ast) in analysis.ObjectReferences)
             {
                 if (range.Contains(request.Position) && analysis.ObjectDefinitions.ContainsKey(ast))
                 {
@@ -34,7 +34,7 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            foreach (var (uri, range, ast) in analysis.ClassReferences)
+            foreach (var (_, range, ast) in analysis.ClassReferences)
             {
                 if (ast is not null && range.Contains(request.Position) && analysis.ClassDefinitions.ContainsKey(ast))
                 {

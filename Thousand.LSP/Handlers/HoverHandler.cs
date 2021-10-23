@@ -4,6 +4,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Threading;
 using System.Threading.Tasks;
 using Thousand.LSP.Analyse;
+using Thousand.Parse.Attributes;
 
 namespace Thousand.LSP.Handlers
 {
@@ -11,11 +12,13 @@ namespace Thousand.LSP.Handlers
     {
         private readonly AnalysisService semanticService;
         private readonly IDiagnosticService diagnosticService;
+        private readonly API api;
 
         public HoverHandler(AnalysisService semanticService, IDiagnosticService diagnosticService)
         {
             this.semanticService = semanticService;
             this.diagnosticService = diagnosticService;
+            this.api = new API();
         }
 
         protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities) => new HoverRegistrationOptions
@@ -32,9 +35,9 @@ namespace Thousand.LSP.Handlers
 
             var analysis = await semanticService.GetAnalysisAsync(request.TextDocument.Uri);
 
-            foreach (var (_, loc, ast) in analysis.ObjectReferences)
+            foreach (var (uri, loc, ast) in analysis.ObjectReferences)
             {
-                if (loc.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && loc.Contains(request.Position))
                 {
                     var tooltip = Format.Canonicalise(ast);
 
@@ -46,14 +49,14 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            foreach (var (_, loc, ast) in analysis.ClassReferences)
+            foreach (var (uri, loc, ast) in analysis.ClassReferences)
             {
                 if (ast is null)
                 {
                     continue;
                 }
 
-                if (loc.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && loc.Contains(request.Position))
                 {
                     var tooltip = Format.Canonicalise(ast);
 
@@ -62,6 +65,22 @@ namespace Thousand.LSP.Handlers
                         Range = loc,
                         Contents = Format.CodeBlock(tooltip)
                     };
+                }
+            }
+
+            foreach (var (uri, ast) in analysis.Attributes)
+            {
+                if (uri == request.TextDocument.Uri)
+                {
+                    var loc = ast.Key.Span.AsRange();
+                    if (loc.Contains(request.Position) && api.Documentation.ContainsKey(ast.Key.Text))
+                    {
+                        return new Hover
+                        {
+                            Range = ast.Key.Span.AsRange(),
+                            Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[ast.Key.Text] })
+                        };
+                    }
                 }
             }
 

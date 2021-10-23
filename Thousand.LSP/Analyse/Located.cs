@@ -5,25 +5,19 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace Thousand.LSP.Analyse
 {
-    public sealed class Reference<T>
+    public sealed class Located<T> : Owned<T>
     {
-        public DocumentUri Uri { get; }
         private readonly Lazy<Range> range;
         public Range Range => range.Value;
-        public T Value { get; }
 
-        public Reference(DocumentUri uri, ILocated location, T value)
+        public Located(DocumentUri uri, T value, ILocated location) : base(uri, value)
         {
-            Uri = uri;
             range = new Lazy<Range>(() => location.Span.AsRange());
-            Value = value;
         }
 
-        public Reference(DocumentUri uri, Macro location, T value)
+        public Located(DocumentUri uri, T value, Macro location) : base(uri, value)
         {
-            Uri = uri;
             range = new Lazy<Range>(() => location.Span().AsRange());
-            Value = value;
         }
 
         public void Deconstruct(out DocumentUri u, out Range r, out T v)

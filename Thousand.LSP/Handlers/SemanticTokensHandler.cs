@@ -51,13 +51,16 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            foreach (var attribute in document.Attributes)
+            foreach (var (uri, ast) in document.Attributes)
             {
-                foreach (var token in attribute.Value.Sequence())
+                if (uri == identifier.TextDocument.Uri)
                 {
-                    if (token.Kind == Parse.TokenKind.Identifier)
+                    foreach (var token in ast.Value.Sequence())
                     {
-                        builderBuilder.Add((token.Span.AsRange(), 1));
+                        if (token.Kind == Parse.TokenKind.Identifier)
+                        {
+                            builderBuilder.Add((token.Span.AsRange(), 1));
+                        }
                     }
                 }
             }
@@ -67,6 +70,7 @@ namespace Thousand.LSP.Handlers
                 var l = a.r.Start.Line.CompareTo(b.r.Start.Line);
                 return (l != 0) ? l : a.r.Start.Character.CompareTo(b.r.Start.Character);
             });
+
             foreach (var p in builderBuilder)
             {
                 builder.Push(p.r, p.t, 0);

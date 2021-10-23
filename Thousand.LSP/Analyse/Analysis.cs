@@ -17,12 +17,16 @@ namespace Thousand.LSP.Analyse
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
-        public List<UntypedAttribute> Attributes { get; } = new();
+        public List<Owned<UntypedAttribute>> Attributes { get; } = new();
+
         public Dictionary<UntypedClass, Location> ClassDefinitions { get; } = new();
-        public List<Reference<UntypedClass?>> ClassReferences { get; } = new();
-        public Dictionary<UntypedClass, List<UntypedClass>> ClassClasses { get; } = new();
         public Dictionary<UntypedObject, Location> ObjectDefinitions { get; } = new();
-        public List<Reference<UntypedObject>> ObjectReferences { get; } = new();
+        
+        public List<Located<UntypedClass?>> ClassReferences { get; } = new();        
+        public List<Located<UntypedObject>> ObjectReferences { get; } = new();
+
+        // XXX only used for defunct go-to-type-definition
+        public Dictionary<UntypedClass, List<UntypedClass>> ClassClasses { get; } = new();
         public Dictionary<UntypedObject, List<UntypedClass>> ObjectClasses { get; } = new();
     }
 }

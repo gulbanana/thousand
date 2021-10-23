@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Thousand.Parse.Attributes
 {
@@ -11,14 +12,19 @@ namespace Thousand.Parse.Attributes
     {
         public List<AttributeDefinition<AST.DocumentAttribute>> DocumentAttributes { get; }
         public HashSet<string> DocumentNames { get; }
+        
         public List<AttributeDefinition<AST.ObjectAttribute>> ObjectAttributes { get; }
         public HashSet<string> ObjectNames { get; }
         public HashSet<string> ObjectOnlyNames { get; }
+        
         public List<AttributeDefinition<AST.LineAttribute>> LineAttributes { get; }
         public HashSet<string> LineNames { get; }
         public HashSet<string> LineOnlyNames { get; }
+        
         public List<AttributeDefinition<AST.EntityAttribute>> EntityAttributes { get; }
-        public HashSet<string> EntityNames { get; }        
+        public HashSet<string> EntityNames { get; }
+
+        public Dictionary<string, string> Documentation { get; }
 
         public API()
         {
@@ -67,8 +73,44 @@ namespace Thousand.Parse.Attributes
             EntityNames = EntityAttributes
                 .SelectMany(a => a.Names)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            Documentation = ArrowAttributes.All().Cast<AttributeDefinition>()
+                .Concat(DiagramAttributes.All())
+                .Concat(NodeAttributes.All())
+                .Concat(PositionAttributes.All())
+                .Concat(RegionAttributes.All())
+                .Concat(StrokeAttributes.All())
+                .Concat(TextAttributes.All())
+                .Where(attr => attr.Documentation != null)
+                .SelectMany(attr => attr.Names.Select(n => (name: n, doc: attr.Documentation!)))
+                .ToDictionary(t => t.name, t => t.doc, StringComparer.OrdinalIgnoreCase);
         }
 
-        private static string Key(string k) => Identifier.UnCamel(k).ToLowerInvariant();
+        internal static string Doc(string? description, string type, UseKind kind, params string[] examples)
+        {
+            var builder = new StringBuilder();
+
+            if (description != null)
+            {
+                builder.Append($@"{description}
+
+");
+            }
+
+            builder.Append(@$"_Value_: {type}
+
+_Applies to:_ {kind switch {
+    UseKind.Object => "objects",
+    UseKind.Line => "lines",
+    UseKind.Document => "the whole diagram", 
+    UseKind.Region => "objects or the whole diagram",
+    UseKind.Entity => "objects or lines" }}
+
+_Examples:_ {string.Join(", ", examples.Select(e => $"`{e}`"))}");
+
+            return builder.ToString();
+        }
+
+        internal static string Doc(string type, UseKind kind, params string[] examples) => Doc(null, type, kind, examples);
     }
 }

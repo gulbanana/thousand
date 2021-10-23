@@ -1,5 +1,6 @@
 ﻿using Superpower;
 using System.Collections.Generic;
+using System.Linq;
 using Thousand.Model;
 using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.NodeAttribute>;
 
@@ -17,11 +18,36 @@ namespace Thousand.Parse.Attributes
         public static IEnumerable<Definition> All()
         {
             // controls for the intrinsic content 
-            yield return Definition.Create("min-width", Value.CountingDecimal.OrNone(), value => new AST.NodeMinWidthAttribute(value));
-            yield return Definition.Create("min-height", Value.CountingDecimal.OrNone(), value => new AST.NodeMinHeightAttribute(value));
+            yield return Definition.Create("min-width", Value.CountingDecimal.OrNone(), value => new AST.NodeMinWidthAttribute(value), API.Doc(
+                "Increases an object's width to at least `X` pixels. If its content is wider than `X-padding`, it will grow larger.",
+                "`X` (decimal) or `none`",
+                UseKind.Object,
+                "min-width=100", 
+                "min-width=none"
+            ));
 
-            yield return Definition.Create("shape", Identifier.Enum<ShapeKind>().OrNone(), value => new AST.NodeShapeAttribute(value));
-            yield return Definition.Create("corner-radius", "corner", Value.WholeNumber, value => new AST.NodeCornerRadiusAttribute(value)); // XXX maybe this should be shape-radius or something
+            yield return Definition.Create("min-height", Value.CountingDecimal.OrNone(), value => new AST.NodeMinHeightAttribute(value), API.Doc(
+                "Increases an object's height to at least `Y` pixels. If its content is taller than `X-padding`, it will grow larger.",
+                "`Y` (decimal) or `none`",
+                UseKind.Object,
+                "min-height=100",
+                "min-height=none"
+            ));
+
+            yield return Definition.Create("shape", Identifier.Enum<ShapeKind>().OrNone(), value => new AST.NodeShapeAttribute(value), API.Doc(
+                string.Join(", ", System.Enum.GetNames<ShapeKind>().Select(n => $"`{n.ToLowerInvariant()}`")) + " or `none` (in which case the object is just a container)",
+                UseKind.Object,
+                "shape=pill",
+                "shape=none"
+            ));
+
+            yield return Definition.Create("corner-radius", "corner", Value.WholeNumber, value => new AST.NodeCornerRadiusAttribute(value), API.Doc(
+                "For an object with rounded corners, sets the width and height of the corners to `X`.",
+                "`X` (integer)",
+                UseKind.Object,
+                "corner-radius=5",
+                "corner=0"
+            ));
 
             yield return Definition.Create("label-content", Value.Text, value => new AST.NodeLabelContentAttribute(value));
             yield return Definition.Create("label-justify", Attribute.AlignColumn, value => new AST.NodeLabelJustifyAttribute(value));
