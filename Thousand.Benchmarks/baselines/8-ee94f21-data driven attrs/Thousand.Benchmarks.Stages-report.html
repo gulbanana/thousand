@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Thousand.Benchmarks.Stages-20211023-184538</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19043.1288 (21H1/May2021Update)
+AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
+Frequency=14318180 Hz, Resolution=69.8413 ns, Timer=HPET
+.NET SDK=6.0.100-preview.5.21302.13
+  [Host]     : .NET 5.0.9 (5.0.921.35908), X64 RyuJIT
+  DefaultJob : .NET 5.0.9 (5.0.921.35908), X64 RyuJIT
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>     Input</th><th> Mean</th><th>Error</th><th>StdDev</th>
+</tr>
+</thead><tbody><tr><td>Preprocess</td><td>connectors.1000</td><td>6,241.2 &mu;s</td><td>34.80 &mu;s</td><td>30.85 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>connectors.1000</td><td>441.8 &mu;s</td><td>4.69 &mu;s</td><td>4.38 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>connectors.1000</td><td>126.8 &mu;s</td><td>1.39 &mu;s</td><td>1.16 &mu;s</td>
+</tr><tr><td>Compose</td><td>connectors.1000</td><td>1,175.4 &mu;s</td><td>21.35 &mu;s</td><td>19.97 &mu;s</td>
+</tr><tr><td>Render</td><td>connectors.1000</td><td>143.5 &mu;s</td><td>2.47 &mu;s</td><td>2.31 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>tetris.1000</td><td>3,547.0 &mu;s</td><td>17.27 &mu;s</td><td>16.16 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>tetris.1000</td><td>112.6 &mu;s</td><td>0.16 &mu;s</td><td>0.13 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>tetris.1000</td><td>226.1 &mu;s</td><td>0.81 &mu;s</td><td>0.76 &mu;s</td>
+</tr><tr><td>Compose</td><td>tetris.1000</td><td>268.3 &mu;s</td><td>0.59 &mu;s</td><td>0.55 &mu;s</td>
+</tr><tr><td>Render</td><td>tetris.1000</td><td>163.1 &mu;s</td><td>0.29 &mu;s</td><td>0.26 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>underground.1000</td><td>10,722.4 &mu;s</td><td>77.37 &mu;s</td><td>68.58 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>underground.1000</td><td>669.1 &mu;s</td><td>7.50 &mu;s</td><td>7.01 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>underground.1000</td><td>449.9 &mu;s</td><td>4.35 &mu;s</td><td>4.07 &mu;s</td>
+</tr><tr><td>Compose</td><td>underground.1000</td><td>2,648.7 &mu;s</td><td>50.44 &mu;s</td><td>53.97 &mu;s</td>
+</tr><tr><td>Render</td><td>underground.1000</td><td>519.4 &mu;s</td><td>3.55 &mu;s</td><td>3.32 &mu;s</td>
+</tr></tbody></table>
+</body>
+</html>

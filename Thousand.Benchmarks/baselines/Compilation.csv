@@ -2,7 +2,8 @@ Baseline,connectors.1000(Batch),connectors.1000(Interactive),tetris.1000(Batch),
 baseline,15.507,15.459,7.929,7.615,22.556,24.630
 merge parsers,15.296,15.343,8.057,7.756,23.216,25.206
 reuse analysis ast,17.008,15.848,9.081,7.803,25.326,25.482
-typed ast from untyped,15.392,14.214,7.513,6.571,22.227,21.953
-pass3 ast without reparse,13.184,12.561,6.721,5.875,19.949,19.511
-remove pointless reparse,11.290,10.631,5.736,4.872,17.010,16.854
+ast based typecheck,15.392,14.214,7.513,6.571,22.227,21.953
+ast based pass3,13.184,12.561,6.721,5.875,19.949,19.511
+pointless reparse,11.290,10.631,5.736,4.872,17.010,16.854
 improve attr errors,13.273,12.747,5.948,5.169,20.176,19.455
+data driven attrs,8.916,8.534,4.807,4.307,15.452,15.443
