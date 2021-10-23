@@ -292,6 +292,17 @@ namespace Thousand.LSP.Analyse
 
         private void WalkObject(Analysis analysis, DocumentUri uri, AnalysisScope scope, AST.UntypedObject ast)
         {
+            // XXX this duplicates logic from Evaluator
+            var name = ast.Name;
+            if (name == null)
+            {
+                var classExpression = string.Join('.', ast.Classes.Select(c => c.Value.Name.Text));
+                var firstClass = ast.Classes.First().Value.Name.Span;
+                name = new Identifier(classExpression) { Span = new(firstClass.Source!, firstClass.Position, firstClass.Length) }; // XXX use all sources
+            }
+
+            analysis.ObjectDefinitions[ast] = new Location { Uri = uri, Range = name.Span.AsRange() };
+
             if (ast.Name != null)
             {
                 analysis.ObjectReferences.Add(new(uri, ast.Name, ast));

@@ -29,12 +29,13 @@ namespace Thousand.LSP
                 .WithInput(Console.OpenStandardInput())
                 .WithOutput(Console.OpenStandardOutput())
                 .ConfigureLogging(builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(LogLevel.Debug))
+                .WithHandler<VFSHandler>()
                 .WithHandler<TextDocumentSyncHandler>()
-                .WithHandler<HoverHandler>()
                 .WithHandler<SemanticTokensHandler>()
                 .WithHandler<ReferencesHandler>()
+                .WithHandler<DefinitionHandler>()
                 .WithHandler<TypeDefinitionHandler>() // of questionable utility
-                .WithHandler<VFSHandler>()
+                .WithHandler<HoverHandler>()                
                 .WithServices(ConfigureServices);
         }
 
