@@ -22,7 +22,7 @@ namespace Thousand.LSP.Analyse
 
         public void Pop(AST.UntypedClass c)
         {
-            Classes.Add(c.Name.Text, c);
+            Classes[c.Name.Text] = c;
             Pop();
         }
 
