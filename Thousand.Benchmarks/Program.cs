@@ -33,7 +33,7 @@ namespace Thousand.Benchmarks
             {
                 var baseline = Path.GetFileName(dir).Split("-");
                 return new Baseline(dir, baseline[0], baseline[1], baseline[2]);
-            }).OrderBy(b => b.Index).ToList(); ;
+            }).OrderBy(b => int.Parse(b.Index)).ToList(); ;
             
             var compilationData = new Dictionary<Baseline, BDNRecord[]>();
             var stagesData = new Dictionary<Baseline, BDNRecord[]>();
