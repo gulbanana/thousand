@@ -23,7 +23,8 @@ namespace Thousand.Parse.Attributes
         
         public List<AttributeDefinition<AST.EntityAttribute>> EntityAttributes { get; }
         public HashSet<string> EntityNames { get; }
-        public HashSet<string> ClassNames { get; }
+
+        public List<AttributeDefinition> ClassAttributes { get; }
 
         public Dictionary<string, string> Documentation { get; }
 
@@ -75,10 +76,10 @@ namespace Thousand.Parse.Attributes
                 .SelectMany(a => a.Names)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            ClassNames = EntityNames
-                .Concat(ObjectOnlyNames)
-                .Concat(LineOnlyNames)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            ClassAttributes = ObjectAttributes.Cast<AttributeDefinition>()
+                .Concat(LineAttributes)
+                .Distinct()
+                .ToList();
 
             Documentation = ArrowAttributes.All().Cast<AttributeDefinition>()
                 .Concat(DiagramAttributes.All())
@@ -91,32 +92,5 @@ namespace Thousand.Parse.Attributes
                 .SelectMany(attr => attr.Names.Select(n => (name: n, doc: attr.Documentation!)))
                 .ToDictionary(t => t.name, t => t.doc, StringComparer.OrdinalIgnoreCase);
         }
-
-        internal static string Doc(string? description, string type, UseKind kind, params string[] examples)
-        {
-            var builder = new StringBuilder();
-
-            if (description != null)
-            {
-                builder.Append($@"{description}
-
-");
-            }
-
-            builder.Append(@$"_Value_: {type}
-
-_Applies to:_ {kind switch {
-    UseKind.Object => "objects",
-    UseKind.Line => "lines",
-    UseKind.Document => "the whole diagram", 
-    UseKind.Region => "objects or the whole diagram",
-    UseKind.Entity => "objects or lines" }}
-
-_Examples:_ {string.Join(", ", examples.Select(e => $"`{e}`"))}");
-
-            return builder.ToString();
-        }
-
-        internal static string Doc(string type, UseKind kind, params string[] examples) => Doc(null, type, kind, examples);
     }
 }

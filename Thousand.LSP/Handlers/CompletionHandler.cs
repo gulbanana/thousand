@@ -47,26 +47,29 @@ namespace Thousand.LSP.Handlers
                 var attribute = analysis.Main.Attributes.FirstOrDefault(a => a.Syntax.Key.Span.AsRange().Contains(request.Position));
                 if (attribute != null)
                 {
-                    var names = attribute.ParentKind switch
+                    var candidates = attribute.ParentKind switch
                     {
-                        ParentKind.Document => metadata.DocumentNames,
-                        ParentKind.Class => metadata.ClassNames, // XXX this could be narrowed by existing attributes
-                        ParentKind.Object => metadata.ObjectNames,
-                        ParentKind.Line => metadata.LineNames,
+                        ParentKind.Class => metadata.ClassAttributes.AsEnumerable(),
+                        ParentKind.Document => metadata.DocumentAttributes,
+                        ParentKind.Object => metadata.ObjectAttributes,
+                        ParentKind.Line => metadata.LineAttributes,
                     };
 
-                    if (!names.Any(name => attribute.ParentAttributes.Contains(name)))
+                    foreach (var candidate in candidates)
                     {
-                        foreach (var name in names)
+                        if (candidate.Names.Contains(attribute.Syntax.Key.Text, StringComparer.OrdinalIgnoreCase) || !candidate.Names.Any(name => attribute.ParentAttributes.Contains(name)))
                         {
-                            logger.LogInformation($"{name} doc: {metadata.Documentation.ContainsKey(name)}");
-                            completions.Add(new CompletionItem
+                            foreach (var name in candidate.Names)
                             {
-                                Kind = CompletionItemKind.Enum,
-                                Label = name,
-                                InsertText = attribute.Syntax.HasEqualsSign ? name : $"{name}=",
-                                Documentation = metadata.Documentation.ContainsKey(name) ? new MarkupContent { Kind = MarkupKind.Markdown, Value = metadata.Documentation[name] } : null
-                            });
+                                logger.LogInformation($"{name} doc: {metadata.Documentation.ContainsKey(name)}");
+                                completions.Add(new CompletionItem
+                                {
+                                    Kind = CompletionItemKind.Enum,
+                                    Label = name,
+                                    InsertText = attribute.Syntax.HasEqualsSign ? name : $"{name}=",
+                                    Documentation = candidate.Documentation != null ? new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation } : null
+                                });
+                            }
                         }
                     }
                 }
