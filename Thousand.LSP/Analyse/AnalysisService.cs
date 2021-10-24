@@ -225,33 +225,49 @@ namespace Thousand.LSP.Analyse
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    analysis.Attributes.Add(new(doc.Uri, asAttribute));
+                    doc.Attributes.Add(asAttribute);
                 }, asClass =>
                 {
-                    WalkClass(analysis, doc.Uri, root, asClass);
+                    doc.Symbols.Add(new DocumentSymbol
+                    {
+                        Kind = SymbolKind.Class,
+                        Range = dec.Span().AsRange(),
+                        SelectionRange = asClass.Name.Span.AsRange(),
+                        Name = "class " + asClass.Name.Text,
+                        Children = WalkClass(analysis, doc, root, asClass).ToArray()
+                    });
+
                     root.Pop(asClass);
                 }, asObject =>
                 {
-                    WalkObject(analysis, doc.Uri, root, asObject);
+                    doc.Symbols.Add(new DocumentSymbol
+                    {
+                        Kind = SymbolKind.Object,
+                        Range = dec.Span().AsRange(),
+                        SelectionRange = (asObject.Name?.Span ?? asObject.TypeSpan).AsRange(),
+                        Name = asObject.TypeName + (asObject.Name == null ? "" : $" {asObject.Name.Text}"),
+                        Children = WalkObject(analysis, doc, root, asObject).ToArray()
+                    });
+
                     root.Pop(asObject);
                 }, asLine =>
                 {
-                    WalkLine(analysis, doc.Uri, root, asLine);
+                    WalkLine(analysis, doc, root, asLine);
                 });
             }
         }
 
-        private void WalkClass(Analysis analysis, DocumentUri uri, AnalysisScope scope, AST.UntypedClass ast)
+        private IEnumerable<DocumentSymbol> WalkClass(Analysis analysis, ParsedDocument doc, AnalysisScope scope, AST.UntypedClass ast)
         {
-            analysis.ClassDefinitions[ast] = new Location { Uri = uri, Range = ast.Name.Span.AsRange()};
+            analysis.ClassDefinitions[ast] = new Location { Uri = doc.Uri, Range = ast.Name.Span.AsRange()};
 
-            analysis.ClassReferences.Add(new(uri, ast, ast.Name));
+            analysis.ClassReferences.Add(new(doc.Uri, ast, ast.Name));
 
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.BaseClasses)
             {
                 var klass = scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(uri, klass, callMacro));
+                analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
                 if (klass is not null)
                 {
                     classes.Add(klass);
@@ -261,54 +277,66 @@ namespace Thousand.LSP.Analyse
 
             foreach (var attribute in ast.Attributes)
             {
-                analysis.Attributes.Add(new(uri, attribute));
+                doc.Attributes.Add(attribute);
             }
 
             var contents = scope.Push();
 
             foreach (var dec in ast.Declarations)
             {
-                dec.Value.Switch(invalid => { }, asAttribute =>
+                if (dec.Value.IsT1)
                 {
-                    analysis.Attributes.Add(new(uri, asAttribute));
-                }, asClass =>
+                    doc.Attributes.Add(dec.Value.AsT1);
+                }
+                else if(dec.Value.IsT2)
                 {
-                    WalkClass(analysis, uri, contents, asClass);
-                    contents.Pop(asClass);
-                }, asObject =>
+                    yield return new DocumentSymbol
+                    {
+                        Kind = SymbolKind.Class,
+                        Range = dec.Span().AsRange(),
+                        SelectionRange = dec.Value.AsT2.Name.Span.AsRange(),
+                        Name = "class " + dec.Value.AsT2.Name.Text,
+                        Children = WalkClass(analysis, doc, contents, dec.Value.AsT2).ToArray()
+                    };
+
+                    contents.Pop(dec.Value.AsT2);
+                }
+                else if (dec.Value.IsT3)
                 {
-                    WalkObject(analysis, uri, contents, asObject);
+                    var asObject = dec.Value.AsT3;
+
+                    yield return new DocumentSymbol
+                    {
+                        Kind = SymbolKind.Object,
+                        Range = dec.Span().AsRange(),
+                        SelectionRange = (asObject.Name?.Span ?? asObject.TypeSpan).AsRange(),
+                        Name = asObject.TypeName + (asObject.Name == null ? "" : $" {asObject.Name.Text}"),
+                        Children = WalkObject(analysis, doc, contents, asObject).ToArray()
+                    };
+
                     contents.Pop(asObject);
-                }, asLine =>
+                }
+                else if (dec.Value.IsT4)
                 {
-                    WalkLine(analysis, uri, contents, asLine);
-                });
+                    WalkLine(analysis, doc, contents, dec.Value.AsT4);
+                }
             }
         }
 
-        private void WalkObject(Analysis analysis, DocumentUri uri, AnalysisScope scope, AST.UntypedObject ast)
+        private IEnumerable<DocumentSymbol> WalkObject(Analysis analysis, ParsedDocument doc, AnalysisScope scope, AST.UntypedObject ast)
         {
-            // XXX this duplicates logic from Evaluator
-            var name = ast.Name;
-            if (name == null)
-            {
-                var classExpression = string.Join('.', ast.Classes.Select(c => c.Value.Name.Text));
-                var firstClass = ast.Classes.First().Value.Name.Span;
-                name = new Identifier(classExpression) { Span = new(firstClass.Source!, firstClass.Position, firstClass.Length) }; // XXX use all sources
-            }
-
-            analysis.ObjectDefinitions[ast] = new Location { Uri = uri, Range = name.Span.AsRange() };
+            analysis.ObjectDefinitions[ast] = new Location { Uri = doc.Uri, Range = (ast.Name?.Span ?? ast.TypeSpan).AsRange() };
 
             if (ast.Name != null)
             {
-                analysis.ObjectReferences.Add(new(uri, ast, ast.Name));
+                analysis.ObjectReferences.Add(new(doc.Uri, ast, ast.Name));
             }
 
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.Classes)
             {
                 var klass = scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(uri, klass, callMacro));
+                analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
                 if (klass is not null)
                 {
                     classes.Add(klass);
@@ -318,49 +346,70 @@ namespace Thousand.LSP.Analyse
 
             foreach (var attribute in ast.Attributes)
             {
-                analysis.Attributes.Add(new(uri, attribute));
+                doc.Attributes.Add(attribute);
             }
 
             var contents = scope.Push();
 
             foreach (var dec in ast.Declarations)
             {
-                dec.Value.Switch(invalid => { }, asAttribute =>
+                if (dec.Value.IsT1)
                 {
-                    analysis.Attributes.Add(new(uri, asAttribute));
-                }, asClass =>
+                    doc.Attributes.Add(dec.Value.AsT1);
+                }
+                else if (dec.Value.IsT2)
                 {
-                    WalkClass(analysis, uri, contents, asClass);
-                    contents.Pop(asClass);
-                }, asObject =>
+                    yield return new DocumentSymbol
+                    {
+                        Kind = SymbolKind.Class,
+                        Range = dec.Span().AsRange(),
+                        SelectionRange = dec.Value.AsT2.Name.Span.AsRange(),
+                        Name = "class " + dec.Value.AsT2.Name.Text,
+                        Children = WalkClass(analysis, doc, contents, dec.Value.AsT2).ToArray()
+                    };
+
+                    contents.Pop(dec.Value.AsT2);
+                }
+                else if (dec.Value.IsT3)
                 {
-                    WalkObject(analysis, uri, contents, asObject);
-                    contents.Pop(asObject);
-                }, asLine =>
+                    var asObject = dec.Value.AsT3;
+
+                    yield return new DocumentSymbol
+                    {
+                        Kind = SymbolKind.Object,
+                        Range = dec.Span().AsRange(),
+                        SelectionRange = (asObject.Name?.Span ?? asObject.TypeSpan).AsRange(),
+                        Name = asObject.TypeName + (asObject.Name == null ? "" : $" {asObject.Name.Text}"),
+                        Children = WalkObject(analysis, doc, contents, asObject).ToArray()
+                    };
+
+                    contents.Pop(dec.Value.AsT3); contents.Pop(dec.Value.AsT3);
+                }
+                else if (dec.Value.IsT4)
                 {
-                    WalkLine(analysis, uri, contents, asLine);
-                });
+                    WalkLine(analysis, doc, contents, dec.Value.AsT4);
+                }
             }
         }
 
-        private void WalkLine(Analysis analysis, DocumentUri uri, AnalysisScope  scope, AST.UntypedLine ast)
+        private void WalkLine(Analysis analysis, ParsedDocument doc, AnalysisScope  scope, AST.UntypedLine ast)
         {
             foreach (var attribute in ast.Attributes)
             {
-                analysis.Attributes.Add(new(uri, attribute));
+                doc.Attributes.Add(attribute);
             }
 
             foreach (var segment in ast.Segments)
             {
                 if (scope.FindObject(segment.Target) is AST.UntypedObject objekt)
                 {
-                    analysis.ObjectReferences.Add(new(uri, objekt, segment.Target));
+                    analysis.ObjectReferences.Add(new(doc.Uri, objekt, segment.Target));
                 }               
             }
 
             foreach (var callMacro in ast.Classes)
             {
-                analysis.ClassReferences.Add(new(uri, scope.FindClass(callMacro.Value.Name), callMacro));
+                analysis.ClassReferences.Add(new(doc.Uri, scope.FindClass(callMacro.Value.Name), callMacro));
             }
         }
     }

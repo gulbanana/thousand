@@ -17,8 +17,6 @@ namespace Thousand.LSP.Analyse
         public IR.Root? Rules { get; set; }
         public Diagram? Diagram { get; set; }
 
-        public List<Owned<UntypedAttribute>> Attributes { get; } = new();
-
         public Dictionary<UntypedClass, Location> ClassDefinitions { get; } = new();
         public Dictionary<UntypedObject, Location> ObjectDefinitions { get; } = new();
         

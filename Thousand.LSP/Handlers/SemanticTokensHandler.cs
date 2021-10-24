@@ -51,9 +51,9 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            foreach (var (uri, ast) in document.Attributes)
+            if (document.Main != null)
             {
-                if (uri == identifier.TextDocument.Uri)
+                foreach (var ast in document.Main.Attributes)
                 {
                     foreach (var token in ast.Value.Sequence())
                     {

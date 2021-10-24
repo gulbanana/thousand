@@ -32,10 +32,11 @@ namespace Thousand.LSP
                 .WithHandler<VFSHandler>()
                 .WithHandler<TextDocumentSyncHandler>()
                 .WithHandler<SemanticTokensHandler>()
+                .WithHandler<DocumentSymbolHandler>()
                 .WithHandler<ReferencesHandler>()
                 .WithHandler<DefinitionHandler>()
                 // .WithHandler<TypeDefinitionHandler>() // of questionable utility
-                .WithHandler<HoverHandler>()                
+                .WithHandler<HoverHandler>()
                 .WithServices(ConfigureServices);
         }
 

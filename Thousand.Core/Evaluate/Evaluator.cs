@@ -144,13 +144,7 @@ namespace Thousand.Evaluate
 
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, Scope scope)
         {
-            var name = node.Name;
-            if (name == null)
-            {
-                var classExpression = string.Join('.', node.Classes.Select(c => c.Text));
-                var firstClass = node.Classes.First().Span;
-                name = new Parse.Identifier(classExpression) { Span = new(firstClass.Source!, firstClass.Position, firstClass.Length) }; // XXX use all sources
-            }
+            var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
             
             var regionConfig = new IR.Config(null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
             

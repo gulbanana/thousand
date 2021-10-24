@@ -1,5 +1,6 @@
 ﻿using OneOf;
 using System;
+using System.Linq;
 using Thousand.Model;
 
 // Intermediate representation shared between Parse and Canonicalise stages
@@ -98,7 +99,23 @@ namespace Thousand.AST
     public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
-    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
+    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
+    {
+        private readonly Lazy<string> typeName = new(() =>
+        {
+            return string.Join('.', Classes.Select(c => c.Span().ToStringValue()));
+        });
+
+        private readonly Lazy<Superpower.Model.TextSpan> typeSpan = new(() =>
+        {
+            var first = Classes[0].Location.First().Span;
+            var last = Classes.Last().Span();
+            return new(first.Source!, first.Position, last.Position.Absolute - first.Position.Absolute + last.Length);
+        });
+
+        public string TypeName => typeName.Value;
+        public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
+    }
 
     public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, UntypedAttribute[] Attributes);
 
@@ -124,6 +141,16 @@ namespace Thousand.AST
     {
         public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedObjectContent[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }
         public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedObjectContent>()) { }
+
+        // XXX not a true sourced span - doesn't matter where it's used, but we need to get this into the type system
+        private readonly Lazy<Superpower.Model.TextSpan> typeSpan = new(() =>
+        {
+            var classExpression = string.Join('.', Classes.Select(c => c.Text));
+            return new(classExpression);
+        });
+
+        public string TypeName => string.Join('.', Classes.Select(c => c.Text));
+        public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
     }
 
     public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, LineAttribute[] Attributes)
