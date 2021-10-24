@@ -8,7 +8,7 @@ namespace Thousand.LSP.Analyse
     // XXX add uint version, might help to avoid races
     public record ParsedDocument(DocumentUri Uri, string Source, UntypedDocument Syntax)
     {
-        public List<UntypedAttribute> Attributes { get; } = new();
         public List<DocumentSymbol> Symbols { get; } = new();
+        public List<AttributeContext> Attributes { get; } = new();
     }
 }

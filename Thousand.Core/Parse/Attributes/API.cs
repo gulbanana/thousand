@@ -23,6 +23,7 @@ namespace Thousand.Parse.Attributes
         
         public List<AttributeDefinition<AST.EntityAttribute>> EntityAttributes { get; }
         public HashSet<string> EntityNames { get; }
+        public HashSet<string> ClassNames { get; }
 
         public Dictionary<string, string> Documentation { get; }
 
@@ -72,6 +73,11 @@ namespace Thousand.Parse.Attributes
 
             EntityNames = EntityAttributes
                 .SelectMany(a => a.Names)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            ClassNames = EntityNames
+                .Concat(ObjectOnlyNames)
+                .Concat(LineOnlyNames)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             Documentation = ArrowAttributes.All().Cast<AttributeDefinition>()

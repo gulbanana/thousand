@@ -221,11 +221,13 @@ namespace Thousand.LSP.Analyse
 
         private void WalkDocument(Analysis analysis, ParsedDocument doc, AnalysisScope root)
         {
+            var allAttributes = doc.Syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1.Key.Text).Distinct().ToArray();
+
             foreach (var dec in doc.Syntax.Declarations)
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    doc.Attributes.Add(asAttribute);
+                    doc.Attributes.Add(new(asAttribute, ParentKind.Document, allAttributes));
                 }, asClass =>
                 {
                     doc.Symbols.Add(new DocumentSymbol
@@ -275,18 +277,18 @@ namespace Thousand.LSP.Analyse
             }
             analysis.ClassClasses[ast] = classes;
 
+            var allAttributes = ast.Attributes.Concat(ast.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1)).Select(a => a.Key.Text).Distinct().ToArray();
             foreach (var attribute in ast.Attributes)
             {
-                doc.Attributes.Add(attribute);
+                doc.Attributes.Add(new(attribute, ParentKind.Class, allAttributes));
             }
 
             var contents = scope.Push();
-
             foreach (var dec in ast.Declarations)
             {
                 if (dec.Value.IsT1)
                 {
-                    doc.Attributes.Add(dec.Value.AsT1);
+                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Class, allAttributes));
                 }
                 else if(dec.Value.IsT2)
                 {
@@ -344,18 +346,18 @@ namespace Thousand.LSP.Analyse
             }
             analysis.ObjectClasses[ast] = classes;
 
+            var allAttributes = ast.Attributes.Concat(ast.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1)).Select(a => a.Key.Text).Distinct().ToArray();
             foreach (var attribute in ast.Attributes)
             {
-                doc.Attributes.Add(attribute);
+                doc.Attributes.Add(new(attribute, ParentKind.Object, allAttributes));
             }
 
             var contents = scope.Push();
-
             foreach (var dec in ast.Declarations)
             {
                 if (dec.Value.IsT1)
                 {
-                    doc.Attributes.Add(dec.Value.AsT1);
+                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Object, allAttributes));
                 }
                 else if (dec.Value.IsT2)
                 {
@@ -394,9 +396,13 @@ namespace Thousand.LSP.Analyse
 
         private void WalkLine(Analysis analysis, ParsedDocument doc, AnalysisScope  scope, AST.UntypedLine ast)
         {
-            foreach (var attribute in ast.Attributes)
+            var allAttributes = ast.Attributes.Select(a => a.Key.Text).Distinct().ToArray();
+            if (ast.Attributes != null)
             {
-                doc.Attributes.Add(attribute);
+                foreach (var attribute in ast.Attributes)
+                {
+                    doc.Attributes.Add(new(attribute, ParentKind.Line, allAttributes));
+                }
             }
 
             foreach (var segment in ast.Segments)

@@ -9,12 +9,21 @@ namespace Thousand.Parse
 {   
     public static class Untyped
     {
+        public static TokenListParser<TokenKind, Macro> AttributeValue { get; } =
+            Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace, TokenKind.LineSeparator);
+
         public static TokenListParser<TokenKind, AST.UntypedAttribute> Attribute { get; } =
             from key in Identifier.Any.Named("attribute name")
             from value in Token.EqualTo(TokenKind.EqualsSign)
-                               .IgnoreThen(Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace, TokenKind.LineSeparator))
-                               .Or(Macro.Raw(TokenKind.Comma, TokenKind.LineSeparator, TokenKind.RightBracket, TokenKind.RightBrace, TokenKind.LineSeparator))
-            select new AST.UntypedAttribute(key, value);
+                               .IgnoreThen(AttributeValue.Select(m => (eq: true, m)))
+                               .Or(AttributeValue.Select(m => (eq: false, m)))
+            select new AST.UntypedAttribute(key, value.eq, value.m);
+
+        public static TokenListParser<TokenKind, AST.UntypedAttribute[]> AttributeList { get; } =
+            from begin in Token.EqualTo(TokenKind.LeftBracket)
+            from values in Attribute.Or(Macro.Empty.Select(finalValue => new AST.UntypedAttribute(new Identifier("") { Span = finalValue.Span() }, false, finalValue))).ManyDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from end in Token.EqualTo(TokenKind.RightBracket)
+            select values;
 
         /***********************************************************************************************
          * The untyped AST may contain errors and macros. A declaration in any scope can be /invalid/, *
@@ -76,7 +85,7 @@ namespace Thousand.Parse
             from name in Identifier.Any
             from arguments in Macro.Of(ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
             from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
-            from attrs in Shared.List(Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
+            from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = Ref(() => ObjectContent!).Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
             from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
             select new AST.UntypedClass(name, arguments, bases, attrs, children);
@@ -146,7 +155,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedObject> Object { get; } =
             from classes in ClassCallList
             from name in Shared.Target.AsNullable().OptionalOrDefault()
-            from attrs in Shared.List(Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
+            from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = ObjectContent.Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
             from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
             select new AST.UntypedObject(classes, name, attrs, children);
@@ -154,7 +163,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
             from calls in ClassCallList
             from chain in Shared.Edges
-            from attrs in Shared.List(Attribute).OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
+            from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.UntypedLine(calls, chain.ToArray(), attrs);
 
         /*********************************************************************************************

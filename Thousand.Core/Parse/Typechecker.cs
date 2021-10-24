@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Thousand.Parse.Attributes;
 using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
 using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
@@ -40,9 +41,9 @@ namespace Thousand.Parse
 
         private T? CheckAttribute<T>(AST.UntypedAttribute ast, TokenListParser<TokenKind, T> pT) where T : class
         {
-            if (ast.Value.Location.Position == ast.Value.Remainder.Position)
+            if (!ast.HasValue)
             {
-                state.AddError(ast.Key.Span, ErrorKind.Syntax, $"attribute has no value");
+                state.AddError(ast.Value.Span(), ErrorKind.Syntax, $"attribute has no value");
                 return null;
             }
 
@@ -67,9 +68,15 @@ namespace Thousand.Parse
             }
         }
 
-        private AST.DocumentAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
+        private T? CheckAttribute<T>(AST.UntypedAttribute ast, IEnumerable<AttributeDefinition<T>> metadata, IEnumerable<string> validNames) where T : class
         {
-            foreach (var attr in api.DocumentAttributes)
+            if (string.IsNullOrEmpty(ast.Key.Text))
+            {
+                state.AddError(ast.Key, ErrorKind.Syntax, "expected attribute");
+                return null;
+            }
+
+            foreach (var attr in metadata)
             {
                 if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
                 {
@@ -77,54 +84,29 @@ namespace Thousand.Parse
                 }
             }
 
-            var validAttributes = string.Join(", ", api.DocumentNames.Select(a => $"`{a}`").OrderBy(x => x));
+            var validAttributes = string.Join(", ", validNames.Select(a => $"`{a}`").OrderBy(x => x));
             state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
             return null;
+        }
+
+        private AST.DocumentAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
+        {
+            return CheckAttribute(ast, api.DocumentAttributes, api.DocumentNames);
         }
 
         private AST.ObjectAttribute? CheckObjectAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var attr in api.ObjectAttributes)
-            {
-                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
-                {
-                    return CheckAttribute(ast, attr.ValueParser);
-                }
-            }
-
-            var validAttributes = string.Join(", ", api.ObjectNames.Select(a => $"`{a}`").OrderBy(x => x));
-            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-            return null;
+            return CheckAttribute(ast, api.ObjectAttributes, api.ObjectNames);
         }
 
         private AST.LineAttribute? CheckLineAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var attr in api.LineAttributes)
-            {
-                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
-                {
-                    return CheckAttribute(ast, attr.ValueParser);
-                }
-            }
-
-            var validAttributes = string.Join(", ", api.LineNames.Select(a => $"`{a}`").OrderBy(x => x));
-            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-            return null;
+            return CheckAttribute(ast, api.LineAttributes, api.LineNames);
         }
 
         private AST.EntityAttribute? CheckEntityAttribute(AST.UntypedAttribute ast)
         {
-            foreach (var attr in api.EntityAttributes)
-            {
-                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
-                {
-                    return CheckAttribute(ast, attr.ValueParser);
-                }
-            }
-
-            var validAttributes = string.Join(", ", api.ObjectNames.Concat(api.LineNames).Distinct().Select(a => $"`{a}`").OrderBy(x => x));
-            state.AddError(ast.Key, ErrorKind.Type, "unknown attribute {0}. expected " + validAttributes, ast.Key);
-            return null;
+            return CheckAttribute(ast, api.EntityAttributes, api.ObjectNames.Concat(api.LineNames).Distinct());
         }
 
         private AST.TypedDocument CheckDocument(AST.UntypedDocument ast)

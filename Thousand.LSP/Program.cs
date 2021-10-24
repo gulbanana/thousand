@@ -37,6 +37,7 @@ namespace Thousand.LSP
                 .WithHandler<DefinitionHandler>()
                 // .WithHandler<TypeDefinitionHandler>() // of questionable utility
                 .WithHandler<HoverHandler>()
+                .WithHandler<CompletionHandler>()
                 .WithServices(ConfigureServices);
         }
 

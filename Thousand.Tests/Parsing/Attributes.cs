@@ -275,5 +275,47 @@ namespace Thousand.Tests.Parsing
             Assert.Equal(expectedHorizontal, result.Value.horizontal);
             Assert.Equal(expectedVertical, result.Value.vertical);
         }
+
+        [Fact]
+        public void Untyped_EmptyValue()
+        {
+            var tokens = tokenizer.Tokenize(@"[shape]");
+            var result = Untyped.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Single(result.Value);
+            Assert.Empty(result.Value.Single().Value.Sequence());
+        }
+
+        [Fact]
+        public void Untyped_EmptyValue_WithEquals()
+        {
+            var tokens = tokenizer.Tokenize(@"[shape=]");
+            var result = Untyped.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Single(result.Value);
+            Assert.Empty(result.Value.Single().Value.Sequence());
+        }
+
+        [Fact]
+        public void Untyped_EmptyList()
+        {
+            var tokens = tokenizer.Tokenize(@"[]");
+            var result = Untyped.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Single(result.Value);
+        }
+
+        [Fact]
+        public void Untyped_UnterminatedList()
+        {
+            var tokens = tokenizer.Tokenize(@"[shape=rect,]");
+            var result = Untyped.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(2, result.Value.Count());
+        }
     }
 }

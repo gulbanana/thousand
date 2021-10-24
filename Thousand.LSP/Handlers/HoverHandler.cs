@@ -12,13 +12,13 @@ namespace Thousand.LSP.Handlers
     {
         private readonly AnalysisService semanticService;
         private readonly IDiagnosticService diagnosticService;
-        private readonly API api;
+        private readonly API metadata;
 
         public HoverHandler(AnalysisService semanticService, IDiagnosticService diagnosticService)
         {
             this.semanticService = semanticService;
             this.diagnosticService = diagnosticService;
-            this.api = new API();
+            this.metadata = new API();
         }
 
         protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities) => new HoverRegistrationOptions
@@ -63,22 +63,22 @@ namespace Thousand.LSP.Handlers
                 }
             }
 
-            // XXX reenable once we have reasonable coverage
-            //foreach (var (uri, ast) in analysis.Attributes)
-            //{
-            //    if (uri == request.TextDocument.Uri)
-            //    {
-            //        var loc = ast.Key.Span.AsRange();
-            //        if (loc.Contains(request.Position) && api.Documentation.ContainsKey(ast.Key.Text))
-            //        {
-            //            return new Hover
-            //            {
-            //                Range = ast.Key.Span.AsRange(),
-            //                Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[ast.Key.Text] })
-            //            };
-            //        }
-            //    }
-            //}
+            if (analysis.Main != null)
+            {
+                foreach (var ctx in analysis.Main.Attributes)
+                {
+                    var key = ctx.Syntax.Key;
+                    var loc = key.Span.AsRange();
+                    if (loc.Contains(request.Position) && metadata.Documentation.ContainsKey(key.Text))
+                    {
+                        return new Hover
+                        {
+                            Range = key.Span.AsRange(),
+                            Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = metadata.Documentation[key.Text] })
+                        };
+                    }
+                }
+            }
 
             return null;
         }

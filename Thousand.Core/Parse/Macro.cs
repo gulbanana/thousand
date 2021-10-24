@@ -10,6 +10,11 @@ namespace Thousand.Parse
     // XXX basically ITemplated with concrete init - extract the interface somehow
     public record Macro(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder)
     {
+        public static TokenListParser<TokenKind, Macro> Empty { get; } = input =>
+        {
+            return TokenListParserResult.Value(new Macro(input, input), input, input);
+        };
+
         public static TokenListParser<TokenKind, Macro> Raw(params TokenKind[] terminators) => input =>
         {
             var remainder = input;
@@ -72,8 +77,15 @@ namespace Thousand.Parse
             else
             {
                 var tokenDiff = Remainder.Position - Location.Position;
-                var last = Location.ElementAt(tokenDiff - 1).Span;
-                return new TextSpan(first.Source, first.Position, last.Position.Absolute - first.Position.Absolute + last.Length);
+                if (tokenDiff == 0)
+                {
+                    return new TextSpan(first.Source, first.Position, 0);
+                }
+                else
+                {
+                    var last = Location.ElementAt(tokenDiff - 1).Span;
+                    return new TextSpan(first.Source, first.Position, last.Position.Absolute - first.Position.Absolute + last.Length);
+                }
             }
         }
     }

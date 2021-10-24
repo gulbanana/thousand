@@ -93,9 +93,13 @@ namespace Thousand.AST
      * Error-tolerant AST, containing invalid declarations and unresolved macros *
      *****************************************************************************/
     public record InvalidDeclaration;
-    public record UntypedAttribute(Parse.Identifier Key, Parse.Macro Value);
-    public record Argument(Parse.Identifier Name, Parse.Macro? Default);   
 
+    public record UntypedAttribute(Parse.Identifier Key, bool HasEqualsSign, Parse.Macro Value)
+    {
+        public bool HasValue => Value.Location.Position < Value.Remainder.Position;
+    }
+
+    public record Argument(Parse.Identifier Name, Parse.Macro? Default);   
     public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }

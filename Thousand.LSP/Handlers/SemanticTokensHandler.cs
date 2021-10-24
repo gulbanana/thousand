@@ -53,9 +53,9 @@ namespace Thousand.LSP.Handlers
 
             if (document.Main != null)
             {
-                foreach (var ast in document.Main.Attributes)
+                foreach (var ctx in document.Main.Attributes)
                 {
-                    foreach (var token in ast.Value.Sequence())
+                    foreach (var token in ctx.Syntax.Value.Sequence())
                     {
                         if (token.Kind == Parse.TokenKind.Identifier)
                         {
