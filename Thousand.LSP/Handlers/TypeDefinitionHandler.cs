@@ -28,7 +28,7 @@ namespace Thousand.LSP.Handlers
 
             foreach (var (uri, range, ast) in analysis.ObjectReferences)
             {
-                if (range.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && range.Contains(request.Position))
                 {
                     var defs = analysis.ObjectClasses[ast]
                         .Select(classAST => analysis.ClassDefinitions[classAST])
@@ -41,7 +41,7 @@ namespace Thousand.LSP.Handlers
 
             foreach (var (uri, range, ast) in analysis.ClassReferences)
             {
-                if (ast is not null && range.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && range.Contains(request.Position) && ast is not null)
                 {
                     var defs = analysis.ClassClasses[ast]
                         .Select(classAST => analysis.ClassDefinitions[classAST])

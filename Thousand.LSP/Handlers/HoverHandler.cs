@@ -51,12 +51,7 @@ namespace Thousand.LSP.Handlers
 
             foreach (var (uri, loc, ast) in analysis.ClassReferences)
             {
-                if (ast is null)
-                {
-                    continue;
-                }
-
-                if (uri == request.TextDocument.Uri && loc.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && loc.Contains(request.Position) && ast is not null)
                 {
                     var tooltip = Format.Canonicalise(ast);
 

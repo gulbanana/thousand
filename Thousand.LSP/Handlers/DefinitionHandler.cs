@@ -25,18 +25,18 @@ namespace Thousand.LSP.Handlers
         {
             var analysis = await analysisService.GetAnalysisAsync(request.TextDocument.Uri);
 
-            foreach (var (_, range, ast) in analysis.ObjectReferences)
+            foreach (var (uri, range, ast) in analysis.ObjectReferences)
             {
-                if (range.Contains(request.Position) && analysis.ObjectDefinitions.ContainsKey(ast))
+                if (uri == request.TextDocument.Uri && range.Contains(request.Position) && analysis.ObjectDefinitions.ContainsKey(ast))
                 {
                     var def = new LocationOrLocationLink(analysis.ObjectDefinitions[ast]);
                     return new LocationOrLocationLinks(def);
                 }
             }
 
-            foreach (var (_, range, ast) in analysis.ClassReferences)
+            foreach (var (uri, range, ast) in analysis.ClassReferences)
             {
-                if (ast is not null && range.Contains(request.Position) && analysis.ClassDefinitions.ContainsKey(ast))
+                if (uri == request.TextDocument.Uri && ast is not null && range.Contains(request.Position) && analysis.ClassDefinitions.ContainsKey(ast))
                 {
                     var def = new LocationOrLocationLink(analysis.ClassDefinitions[ast]);
                     return new LocationOrLocationLinks(def);

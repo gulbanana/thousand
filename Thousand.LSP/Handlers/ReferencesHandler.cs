@@ -28,11 +28,11 @@ namespace Thousand.LSP.Handlers
 
             foreach (var (uri, loc, ast) in analysis.ObjectReferences)
             {
-                if (loc.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && loc.Contains(request.Position))
                 {
                     var refs = analysis.ObjectReferences
                         .Where(r => ReferenceEquals(r.Value, ast))
-                        .Select(r => new Location { Uri = uri, Range = r.Range })
+                        .Select(r => new Location { Uri = r.Uri, Range = r.Range })
                         .ToArray();
 
                     return new LocationContainer(refs);
@@ -41,11 +41,11 @@ namespace Thousand.LSP.Handlers
 
             foreach (var (uri, loc, ast) in analysis.ClassReferences)
             {
-                if (loc.Contains(request.Position))
+                if (uri == request.TextDocument.Uri && loc.Contains(request.Position))
                 {
                     var refs = analysis.ClassReferences
                         .Where(r => ReferenceEquals(r.Value, ast))
-                        .Select(r => new Location { Uri = uri, Range = r.Range })
+                        .Select(r => new Location { Uri = r.Uri, Range = r.Range })
                         .ToArray();
 
                     return new LocationContainer(refs);
