@@ -69,20 +69,21 @@ namespace Thousand.Evaluate
                 region => Config = ApplyRegionAttributes(Config, region), 
                 text => rootFont = ApplyFontAttributes(rootFont, text));
             }
-
-            foreach (var c in diagram.Declarations.Where(d => d.IsT1).Select(d => d.AsT1))
+            
+            foreach (var declaration in diagram.Declarations)
             {
-                AddClass(c, rootScope);
-            }
-
-            foreach (var node in diagram.Declarations.Where(d => d.IsT2).Select(d => d.AsT2))
-            {
-                AddObject(node, rootFont, rootScope);
-            }
-
-            foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
-            {
-                AddEdges(chain, rootFont, rootScope).ToList();
+                if (declaration.IsT1)
+                {
+                    AddClass(declaration.AsT1, rootScope);
+                }
+                else if (declaration.IsT2)
+                {
+                    AddObject(declaration.AsT2, rootFont, rootScope);
+                }
+                else if (declaration.IsT3)
+                {
+                    AddEdges(declaration.AsT3, rootFont, rootScope).ToList();
+                }
             }
         }
 

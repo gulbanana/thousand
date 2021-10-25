@@ -56,12 +56,12 @@ namespace Thousand.Parse
             select Enumerable.Repeat(new AST.LineSegment<T>(dst, null), 1);
 
         public static TokenListParser<TokenKind, ArrowKind> Arrow { get; } =
-            //from begin in Token.EqualTo(TokenKind.LineSeparator).Optional()
+            from begin in Token.EqualTo(TokenKind.LineSeparator).Optional()
             from arrow in Token.EqualTo(TokenKind.RightArrow).Value(ArrowKind.Forward)
                 .Or(Token.EqualTo(TokenKind.LeftArrow).Value(ArrowKind.Backward))
                 .Or(Token.EqualTo(TokenKind.NoArrow).Value(ArrowKind.Neither))
                 .Or(Token.EqualTo(TokenKind.DoubleArrow).Value(ArrowKind.Both))
-            //from end in Token.EqualTo(TokenKind.LineSeparator).Optional()
+            from end in Token.EqualTo(TokenKind.LineSeparator).Optional()
             select arrow;
 
         public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> LineSegments<T>(TokenListParser<TokenKind, T> pT) =>
