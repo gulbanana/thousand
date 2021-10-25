@@ -42,6 +42,7 @@ namespace Thousand.Parse
                 .Match(Character.EqualTo('}'), TokenKind.RightBrace)
                 .Match(Character.EqualTo('('), TokenKind.LeftParenthesis)
                 .Match(Character.EqualTo(')'), TokenKind.RightParenthesis)
+                .Match(Character.EqualTo('|'), TokenKind.Pipe)
                 .Match(Character.EqualTo('='), TokenKind.EqualsSign)
                 .Match(Character.EqualTo(','), TokenKind.Comma)
                 .Match(Character.EqualTo(':'), TokenKind.Colon)

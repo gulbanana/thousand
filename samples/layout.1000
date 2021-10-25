@@ -76,6 +76,19 @@ group {
 }
 
 group {
+	header "align=stretch"
+	area.blue {
+		box "a=c" [align=stretch]
+		column.red {
+			box(50)
+			box(50,50)
+			box(50)
+		}
+		box "a=e" [align=stretch]
+	}
+}
+
+group {
 	header "axial alignment"
 	area.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
 		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]

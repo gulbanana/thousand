@@ -83,8 +83,7 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class LineAttribute : OneOfBase<PositionAttribute, ArrowAttribute, StrokeAttribute> { }
     [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<DiagramAttribute, RegionAttribute, TextAttribute> { }
 
-    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
-    public record LineSegment(Parse.Identifier Target, ArrowKind? Direction)
+    public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
     {
         public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
     }
@@ -99,7 +98,8 @@ namespace Thousand.AST
         public bool HasValue => Value.Location.Position < Value.Remainder.Position;
     }
 
-    public record Argument(Parse.Identifier Name, Parse.Macro? Default);   
+    public record Argument(Parse.Identifier Name, Parse.Macro? Default);
+    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
     public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
@@ -121,7 +121,7 @@ namespace Thousand.AST
         public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
     }
 
-    public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment[] Segments, UntypedAttribute[] Attributes);
+    public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, UntypedAttribute[] Attributes);
 
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
     public record UntypedDocument(Parse.Macro<UntypedDocumentContent>[] Declarations);
@@ -157,9 +157,9 @@ namespace Thousand.AST
         public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
     }
 
-    public record TypedLine(Parse.Identifier[] Classes, LineSegment[] Segments, LineAttribute[] Attributes)
+    public record TypedLine(Parse.Identifier[] Classes, LineSegment<TypedObject>[] Segments, LineAttribute[] Attributes)
     {
-        public TypedLine(string klass, params LineSegment[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<LineAttribute>()) { }
+        public TypedLine(string klass, params LineSegment<TypedObject>[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<LineAttribute>()) { }
     }
 
     [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DocumentAttribute, TypedClass, TypedObject, TypedLine> { }

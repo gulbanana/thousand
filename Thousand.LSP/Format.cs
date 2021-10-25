@@ -67,7 +67,14 @@ namespace Thousand.LSP
             foreach (var segment in ast.Segments)
             {
                 builder.Append(' ');
-                builder.Append(Target(segment.Target));
+                if (segment.Target.IsT0)
+                {
+                    builder.Append(Target(segment.Target.AsT0));
+                }
+                else if (segment.Target.IsT1)
+                {
+                    builder.Append(Canonicalise(segment.Target.AsT1.Value));
+                }
 
                 if (segment.Direction.HasValue)
                 {

@@ -119,6 +119,10 @@ namespace Thousand.Parse
                 {
                     return Attribute.Select(x => (AST.UntypedObjectContent)x)(input);
                 }
+                else if (second.Value.Kind == TokenKind.Pipe)
+                {
+                    return Ref(() => Line!).Select(x => (AST.UntypedObjectContent)x)(input);
+                }
                 else // could still be an object or a line
                 {
                     var classList = ClassCallList(input);
@@ -128,6 +132,10 @@ namespace Thousand.Parse
                         if (!identifier.HasValue) // a slightly less trivial object 
                         {
                             return Ref(() => Object!).Select(x => (AST.UntypedObjectContent)x)(input);
+                        }
+                        else if (identifier.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
+                        {
+                            return Ref(() => Line!).Select(x => (AST.UntypedObjectContent)x)(input);
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
@@ -154,7 +162,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.UntypedObject> Object { get; } =
             from classes in ClassCallList
-            from name in Shared.Target.AsNullable().OptionalOrDefault()
+            from name in Shared.ObjectName.AsNullable().OptionalOrDefault()
             from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = ObjectContent.Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
             from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
@@ -162,7 +170,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
             from calls in ClassCallList
-            from chain in Shared.Edges
+            from chain in Shared.LineSegments(Macro.Of(Object))
             from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             select new AST.UntypedLine(calls, chain.ToArray(), attrs);
 
@@ -191,18 +199,26 @@ namespace Thousand.Parse
                 {
                     return Attribute.Select(x => (AST.UntypedDocumentContent)x)(input);
                 }
+                else if (second.Value.Kind == TokenKind.Pipe)
+                {
+                    return Line.Select(x => (AST.UntypedDocumentContent)x)(input);
+                }
                 else // could still be an object or a line
                 {
                     var classList = ClassCallList(input);
                     if (classList.HasValue)
                     {
-                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue) // a slightly less trivial object 
+                        var identifierOrInline = classList.Remainder.ConsumeToken(); // object declaration or first object of line
+                        if (!identifierOrInline.HasValue) // a slightly less trivial object 
                         {
                             return Object.Select(x => (AST.UntypedDocumentContent)x)(input);
                         }
+                        else if (identifierOrInline.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
+                        {
+                            return Line.Select(x => (AST.UntypedDocumentContent)x)(input);
+                        }
 
-                        var arrow = identifier.Remainder.ConsumeToken();
+                        var arrow = identifierOrInline.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
                             return Line.Select(x => (AST.UntypedDocumentContent)x)(input);

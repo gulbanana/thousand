@@ -138,11 +138,11 @@ bar""");
         public void Line_Bare()
         {
             var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar""");
-            var result = Shared.Edges(tokens);
+            var result = Shared.LineSegments(Typed.Object)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.First().Target?.Text);
-            Assert.Equal("bar", result.Value.Last().Target?.Text);
+            Assert.Equal("foo", result.Value.First().Target.AsT0.Text);
+            Assert.Equal("bar", result.Value.Last().Target.AsT0.Text);
         }
 
         [Fact]
@@ -174,6 +174,37 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Attributes, new AST.StrokeColourAttribute(new Colour(0, 0, 0)));
+        }
+
+        [Fact]
+        public void Line_WithInline()
+        {
+            var tokens = tokenizer.Tokenize(@"line |object foo|->bar");
+            var result = Typed.Line(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.True(result.Value.Segments.First().Target.IsT1);
+        }
+
+        [Fact]
+        public void Line_WithInline_Untyped()
+        {
+            var tokens = tokenizer.Tokenize(@"line |object foo|->bar");
+            var result = Untyped.Line(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.True(result.Value.Segments.First().Target.IsT1);
+        }
+
+        [Fact]
+        public void Line_WithInline_MultiSeg()
+        {
+            var tokens = tokenizer.Tokenize(@"line |object ""Lamp doesn't work""| -> ""Lamp\nplugged in?"" -> ""Bulb\nburned out?"" -> ""Repair Lamp""");
+            var result = Typed.Line(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.True(result.Value.Segments.ElementAt(0).Target.IsT1);
+            Assert.True(result.Value.Segments.ElementAt(1).Target.IsT0);
         }
 
         [Fact]

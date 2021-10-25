@@ -1,18 +1,12 @@
 grid=4 rows;layout=pack;justify-columns=stretch;gutter=45
 
-class choice [shape=rhombus,padding=15 30,fill=#ff7]
+class initial [fill=#f88]
 class terminal [fill=#8f4]
+class choice [shape=rhombus,padding=15 30,fill=#ff7]
 
-object "Lamp doesn't work"
-choice "Lamp\nplugged in?"
-choice "Bulb\nburned out?"
-terminal "Repair lamp"
-terminal "Plug in lamp" [row=2]
-terminal "Replace bulb"
-
-line "Lamp doesn't work" -> "Lamp\nplugged in?" -> "Bulb\nburned out?" -> "Repair Lamp"
-line "Lamp\nplugged in?" -> "Plug in lamp"
-line "Bulb\nburned out?" -> "Replace bulb"
+line |initial "Lamp doesn't work"| -> |choice "Lamp\nplugged in?"| -> |choice "Bulb\nburned out?"| -> |terminal "Repair Lamp"|
+line "Lamp\nplugged in?" -> |terminal "Plug in lamp" [row=2]|
+line "Bulb\nburned out?" -> |terminal "Replace bulb"|
 
 class yes:label [label="Yes"]
 class no:label [label="No"]

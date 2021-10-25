@@ -1,4 +1,5 @@
-﻿using Superpower;
+﻿using OneOf;
+using Superpower;
 using Superpower.Model;
 using System;
 using System.Collections.Generic;
@@ -185,7 +186,7 @@ namespace Thousand.Parse
         {
             return new AST.TypedLine(
                 ast.Classes.Select(c => c.Value.Name).ToArray(),
-                ast.Segments,
+                ast.Segments.Select(s => new AST.LineSegment<AST.TypedObject>(s.Target.Match<OneOf<Identifier, AST.TypedObject>>(x => x, x => CheckObject(x.Value)), s.Direction)).ToArray(),
                 ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
             );
         }

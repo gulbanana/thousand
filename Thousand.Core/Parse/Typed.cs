@@ -173,18 +173,26 @@ namespace Thousand.Parse
                 {
                     return ObjectAttribute.Select(x => (AST.TypedObjectContent)x)(input);
                 }
+                else if (second.Value.Kind == TokenKind.Pipe)
+                {
+                    return Ref(() => Line!).Select(x => (AST.TypedObjectContent)x)(input);
+                }
                 else // could still be an object or a line
                 {
                     var classList = Shared.ClassList(input);
                     if (classList.HasValue)
                     {
-                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue) // a slightly less trivial object 
+                        var identifierOrInline = classList.Remainder.ConsumeToken(); // object declaration or first object of line
+                        if (!identifierOrInline.HasValue) // a slightly less trivial object 
                         {
                             return Ref(() => Object!).Select(x => (AST.TypedObjectContent)x)(input);
                         }
+                        else if (identifierOrInline.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
+                        {
+                            return Ref(() => Line!).Select(x => (AST.TypedObjectContent)x)(input);
+                        }
 
-                        var arrow = identifier.Remainder.ConsumeToken();
+                        var arrow = identifierOrInline.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
                             return Ref(() => Line!).Select(x => (AST.TypedObjectContent)x)(input);
@@ -208,7 +216,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in Shared.ClassList
-            from name in Shared.Target.AsNullable().OptionalOrDefault()
+            from name in Shared.ObjectName.AsNullable().OptionalOrDefault()
             from attrs in Shared.List(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
             select new AST.TypedObject(classes, name, attrs, children);
@@ -219,9 +227,9 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
-            from chain in Shared.Edges
+            from content in Shared.LineSegments(Object)
             from attrs in Shared.List(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
-            select new AST.TypedLine(classes, chain.ToArray(), attrs);
+            select new AST.TypedLine(classes, content.ToArray(), attrs);
 
         /***************************************************************************
          * Entire parsed documents, multiple of which can contribute to a diagram. *
@@ -248,18 +256,26 @@ namespace Thousand.Parse
                 {
                     return DocumentAttribute.Select(x => (AST.TypedDocumentContent)x)(input);
                 }
+                else if (second.Value.Kind == TokenKind.Pipe)
+                {
+                    return Line.Select(x => (AST.TypedDocumentContent)x)(input);
+                }
                 else // could still be an object or a line
                 {
                     var classList = Shared.ClassList(input);
                     if (classList.HasValue)
                     {
-                        var identifier = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifier.HasValue) // a slightly less trivial object 
+                        var identifierOrInline = classList.Remainder.ConsumeToken(); // object declaration or first object of line
+                        if (!identifierOrInline.HasValue) // a slightly less trivial object 
                         {
                             return Object.Select(x => (AST.TypedDocumentContent)x)(input);
                         }
+                        else if (identifierOrInline.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
+                        {
+                            return Line.Select(x => (AST.TypedDocumentContent)x)(input);
+                        }
 
-                        var arrow = identifier.Remainder.ConsumeToken();
+                        var arrow = identifierOrInline.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
                         {
                             return Line.Select(x => (AST.TypedDocumentContent)x)(input);

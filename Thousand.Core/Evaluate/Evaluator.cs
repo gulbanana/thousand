@@ -82,7 +82,7 @@ namespace Thousand.Evaluate
 
             foreach (var chain in diagram.Declarations.Where(d => d.IsT3).Select(d => d.AsT3))
             {
-                AddEdge(chain, rootScope);
+                AddEdges(chain, rootFont, rootScope).ToList();
             }
         }
 
@@ -274,19 +274,20 @@ namespace Thousand.Evaluate
             {
                 var objectScope = scope.Chain(node.Name?.Text ?? node.Classes.First().Text);
 
-                foreach (var childClass in childContent.Where(d => d.IsT1).Select(d => d.AsT1))
+                foreach (var declaration in childContent)
                 {
-                    AddClass(childClass, objectScope);
-                }
-
-                foreach (var childObject in childContent.Where(d => d.IsT2).Select(d => d.AsT2))
-                {
-                    childObjects.Add(AddObject(childObject, font, objectScope));
-                }
-
-                foreach (var chain in childContent.Where(d => d.IsT3).Select(d => d.AsT3))
-                {
-                    AddEdge(chain, objectScope);
+                    if (declaration.IsT1)
+                    {
+                        AddClass(declaration.AsT1, objectScope);
+                    }
+                    else if (declaration.IsT2)
+                    {
+                        childObjects.Add(AddObject(declaration.AsT2, font, objectScope));
+                    }
+                    else if (declaration.IsT3)
+                    {
+                        childObjects.AddRange(AddEdges(declaration.AsT3, font, objectScope));
+                    }
                 }
             }
 
@@ -305,7 +306,7 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        private void AddEdge(AST.TypedLine line, Scope scope)
+        private IEnumerable<IR.Object> AddEdges(AST.TypedLine line, Font cascadeFont, Scope scope)
         {
             var stroke = new Stroke();
             var anchorStart = new NoAnchor() as Anchor;
@@ -352,36 +353,47 @@ namespace Thousand.Evaluate
                 }, line => stroke = ApplyStrokeAttributes(stroke, line));
             }
 
-            for (var i = 0; i < line.Segments.Length - 1; i++)
+            var resolvedSegments = new List<(ArrowKind? direction, IR.Object? target)>();
+            foreach (var seg in line.Segments)
             {
-                var from = line.Segments[i];
-                var to = line.Segments[i + 1];
-
-                var fromTarget = scope.FindObject(from.Target);
-                var toTarget = scope.FindObject(to.Target);
-
-                if (fromTarget != null && toTarget != null && from.Direction.HasValue)
+                var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);
+                if (seg.Target.IsT1)
                 {
-                    switch (from.Direction.Value)
+                    yield return target!;
+                }
+                resolvedSegments.Add((seg.Direction, target));
+            }
+
+            for (var i = 0; i < resolvedSegments.Count - 1; i++)
+            {
+                var from = resolvedSegments[i];
+                var to = resolvedSegments[i + 1];
+                
+                if (from.target != null && to.target != null && from.direction.HasValue)
+                {
+                    var fromName = from.target.Name;
+                    var toName = from.target.Name;
+
+                    switch (from.direction.Value)
                     {
                         case ArrowKind.Backward:
-                            rootEdges.Add(new(stroke, to.Target, from.Target, toTarget, fromTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, toName, fromName, to.target, from.target, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Forward:
-                            rootEdges.Add(new(stroke, from.Target, to.Target, fromTarget, toTarget, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, fromName, toName, from.target, to.target, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Neither:
-                            rootEdges.Add(new(stroke, from.Target, to.Target, fromTarget, toTarget, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, fromName, toName, from.target, to.target, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
 
                         case ArrowKind.Both:
-                            rootEdges.Add(new(stroke, from.Target, to.Target, fromTarget, toTarget, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(stroke, fromName, toName, from.target, to.target, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
                             break;
                             
                         default:
-                            state.AddError(from.Target, ErrorKind.Internal, $"unknown ArrowKind {from.Direction.Value} from object {0}", from.Target);
+                            state.AddError(fromName, ErrorKind.Internal, $"unknown ArrowKind {from.direction.Value} from object {0}", fromName);
                             break;
                     }
                 }

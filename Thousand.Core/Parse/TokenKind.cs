@@ -22,6 +22,9 @@ namespace Thousand.Parse
         [Token(Example = ")")]
         RightParenthesis,
 
+        [Token(Example = "|")]
+        Pipe,
+
         [Token(Example = "=")]
         EqualsSign,
 

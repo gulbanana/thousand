@@ -42,7 +42,7 @@ namespace Thousand.Tests
                 new AST.TypedObject("object", "qux"), 
 
                 // chain containing two edges, both from foo to bar
-                new AST.TypedLine("line", new AST.LineSegment[]{ new("foo", ArrowKind.Forward), new("bar", ArrowKind.Backward), new("foo", null) })
+                new AST.TypedLine("line", new AST.LineSegment<AST.TypedObject>[]{ new("foo", ArrowKind.Forward), new("bar", ArrowKind.Backward), new("foo", null) })
             });
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
