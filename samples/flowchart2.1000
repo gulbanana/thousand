@@ -1,22 +1,22 @@
-grid=4 rows;layout=pack;justify-columns=stretch;gutter=45
-
 class initial [fill=#f88]
 class terminal [fill=#8f4]
 class choice [shape=rhombus,padding=15 30,fill=#ff7]
 
-line |initial "Lamp doesn't work"| 
-    -> |choice "Lamp\nplugged in?"| 
-    -> |choice "Bulb\nburned out?"| 
-    -> |terminal "Repair Lamp"|
+group [grid=4 rows, layout=pack, justify=stretch center, gutter=45] {
+    line |initial "Lamp doesn't work"|         
+        -> |choice "Lamp\nplugged in?"|         
+        -> |choice "Bulb\nburned out?"|         
+        -> |terminal "Repair Lamp"|
 
-line "Lamp\nplugged in?" -> |terminal "Plug in lamp" [row=2]|
+    line "Lamp\nplugged in?" -> |terminal "Plug in lamp" [row=2]|
 
-line "Bulb\nburned out?" -> |terminal "Replace bulb"|
+    line "Bulb\nburned out?" -> |terminal "Replace bulb"|
 
-class yes:label [label="Yes"]
-class no:label [label="No"]
+    class yes:label [label="Yes"]
+    class no:label [label="No"]
 
-no [pos=205 125]
-yes [pos=205 280]
-yes [pos=110 220]
-no [pos=110 377]
+    no [pos=205 125]
+    yes [pos=205 280]
+    yes [pos=110 220]
+    no [pos=110 377]
+}
