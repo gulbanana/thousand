@@ -42,7 +42,7 @@ namespace Thousand.Parse.Attributes
             ObjectAttributes = NodeAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2))
                 .Concat(RegionAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
                 .Concat(TextAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
-                .Concat(StrokeAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
+                .Concat(SharedAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
                 .Concat(PositionAttributes.All().Select(x => x.Select(x2 => (AST.ObjectAttribute)x2)))
                 .ToList();
 
@@ -56,7 +56,7 @@ namespace Thousand.Parse.Attributes
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             LineAttributes = ArrowAttributes.All().Select(x => x.Select(x2 => (AST.LineAttribute)x2))
-                .Concat(StrokeAttributes.All().Select(x => x.Select(x2 => (AST.LineAttribute)x2)))
+                .Concat(SharedAttributes.All().Select(x => x.Select(x2 => (AST.LineAttribute)x2)))
                 .Concat(PositionAttributes.All().Select(x => x.Select(x2 => (AST.LineAttribute)x2)))
                 .ToList();
 
@@ -68,7 +68,7 @@ namespace Thousand.Parse.Attributes
                 .SelectMany(a => a.Names)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            EntityAttributes = StrokeAttributes.All().Select(x => x.Select(x2 => (AST.EntityAttribute)x2))
+            EntityAttributes = SharedAttributes.All().Select(x => x.Select(x2 => (AST.EntityAttribute)x2))
                 .Concat(PositionAttributes.All().Select(x => x.Select(x2 => (AST.EntityAttribute)x2)))
                 .ToList();
 
@@ -86,7 +86,7 @@ namespace Thousand.Parse.Attributes
                 .Concat(NodeAttributes.All())
                 .Concat(PositionAttributes.All())
                 .Concat(RegionAttributes.All())
-                .Concat(StrokeAttributes.All())
+                .Concat(SharedAttributes.All())
                 .Concat(TextAttributes.All())
                 .Where(attr => attr.Documentation != null)
                 .SelectMany(attr => attr.Names.Select(n => (name: n, doc: attr.Documentation!)))

@@ -3,7 +3,7 @@ using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.Te
 
 namespace Thousand.Parse.Attributes
 {
-    // text group, used only by objects (so far)
+    // text group, used by everything - diagrams and objects cascade, objects and lines have labels
     static class TextAttributes
     {
         public static IEnumerable<Definition> All()

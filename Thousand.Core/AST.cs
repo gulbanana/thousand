@@ -18,15 +18,21 @@ namespace Thousand.AST
     public record TextFontColourAttribute(Colour Colour) : TextAttribute;
     public record TextFontAttribute(string? Family, int? Size, Colour? Colour) : TextAttribute;
 
-    public abstract record StrokeAttribute;
-    public record StrokeColourAttribute(Colour Colour) : StrokeAttribute;
-    public record StrokeStyleAttribute(StrokeKind Kind) : StrokeAttribute;
-    public record StrokeWidthAttribute(Width Value) : StrokeAttribute;
-    public record StrokeShorthandAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : StrokeAttribute;
+    public abstract record SharedAttribute;
+
+    public record SharedStrokeColourAttribute(Colour Colour) : SharedAttribute;
+    public record SharedStrokeStyleAttribute(StrokeKind Kind) : SharedAttribute;
+    public record SharedStrokeWidthAttribute(Width Value) : SharedAttribute;
+    public record SharedStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : SharedAttribute;
+
+    public record SharedLabelContentAttribute(string Content) : SharedAttribute;
+    public record SharedLabelJustifyAttribute(AlignmentKind Kind) : SharedAttribute;
+    public record SharedLabelAttribute(Text? Content, AlignmentKind? Justify) : SharedAttribute;
 
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
     public record RegionPaddingAttribute(Border Value) : RegionAttribute;
+
     public record RegionGridFlowAttribute(FlowKind Kind) : RegionAttribute;
     public record RegionGridMaxAttribute(int Value) : RegionAttribute;
     public record RegionGridAttribute(FlowKind? Flow, int? Max) : RegionAttribute;
@@ -57,20 +63,18 @@ namespace Thousand.AST
     }
 
     public abstract record NodeAttribute;
-    public record NodeLabelContentAttribute(Text Text) : NodeAttribute;
-    public record NodeLabelJustifyAttribute(AlignmentKind Kind) : NodeAttribute;
-    public record NodeLabelAttribute(Text? Content, AlignmentKind? Justify) : NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;
     public record NodePositionAttribute(Point Origin) : NodeAttribute;
     public record NodeMinWidthAttribute(decimal? Value) : NodeAttribute;
     public record NodeMinHeightAttribute(decimal? Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;
+    public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
+    public record NodeMarginAttribute(Border Value) : NodeAttribute;
+
     public record NodeAlignColumnAttribute(AlignmentKind? Kind) : NodeAttribute;
     public record NodeAlignRowAttribute(AlignmentKind? Kind) : NodeAttribute;
     public record NodeAlignAttribute(AlignmentKind? Columns, AlignmentKind? Rows) : NodeAttribute;
-    public record NodeMarginAttribute(Border Value) : NodeAttribute;
-    public record NodeCornerRadiusAttribute(int Value) : NodeAttribute;
 
     public abstract record ArrowAttribute;
     public record ArrowAnchorStartAttribute(Anchor Anchor) : ArrowAttribute;
@@ -78,9 +82,9 @@ namespace Thousand.AST
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, StrokeAttribute> { }
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, StrokeAttribute> { }
-    [GenerateOneOf] public partial class LineAttribute : OneOfBase<PositionAttribute, ArrowAttribute, StrokeAttribute> { }
+    [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, SharedAttribute> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, SharedAttribute> { }
+    [GenerateOneOf] public partial class LineAttribute : OneOfBase<PositionAttribute, ArrowAttribute, SharedAttribute> { }
     [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<DiagramAttribute, RegionAttribute, TextAttribute> { }
 
     public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)

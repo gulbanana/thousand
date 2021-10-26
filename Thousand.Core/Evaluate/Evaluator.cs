@@ -148,9 +148,9 @@ namespace Thousand.Evaluate
             var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
             
             var regionConfig = new IR.Config(null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
-            
-            var label = new Text(node.Name?.Text); // names are a separate thing, but if a node has one, it is also the default label
-            var justifyText = AlignmentKind.Center;
+
+            // names are a separate thing, but if a node has one, it is also the default label
+            var shared = new SharedStyles(node.Name?.Text, AlignmentKind.Center, new Stroke());
             var font = cascadeFont;
 
             var alignment = new IR.Axes<AlignmentKind?>(null, null);
@@ -166,8 +166,6 @@ namespace Thousand.Evaluate
 
             var shape = new ShapeKind?(ShapeKind.Roundrect);
             var cornerRadius = 15;
-
-            var stroke = new Stroke();                        
 
             foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes)
                 .Concat(node.Classes.SelectMany(c => scope.FindObjectClass(c, false).Children.Where(d => d.IsT0).Select(d => d.AsT0)))
@@ -195,7 +193,7 @@ namespace Thousand.Evaluate
                             {
                                 offset = eoa.Start;
                             }
-                            else 
+                            else
                             {
                                 // XXX save attr identifiers in the final AST
                                 state.AddError(name, ErrorKind.Type, "object {0} has too many offsets (expected point)", name);
@@ -206,19 +204,6 @@ namespace Thousand.Evaluate
                 {
                     switch (n)
                     {
-                        case AST.NodeLabelContentAttribute nlca:
-                            label = nlca.Text;
-                            break;
-
-                        case AST.NodeLabelJustifyAttribute nlja:
-                            justifyText = nlja.Kind;
-                            break;
-
-                        case AST.NodeLabelAttribute nla:
-                            label = nla.Content ?? label;
-                            justifyText = nla.Justify ?? justifyText;
-                            break;
-
                         case AST.NodeColumnAttribute nca:
                             column = nca.Value;
                             break;
@@ -254,7 +239,7 @@ namespace Thousand.Evaluate
                         case AST.NodeAlignAttribute naa:
                             alignment = new(naa.Columns, naa.Rows);
                             break;
-                            
+
                         case AST.NodeMarginAttribute nma:
                             margin = nma.Value;
                             break;
@@ -263,10 +248,10 @@ namespace Thousand.Evaluate
                             cornerRadius = ncra.Value;
                             break;
                     }
-                }, 
-                r => regionConfig = ApplyRegionAttributes(regionConfig, r), 
-                t => font = ApplyFontAttributes(font, t), 
-                l => stroke = ApplyStrokeAttributes(stroke, l));
+                },
+                r => regionConfig = ApplyRegionAttributes(regionConfig, r),
+                t => font = ApplyFontAttributes(font, t),
+                s => shared = ApplySharedAttributes(shared, s));
             }
 
             var childObjects = new List<IR.Object>();
@@ -295,11 +280,11 @@ namespace Thousand.Evaluate
             var result = new IR.Object(
                 name,
                 new IR.Region(regionConfig, childObjects), 
-                label.Value == null ? null : new IR.StyledText(font, label.Value, justifyText), 
+                shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel), 
                 alignment, margin, width, height, 
                 row, column, position, anchor, offset, 
                 shape, cornerRadius, 
-                stroke
+                shared.Stroke
             );
 
             scope.AddObject(node.Name, result);
@@ -309,7 +294,7 @@ namespace Thousand.Evaluate
 
         private IEnumerable<IR.Object> AddEdges(AST.TypedLine line, Font cascadeFont, Scope scope)
         {
-            var stroke = new Stroke();
+            var shared = new SharedStyles(null, AlignmentKind.Center, new Stroke());
             var anchorStart = new NoAnchor() as Anchor;
             var anchorEnd = new NoAnchor() as Anchor;
             var offsetStart = Point.Zero;
@@ -351,10 +336,11 @@ namespace Thousand.Evaluate
                             offsetEnd = aoea.Offset; ;
                             break;
                     }
-                }, line => stroke = ApplyStrokeAttributes(stroke, line));
+                }, 
+                s => shared = ApplySharedAttributes(shared, s));
             }
 
-            var resolvedSegments = new List<(ArrowKind? direction, IR.Object? target)>();
+            var nodes = new List<(ArrowKind? direction, IR.Object? target)>();
             foreach (var seg in line.Segments)
             {
                 var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);
@@ -362,35 +348,56 @@ namespace Thousand.Evaluate
                 {
                     yield return target!;
                 }
-                resolvedSegments.Add((seg.Direction, target));
+                nodes.Add((seg.Direction, target));
             }
 
-            for (var i = 0; i < resolvedSegments.Count - 1; i++)
+            for (var i = 0; i < nodes.Count - 1; i++)
             {
-                var from = resolvedSegments[i];
-                var to = resolvedSegments[i + 1];
+                var from = nodes[i];
+                var to = nodes[i + 1];
                 
                 if (from.target != null && to.target != null && from.direction.HasValue)
                 {
                     var fromName = from.target.Name;
                     var toName = from.target.Name;
+                    var label = shared.Label == null ? null : new IR.StyledText(cascadeFont, shared.Label, shared.JustifyLabel);
 
                     switch (from.direction.Value)
                     {
                         case ArrowKind.Backward:
-                            rootEdges.Add(new(stroke, toName, fromName, to.target, from.target, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(
+                                new IR.Endpoint(toName, to.target, null, anchorStart, offsetStart), 
+                                new IR.Endpoint(fromName, from.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd), 
+                                shared.Stroke, 
+                                label
+                            ));
                             break;
 
                         case ArrowKind.Forward:
-                            rootEdges.Add(new(stroke, fromName, toName, from.target, to.target, null, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(
+                                new IR.Endpoint(fromName, from.target, null, anchorStart, offsetStart),
+                                new IR.Endpoint(toName, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
+                                shared.Stroke,
+                                label
+                            ));
                             break;
 
                         case ArrowKind.Neither:
-                            rootEdges.Add(new(stroke, fromName, toName, from.target, to.target, null, null, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(
+                                new IR.Endpoint(fromName, from.target, null, anchorStart, offsetStart),
+                                new IR.Endpoint(toName, to.target, null, anchorEnd, offsetEnd),
+                                shared.Stroke,
+                                label
+                            ));
                             break;
 
                         case ArrowKind.Both:
-                            rootEdges.Add(new(stroke, fromName, toName, from.target, to.target, MarkerKind.Arrowhead, MarkerKind.Arrowhead, anchorStart, anchorEnd, offsetStart, offsetEnd));
+                            rootEdges.Add(new(
+                                new IR.Endpoint(fromName, from.target, MarkerKind.Arrowhead, anchorStart, offsetStart),
+                                new IR.Endpoint(toName, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
+                                shared.Stroke,
+                                label
+                            ));
                             break;
                             
                         default:
@@ -440,20 +447,32 @@ namespace Thousand.Evaluate
             };
         }
 
-        private Stroke ApplyStrokeAttributes(Stroke stroke, AST.StrokeAttribute attribute)
+        private SharedStyles ApplySharedAttributes(SharedStyles shared, AST.SharedAttribute attribute)
         {
             return attribute switch
             {
-                AST.StrokeColourAttribute lsca => stroke with { Colour = lsca.Colour },
-                AST.StrokeWidthAttribute lswa => stroke with { Width = lswa.Value },
-                AST.StrokeStyleAttribute lssa => stroke with { Style = lssa.Kind },
-                AST.StrokeShorthandAttribute lsa => new Stroke
+                AST.SharedStrokeColourAttribute ssca => shared with { Stroke = shared.Stroke with { Colour = ssca.Colour } },
+                AST.SharedStrokeWidthAttribute sswa => shared with { Stroke = shared.Stroke with { Width = sswa.Value } },
+                AST.SharedStrokeStyleAttribute sssa => shared with { Stroke = shared.Stroke with { Style = sssa.Kind } },
+                AST.SharedStrokeAttribute ssa => shared with
                 {
-                    Colour = lsa.Colour ?? stroke.Colour,
-                    Width = lsa.Width ?? stroke.Width,
-                    Style = lsa.Style ?? stroke.Style
+                    Stroke = new Stroke
+                    {
+                        Colour = ssa.Colour ?? shared.Stroke.Colour,
+                        Width = ssa.Width ?? shared.Stroke.Width,
+                        Style = ssa.Style ?? shared.Stroke.Style
+                    }
                 },
-                _ => stroke
+
+                AST.SharedLabelContentAttribute slca => shared with { Label = slca.Content },
+                AST.SharedLabelJustifyAttribute slja => shared with { JustifyLabel = slja.Kind },
+                AST.SharedLabelAttribute sla => shared with
+                {
+                    Label = sla.Content.HasValue ? sla.Content.Value.Value : shared.Label,
+                    JustifyLabel = sla.Justify ?? shared.JustifyLabel
+                },
+
+                _ => shared
             };
         }
     }

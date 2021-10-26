@@ -29,6 +29,10 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, Identifier> StringIdentifier { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String.Select(s => new Identifier(s)).Located());
 
+        public static TokenListParser<TokenKind, string> IdentifierString { get; } =
+            String
+                .Or(Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Select(i => i.Text)));
+
         public static TokenListParser<TokenKind, string?> NullableString { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
                 .Or(Token.EqualTo(TokenKind.NoneKeyword).Value(default(string?)));

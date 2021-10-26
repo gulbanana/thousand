@@ -141,9 +141,9 @@ namespace Thousand.Tests.Parsing
             var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.SharedStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Black, lsa.Colour);
@@ -156,9 +156,9 @@ namespace Thousand.Tests.Parsing
             var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.SharedStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Width);
             Assert.True(lsa.Width is ZeroWidth);
@@ -171,9 +171,9 @@ namespace Thousand.Tests.Parsing
             var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.SharedStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Style);
             Assert.Equal(StrokeKind.ShortDash, lsa.Style);
@@ -186,9 +186,9 @@ namespace Thousand.Tests.Parsing
             var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.SharedStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Black, lsa.Colour);
@@ -206,9 +206,9 @@ namespace Thousand.Tests.Parsing
             var result = Typed.StrokeAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.StrokeShorthandAttribute>(result.Value);
+            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value;
+            var lsa = (AST.SharedStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Green, lsa.Colour);
@@ -230,7 +230,7 @@ namespace Thousand.Tests.Parsing
             Assert.Single(result.Value.Attributes);
             Assert.True(result.Value.Attributes.Single().IsT4);
 
-            var lsa = (AST.StrokeShorthandAttribute)result.Value.Attributes.Single();
+            var lsa = (AST.SharedStrokeAttribute)result.Value.Attributes.Single();
             
             Assert.NotNull(lsa.Colour);
             Assert.Null(lsa.Width);

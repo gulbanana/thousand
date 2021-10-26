@@ -49,29 +49,6 @@ namespace Thousand.Parse.Attributes
                 "corner=0"
             ));
 
-            yield return Definition.Create("label-content", Value.Text, value => new AST.NodeLabelContentAttribute(value), Format.Doc(
-                "For an object with rounded corners, sets the width and height of the corners to `X`.",
-                "`\"My Object\"` or `MyObject` (string), or `none`",
-                UseKind.Object,
-                "label=\"This is used instead of the object's name.\""
-            ));
-
-            yield return Definition.Create("label-justify", Attribute.AlignColumn, value => new AST.NodeLabelJustifyAttribute(value), Format.Doc(
-                "Positions the label within the object.",
-                "`start`/`left`, `center` or `end`/`right`",
-                UseKind.Object
-            ));
-
-            yield return Definition.Create("label", Attribute.Shorthand(Identifier.Enum<AlignmentKind>(), Value.Text), 
-                                                    values => values switch { (var a, var t) => new AST.NodeLabelAttribute(t, a) }, Format.Doc(
-                "Shorthand for `label-content` and `label-justify`.",
-                "text and/or justification",
-                UseKind.Entity,
-                "label=\"My Object\"",
-                "label=center",
-                "label=boringobject end"
-            ));
-
             // different methods of placing the node in its region - see also "anchor" from EntityAttributes
             yield return Definition.Create("column", "col", Value.CountingNumber, value => new AST.NodeColumnAttribute(value), Format.Doc(
                 "`X` (integer)",

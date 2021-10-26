@@ -19,7 +19,7 @@ namespace Thousand.Parse
          * Base attribute groups, delegated to metadata definitions *
          ************************************************************/
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } = Attribute.From(ArrowAttributes.All());
-        public static TokenListParser<TokenKind, AST.StrokeAttribute> StrokeAttribute { get; } = Attribute.From(StrokeAttributes.All());
+        public static TokenListParser<TokenKind, AST.SharedAttribute> StrokeAttribute { get; } = Attribute.From(SharedAttributes.All());
         public static TokenListParser<TokenKind, AST.PositionAttribute> PositionAttribute { get; } = Attribute.From(PositionAttributes.All());
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } = Attribute.From(RegionAttributes.All());
         public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } = Attribute.From(TextAttributes.All());

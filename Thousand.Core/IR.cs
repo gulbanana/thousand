@@ -43,7 +43,7 @@ namespace Thousand.IR
         
     public record Object
     (
-        Parse.Identifier Name, // used only for diagnostics
+        Parse.Identifier Name, // this is a display name, not a unique identifier
         Region Region,
         StyledText? Label,
         // layout
@@ -59,9 +59,15 @@ namespace Thousand.IR
     }
     
     // there may be many IR.Edge for a single AST.Line
-    public record Edge(Stroke Stroke, Parse.Identifier FromName, Parse.Identifier ToName, Object FromTarget, Object ToTarget, MarkerKind? FromMarker, MarkerKind? ToMarker, Anchor FromAnchor, Anchor ToAnchor, Point FromOffset, Point ToOffset)
+    public record Endpoint(Parse.Identifier Name, Object Target, MarkerKind? Marker, Anchor Anchor, Point Offset)
     {
-        public Edge(Object FromTarget, Object ToTarget) : this(new Stroke(), new Parse.Identifier("from"), new Parse.Identifier("to"), FromTarget, ToTarget, null, null, new NoAnchor(), new NoAnchor(), Point.Zero, Point.Zero) { }
+        public Endpoint(Object target) : this(target.Name, target, null, new NoAnchor(), Point.Zero) { }
+    }
+
+    public record Edge(Endpoint From, Endpoint To, Stroke Stroke, StyledText? Label)
+    {
+        public Edge(Object from, Object to) : this(new Endpoint(from), new Endpoint(to), new Stroke(), null) { }
+        public Edge(Endpoint from, Endpoint to) : this(from, to, new Stroke(), null) { }
     }
     
     public record Root(decimal Scale, Region Region, IReadOnlyList<Edge> Edges)

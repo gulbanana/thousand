@@ -1,6 +1,7 @@
 TO DO
 =====
 
+* bug: fix LSP getting stuck (content modified)
 * bug: use fill-opacity for SVG transparency (https://gitlab.com/inkscape/inbox/-/issues/1195)
 * bug: using diamond as a container seems to be broken somehow
 * bug: (line) anchors and offsets probably don't combine correctly
@@ -9,7 +10,7 @@ TO DO
 * syntax: class contents placeholder inserts - right now it's all prepended (but how would this work with a classlist?)
 * syntax: import files?
 * syntax: import templates (not the same as above! applies to the stdlib)
-* feature: line labels
+* feature: line labels (+ add font to line, + align vs justify)
 * feature: object offset from position 
 * feature: drop shadows (object/line, though different)
 * feature: customisable arrowheads
@@ -38,3 +39,5 @@ TO DO
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
 * reconsider space/gutter/gap
+* runtime colour names
+* position -> shared -> entity?

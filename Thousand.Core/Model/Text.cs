@@ -1,16 +1,14 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Thousand.Model
+﻿namespace Thousand.Model
 {
-    // at the moment this is just a wrapper which can optionally contain text; later it might become something like an attributed string
+    // at the moment this is just a wrapper which contains optional text; later it might become something like an attributed string
     public struct Text
     {
-        public bool HasValue { [MemberNotNullWhen(true, nameof(Value))] get; }
+        public bool HasValue { get; }
         public string? Value { get; }
 
         public Text(string? value)
         {
-            HasValue = value != null;
+            HasValue = true;
             Value = value;
         }
 

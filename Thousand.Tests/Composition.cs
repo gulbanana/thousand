@@ -122,7 +122,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(left, right) with { FromOffset = new Point(0, 1), ToOffset = new Point(0, 1) }
+                new IR.Edge(new IR.Endpoint(left) with { Offset = new Point(0, 1) }, new IR.Endpoint(right) with { Offset = new Point(0, 1) })
             );
 
             var result = Composer.TryCompose(rules, state, out var layout);
@@ -144,7 +144,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(left, right) with { FromAnchor = new CornerAnchor(), ToAnchor = new AnyAnchor() }
+                new IR.Edge(new IR.Endpoint(left) with { Anchor = new CornerAnchor() }, new IR.Endpoint(right) with { Anchor = new AnyAnchor() })
             );
 
             var result = Composer.TryCompose(rules, state, out var layout);
@@ -166,7 +166,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(left, right) with { FromAnchor = new CornerAnchor(), ToAnchor = new CornerAnchor() }
+                new IR.Edge(new IR.Endpoint(left) with { Anchor = new CornerAnchor() }, new IR.Endpoint(right) with { Anchor = new CornerAnchor() })
             );
 
             var result = Composer.TryCompose(rules, state, out var layout);
@@ -194,7 +194,7 @@ namespace Thousand.Tests
                     new IR.Config() with { Gutter = new(10) },
                     new IR.Object[] { left, right }
                 ),
-                new IR.Edge(left, right) with { FromAnchor = new NoAnchor(), ToAnchor = new CornerAnchor() }
+                new IR.Edge(new IR.Endpoint(left) with { Anchor = new NoAnchor() }, new IR.Endpoint(right) with { Anchor = new CornerAnchor() })
             );
 
             var result = Composer.TryCompose(rules, state, out var layout);

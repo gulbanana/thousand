@@ -3,7 +3,7 @@ using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.Po
 
 namespace Thousand.Parse.Attributes
 {
-    // entity position group, used by objects and lines
+    // position group, used by objects and lines... but with different meanings. this is inconvenient
     static class PositionAttributes
     {
         public static IEnumerable<Definition> All()

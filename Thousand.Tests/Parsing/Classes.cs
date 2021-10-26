@@ -146,7 +146,7 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectOrLineClass>(result.Value);
-            AssertEx.Sequence(((AST.ObjectOrLineClass)result.Value).Attributes, new AST.StrokeColourAttribute(Colour.Red));
+            AssertEx.Sequence(((AST.ObjectOrLineClass)result.Value).Attributes, new AST.SharedStrokeColourAttribute(Colour.Red));
         }
 
         [Fact] 
@@ -180,8 +180,8 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.StrokeColourAttribute(Colour.Black));
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.StrokeColourAttribute(Colour.Black));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.SharedStrokeColourAttribute(Colour.Black));
+            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.SharedStrokeColourAttribute(Colour.Black));
         }
 
         [Fact]

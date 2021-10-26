@@ -64,8 +64,8 @@ namespace Thousand.Tests
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
-            Assert.Equal(new Point(1, 1), line.FromOffset);
-            Assert.Equal(new Point(1, 1), line.ToOffset);
+            Assert.Equal(new Point(1, 1), line.From.Offset);
+            Assert.Equal(new Point(1, 1), line.To.Offset);
         }
 
         [Fact]
@@ -75,8 +75,8 @@ namespace Thousand.Tests
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
-            Assert.Equal(new Point(1, 1), line.FromOffset);
-            Assert.Equal(new Point(2, 2), line.ToOffset);
+            Assert.Equal(new Point(1, 1), line.From.Offset);
+            Assert.Equal(new Point(2, 2), line.To.Offset);
         }
 
         [Fact]
@@ -96,8 +96,8 @@ namespace Thousand.Tests
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
-            Assert.Equal(new SpecificAnchor(CompassKind.N), line.FromAnchor);
-            Assert.Equal(new SpecificAnchor(CompassKind.N), line.ToAnchor);
+            Assert.Equal(new SpecificAnchor(CompassKind.N), line.From.Anchor);
+            Assert.Equal(new SpecificAnchor(CompassKind.N), line.To.Anchor);
         }
 
         [Fact]
@@ -107,8 +107,8 @@ namespace Thousand.Tests
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
-            Assert.Equal(new SpecificAnchor(CompassKind.N), line.FromAnchor);
-            Assert.Equal(new SpecificAnchor(CompassKind.E), line.ToAnchor);
+            Assert.Equal(new SpecificAnchor(CompassKind.N), line.From.Anchor);
+            Assert.Equal(new SpecificAnchor(CompassKind.E), line.To.Anchor);
         }
 
         [Fact]
@@ -118,8 +118,8 @@ namespace Thousand.Tests
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
 
             var line = rules!.Edges.Single();
-            Assert.Equal(new AnyAnchor(), line.FromAnchor);
-            Assert.Equal(new AnyAnchor(), line.ToAnchor);
+            Assert.Equal(new AnyAnchor(), line.From.Anchor);
+            Assert.Equal(new AnyAnchor(), line.To.Anchor);
         }
 
 

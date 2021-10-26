@@ -66,20 +66,25 @@ namespace Thousand.Compose
             // create lines, which are global - all they need from layout is the margin-exclusive laid out bounds of each object 
             foreach (var edge in root.Edges)
             {
-                var fromBox = allBounds[edge.FromTarget];
-                var toBox = allBounds[edge.ToTarget];
+                if (edge.Label != null)
+                {
+                    state.AddWarning(edge.To.Name, ErrorKind.Layout, "line labels have not been implemented yet");
+                }
+
+                var fromBox = allBounds[edge.From.Target];
+                var toBox = allBounds[edge.To.Target];
                 try
                 {
-                    var (start, end) = Intrinsics.Line(fromBox.Center + edge.FromOffset, toBox.Center + edge.ToOffset, outputShapes.GetValueOrDefault(edge.FromTarget), outputShapes.GetValueOrDefault(edge.ToTarget));
+                    var (start, end) = Intrinsics.Line(fromBox.Center + edge.From.Offset, toBox.Center + edge.To.Offset, outputShapes.GetValueOrDefault(edge.From.Target), outputShapes.GetValueOrDefault(edge.To.Target));
 
                     if (start == null)
                     {
-                        state.AddWarning(edge.FromName, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.FromName, edge.ToName);
+                        state.AddWarning(edge.From.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
                     }
 
                     if (end == null)
                     {
-                        state.AddWarning(edge.ToName, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.FromName, edge.ToName);
+                        state.AddWarning(edge.To.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
                     }
 
                     if (start == null || end == null)
@@ -87,11 +92,11 @@ namespace Thousand.Compose
                         continue;
                     }
 
-                    if (edge.FromTarget.Shape.HasValue)
+                    if (edge.From.Target.Shape.HasValue)
                     {
-                        var anchors = Shapes.Anchors(edge.FromTarget.Shape.Value, edge.FromTarget.CornerRadius, fromBox);
+                        var anchors = Shapes.Anchors(edge.From.Target.Shape.Value, edge.From.Target.CornerRadius, fromBox);
 
-                        switch (edge.FromAnchor)
+                        switch (edge.From.Anchor)
                         {
                             case AnyAnchor:
                                 start = start.ClosestTo(anchors.Values.Select(c => c.Location));
@@ -106,22 +111,22 @@ namespace Thousand.Compose
                                 break;
                         }
 
-                        if (edge.FromAnchor is not NoAnchor && edge.ToAnchor is NoAnchor)
+                        if (edge.From.Anchor is not NoAnchor && edge.To.Anchor is NoAnchor)
                         {
-                            (_, end) = Intrinsics.Line(start, toBox.Center + edge.ToOffset, null, outputShapes.GetValueOrDefault(edge.ToTarget));
+                            (_, end) = Intrinsics.Line(start, toBox.Center + edge.To.Offset, null, outputShapes.GetValueOrDefault(edge.To.Target));
                             if (end == null)
                             {
-                                state.AddWarning(edge.FromName, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.FromName, edge.ToName);
+                                state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
                                 continue;
                             }
                         }
                     }
 
-                    if (edge.ToTarget.Shape.HasValue)
+                    if (edge.To.Target.Shape.HasValue)
                     {
-                        var anchors = Shapes.Anchors(edge.ToTarget.Shape.Value, edge.ToTarget.CornerRadius, toBox);
+                        var anchors = Shapes.Anchors(edge.To.Target.Shape.Value, edge.To.Target.CornerRadius, toBox);
 
-                        switch (edge.ToAnchor)
+                        switch (edge.To.Anchor)
                         {
                             case AnyAnchor:
                                 end = end.ClosestTo(anchors.Values.Select(c => c.Location));
@@ -136,18 +141,18 @@ namespace Thousand.Compose
                                 break;
                         }
 
-                        if (edge.ToAnchor is not NoAnchor && edge.FromAnchor is NoAnchor)
+                        if (edge.To.Anchor is not NoAnchor && edge.From.Anchor is NoAnchor)
                         {
-                            (start, _) = Intrinsics.Line(fromBox.Center + edge.FromOffset, end, outputShapes.GetValueOrDefault(edge.FromTarget), null);
+                            (start, _) = Intrinsics.Line(fromBox.Center + edge.From.Offset, end, outputShapes.GetValueOrDefault(edge.From.Target), null);
                             if (start == null)
                             {
-                                state.AddWarning(edge.FromName, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.FromName, edge.ToName);
+                                state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
                                 continue;
                             }
                         }
                     }
 
-                    outputLines.Add(new(edge.Stroke, start, end, edge.FromMarker.HasValue, edge.ToMarker.HasValue));
+                    outputLines.Add(new(edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
                 }
                 catch (Exception ex)
                 { 

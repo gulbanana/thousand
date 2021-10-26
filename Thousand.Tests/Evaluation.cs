@@ -27,7 +27,7 @@ namespace Thousand.Tests
                 new AST.ObjectClass("big", new AST.TextFontSizeAttribute(50)), // increases font
                 new AST.ObjectClass("group",                
                     new AST.NodeShapeAttribute(null), 
-                    new AST.NodeLabelContentAttribute(new Text()), 
+                    new AST.SharedLabelAttribute(null, null), 
                     new AST.RegionLayoutColumnsAttribute(new EqualContentSize()),
                     new AST.RegionLayoutRowsAttribute(new EqualContentSize())
                 ),
@@ -73,7 +73,7 @@ namespace Thousand.Tests
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(root!.Edges[0].FromTarget, root.Edges[0].ToTarget);
+            Assert.Equal(root!.Edges[0].From.Target, root.Edges[0].To.Target);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace Thousand.Tests
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(root!.Edges[0].FromTarget, root.Edges[0].ToTarget);
+            Assert.Equal(root!.Edges[0].From.Target, root.Edges[0].To.Target);
         }
 
         [Fact]
@@ -113,8 +113,8 @@ namespace Thousand.Tests
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(ShapeKind.Circle, root!.Edges[0].FromTarget.Shape);
-            Assert.Equal(ShapeKind.Octagon, root!.Edges[1].FromTarget.Shape);
+            Assert.Equal(ShapeKind.Circle, root!.Edges[0].From.Target.Shape);
+            Assert.Equal(ShapeKind.Octagon, root!.Edges[1].From.Target.Shape);
         }
     }
 }
