@@ -1,9 +1,10 @@
 ﻿using Superpower;
 using System.Collections.Generic;
 using Thousand.Model;
-using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.RegionAttribute>;
+using Thousand.Parse;
+using Definition = Thousand.API.AttributeDefinition<Thousand.AST.RegionAttribute>;
 
-namespace Thousand.Parse.Attributes
+namespace Thousand.API
 {
     // region group, used by objects and documents
     public static class RegionAttributes
@@ -21,7 +22,7 @@ namespace Thousand.Parse.Attributes
 
             yield return Definition.Create("grid-flow", Identifier.Enum<FlowKind>(), value => new AST.RegionGridFlowAttribute(value));
             yield return Definition.Create("grid-max", Value.CountingNumber, value => new AST.RegionGridMaxAttribute(value));
-            yield return Definition.Create("grid", Attribute.Shorthand(Identifier.Enum<FlowKind>(), Value.CountingNumber), 
+            yield return Definition.Create("grid", Attribute.ShorthandVV(Identifier.Enum<FlowKind>(), Value.CountingNumber), 
                                                    values => values switch { (var flow, var max) => new AST.RegionGridAttribute(flow, max) });
 
             yield return Definition.Create("space-columns", "gutter-columns", Value.WholeNumber, value => new AST.RegionSpaceColumnsAttribute(value));

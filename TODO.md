@@ -41,3 +41,5 @@ TO DO
 * reconsider space/gutter/gap
 * runtime colour names
 * position -> shared -> entity?
+* document all attributes
+* implement node/label offsets (they are already parsed & styled)

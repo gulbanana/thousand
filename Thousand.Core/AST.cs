@@ -18,16 +18,30 @@ namespace Thousand.AST
     public record TextFontColourAttribute(Colour Colour) : TextAttribute;
     public record TextFontAttribute(string? Family, int? Size, Colour? Colour) : TextAttribute;
 
-    public abstract record SharedAttribute;
+    public abstract record EntityAttribute
+    {
+        public virtual bool IsLineOnly() => false;
+    }
 
-    public record SharedStrokeColourAttribute(Colour Colour) : SharedAttribute;
-    public record SharedStrokeStyleAttribute(StrokeKind Kind) : SharedAttribute;
-    public record SharedStrokeWidthAttribute(Width Value) : SharedAttribute;
-    public record SharedStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : SharedAttribute;
+    public record EntityAnchorAttribute(Anchor Start, Anchor End) : EntityAttribute
+    {
+        public override bool IsLineOnly() => Start is not SpecificAnchor || !Start.Equals(End);
+    }
 
-    public record SharedLabelContentAttribute(string Content) : SharedAttribute;
-    public record SharedLabelJustifyAttribute(AlignmentKind Kind) : SharedAttribute;
-    public record SharedLabelAttribute(Text? Content, AlignmentKind? Justify) : SharedAttribute;
+    public record EntityOffsetAttribute(Point Start, Point End) : EntityAttribute
+    {
+        public override bool IsLineOnly() => !Start.Equals(End);
+    }
+
+    public record EntityStrokeColourAttribute(Colour Colour) : EntityAttribute;
+    public record EntityStrokeStyleAttribute(StrokeKind Kind) : EntityAttribute;
+    public record EntityStrokeWidthAttribute(Width Value) : EntityAttribute;
+    public record EntityStrokeAttribute(Colour? Colour, StrokeKind? Style, Width? Width) : EntityAttribute;
+
+    public record EntityLabelContentAttribute(string Content) : EntityAttribute;
+    public record EntityLabelJustifyAttribute(AlignmentKind Kind) : EntityAttribute;
+    public record EntityLabelOffsetAttribute(Point Offset) : EntityAttribute;
+    public record EntityLabelAttribute(Point? Offset, Text? Content, AlignmentKind? Justify) : EntityAttribute;
 
     public abstract record RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
@@ -49,19 +63,6 @@ namespace Thousand.AST
     public record RegionJustifyRowsAttribute(AlignmentKind Kind) : RegionAttribute;
     public record RegionJustifyAttribute(AlignmentKind Columns, AlignmentKind Rows) : RegionAttribute;
 
-    public abstract record PositionAttribute
-    {
-        public abstract bool IsLineOnly();
-    }
-    public record PositionAnchorAttribute(Anchor Start, Anchor End) : PositionAttribute
-    {
-        public override bool IsLineOnly() => Start is not SpecificAnchor || !Start.Equals(End);
-    }
-    public record PositionOffsetAttribute(Point Start, Point End) : PositionAttribute
-    {
-        public override bool IsLineOnly() => !Start.Equals(End);
-    }
-
     public abstract record NodeAttribute;
     public record NodeColumnAttribute(int Value) : NodeAttribute;
     public record NodeRowAttribute(int Value) : NodeAttribute;
@@ -82,10 +83,9 @@ namespace Thousand.AST
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class EntityAttribute : OneOfBase<PositionAttribute, SharedAttribute> { }
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<PositionAttribute, NodeAttribute, RegionAttribute, TextAttribute, SharedAttribute> { }
-    [GenerateOneOf] public partial class LineAttribute : OneOfBase<PositionAttribute, ArrowAttribute, SharedAttribute> { }
-    [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<DiagramAttribute, RegionAttribute, TextAttribute> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<EntityAttribute, NodeAttribute, TextAttribute, RegionAttribute> { }
+    [GenerateOneOf] public partial class LineAttribute : OneOfBase<EntityAttribute, ArrowAttribute> { }
+    [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<DiagramAttribute, TextAttribute, RegionAttribute> { }
 
     public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
     {

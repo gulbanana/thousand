@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.DiagramAttribute>;
+using Thousand.Parse;
+using Definition = Thousand.API.AttributeDefinition<Thousand.AST.DiagramAttribute>;
 
-namespace Thousand.Parse.Attributes
+namespace Thousand.API
 {
     // diagram group, used only by documents
     static class DiagramAttributes

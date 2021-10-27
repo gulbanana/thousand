@@ -1,23 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 
-namespace Thousand.Parse.Attributes
+namespace Thousand.API
 {
-    internal static class Format
+    static class Format
     {
-        public static string Doc(string? description, string type, UseKind kind, params string[] examples)
+        public static string Doc(string description, string type, UseKind kind, params string[] examples)
         {
-            var builder = new StringBuilder();
+            return $@"{description}
 
-            if (description != null)
-            {
-                builder.Append($@"{description}
-
-");
-            }
-
-            builder.Append(@$"_Value_: {type}
+_Value_: {type}
 
 _Applies to:_ {kind switch
             {
@@ -28,12 +20,8 @@ _Applies to:_ {kind switch
                 UseKind.Entity => "objects or lines"
             }}
 
-_Examples:_ {string.Join(", ", examples.Select(e => $"`{e}`"))}");
-
-            return builder.ToString();
+_Examples:_ {string.Join(", ", examples.Select(e => $"`{e}`"))}";
         }
-
-        public static string Doc(string type, UseKind kind, params string[] examples) => Doc(null, type, kind, examples);
 
         public static string Names<T>() where T : struct, Enum
         {

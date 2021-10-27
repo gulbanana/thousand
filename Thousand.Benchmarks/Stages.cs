@@ -3,6 +3,7 @@ using Superpower;
 using Superpower.Model;
 using System;
 using System.IO;
+using Thousand.API;
 using Thousand.Compose;
 using Thousand.Evaluate;
 using Thousand.Parse;
@@ -18,7 +19,7 @@ namespace Thousand.Benchmarks
         private readonly Tokenizer<TokenKind> tokenizer;
         private readonly SVGRenderer renderer;
         private string source;
-        private Parse.Attributes.API api;
+        private Metadata api;
         private AST.TypedDocument stdlibAST;
         private AST.UntypedDocument preprocessedAST;
         private AST.TypedDocument typedAST;
@@ -37,7 +38,7 @@ namespace Thousand.Benchmarks
         {
             source = File.ReadAllText(Input);
 
-            api = new Parse.Attributes.API();
+            api = new Metadata();
             var state = new GenerationState();
 
             Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);

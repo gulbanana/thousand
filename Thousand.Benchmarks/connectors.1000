@@ -3,7 +3,7 @@ font-size=16
 class c [justify=center]
 class box($w=100, $h=100) [min-width=$w, min-height=$h, label=none, stroke=2]
 class spacer($x) [shape=none, min-width=$x]
-class title : label [font=20, label-justify=start]
+class title : label [font=20, label-align=start]
 class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
 class tline [stroke=red, offset=0 -20]; class bline [stroke=blue, offset=0 20]
 

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Superpower;
 using Superpower.Model;
 using System;
@@ -21,19 +20,19 @@ namespace Thousand.LSP.Analyse
         private readonly IGenerationService generationService;
 
         private readonly Tokenizer<TokenKind> tokenizer;
-        private readonly Parse.Attributes.API api;
+        private readonly API.Metadata api;
 
         private readonly ParsedDocument? stdlib;
         private readonly AST.TypedDocument? typedStdlib;
 
-        public AnalysisService(ILogger<AnalysisService> logger, BufferService documentService, IDiagnosticService diagnosticService, IGenerationService generationService)
+        public AnalysisService(ILogger<AnalysisService> logger, API.Metadata api, BufferService documentService, IDiagnosticService diagnosticService, IGenerationService generationService)
         {
             this.logger = logger;
             this.documentService = documentService;
             this.diagnosticService = diagnosticService;
             this.generationService = generationService;
 
-            this.api = new Parse.Attributes.API();
+            this.api = api;
             this.tokenizer = Tokenizer.Build();
 
             var stdlibState = new GenerationState();

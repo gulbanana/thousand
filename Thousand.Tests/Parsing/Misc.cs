@@ -87,7 +87,7 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name?.Text);
-            AssertEx.Sequence(result.Value.Attributes, new AST.SharedLabelContentAttribute("bar"));
+            AssertEx.Sequence(result.Value.Attributes, new AST.EntityLabelContentAttribute("bar"));
         }
 
         [Fact]
@@ -173,7 +173,7 @@ bar""");
             var result = Typed.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Attributes, new AST.SharedStrokeColourAttribute(new Colour(0, 0, 0)));
+            AssertEx.Sequence(result.Value.Attributes, new AST.EntityStrokeColourAttribute(new Colour(0, 0, 0)));
         }
 
         [Fact]

@@ -27,7 +27,7 @@ namespace Thousand.Tests
                 new AST.ObjectClass("big", new AST.TextFontSizeAttribute(50)), // increases font
                 new AST.ObjectClass("group",                
                     new AST.NodeShapeAttribute(null), 
-                    new AST.SharedLabelAttribute(null, null), 
+                    new AST.EntityLabelAttribute(null, null, null), 
                     new AST.RegionLayoutColumnsAttribute(new EqualContentSize()),
                     new AST.RegionLayoutRowsAttribute(new EqualContentSize())
                 ),

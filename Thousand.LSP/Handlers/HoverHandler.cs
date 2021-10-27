@@ -4,7 +4,6 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Threading;
 using System.Threading.Tasks;
 using Thousand.LSP.Analyse;
-using Thousand.Parse.Attributes;
 
 namespace Thousand.LSP.Handlers
 {
@@ -12,13 +11,13 @@ namespace Thousand.LSP.Handlers
     {
         private readonly AnalysisService semanticService;
         private readonly IDiagnosticService diagnosticService;
-        private readonly API metadata;
+        private readonly API.Metadata api;
 
-        public HoverHandler(AnalysisService semanticService, IDiagnosticService diagnosticService)
+        public HoverHandler(AnalysisService semanticService, API.Metadata api, IDiagnosticService diagnosticService)
         {
             this.semanticService = semanticService;
             this.diagnosticService = diagnosticService;
-            this.metadata = new API();
+            this.api = api;
         }
 
         protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities) => new HoverRegistrationOptions
@@ -69,12 +68,12 @@ namespace Thousand.LSP.Handlers
                 {
                     var key = ctx.Syntax.Key;
                     var loc = key.Span.AsRange();
-                    if (loc.Contains(request.Position) && metadata.Documentation.ContainsKey(key.Text))
+                    if (loc.Contains(request.Position) && api.Documentation.ContainsKey(key.Text))
                     {
                         return new Hover
                         {
                             Range = key.Span.AsRange(),
-                            Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = metadata.Documentation[key.Text] })
+                            Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[key.Text] })
                         };
                     }
                 }

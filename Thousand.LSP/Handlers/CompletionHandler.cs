@@ -5,11 +5,9 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Thousand.LSP.Analyse;
-using Thousand.Parse.Attributes;
 
 namespace Thousand.LSP.Handlers
 {
@@ -17,13 +15,13 @@ namespace Thousand.LSP.Handlers
     {
         private readonly ILogger<CompletionHandler> logger;
         private readonly AnalysisService analysisService;
-        private readonly API metadata;
+        private readonly API.Metadata api;
 
-        public CompletionHandler(ILogger<CompletionHandler> logger, AnalysisService analysisService)
+        public CompletionHandler(ILogger<CompletionHandler> logger, API.Metadata api, AnalysisService analysisService)
         {
             this.logger = logger;
             this.analysisService = analysisService;
-            this.metadata = new API();
+            this.api = api;
         }
 
         protected override CompletionRegistrationOptions CreateRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities) => new CompletionRegistrationOptions()
@@ -49,10 +47,10 @@ namespace Thousand.LSP.Handlers
                 {
                     var candidates = attribute.ParentKind switch
                     {
-                        ParentKind.Class => metadata.ClassAttributes.AsEnumerable(),
-                        ParentKind.Document => metadata.DocumentAttributes,
-                        ParentKind.Object => metadata.ObjectAttributes,
-                        ParentKind.Line => metadata.LineAttributes,
+                        ParentKind.Class => api.ClassAttributes.AsEnumerable(),
+                        ParentKind.Document => api.EntityDefinitions,
+                        ParentKind.Object => api.ObjectDefinitions,
+                        ParentKind.Line => api.LineDefinitions,
                     };
 
                     foreach (var candidate in candidates)
@@ -61,7 +59,7 @@ namespace Thousand.LSP.Handlers
                         {
                             foreach (var name in candidate.Names)
                             {
-                                logger.LogInformation($"{name} doc: {metadata.Documentation.ContainsKey(name)}");
+                                logger.LogInformation($"{name} doc: {api.Documentation.ContainsKey(name)}");
                                 completions.Add(new CompletionItem
                                 {
                                     Kind = CompletionItemKind.Enum,

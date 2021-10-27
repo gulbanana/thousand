@@ -3,6 +3,7 @@ using SkiaSharp;
 using System;
 using System.IO;
 using System.Xml.Linq;
+using Thousand.API;
 using Thousand.Compose;
 using Thousand.Evaluate;
 using Thousand.Parse;
@@ -34,7 +35,7 @@ namespace Thousand.Benchmarks
         {
             source = File.ReadAllText(Input);
 
-            var api = new Parse.Attributes.API();
+            var api = new Metadata();
             var state = new GenerationState();
 
             Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);

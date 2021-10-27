@@ -47,7 +47,7 @@ foo(2) a--b
 
             var klass = (AST.LineClass)ast!.Declarations.Where(d => d.IsT1).First();
 
-            Assert.Contains(new AST.SharedStrokeAttribute(null, null, new PositiveWidth(2)), klass.Attributes);
+            Assert.Contains(new AST.EntityStrokeAttribute(null, null, new PositiveWidth(2)), klass.Attributes);
         }
 
         [Fact]

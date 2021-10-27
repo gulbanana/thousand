@@ -3,7 +3,7 @@ using Superpower.Model;
 using Superpower.Parsers;
 using System;
 using System.Linq;
-using Thousand.Parse.Attributes;
+using Thousand.API;
 using static Superpower.Parse;
 
 namespace Thousand.Parse
@@ -19,36 +19,29 @@ namespace Thousand.Parse
          * Base attribute groups, delegated to metadata definitions *
          ************************************************************/
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } = Attribute.From(ArrowAttributes.All());
-        public static TokenListParser<TokenKind, AST.SharedAttribute> StrokeAttribute { get; } = Attribute.From(SharedAttributes.All());
-        public static TokenListParser<TokenKind, AST.PositionAttribute> PositionAttribute { get; } = Attribute.From(PositionAttributes.All());
-        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } = Attribute.From(RegionAttributes.All());
-        public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } = Attribute.From(TextAttributes.All());
         public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } = Attribute.From(DiagramAttributes.All());
+        public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } = Attribute.From(EntityAttributes.All());
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } = Attribute.From(NodeAttributes.All());
+        public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } = Attribute.From(RegionAttributes.All());
+        public static TokenListParser<TokenKind, AST.TextAttribute> TextAttribute { get; } = Attribute.From(TextAttributes.All());        
 
         /******************************************************************************
          * Attribute group combinations which apply to each class of document entity. *
          ******************************************************************************/
-        public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
-            NodeAttribute.Select(x => (AST.ObjectAttribute)x)
-                .Or(RegionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(StrokeAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(PositionAttribute.Select(x => (AST.ObjectAttribute)x))
-                .Or(TextAttribute.Select(x => (AST.ObjectAttribute)x));
-
-        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
-            ArrowAttribute.Select(x => (AST.LineAttribute)x)
-                .Or(StrokeAttribute.Select(x => (AST.LineAttribute)x))
-                .Or(PositionAttribute.Select(x => (AST.LineAttribute)x));
-
-        public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } =
-            StrokeAttribute.Select(x => (AST.EntityAttribute)x)
-                .Or(PositionAttribute.Select(x => (AST.EntityAttribute)x));
-
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
             DiagramAttribute.Select(x => (AST.DocumentAttribute)x)
                 .Or(RegionAttribute.Select(x => (AST.DocumentAttribute)x))
                 .Or(TextAttribute.Select(x => (AST.DocumentAttribute)x));
+
+        public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
+            NodeAttribute.Select(x => (AST.ObjectAttribute)x)
+                .Or(RegionAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(EntityAttribute.Select(x => (AST.ObjectAttribute)x))
+                .Or(TextAttribute.Select(x => (AST.ObjectAttribute)x));
+
+        public static TokenListParser<TokenKind, AST.LineAttribute> LineAttribute { get; } =
+            ArrowAttribute.Select(x => (AST.LineAttribute)x)
+                .Or(EntityAttribute.Select(x => (AST.LineAttribute)x));
 
         /**********************************************************************
          * Classes, the key unit of abstraction, shared by objects and lines. *
@@ -86,7 +79,7 @@ namespace Thousand.Parse
                 var eitherAttr = EntityAttribute(remainder);
                 if (eitherAttr.HasValue)
                 {
-                    if (eitherAttr.Value.IsT0 && eitherAttr.Value.AsT0.IsLineOnly())
+                    if (eitherAttr.Value.IsLineOnly())
                     {
                         return LineClassBody(name, bases)(input);
                     }

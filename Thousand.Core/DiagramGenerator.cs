@@ -16,7 +16,7 @@ namespace Thousand
             return reader.ReadToEnd();
         }
 
-        private readonly Parse.Attributes.API api;
+        private readonly API.Metadata api;
         private readonly Superpower.Tokenizer<Parse.TokenKind> tokenizer;
 
         public DiagramGenerator()

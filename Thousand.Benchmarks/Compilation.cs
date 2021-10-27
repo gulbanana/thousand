@@ -14,6 +14,7 @@ namespace Thousand.Benchmarks
 
         private string source;
         private DocumentUri key;
+        private readonly API.Metadata api;
         private readonly DiagramGenerator generator;
         private readonly BufferService bufferService;
         private readonly AnalysisService analysisService;
@@ -21,9 +22,10 @@ namespace Thousand.Benchmarks
 
         public Compilation()
         {
+            api = new API.Metadata();
             generator = new DiagramGenerator();
             bufferService = new BufferService();
-            analysisService = new AnalysisService(NullLogger<AnalysisService>.Instance, bufferService, new MockDiagnosticService(), new MockGenerationService());
+            analysisService = new AnalysisService(NullLogger<AnalysisService>.Instance, api, bufferService, new MockDiagnosticService(), new MockGenerationService());
             options = new ServerOptions();
         }
 

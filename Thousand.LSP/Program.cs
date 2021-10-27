@@ -44,6 +44,7 @@ namespace Thousand.LSP
         private static void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(new ConfigurationItem { Section = "thousand" });
+            services.AddSingleton<API.Metadata>();
             services.AddSingleton<BufferService>();
             services.AddSingleton<Analyse.AnalysisService>();
             services.AddSingleton<IDiagnosticService, DiagnosticService>();

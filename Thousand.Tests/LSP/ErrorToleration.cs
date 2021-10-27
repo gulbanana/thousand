@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using System.Linq;
-using System.Threading.Tasks;
 using Thousand.LSP;
 using Thousand.LSP.Analyse;
 using Thousand.Model;
@@ -19,7 +18,7 @@ namespace Thousand.Tests.LSP
         {
             diagnostics = new MockDiagnosticService();
             buffers = new BufferService();
-            semantics = new AnalysisService(NullLogger<AnalysisService>.Instance, buffers, diagnostics, new MockGenerationService());
+            semantics = new AnalysisService(NullLogger<AnalysisService>.Instance, new API.Metadata(), buffers, diagnostics, new MockGenerationService());
         }
 
         private Analysis Parse(string source)

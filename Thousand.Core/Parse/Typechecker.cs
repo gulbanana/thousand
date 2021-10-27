@@ -1,20 +1,16 @@
 ﻿using OneOf;
 using Superpower;
-using Superpower.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Thousand.Parse.Attributes;
-using Token = Superpower.Model.Token<Thousand.Parse.TokenKind>;
-using TokenList = Superpower.Model.TokenList<Thousand.Parse.TokenKind>;
 
 namespace Thousand.Parse
 {
     // Invariant: accepts only untyped AST which has already been preprocessed. Will fail hard on unpreprocessed input!
     public class Typechecker
     {
-        public static bool TryTypecheck(Attributes.API api, GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
+        public static bool TryTypecheck(API.Metadata api, GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
         {
             try
             {
@@ -31,12 +27,12 @@ namespace Thousand.Parse
             }
         }
 
-        private readonly Attributes.API api;
+        private readonly API.Metadata api;
         private readonly GenerationState state;
 
-        private Typechecker(Attributes.API metadata, GenerationState state)
+        private Typechecker(API.Metadata api, GenerationState state)
         {
-            this.api = metadata;
+            this.api = api;
             this.state = state;
         }
 
@@ -69,7 +65,7 @@ namespace Thousand.Parse
             }
         }
 
-        private T? CheckAttribute<T>(AST.UntypedAttribute ast, IEnumerable<AttributeDefinition<T>> metadata, IEnumerable<string> validNames) where T : class
+        private T? CheckAttribute<T>(AST.UntypedAttribute ast, IEnumerable<API.AttributeDefinition<T>> metadata, IEnumerable<string> validNames) where T : class
         {
             if (string.IsNullOrEmpty(ast.Key.Text))
             {
@@ -92,22 +88,22 @@ namespace Thousand.Parse
 
         private AST.DocumentAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
         {
-            return CheckAttribute(ast, api.DocumentAttributes, api.DocumentNames);
+            return CheckAttribute(ast, api.DocumentDefinitions, api.DocumentNames);
         }
 
         private AST.ObjectAttribute? CheckObjectAttribute(AST.UntypedAttribute ast)
         {
-            return CheckAttribute(ast, api.ObjectAttributes, api.ObjectNames);
+            return CheckAttribute(ast, api.ObjectDefinitions, api.ObjectNames);
         }
 
         private AST.LineAttribute? CheckLineAttribute(AST.UntypedAttribute ast)
         {
-            return CheckAttribute(ast, api.LineAttributes, api.LineNames);
+            return CheckAttribute(ast, api.LineDefinitions, api.LineNames);
         }
 
         private AST.EntityAttribute? CheckEntityAttribute(AST.UntypedAttribute ast)
         {
-            return CheckAttribute(ast, api.EntityAttributes, api.ObjectNames.Concat(api.LineNames).Distinct());
+            return CheckAttribute(ast, api.EntityDefinitions, api.ObjectNames.Concat(api.LineNames).Distinct());
         }
 
         private AST.TypedDocument CheckDocument(AST.UntypedDocument ast)

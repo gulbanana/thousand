@@ -1,4 +1,4 @@
-﻿namespace Thousand.Parse.Attributes
+﻿namespace Thousand.API
 {
     public enum UseKind
     {

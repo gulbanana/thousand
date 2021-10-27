@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Thousand.Model;
 using Thousand.Parse;
-using Thousand.Parse.Attributes;
+using Thousand.API;
 using Xunit;
 
 namespace Thousand.Tests.Parsing
@@ -129,7 +129,7 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_InvalidKeyword()
         {
             var tokens = tokenizer.Tokenize(@"stroke=square");
-            var result = Typed.StrokeAttribute(tokens);
+            var result = Typed.EntityAttribute(tokens);
 
             Assert.False(result.HasValue, result.ToString());
         }
@@ -138,12 +138,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleColour(string c)
         {
             var tokens = tokenizer.Tokenize($"stroke={c}");
-            var result = Typed.StrokeAttribute(tokens);
+            var result = Typed.EntityAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
+            Assert.IsType<AST.EntityStrokeAttribute>(result.Value);
 
-            var lsa = (AST.SharedStrokeAttribute)result.Value;
+            var lsa = (AST.EntityStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Black, lsa.Colour);
@@ -153,12 +153,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleWidth()
         {
             var tokens = tokenizer.Tokenize($"stroke=none");
-            var result = Typed.StrokeAttribute(tokens);
+            var result = Typed.EntityAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
+            Assert.IsType<AST.EntityStrokeAttribute>(result.Value);
 
-            var lsa = (AST.SharedStrokeAttribute)result.Value;
+            var lsa = (AST.EntityStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Width);
             Assert.True(lsa.Width is ZeroWidth);
@@ -168,12 +168,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_SingleStyle()
         {
             var tokens = tokenizer.Tokenize($"stroke=short-dash");
-            var result = Typed.StrokeAttribute(tokens);
+            var result = Typed.EntityAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
+            Assert.IsType<AST.EntityStrokeAttribute>(result.Value);
 
-            var lsa = (AST.SharedStrokeAttribute)result.Value;
+            var lsa = (AST.EntityStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Style);
             Assert.Equal(StrokeKind.ShortDash, lsa.Style);
@@ -183,12 +183,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_Multiple()
         {
             var tokens = tokenizer.Tokenize($"stroke=2 black");
-            var result = Typed.StrokeAttribute(tokens);
+            var result = Typed.EntityAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
+            Assert.IsType<AST.EntityStrokeAttribute>(result.Value);
 
-            var lsa = (AST.SharedStrokeAttribute)result.Value;
+            var lsa = (AST.EntityStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Black, lsa.Colour);
@@ -203,12 +203,12 @@ namespace Thousand.Tests.Parsing
         public void StrokeShorthand_All()
         {
             var tokens = tokenizer.Tokenize($"stroke=solid green hairline");
-            var result = Typed.StrokeAttribute(tokens);
+            var result = Typed.EntityAttribute(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.IsType<AST.SharedStrokeAttribute>(result.Value);
+            Assert.IsType<AST.EntityStrokeAttribute>(result.Value);
 
-            var lsa = (AST.SharedStrokeAttribute)result.Value;
+            var lsa = (AST.EntityStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Colour);
             Assert.Equal(Colour.Green, lsa.Colour);
@@ -228,9 +228,8 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Attributes);
-            Assert.True(result.Value.Attributes.Single().IsT4);
 
-            var lsa = (AST.SharedStrokeAttribute)result.Value.Attributes.Single();
+            var lsa = (AST.EntityStrokeAttribute)result.Value.Attributes.Single();
             
             Assert.NotNull(lsa.Colour);
             Assert.Null(lsa.Width);

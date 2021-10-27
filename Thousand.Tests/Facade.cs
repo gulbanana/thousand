@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Thousand.Parse;
-using Thousand.Parse.Attributes;
+using Thousand.API;
 
 namespace Thousand.Tests
 {
@@ -14,7 +14,7 @@ namespace Thousand.Tests
                 return false;
             }
 
-            if (!Typechecker.TryTypecheck(new API(), state, syntax, allowErrors: false, out outputSyntax))
+            if (!Typechecker.TryTypecheck(new Metadata(), state, syntax, allowErrors: false, out outputSyntax))
             {
                 return false;
             }

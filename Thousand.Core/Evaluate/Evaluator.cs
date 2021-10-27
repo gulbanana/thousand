@@ -65,9 +65,9 @@ namespace Thousand.Evaluate
                             Scale = dsa.Value;
                             break;
                     }
-                }, 
-                region => Config = ApplyRegionAttributes(Config, region), 
-                text => rootFont = ApplyFontAttributes(rootFont, text));
+                },
+                text => rootFont = ApplyFontAttributes(rootFont, text),
+                region => Config = ApplyRegionAttributes(Config, region));
             }
             
             foreach (var declaration in diagram.Declarations)
@@ -102,7 +102,7 @@ namespace Thousand.Evaluate
                 var localAttrs = c switch
                 {
                     AST.ObjectClass oc => oc.Attributes,
-                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.ObjectAttribute(ea.AsT0) : new AST.ObjectAttribute(ea.AsT1)),
+                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => (AST.ObjectAttribute)ea),
                     _ => Enumerable.Empty<AST.ObjectAttribute>()
                 };
 
@@ -130,7 +130,7 @@ namespace Thousand.Evaluate
                 var localAttrs = c switch
                 {
                     AST.LineClass lc => lc.Attributes,
-                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => ea.IsT0 ? new AST.LineAttribute(ea.AsT0) : new AST.LineAttribute(ea.AsT1)),
+                    AST.ObjectOrLineClass olc => olc.Attributes.Select(ea => (AST.LineAttribute)ea),
                     _ => Enumerable.Empty<AST.LineAttribute>()
                 };
 
@@ -176,7 +176,7 @@ namespace Thousand.Evaluate
                 {
                     switch (e)
                     {
-                        case AST.PositionAnchorAttribute eaa:
+                        case AST.EntityAnchorAttribute eaa:
                             if (eaa.Start is SpecificAnchor { Kind: var placement } && eaa.End.Equals(eaa.Start))
                             {
                                 anchor = placement;
@@ -188,7 +188,7 @@ namespace Thousand.Evaluate
                             }
                             break;
 
-                        case AST.PositionOffsetAttribute eoa:
+                        case AST.EntityOffsetAttribute eoa:
                             if (eoa.End.Equals(eoa.Start))
                             {
                                 offset = eoa.Start;
@@ -200,6 +200,8 @@ namespace Thousand.Evaluate
                             }
                             break;
                     }
+
+                    shared = ApplySharedAttributes(shared, e);
                 }, n =>
                 {
                     switch (n)
@@ -249,9 +251,8 @@ namespace Thousand.Evaluate
                             break;
                     }
                 },
-                r => regionConfig = ApplyRegionAttributes(regionConfig, r),
                 t => font = ApplyFontAttributes(font, t),
-                s => shared = ApplySharedAttributes(shared, s));
+                r => regionConfig = ApplyRegionAttributes(regionConfig, r));
             }
 
             var childObjects = new List<IR.Object>();
@@ -306,16 +307,18 @@ namespace Thousand.Evaluate
                 {
                     switch (entity)
                     {
-                        case AST.PositionAnchorAttribute eaa:
+                        case AST.EntityAnchorAttribute eaa:
                             anchorStart = eaa.Start;
                             anchorEnd = eaa.End;
                             break;
 
-                        case AST.PositionOffsetAttribute eoa:
+                        case AST.EntityOffsetAttribute eoa:
                             offsetStart = eoa.Start;
                             offsetEnd = eoa.End;
                             break;
                     }
+
+                    shared = ApplySharedAttributes(shared, entity);
                 }, arrow =>
                 {
                     switch (arrow)
@@ -336,8 +339,7 @@ namespace Thousand.Evaluate
                             offsetEnd = aoea.Offset; ;
                             break;
                     }
-                }, 
-                s => shared = ApplySharedAttributes(shared, s));
+                });
             }
 
             var nodes = new List<(ArrowKind? direction, IR.Object? target)>();
@@ -447,14 +449,14 @@ namespace Thousand.Evaluate
             };
         }
 
-        private SharedStyles ApplySharedAttributes(SharedStyles shared, AST.SharedAttribute attribute)
+        private SharedStyles ApplySharedAttributes(SharedStyles shared, AST.EntityAttribute attribute)
         {
             return attribute switch
             {
-                AST.SharedStrokeColourAttribute ssca => shared with { Stroke = shared.Stroke with { Colour = ssca.Colour } },
-                AST.SharedStrokeWidthAttribute sswa => shared with { Stroke = shared.Stroke with { Width = sswa.Value } },
-                AST.SharedStrokeStyleAttribute sssa => shared with { Stroke = shared.Stroke with { Style = sssa.Kind } },
-                AST.SharedStrokeAttribute ssa => shared with
+                AST.EntityStrokeColourAttribute ssca => shared with { Stroke = shared.Stroke with { Colour = ssca.Colour } },
+                AST.EntityStrokeWidthAttribute sswa => shared with { Stroke = shared.Stroke with { Width = sswa.Value } },
+                AST.EntityStrokeStyleAttribute sssa => shared with { Stroke = shared.Stroke with { Style = sssa.Kind } },
+                AST.EntityStrokeAttribute ssa => shared with
                 {
                     Stroke = new Stroke
                     {
@@ -464,9 +466,9 @@ namespace Thousand.Evaluate
                     }
                 },
 
-                AST.SharedLabelContentAttribute slca => shared with { Label = slca.Content },
-                AST.SharedLabelJustifyAttribute slja => shared with { JustifyLabel = slja.Kind },
-                AST.SharedLabelAttribute sla => shared with
+                AST.EntityLabelContentAttribute slca => shared with { Label = slca.Content },
+                AST.EntityLabelJustifyAttribute slja => shared with { JustifyLabel = slja.Kind },
+                AST.EntityLabelAttribute sla => shared with
                 {
                     Label = sla.Content.HasValue ? sla.Content.Value.Value : shared.Label,
                     JustifyLabel = sla.Justify ?? shared.JustifyLabel

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using Definition = Thousand.Parse.Attributes.AttributeDefinition<Thousand.AST.ArrowAttribute>;
+using Thousand.Parse;
+using Definition = Thousand.API.AttributeDefinition<Thousand.AST.ArrowAttribute>;
 
-namespace Thousand.Parse.Attributes
+namespace Thousand.API
 {
     static class ArrowAttributes
     {
