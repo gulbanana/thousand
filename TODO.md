@@ -43,5 +43,4 @@ TO DO
 * position -> shared -> entity?
 * document all attributes
 * implement node/label offsets (they are already parsed & styled)
-* fully back-to-front regions
 * diagram is just a class, the root has no defaults

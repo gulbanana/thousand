@@ -15,7 +15,7 @@ namespace Thousand.Compose
                 var errors = state.ErrorCount();
 
                 var textMeasures = new Dictionary<IR.StyledText, BlockMeasurements>();
-                foreach (var t in root.WalkObjects().Select(o => o.Label).WhereNotNull())
+                foreach (var t in WalkLabels(root))
                 {
                     textMeasures[t] = Intrinsics.TextBlock(t);
                 }
@@ -33,13 +33,34 @@ namespace Thousand.Compose
             }
         }
 
+        private static IEnumerable<IR.StyledText> WalkLabels(IR.Region region)
+        {
+            foreach (var e in region.Entities)
+            {
+                switch (e)
+                {
+                    case IR.Object objekt:
+                        if (objekt.Label != null) yield return objekt.Label;
+                        foreach (var label in WalkLabels(objekt.Region))
+                        {
+                            yield return label;
+                        }
+                        break;
+
+                    case IR.Edge edge:
+                        if (edge.Label != null) yield return edge.Label;
+                        break;
+                }
+            }
+        }
+
         private readonly GenerationState state;
         private readonly IR.Region root;
         private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, LayoutState> layouts;
-        private readonly Dictionary<IR.Object, Layout.Shape> globalShapes;
+        private readonly Dictionary<IR.Object, Layout.Shape> globalShapes; // XXX replace this with some sort of `childShapes` in Arrange/PlaceEdge
         private readonly Stack<List<Layout.Command>> outputCommands;
-        private decimal outputTransform; // XXX this is used only for subpixel label positioning. perhaps renderers could do it?
+        private decimal outputTransform;
 
         private Composer(GenerationState state, IR.Region root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures)
         {
@@ -125,7 +146,11 @@ namespace Thousand.Compose
             var rowCount = 0;
             var columnCount = 0;
 
-            foreach (var child in region.Objects)
+            var childObjects = region.Entities.OfType<IR.Object>();
+            var childHasExplicitColumnFlow = childObjects.Any(o => o.Region.Config.GridFlow is FlowKind.Columns or FlowKind.ReverseColumns) &&
+                                            !childObjects.Any(o => o.Region.Config.GridFlow is FlowKind.Rows or FlowKind.ReverseRows);
+
+            foreach (var child in childObjects)
             {
                 // measure child and apply overrides
                 var (desiredSize, desiredMargin) = Measure(child);
@@ -172,7 +197,7 @@ namespace Thousand.Compose
                     var flow = region.Config.GridFlow;
                     if (flow is FlowKind.Auto)
                     {
-                        if (region.Objects.Any(o => o.Region.Config.GridFlow is FlowKind.Columns or FlowKind.ReverseColumns) && !region.Objects.Any(o => o.Region.Config.GridFlow is FlowKind.Rows or FlowKind.ReverseRows))
+                        if (childHasExplicitColumnFlow)
                         {
                             flow = FlowKind.Rows;
                         }
@@ -327,14 +352,14 @@ namespace Thousand.Compose
                 outputTransform *= region.Config.Scale;
             }
 
-            var state = layouts[region];
+            var layout = layouts[region];
 
             // calculate tracks based on flow children
-            var columns = new Track[state.Columns.Count];
+            var columns = new Track[layout.Columns.Count];
             var colMarker = bounds.Left + region.Config.Padding.Left;
-            for (var c = 0; c < state.Columns.Count; c++)
+            for (var c = 0; c < layout.Columns.Count; c++)
             {
-                var width = region.Config.Layout.Columns is EqualAreaSize ? bounds.Width / state.Columns.Count : state.Columns[c];
+                var width = region.Config.Layout.Columns is EqualAreaSize ? bounds.Width / layout.Columns.Count : layout.Columns[c];
                 
                 var start = colMarker;
                 var center = colMarker + width / 2;
@@ -344,11 +369,11 @@ namespace Thousand.Compose
                 columns[c] = new(start, center, end);
             }
 
-            var rows = new Track[state.Rows.Count];
+            var rows = new Track[layout.Rows.Count];
             var rowMarker = bounds.Top + region.Config.Padding.Top;
-            for (var r = 0; r < state.Rows.Count; r++)
+            for (var r = 0; r < layout.Rows.Count; r++)
             {
-                var height = region.Config.Layout.Rows is EqualAreaSize ? bounds.Height / state.Rows.Count : state.Rows[r];
+                var height = region.Config.Layout.Rows is EqualAreaSize ? bounds.Height / layout.Rows.Count : layout.Rows[r];
 
                 var start = rowMarker;
                 var center = rowMarker + height / 2;
@@ -359,163 +384,21 @@ namespace Thousand.Compose
             }
 
             // place objects recursively
-            var childrenBounds = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
-            foreach (var child in region.Objects)
+            var childBounds = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
+            foreach (var child in region.Entities)
             {
-                var node = state.AllNodes[child];
-
-                var origin = node switch
+                switch (child)
                 {
-                    // place within intersection of tracks
-                    GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
-                    {
-                        AlignmentKind.Start or AlignmentKind.Stretch => columns[gln.Column - 1].Start + gln.Margin.Left,
-                        AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2 + (gln.Margin.Left - gln.Margin.Right) / 2,
-                        AlignmentKind.End => columns[gln.Column - 1].End - (gln.Size.X + gln.Margin.Right),
-                    }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
-                    {
-                        AlignmentKind.Start or AlignmentKind.Stretch => rows[gln.Row - 1].Start + gln.Margin.Top,
-                        AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.Size.Y) / 2 + (gln.Margin.Top - gln.Margin.Bottom) / 2,
-                        AlignmentKind.End => rows[gln.Row - 1].End - (gln.Size.Y + gln.Margin.Bottom),
-                    }),
-
-                    // place *after* anchor = anchor is shape's *origin*
-                    AnchorLayoutNode aln when state.Anchors.ContainsKey(aln.Anchor) => new Point((child.Alignment.Columns ?? AlignmentKind.Center) switch
-                    {
-                        AlignmentKind.Start => (state.Anchors[aln.Anchor] - node.Size).X,
-                        AlignmentKind.Center or AlignmentKind.Stretch => (state.Anchors[aln.Anchor] - node.Size / 2).X,
-                        AlignmentKind.End => state.Anchors[aln.Anchor].X,
-                    }, (child.Alignment.Rows ?? AlignmentKind.Center) switch
-                    {
-                        AlignmentKind.Start => (state.Anchors[aln.Anchor] - node.Size).Y,
-                        AlignmentKind.Center or AlignmentKind.Stretch => (state.Anchors[aln.Anchor] - node.Size / 2).Y,
-                        AlignmentKind.End => state.Anchors[aln.Anchor].Y,
-                    }),
-
-                    // place at specific loation
-                    PositionLayoutNode pln => bounds.Origin + pln.Origin + region.Config.Padding.TopLeft,
-                    
-                    _ => Point.Zero
-                };
-
-                var size = node switch
-                {
-                    GridLayoutNode gln => new Point((child.Alignment.Columns ?? region.Config.Alignment.Columns) switch
-                    {
-                        AlignmentKind.Stretch => columns[gln.Column - 1].Size,
-                        _ => node.Size.X
-                    }, (child.Alignment.Rows ?? region.Config.Alignment.Rows) switch
-                    {
-                        AlignmentKind.Stretch => rows[gln.Row - 1].Size,
-                        _ => node.Size.Y
-                    }),
-                    _ => node.Size
-                };
-
-                var childBounds = new Rect(origin, size);
-                childrenBounds[child] = childBounds * outputTransform;
-
-                foreach (var kvp in Arrange(child, childBounds))
-                {
-                    childrenBounds.Add(kvp.Key, kvp.Value);
-                }
-            }
-
-            // place lines, which are above the whole hierarchy - they need the margin-exclusive laid out bounds of each contained object 
-            foreach (var edge in region.Edges)
-            {
-                if (edge.Label != null)
-                {
-                    this.state.AddWarning(edge.To.Name, ErrorKind.Layout, "line labels have not been implemented yet");
-                }
-
-                var fromBox = childrenBounds[edge.From.Target] / outputTransform;
-                var toBox = childrenBounds[edge.To.Target] / outputTransform;
-                try
-                {
-                    var (start, end) = Intrinsics.Line(fromBox.Center + edge.From.Offset, toBox.Center + edge.To.Offset, globalShapes.GetValueOrDefault(edge.From.Target), globalShapes.GetValueOrDefault(edge.To.Target));
-
-                    if (start == null)
-                    {
-                        this.state.AddWarning(edge.From.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
-                    }
-
-                    if (end == null)
-                    {
-                        this.state.AddWarning(edge.To.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
-                    }
-
-                    if (start == null || end == null)
-                    {
-                        continue;
-                    }
-
-                    if (edge.From.Target.Shape.HasValue)
-                    {
-                        var anchors = Shapes.Anchors(edge.From.Target.Shape.Value, edge.From.Target.CornerRadius, fromBox);
-
-                        switch (edge.From.Anchor)
+                    case IR.Object childObject:
+                        foreach (var kvp in PlaceObject(region.Config, bounds, columns, rows, layout, childObject))
                         {
-                            case AnyAnchor:
-                                start = start.ClosestTo(anchors.Values.Select(c => c.Location));
-                                break;
-
-                            case CornerAnchor:
-                                start = start.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
-                                break;
-
-                            case SpecificAnchor(var dir):
-                                start = anchors.GetValueOrDefault(dir)?.Location ?? start;
-                                break;
+                            childBounds.Add(kvp.Key, kvp.Value);
                         }
+                        break;
 
-                        if (edge.From.Anchor is not NoAnchor && edge.To.Anchor is NoAnchor)
-                        {
-                            (_, end) = Intrinsics.Line(start, toBox.Center + edge.To.Offset, null, globalShapes.GetValueOrDefault(edge.To.Target));
-                            if (end == null)
-                            {
-                                this.state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (edge.To.Target.Shape.HasValue)
-                    {
-                        var anchors = Shapes.Anchors(edge.To.Target.Shape.Value, edge.To.Target.CornerRadius, toBox);
-
-                        switch (edge.To.Anchor)
-                        {
-                            case AnyAnchor:
-                                end = end.ClosestTo(anchors.Values.Select(c => c.Location));
-                                break;
-
-                            case CornerAnchor:
-                                end = end.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
-                                break;
-
-                            case SpecificAnchor(var dir):
-                                end = anchors.GetValueOrDefault(dir)?.Location ?? end;
-                                break;
-                        }
-
-                        if (edge.To.Anchor is not NoAnchor && edge.From.Anchor is NoAnchor)
-                        {
-                            (start, _) = Intrinsics.Line(fromBox.Center + edge.From.Offset, end, globalShapes.GetValueOrDefault(edge.From.Target), null);
-                            if (start == null)
-                            {
-                                this.state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
-                                continue;
-                            }
-                        }
-                    }
-
-                    outputCommands.Peek().Add(new Layout.Line(edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
-                }
-                catch (Exception ex)
-                {
-                    this.state.AddWarning(ex);
-                    continue;
+                    case IR.Edge childEdge:
+                        PlaceEdge(childBounds, childEdge);
+                        break;
                 }
             }
 
@@ -525,7 +408,167 @@ namespace Thousand.Compose
                 outputCommands.Pop();
             }
 
-            return childrenBounds;
+            return childBounds;
+        }
+
+        // place objects recursively
+        private IEnumerable<KeyValuePair<IR.Object, Rect>> PlaceObject(IR.Config config, Rect bounds, Track[] columns, Track[] rows, LayoutState layout, IR.Object child)
+        {
+            var node = layout.AllNodes[child];
+
+            var origin = node switch
+            {
+                // place within intersection of tracks
+                GridLayoutNode gln => new Point((child.Alignment.Columns ?? config.Alignment.Columns) switch
+                {
+                    AlignmentKind.Start or AlignmentKind.Stretch => columns[gln.Column - 1].Start + gln.Margin.Left,
+                    AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2 + (gln.Margin.Left - gln.Margin.Right) / 2,
+                    AlignmentKind.End => columns[gln.Column - 1].End - (gln.Size.X + gln.Margin.Right),
+                }, (child.Alignment.Rows ?? config.Alignment.Rows) switch
+                {
+                    AlignmentKind.Start or AlignmentKind.Stretch => rows[gln.Row - 1].Start + gln.Margin.Top,
+                    AlignmentKind.Center => rows[gln.Row - 1].Center - (gln.Size.Y) / 2 + (gln.Margin.Top - gln.Margin.Bottom) / 2,
+                    AlignmentKind.End => rows[gln.Row - 1].End - (gln.Size.Y + gln.Margin.Bottom),
+                }),
+
+                // place *after* anchor = anchor is shape's *origin*
+                AnchorLayoutNode aln when layout.Anchors.ContainsKey(aln.Anchor) => new Point((child.Alignment.Columns ?? AlignmentKind.Center) switch
+                {
+                    AlignmentKind.Start => (layout.Anchors[aln.Anchor] - node.Size).X,
+                    AlignmentKind.Center or AlignmentKind.Stretch => (layout.Anchors[aln.Anchor] - node.Size / 2).X,
+                    AlignmentKind.End => layout.Anchors[aln.Anchor].X,
+                }, (child.Alignment.Rows ?? AlignmentKind.Center) switch
+                {
+                    AlignmentKind.Start => (layout.Anchors[aln.Anchor] - node.Size).Y,
+                    AlignmentKind.Center or AlignmentKind.Stretch => (layout.Anchors[aln.Anchor] - node.Size / 2).Y,
+                    AlignmentKind.End => layout.Anchors[aln.Anchor].Y,
+                }),
+
+                // place at specific loation
+                PositionLayoutNode pln => bounds.Origin + pln.Origin + config.Padding.TopLeft,
+
+                _ => Point.Zero
+            };
+
+            var size = node switch
+            {
+                GridLayoutNode gln => new Point((child.Alignment.Columns ?? config.Alignment.Columns) switch
+                {
+                    AlignmentKind.Stretch => columns[gln.Column - 1].Size,
+                    _ => node.Size.X
+                }, (child.Alignment.Rows ?? config.Alignment.Rows) switch
+                {
+                    AlignmentKind.Stretch => rows[gln.Row - 1].Size,
+                    _ => node.Size.Y
+                }),
+                _ => node.Size
+            };
+
+            var childBounds = new Rect(origin, size);
+            yield return new(child, childBounds * outputTransform);
+
+            foreach (var kvp in Arrange(child, childBounds))
+            {
+                yield return kvp;
+            }
+        }
+
+        // place lines, which are above the whole hierarchy - they need the margin-exclusive laid out bounds of each contained object 
+        private void PlaceEdge(Dictionary<IR.Object, Rect> childBounds, IR.Edge edge)
+        {
+            if (edge.Label != null)
+            {
+                state.AddWarning(edge.To.Name, ErrorKind.Layout, "line labels have not been implemented yet");
+            }
+
+            var fromBox = childBounds[edge.From.Target] / outputTransform;
+            var toBox = childBounds[edge.To.Target] / outputTransform;
+            try
+            {
+                var (start, end) = Intrinsics.Line(fromBox.Center + edge.From.Offset, toBox.Center + edge.To.Offset, globalShapes.GetValueOrDefault(edge.From.Target), globalShapes.GetValueOrDefault(edge.To.Target));
+
+                if (start == null)
+                {
+                    state.AddWarning(edge.From.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
+                }
+
+                if (end == null)
+                {
+                    state.AddWarning(edge.To.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
+                }
+
+                if (start == null || end == null)
+                {
+                    return;
+                }
+
+                if (edge.From.Target.Shape.HasValue)
+                {
+                    var anchors = Shapes.Anchors(edge.From.Target.Shape.Value, edge.From.Target.CornerRadius, fromBox);
+
+                    switch (edge.From.Anchor)
+                    {
+                        case AnyAnchor:
+                            start = start.ClosestTo(anchors.Values.Select(c => c.Location));
+                            break;
+
+                        case CornerAnchor:
+                            start = start.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
+                            break;
+
+                        case SpecificAnchor(var dir):
+                            start = anchors.GetValueOrDefault(dir)?.Location ?? start;
+                            break;
+                    }
+
+                    if (edge.From.Anchor is not NoAnchor && edge.To.Anchor is NoAnchor)
+                    {
+                        (_, end) = Intrinsics.Line(start, toBox.Center + edge.To.Offset, null, globalShapes.GetValueOrDefault(edge.To.Target));
+                        if (end == null)
+                        {
+                            state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
+                            return;
+                        }
+                    }
+                }
+
+                if (edge.To.Target.Shape.HasValue)
+                {
+                    var anchors = Shapes.Anchors(edge.To.Target.Shape.Value, edge.To.Target.CornerRadius, toBox);
+
+                    switch (edge.To.Anchor)
+                    {
+                        case AnyAnchor:
+                            end = end.ClosestTo(anchors.Values.Select(c => c.Location));
+                            break;
+
+                        case CornerAnchor:
+                            end = end.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
+                            break;
+
+                        case SpecificAnchor(var dir):
+                            end = anchors.GetValueOrDefault(dir)?.Location ?? end;
+                            break;
+                    }
+
+                    if (edge.To.Anchor is not NoAnchor && edge.From.Anchor is NoAnchor)
+                    {
+                        (start, _) = Intrinsics.Line(fromBox.Center + edge.From.Offset, end, globalShapes.GetValueOrDefault(edge.From.Target), null);
+                        if (start == null)
+                        {
+                            state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
+                            return;
+                        }
+                    }
+                }
+
+                outputCommands.Peek().Add(new Layout.Line(edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
+            }
+            catch (Exception ex)
+            {
+                state.AddWarning(ex);
+                return;
+            }
         }
 
         private static Border GetAnchorBorder(AnchorLayoutNode node, IR.Object parent, Point parentSize)

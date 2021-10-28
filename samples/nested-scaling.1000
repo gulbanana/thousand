@@ -12,14 +12,8 @@ row [gutter=10,scale=2,fill=white] {
 
 line a--b [anchor=se sw]
 
-group [pos=50 250] {
-    box x [pos=000 000]
-    box z [pos=400 000]
-    line x--z [anchor=ne none]
-}
-
-group [pos=250 250] {
-    box y 
-}
-
+box x [pos=50 250]
+box z [pos=450 250]
+line x--z [anchor=ne none]
+box y [pos=250 250]
 line x--z [anchor=none sw]

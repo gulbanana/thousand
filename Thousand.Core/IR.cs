@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Thousand.Model;
 
 // Intermediate representation shared between Canonicalise and Compose stages
@@ -17,10 +18,35 @@ namespace Thousand.IR
         public StyledText(string content) : this(new Font(), content, AlignmentKind.Center) {  }
     }
 
+    // the whole diagram is a Region, which contains Objects that also have Regions
+    public record Region(Config Config, IReadOnlyList<Entity> Entities)
+    {
+        public Region(Config config, params Entity[] entities) : this(config, entities as IReadOnlyList<Entity>) { }
+        public Region(params Entity[] entities) : this(new Config(), entities as IReadOnlyList<Entity>) { }
+        public Region(Config config) : this(config, new Entity[0]) { }
+
+        // for tests
+        public IReadOnlyList<Object> Objects => Entities.OfType<Object>().ToList();
+        public IReadOnlyList<Edge> Edges => Entities.OfType<Edge>().ToList();
+        public IEnumerable<Object> WalkObjects()
+        {
+            foreach (var obj in Entities.OfType<Object>())
+            {
+                yield return obj;
+                foreach (var child in obj.Region.WalkObjects())
+                {
+                    yield return child;
+                }
+            }
+        }
+    }
+
     public record Config(decimal Scale, Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
         public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
     }
+
+    public abstract record Entity;
         
     public record Object
     (
@@ -32,7 +58,7 @@ namespace Thousand.IR
         int? Row, int? Column, Point? Position, CompassKind? Anchor, Point? Offset,
         // shape
         ShapeKind? Shape, int CornerRadius, Stroke Stroke
-    )
+    ) : Entity
     {
         public Object(string label, params Object[] children) : this(new Parse.Identifier("object"), new Region(new Config(), children), new StyledText(label), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
         public Object(Config config, params Object[] children) : this(new Parse.Identifier("object"), new Region(config, children), null, new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null, ShapeKind.Rectangle, 0, new Stroke()) { }
@@ -45,29 +71,9 @@ namespace Thousand.IR
         public Endpoint(Object target) : this(target.Name, target, null, new NoAnchor(), Point.Zero) { }
     }
 
-    public record Edge(Endpoint From, Endpoint To, Stroke Stroke, StyledText? Label)
+    public record Edge(Endpoint From, Endpoint To, Stroke Stroke, StyledText? Label) : Entity
     {
         public Edge(Object from, Object to) : this(new Endpoint(from), new Endpoint(to), new Stroke(), null) { }
         public Edge(Endpoint from, Endpoint to) : this(from, to, new Stroke(), null) { }
-    }
-
-    // the whole diagram is a Region, which contains Objects that also have Regions
-    public record Region(Config Config, IReadOnlyList<Object> Objects, IReadOnlyList<Edge> Edges)
-    {
-        public Region(Config config, params Object[] objects) : this(config, objects as IReadOnlyList<Object>, Array.Empty<Edge>()) { }
-        public Region(params Object[] objects) : this(new Config(), objects as IReadOnlyList<Object>, Array.Empty<Edge>()) { }
-        public Region(Config config) : this(config, new Object[0]) { }
-
-        public IEnumerable<Object> WalkObjects()
-        {
-            foreach (var obj in Objects)
-            {
-                yield return obj;
-                foreach (var child in obj.Region.WalkObjects())
-                {
-                    yield return child;
-                }
-            }
-        }
     }
 }

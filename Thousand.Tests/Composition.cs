@@ -69,8 +69,7 @@ namespace Thousand.Tests
 
             var root = new IR.Region(
                 new IR.Config() with { Gutter = new(10) },
-                new IR.Object[] { left, right },
-                new IR.Edge[] { new IR.Edge(left, right) }
+                new IR.Entity[] { left, right, new IR.Edge(left, right) }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -89,8 +88,7 @@ namespace Thousand.Tests
 
             var root = new IR.Region(
                 new IR.Config() with { Gutter = new(10) },
-                new IR.Object[] { left, right },
-                new IR.Edge[] { new IR.Edge(left, right) }
+                new IR.Entity[] { left, right, new IR.Edge(left, right) }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -110,8 +108,7 @@ namespace Thousand.Tests
 
             var root = new IR.Region(
                 new IR.Config() with { Gutter = new(10) },
-                new IR.Object[] { left, right },
-                new IR.Edge[] { edge }
+                new IR.Entity[] { left, right, edge }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -131,8 +128,7 @@ namespace Thousand.Tests
 
             var root = new IR.Region(
                 new IR.Config() with { Gutter = new(10) },
-                new IR.Object[] { left, right },
-                new IR.Edge[] { edge }
+                new IR.Entity[] { left, right, edge }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -152,8 +148,7 @@ namespace Thousand.Tests
 
             var root = new IR.Region(
                 new IR.Config() with { Gutter = new(10) },
-                new IR.Object[] { left, right },
-                new IR.Edge[] { edge }
+                new IR.Entity[] { left, right, edge }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -179,8 +174,7 @@ namespace Thousand.Tests
 
             var root = new IR.Region(
                 new IR.Config() with { Gutter = new(10) },
-                new IR.Object[] { left, right },
-                new IR.Edge[] { edge }
+                new IR.Entity[] { left, right, edge }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);

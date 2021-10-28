@@ -19,7 +19,7 @@ namespace Thousand.Evaluate
                 {
                     evaluation.AddDocument(doc);
                 }
-                root = new IR.Region(evaluation.Config, evaluation.Objects, evaluation.Edges);
+                root = new IR.Region(evaluation.Config, evaluation.Entities);
 
                 return state.ErrorCount() == errors;
             }
@@ -33,21 +33,18 @@ namespace Thousand.Evaluate
 
         private readonly GenerationState state;
         private readonly Scope rootScope;
-        private readonly List<IR.Object> rootObjects;
-        private readonly List<IR.Edge> rootEdges;
+        private readonly List<IR.Entity> rootEntities;
 
         private Font rootFont;
         public IR.Config Config { get; private set; }
 
-        public IReadOnlyList<IR.Object> Objects => rootObjects;
-        public IReadOnlyList<IR.Edge> Edges => rootEdges;
+        public IReadOnlyList<IR.Entity> Entities => rootEntities;
 
         private Evaluator(GenerationState state)
         {
             this.state = state;
             rootScope = new("diagram", state);
-            rootObjects = new();
-            rootEdges = new();
+            rootEntities = new();
 
             rootFont = new Font();
             Config = new IR.Config(1m, Colour.White, FlowKind.Auto, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
@@ -69,13 +66,13 @@ namespace Thousand.Evaluate
                 }
                 else if (declaration.IsT2)
                 {
-                    rootObjects.Add(AddObject(declaration.AsT2, rootFont, rootScope));
+                    rootEntities.Add(AddObject(declaration.AsT2, rootFont, rootScope));
                 }
                 else if (declaration.IsT3)
                 {
                     var (objects, edges) = AddLine(declaration.AsT3, rootFont, rootScope);
-                    rootObjects.AddRange(objects);
-                    rootEdges.AddRange(edges);
+                    rootEntities.AddRange(objects);
+                    rootEntities.AddRange(edges);
                 }
             }
         }
@@ -248,8 +245,7 @@ namespace Thousand.Evaluate
                 t => font = ApplyFontAttributes(font, t));
             }
 
-            var childObjects = new List<IR.Object>();
-            var childEdges = new List<IR.Edge>();
+            var childEntities = new List<IR.Entity>();
             var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Declarations).ToList();            
             if (childContent.Any())
             {
@@ -263,20 +259,20 @@ namespace Thousand.Evaluate
                     }
                     else if (declaration.IsT2)
                     {
-                        childObjects.Add(AddObject(declaration.AsT2, font, objectScope));
+                        childEntities.Add(AddObject(declaration.AsT2, font, objectScope));
                     }
                     else if (declaration.IsT3)
                     {
                         var (objects, edges) = AddLine(declaration.AsT3, font, objectScope);
-                        childObjects.AddRange(objects);
-                        childEdges.AddRange(edges);
+                        childEntities.AddRange(objects);
+                        childEntities.AddRange(edges);
                     }
                 }
             }
 
             var result = new IR.Object(
                 name,
-                new IR.Region(regionConfig, childObjects, childEdges), 
+                new IR.Region(regionConfig, childEntities), 
                 shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel), 
                 alignment, margin, width, height, 
                 row, column, position, anchor, offset, 
