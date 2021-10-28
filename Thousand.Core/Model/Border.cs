@@ -13,6 +13,8 @@ namespace Thousand.Model
         public decimal Y => Top + Bottom;
         public Point TopLeft => new Point(Left, Top);
 
+        public static Border operator /(Border a, decimal b) => new(a.Left / b, a.Top / b, a.Right / b, a.Bottom / b);
+
         public Border Combine(Border that) => new(
             Math.Max(this.Left, that.Left),
             Math.Max(this.Top, that.Top),

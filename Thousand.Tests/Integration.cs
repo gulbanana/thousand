@@ -51,9 +51,9 @@ namespace Thousand.Tests
         public void EntityOffsetAsObject()
         {
             Assert.True(Facade.TryParse(@"class foo [offset=1 1]; foo bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var objekt = rules!.Region.Objects.Single();
+            var objekt = root!.Objects.Single();
             Assert.Equal(new Point(1, 1), objekt.Offset);
         }
 
@@ -61,9 +61,9 @@ namespace Thousand.Tests
         public void EntityOffsetAsLine()
         {
             Assert.True(Facade.TryParse(@"class object; class foo [offset=1 1]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var line = rules!.Edges.Single();
+            var line = root!.Edges.Single();
             Assert.Equal(new Point(1, 1), line.From.Offset);
             Assert.Equal(new Point(1, 1), line.To.Offset);
         }
@@ -72,9 +72,9 @@ namespace Thousand.Tests
         public void LineOffsetAsLine()
         {
             Assert.True(Facade.TryParse(@"class object; class foo [offset=1 1 2 2]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var line = rules!.Edges.Single();
+            var line = root!.Edges.Single();
             Assert.Equal(new Point(1, 1), line.From.Offset);
             Assert.Equal(new Point(2, 2), line.To.Offset);
         }
@@ -83,9 +83,9 @@ namespace Thousand.Tests
         public void EntityAnchorAsObject()
         {
             Assert.True(Facade.TryParse(@"class foo [anchor=n]; foo bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var objekt = rules!.Region.Objects.Single();
+            var objekt = root!.Objects.Single();
             Assert.Equal(CompassKind.N, objekt.Anchor);
         }
 
@@ -93,9 +93,9 @@ namespace Thousand.Tests
         public void EntityAnchorAsLine()
         {
             Assert.True(Facade.TryParse(@"class object; class foo [anchor=n]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var line = rules!.Edges.Single();
+            var line = root!.Edges.Single();
             Assert.Equal(new SpecificAnchor(CompassKind.N), line.From.Anchor);
             Assert.Equal(new SpecificAnchor(CompassKind.N), line.To.Anchor);
         }
@@ -104,9 +104,9 @@ namespace Thousand.Tests
         public void LineAnchorAsLine_Twice()
         {
             Assert.True(Facade.TryParse(@"class object; class foo [anchor=n e]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var line = rules!.Edges.Single();
+            var line = root!.Edges.Single();
             Assert.Equal(new SpecificAnchor(CompassKind.N), line.From.Anchor);
             Assert.Equal(new SpecificAnchor(CompassKind.E), line.To.Anchor);
         }
@@ -115,9 +115,9 @@ namespace Thousand.Tests
         public void LineAnchorAsLine_Group()
         {
             Assert.True(Facade.TryParse(@"class object; class foo [anchor=any]; object bar; foo bar--bar", state, out var document), state.JoinErrors());
-            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var rules), state.JoinErrors());
+            Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var line = rules!.Edges.Single();
+            var line = root!.Edges.Single();
             Assert.Equal(new AnyAnchor(), line.From.Anchor);
             Assert.Equal(new AnyAnchor(), line.To.Anchor);
         }

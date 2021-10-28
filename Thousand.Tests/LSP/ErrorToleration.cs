@@ -40,7 +40,7 @@ line bar -- baz [stroke=blue]");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Equal(4, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
@@ -61,7 +61,7 @@ template(1) a -- b");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Equal(5, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
@@ -80,11 +80,11 @@ foo(""bar"")
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
             
-            Assert.Single(document.Rules!.Region.Objects);
-            Assert.Equal("bar", document.Rules!.Region.Objects.Single().Region.Objects.Single().Label?.Content);
+            Assert.Single(document.Root!.Objects);
+            Assert.Equal("bar", document.Root!.Objects.Single().Region.Objects.Single().Label?.Content);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ object a
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Single(document.Main!.Syntax.Declarations);
@@ -113,7 +113,7 @@ object b");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Single(document.Main!.Syntax.Declarations);
@@ -131,7 +131,7 @@ line bar -- bar [stroke=blue] // good");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
@@ -150,7 +150,7 @@ line bar -- baz [stroke=blue] // good");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
@@ -166,7 +166,7 @@ line bar -- baz [stroke=blue] // good");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
             Assert.Equal(2, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
@@ -184,11 +184,11 @@ line bar -- baz [stroke=blue] // good");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Rules!.Region.Objects);
-            Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects);
+            Assert.Single(document.Root!.Objects);
+            Assert.Single(document.Root!.Objects.Single().Region.Objects);
         }
 
         [Fact]
@@ -203,10 +203,10 @@ a");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(AlignmentKind.Start, document.Rules!.Region.Objects.Single().Alignment.Columns);
+            Assert.Equal(AlignmentKind.Start, document.Root!.Objects.Single().Alignment.Columns);
         }
 
         [Fact]
@@ -224,12 +224,12 @@ foo");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Rules!.Region.Objects);
-            Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects);
-            Assert.Single(document.Rules!.Region.Objects.Single().Region.Objects.Single().Region.Objects);
+            Assert.Single(document.Root!.Objects);
+            Assert.Single(document.Root!.Objects.Single().Region.Objects);
+            Assert.Single(document.Root!.Objects.Single().Region.Objects.Single().Region.Objects);
         }
 
         [Fact]
@@ -242,7 +242,7 @@ class bar [");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
         }
 
@@ -257,7 +257,7 @@ class bar [");
             Assert.NotNull(document.Tokens);
             Assert.NotNull(document.Main);
             Assert.NotNull(document.ValidSyntax);
-            Assert.NotNull(document.Rules);
+            Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
         }
     }

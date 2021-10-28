@@ -14,7 +14,7 @@ namespace Thousand.LSP.Analyse
 
         public TokenList? Tokens { get; set; }        
         public TypedDocument? ValidSyntax { get; set; }
-        public IR.Root? Rules { get; set; }
+        public IR.Region? Root { get; set; }
         public Diagram? Diagram { get; set; }
 
         public Dictionary<UntypedClass, Location> ClassDefinitions { get; } = new();

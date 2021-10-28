@@ -2,6 +2,7 @@
 using Xunit;
 using Thousand.Model;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Thousand.Tests
 {
@@ -21,12 +22,9 @@ namespace Thousand.Tests
         {
             var textBounds = new Rect(new Point(30, 28));
 
-            var diagram = new Diagram(100, 100, 1, null, new Shape[0], new LabelBlock[]
+            var diagram = new Diagram(100, 100, new List<Command>
             {
-                new LabelBlock(new Font(), textBounds, "foo", new[] { new LabelLine(textBounds, "foo") })
-            },
-            new Line[]
-            {
+                new Label(new Font(), textBounds, "foo", new[] { new LabelSpan(textBounds, "foo") }),
                 new Line(new Stroke(), new Point(0, 0), new Point(100, 100), false, false)
             });
 

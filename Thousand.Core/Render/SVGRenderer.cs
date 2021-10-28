@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Thousand.Layout;
 
 namespace Thousand.Render
 {
@@ -16,12 +16,12 @@ namespace Thousand.Render
 
         public void Dispose() { }
 
-        public XElement Render(Diagram diagram)
+        public XElement Render(Layout.Diagram diagram)
         {
-            var state = new SVGRendererState(diagram.Scale);
+            var state = new SVGRendererState();
 
-            var w = diagram.Width * diagram.Scale;
-            var h = diagram.Height * diagram.Scale;            
+            var w = diagram.Width;
+            var h = diagram.Height;            
 
             var svg = new XElement(xmlns + "svg", new XAttribute("width", w), new XAttribute("height", h), new XAttribute("viewBox", $"0 0 {diagram.Width} {diagram.Height}"),
                 // MDN claims that WebKit supports geometricPrecision, which disables hinting, but that in Gecko it is ignored and treated as optimizeLegibility.
@@ -30,31 +30,36 @@ namespace Thousand.Render
                 new XAttribute("text-rendering", "optimizeLegibility"),
 
                 new XElement(xmlns + "defs",
-                    diagram.Lines.Select(l => l.Stroke.Colour).Distinct().Select(state.DefineMarker).ToArray()
+                    WalkLines(diagram.Commands).Select(l => l.Stroke.Colour).Distinct().Select(state.DefineMarker).ToArray() // XXX
                 )
             );
 
-            if (diagram.Background != null)
-            {
-                svg.Add(new XElement(xmlns + "rect", new XAttribute("width", "100%"), new XAttribute("height", "100%"), new XAttribute("fill", diagram.Background.SVG())));
-            }
-            
-            foreach (var tag in diagram.Shapes.Select(state.RenderShape))
-            {
-                svg.Add(tag);
-            }
-
-            foreach (var tag in diagram.Labels.Select(state.RenderLabel))
-            {
-                svg.Add(tag);
-            }
-
-            foreach (var tag in diagram.Lines.Select(state.RenderLine))
+            foreach (var tag in state.ProcessCommandList(diagram.Commands))
             {
                 svg.Add(tag);
             }
 
             return svg;
+        }
+
+        private static IEnumerable<Layout.Line> WalkLines(IReadOnlyList<Layout.Command> commands)
+        {
+            foreach (var command in commands)
+            {
+                switch (command)
+                {
+                    case Layout.Line line:
+                        yield return line;
+                        break;
+
+                    case Layout.Transform transform:
+                        foreach (var line in WalkLines(transform.Commands))
+                        {
+                            yield return line;
+                        }
+                        break;
+                }
+            }
         }
     }
 }

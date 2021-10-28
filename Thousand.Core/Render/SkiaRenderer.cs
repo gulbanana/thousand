@@ -1,5 +1,6 @@
 ﻿using SkiaSharp;
 using System;
+using Topten.RichTextKit;
 
 namespace Thousand.Render
 {
@@ -17,36 +18,11 @@ namespace Thousand.Render
 
         public SKImage Render(Layout.Diagram diagram)
         {
-            var state = new SkiaRenderState();
-
-            foreach (var shape in diagram.Shapes)
-            {
-                state.ShapePaths[shape] = SkiaPath.Create(shape);
-            }
-
-            var pixelWidth = (int)(diagram.Width * diagram.Scale);
-            var pixelHeight = (int)(diagram.Height * diagram.Scale);
-            var info = new SKImageInfo(Math.Max(pixelWidth, 1), Math.Max(pixelHeight, 1));
-
+            var info = new SKImageInfo(Math.Max(diagram.Width, 1), Math.Max(diagram.Height, 1));
             using var surface = SKSurface.Create(info);
-            var canvas = surface.Canvas;
+            var state = new SkiaRenderState(surface.Canvas);
 
-            state.PaintDiagram(canvas, diagram);
-
-            foreach (var shape in diagram.Shapes)
-            {
-                state.PaintShape(canvas, shape);
-            }
-
-            foreach (var label in diagram.Labels)
-            {
-                state.PaintLabel(canvas, label);
-            }
-
-            foreach (var line in diagram.Lines)
-            {
-                state.PaintLine(canvas, line);
-            }
+            state.ProcessCommandList(diagram.Commands);
 
             return surface.Snapshot();
         }

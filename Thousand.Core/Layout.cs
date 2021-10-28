@@ -4,9 +4,17 @@ using Thousand.Model;
 // Intermediate representation shared between Compose and Render stages
 namespace Thousand.Layout
 {
-    public record LabelLine(Rect Bounds, string Content);
-    public record LabelBlock(Font Font, Rect Bounds, string Content, IReadOnlyList<LabelLine> Lines);
-    public record Shape(Rect Bounds, ShapeKind Kind, int CornerRadius, Stroke Stroke, Colour? Fill);
-    public record Line(Stroke Stroke, Point Start, Point End, bool StartMarker, bool EndMarker);
-    public record Diagram(int Width, int Height, decimal Scale, Colour? Background, IReadOnlyList<Shape> Shapes, IReadOnlyList<LabelBlock> Labels, IReadOnlyList<Line> Lines);
+    /// <summary>Drawing commands, back-to-front.</summary>
+    public abstract record Command;
+
+    public record LabelSpan(Rect Bounds, string Content);
+    public record Label(Font Font, Rect Bounds, string Content, IReadOnlyList<LabelSpan> Lines) : Command;
+
+    public record Shape(Rect Bounds, ShapeKind Kind, int CornerRadius, Stroke Stroke, Colour? Fill) : Command;
+
+    public record Line(Stroke Stroke, Point Start, Point End, bool StartMarker, bool EndMarker) : Command;
+
+    public record Transform(decimal Scale, IReadOnlyList<Command> Commands) : Command;
+
+    public record Diagram(int Width, int Height, IReadOnlyList<Command> Commands);
 }

@@ -48,15 +48,15 @@ namespace Thousand.Tests
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(Colour.Blue, root!.Region.Config.Fill);
-            Assert.Equal(5, root.Region.WalkObjects().Count());
-            Assert.Equal(3, root.Region.Objects.Count); // group, big baz
-            Assert.Equal(2, root.Region.Objects[0].Region.Objects.Count); // group { foo, bar }
+            Assert.Equal(Colour.Blue, root!.Config.Fill);
+            Assert.Equal(5, root.WalkObjects().Count());
+            Assert.Equal(3, root.Objects.Count); // group, big baz
+            Assert.Equal(2, root.Objects[0].Region.Objects.Count); // group { foo, bar }
             Assert.Equal(2, root.Edges.Count);
 
-            AssertEx.Sequence(root.Region.WalkObjects().Select(o => o.Label).WhereNotNull().Select(l => l.Font.Size), 50, 40, 50, 20);
+            AssertEx.Sequence(root.WalkObjects().Select(o => o.Label).WhereNotNull().Select(l => l.Font.Size), 50, 40, 50, 20);
 
-            AssertEx.Sequence(root.Region.Objects.Select(o => o.Region.Config.Layout.Columns), new EqualContentSize(), new PackedSize(), new PackedSize());
+            AssertEx.Sequence(root.Objects.Select(o => o.Region.Config.Layout.Columns), new EqualContentSize(), new PackedSize(), new PackedSize());
         }
 
         [Fact]
@@ -113,8 +113,8 @@ namespace Thousand.Tests
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(ShapeKind.Circle, root!.Edges[0].From.Target.Shape);
-            Assert.Equal(ShapeKind.Octagon, root!.Edges[1].From.Target.Shape);
+            Assert.Equal(ShapeKind.Circle, root!.Objects[1].Region.Edges[0].From.Target.Shape);
+            Assert.Equal(ShapeKind.Octagon, root!.Edges[0].From.Target.Shape);
         }
     }
 }

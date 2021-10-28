@@ -17,28 +17,9 @@ namespace Thousand.IR
         public StyledText(string content) : this(new Font(), content, AlignmentKind.Center) {  }
     }
 
-    public record Config(Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
+    public record Config(decimal Scale, Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
-        public Config() : this(null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
-    }
-
-    public record Region(Config Config, IReadOnlyList<Object> Objects)
-    {
-        public Region(Config config, params Object[] objects) : this(config, objects as IReadOnlyList<Object>) { }  
-        public Region(params Object[] objects) : this(new Config(), objects as IReadOnlyList<Object>) { }
-        public Region(Config config) : this(config, new Object[0]) { }
-
-        public IEnumerable<Object> WalkObjects()
-        {
-            foreach (var obj in Objects)
-            {
-                yield return obj;
-                foreach (var child in obj.Region.WalkObjects())
-                {
-                    yield return child;
-                }
-            }
-        }
+        public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
     }
         
     public record Object
@@ -69,18 +50,24 @@ namespace Thousand.IR
         public Edge(Object from, Object to) : this(new Endpoint(from), new Endpoint(to), new Stroke(), null) { }
         public Edge(Endpoint from, Endpoint to) : this(from, to, new Stroke(), null) { }
     }
-    
-    public record Root(decimal Scale, Region Region, IReadOnlyList<Edge> Edges)
+
+    // the whole diagram is a Region, which contains Objects that also have Regions
+    public record Region(Config Config, IReadOnlyList<Object> Objects, IReadOnlyList<Edge> Edges)
     {
-        public Root(decimal scale, Region region, params Edge[] edges) : this(scale, region, edges as IReadOnlyList<Edge>) { }
-        public Root(decimal scale, Region region) : this(scale, region, new Edge[0]) { }
-        public Root(Region region, IReadOnlyList<Edge> edges) : this(1m, region, edges) { }
-        public Root(Region region, params Edge[] edges) : this(1m, region, edges as IReadOnlyList<Edge>) { }
-        public Root(Region region) : this(1m, region) { }
+        public Region(Config config, params Object[] objects) : this(config, objects as IReadOnlyList<Object>, Array.Empty<Edge>()) { }
+        public Region(params Object[] objects) : this(new Config(), objects as IReadOnlyList<Object>, Array.Empty<Edge>()) { }
+        public Region(Config config) : this(config, new Object[0]) { }
 
         public IEnumerable<Object> WalkObjects()
         {
-            return Region.WalkObjects();
+            foreach (var obj in Objects)
+            {
+                yield return obj;
+                foreach (var child in obj.Region.WalkObjects())
+                {
+                    yield return child;
+                }
+            }
         }
     }
 }

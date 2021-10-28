@@ -29,8 +29,7 @@ namespace Thousand.API
 
         public Metadata()
         {
-            DocumentDefinitions = DiagramAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2))
-                .Concat(RegionAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2)))
+            DocumentDefinitions = RegionAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2))
                 .Concat(TextAttributes.All().Select(x => x.Select(x2 => (AST.DocumentAttribute)x2)))
                 .ToList();
 
@@ -78,7 +77,6 @@ namespace Thousand.API
                 .ToList();
 
             Documentation = ArrowAttributes.All().Cast<AttributeDefinition>()
-                .Concat(DiagramAttributes.All())
                 .Concat(NodeAttributes.All())
                 .Concat(RegionAttributes.All())
                 .Concat(EntityAttributes.All())

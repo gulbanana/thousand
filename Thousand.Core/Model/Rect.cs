@@ -14,6 +14,10 @@
         public Rect(Point origin, Point size) : this(origin.X, origin.Y, origin.X + size.X, origin.Y + size.Y) { }
 
         public static Rect operator +(Rect a, Border b) => new(a.Left - b.Left, a.Top - b.Top, a.Right + b.Right, a.Bottom + b.Bottom);
+        public static Rect operator +(Rect a, Point b) => new(a.Left + b.X, a.Top + b.Y, a.Right + b.X, a.Bottom + b.Y);
+        public static Rect operator -(Rect a, Border b) => new(a.Left + b.Left, a.Top + b.Top, a.Right - b.Right, a.Bottom - b.Bottom);
+        public static Rect operator *(Rect a, decimal b) => new(a.Left * b, a.Top * b, a.Right * b, a.Bottom * b);
+        public static Rect operator /(Rect a, decimal b) => new(a.Left / b, a.Top / b, a.Right / b, a.Bottom / b);
 
         public Rect CenteredAt(Point center) => new Rect(
             new Point(center.X - (Width / 2), center.Y - (Height / 2)),

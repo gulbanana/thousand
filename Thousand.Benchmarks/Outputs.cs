@@ -21,7 +21,7 @@ namespace Thousand.Benchmarks
         private string source;
         private AST.TypedDocument stdlib;
         private AST.TypedDocument ast;
-        private IR.Root rules;
+        private IR.Region root;
         private Layout.Diagram diagram;
         
         public Outputs()
@@ -43,8 +43,8 @@ namespace Thousand.Benchmarks
 
             Preprocessor.TryPreprocess(state, source, out var macros);
             Typechecker.TryTypecheck(api, state, macros, false, out ast);
-            Evaluator.TryEvaluate(new[] { stdlib, ast }, state, out rules);
-            Composer.TryCompose(rules, state, out diagram);
+            Evaluator.TryEvaluate(new[] { stdlib, ast }, state, out root);
+            Composer.TryCompose(root, state, out diagram);
 
             if (state.HasErrors())
             {

@@ -174,7 +174,7 @@ namespace Thousand.LSP.Analyse
                     return;
                 }
 
-                analysis.Rules = rules;
+                analysis.Root = rules;
 
                 if (!Compose.Composer.TryCompose(rules, state, out var diagram))
                 {
@@ -192,7 +192,7 @@ namespace Thousand.LSP.Analyse
                     return;
                 }
 
-                analysis.Rules = rules;
+                analysis.Root = rules;
 
                 if (!Compose.Composer.TryCompose(rules, state, out var diagram))
                 {

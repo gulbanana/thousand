@@ -10,7 +10,7 @@ TO DO
 * syntax: class contents placeholder inserts - right now it's all prepended (but how would this work with a classlist?)
 * syntax: import files?
 * syntax: import templates (not the same as above! applies to the stdlib)
-* feature: line labels (+ add font to line, + align vs justify)
+* feature: line labels (composition+, align vs justify)
 * feature: object offset from position 
 * feature: drop shadows (object/line, though different)
 * feature: customisable arrowheads
@@ -43,3 +43,5 @@ TO DO
 * position -> shared -> entity?
 * document all attributes
 * implement node/label offsets (they are already parsed & styled)
+* fully back-to-front regions
+* diagram is just a class, the root has no defaults

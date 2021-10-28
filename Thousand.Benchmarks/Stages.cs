@@ -23,7 +23,7 @@ namespace Thousand.Benchmarks
         private AST.TypedDocument stdlibAST;
         private AST.UntypedDocument preprocessedAST;
         private AST.TypedDocument typedAST;
-        private IR.Root rules;
+        private IR.Region root;
         private Layout.Diagram diagram;
         private TokenList<TokenKind> tokens;
 
@@ -47,8 +47,8 @@ namespace Thousand.Benchmarks
             tokens = tokenizer.Tokenize(source);
             Preprocessor.TryPreprocess(state, source, out preprocessedAST);
             Typechecker.TryTypecheck(api, state, preprocessedAST, false, out typedAST);
-            Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, state, out rules);
-            Composer.TryCompose(rules, state, out diagram);
+            Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, state, out root);
+            Composer.TryCompose(root, state, out diagram);
 
             if (state.HasErrors())
             {
@@ -83,7 +83,7 @@ namespace Thousand.Benchmarks
         [Benchmark]
         public bool Compose()
         {
-            return Composer.TryCompose(rules, new GenerationState(), out _);
+            return Composer.TryCompose(root, new GenerationState(), out _);
         }
 
         [Benchmark]

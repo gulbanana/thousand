@@ -10,17 +10,14 @@
     {
         var sample = "The quick brown fox jumps over the lazy dog.";
 
-        if (Composer.TryCompose(new IR.Root(1, 
-            new IR.Region(new IR.Config(), new IR.Object[]
-            {
-                new IR.Object() with
-                { 
-                    Shape = null, 
-                    Label = new IR.StyledText(new Font(typeface.FamilyName, 20, Colour.Black), sample, AlignmentKind.Center) 
-                }
-            }),
-            new IR.Edge[0]
-        ), new GenerationState(), out var diagram))
+        if (Composer.TryCompose(new IR.Region(new IR.Config(), new IR.Object[]
+        {
+            new IR.Object() with
+            { 
+                Shape = null, 
+                Label = new IR.StyledText(new Font(typeface.FamilyName, 20, Colour.Black), sample, AlignmentKind.Center) 
+            }
+        }, new IR.Edge[0]), new GenerationState(), out var diagram))
         {
             return diagram;
         }

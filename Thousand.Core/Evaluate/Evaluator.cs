@@ -8,7 +8,7 @@ namespace Thousand.Evaluate
 {
     public class Evaluator
     {
-        public static bool TryEvaluate(IEnumerable<AST.TypedDocument> documents, GenerationState state, [NotNullWhen(true)] out IR.Root? rules)
+        public static bool TryEvaluate(IEnumerable<AST.TypedDocument> documents, GenerationState state, [NotNullWhen(true)] out IR.Region? root)
         {
             try
             {
@@ -19,55 +19,46 @@ namespace Thousand.Evaluate
                 {
                     evaluation.AddDocument(doc);
                 }
-                rules = new IR.Root(evaluation.Scale, new IR.Region(evaluation.Config, evaluation.Objects.ToList()), evaluation.Edges);
+                root = new IR.Region(evaluation.Config, evaluation.Objects, evaluation.Edges);
 
                 return state.ErrorCount() == errors;
             }
             catch (Exception ex)
             {
                 state.AddError(ex);
-                rules = null;
+                root = null;
                 return false;
             }
         }
 
         private readonly GenerationState state;
         private readonly Scope rootScope;
+        private readonly List<IR.Object> rootObjects;
         private readonly List<IR.Edge> rootEdges;
 
         private Font rootFont;
-        public decimal Scale { get; private set; }
         public IR.Config Config { get; private set; }
 
-        public IEnumerable<IR.Object> Objects => rootScope.GetObjects();
+        public IReadOnlyList<IR.Object> Objects => rootObjects;
         public IReadOnlyList<IR.Edge> Edges => rootEdges;
 
         private Evaluator(GenerationState state)
         {
             this.state = state;
             rootScope = new("diagram", state);
+            rootObjects = new();
             rootEdges = new();
 
             rootFont = new Font();
-            Scale = 1m;
-            Config = new IR.Config(Colour.White, FlowKind.Auto, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
+            Config = new IR.Config(1m, Colour.White, FlowKind.Auto, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
         }
 
         private void AddDocument(AST.TypedDocument diagram)
         {
             foreach (var attr in diagram.Declarations.Where(d => d.IsT0).Select(d => d.AsT0))
             {
-                attr.Switch(doc =>
-                {
-                    switch (doc)
-                    {
-                        case AST.DiagramScaleAttribute dsa:
-                            Scale = dsa.Value;
-                            break;
-                    }
-                },
-                text => rootFont = ApplyFontAttributes(rootFont, text),
-                region => Config = ApplyRegionAttributes(Config, region));
+                attr.Switch(region => Config = ApplyRegionAttributes(Config, region),
+                text => rootFont = ApplyFontAttributes(rootFont, text));
             }
             
             foreach (var declaration in diagram.Declarations)
@@ -78,11 +69,13 @@ namespace Thousand.Evaluate
                 }
                 else if (declaration.IsT2)
                 {
-                    AddObject(declaration.AsT2, rootFont, rootScope);
+                    rootObjects.Add(AddObject(declaration.AsT2, rootFont, rootScope));
                 }
                 else if (declaration.IsT3)
                 {
-                    AddEdges(declaration.AsT3, rootFont, rootScope).ToList();
+                    var (objects, edges) = AddLine(declaration.AsT3, rootFont, rootScope);
+                    rootObjects.AddRange(objects);
+                    rootEdges.AddRange(edges);
                 }
             }
         }
@@ -147,7 +140,7 @@ namespace Thousand.Evaluate
         {
             var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
             
-            var regionConfig = new IR.Config(null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
+            var regionConfig = new IR.Config(1m, null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
 
             // names are a separate thing, but if a node has one, it is also the default label
             var shared = new SharedStyles(node.Name?.Text, AlignmentKind.Center, new Stroke());
@@ -251,11 +244,12 @@ namespace Thousand.Evaluate
                             break;
                     }
                 },
-                t => font = ApplyFontAttributes(font, t),
-                r => regionConfig = ApplyRegionAttributes(regionConfig, r));
+                r => regionConfig = ApplyRegionAttributes(regionConfig, r),
+                t => font = ApplyFontAttributes(font, t));
             }
 
             var childObjects = new List<IR.Object>();
+            var childEdges = new List<IR.Edge>();
             var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Declarations).ToList();            
             if (childContent.Any())
             {
@@ -273,14 +267,16 @@ namespace Thousand.Evaluate
                     }
                     else if (declaration.IsT3)
                     {
-                        childObjects.AddRange(AddEdges(declaration.AsT3, font, objectScope));
+                        var (objects, edges) = AddLine(declaration.AsT3, font, objectScope);
+                        childObjects.AddRange(objects);
+                        childEdges.AddRange(edges);
                     }
                 }
             }
 
             var result = new IR.Object(
                 name,
-                new IR.Region(regionConfig, childObjects), 
+                new IR.Region(regionConfig, childObjects, childEdges), 
                 shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel), 
                 alignment, margin, width, height, 
                 row, column, position, anchor, offset, 
@@ -293,9 +289,13 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        private IEnumerable<IR.Object> AddEdges(AST.TypedLine line, Font cascadeFont, Scope scope)
+        private (IEnumerable<IR.Object>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, Scope scope)
         {
+            var objects = new List<IR.Object>();
+            var edges = new List<IR.Edge>();
+
             var shared = new SharedStyles(null, AlignmentKind.Center, new Stroke());
+            var font = cascadeFont;
             var anchorStart = new NoAnchor() as Anchor;
             var anchorEnd = new NoAnchor() as Anchor;
             var offsetStart = Point.Zero;
@@ -339,7 +339,7 @@ namespace Thousand.Evaluate
                             offsetEnd = aoea.Offset; ;
                             break;
                     }
-                });
+                }, text => font = ApplyFontAttributes(font, text));
             }
 
             var nodes = new List<(ArrowKind? direction, IR.Object? target)>();
@@ -348,11 +348,12 @@ namespace Thousand.Evaluate
                 var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);
                 if (seg.Target.IsT1)
                 {
-                    yield return target!;
+                    objects.Add(target!);
                 }
                 nodes.Add((seg.Direction, target));
             }
 
+            var label = shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel);
             for (var i = 0; i < nodes.Count - 1; i++)
             {
                 var from = nodes[i];
@@ -362,12 +363,11 @@ namespace Thousand.Evaluate
                 {
                     var fromName = from.target.Name;
                     var toName = from.target.Name;
-                    var label = shared.Label == null ? null : new IR.StyledText(cascadeFont, shared.Label, shared.JustifyLabel);
 
                     switch (from.direction.Value)
                     {
                         case ArrowKind.Backward:
-                            rootEdges.Add(new(
+                            edges.Add(new(
                                 new IR.Endpoint(toName, to.target, null, anchorStart, offsetStart), 
                                 new IR.Endpoint(fromName, from.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd), 
                                 shared.Stroke, 
@@ -376,7 +376,7 @@ namespace Thousand.Evaluate
                             break;
 
                         case ArrowKind.Forward:
-                            rootEdges.Add(new(
+                            edges.Add(new(
                                 new IR.Endpoint(fromName, from.target, null, anchorStart, offsetStart),
                                 new IR.Endpoint(toName, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
                                 shared.Stroke,
@@ -385,7 +385,7 @@ namespace Thousand.Evaluate
                             break;
 
                         case ArrowKind.Neither:
-                            rootEdges.Add(new(
+                            edges.Add(new(
                                 new IR.Endpoint(fromName, from.target, null, anchorStart, offsetStart),
                                 new IR.Endpoint(toName, to.target, null, anchorEnd, offsetEnd),
                                 shared.Stroke,
@@ -394,7 +394,7 @@ namespace Thousand.Evaluate
                             break;
 
                         case ArrowKind.Both:
-                            rootEdges.Add(new(
+                            edges.Add(new(
                                 new IR.Endpoint(fromName, from.target, MarkerKind.Arrowhead, anchorStart, offsetStart),
                                 new IR.Endpoint(toName, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
                                 shared.Stroke,
@@ -408,12 +408,15 @@ namespace Thousand.Evaluate
                     }
                 }
             }
+
+            return (objects, edges);
         }
 
         private IR.Config ApplyRegionAttributes(IR.Config config, AST.RegionAttribute attribute)
         {
             return attribute switch
             {
+                AST.RegionScaleAttribute rsa => config with { Scale = rsa.Value },
                 AST.RegionFillAttribute rfa => config with { Fill = rfa.Colour },
                 AST.RegionPaddingAttribute rpa => config with { Padding = rpa.Value },
                 AST.RegionGridFlowAttribute rgfa => config with { GridFlow = rgfa.Kind },

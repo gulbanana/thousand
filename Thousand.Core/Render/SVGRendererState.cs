@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 using Thousand.Layout;
 using Thousand.Model;
@@ -8,12 +9,13 @@ namespace Thousand.Render
     internal sealed class SVGRendererState
     {
         private readonly XNamespace xmlns;
-        private readonly decimal scale;
+        private readonly Stack<decimal> scale;
 
-        public SVGRendererState(decimal diagramScale)
+        public SVGRendererState()
         {
             xmlns = "http://www.w3.org/2000/svg";
-            scale = diagramScale;
+            scale = new Stack<decimal>();
+            scale.Push(1m);
         }
 
         public XElement DefineMarker(Colour c) => new XElement(xmlns + "marker",
@@ -26,12 +28,44 @@ namespace Thousand.Render
             new XElement(xmlns + "polygon", new XAttribute("points", "0 8 7 4 0 0"))
         );
 
+        public IEnumerable<XElement> ProcessCommandList(IReadOnlyList<Command> commands)
+        {
+            foreach (var command in commands)
+            {
+                switch (command)
+                {
+                    case Shape shape:
+                        yield return RenderShape(shape);
+                        break;
+
+                    case Line line:
+                        yield return RenderLine(line);
+                        break;
+
+                    case Label label:
+                        yield return RenderLabel(label);
+                        break;
+
+                    case Transform transform:                        
+                        var group = new XElement(xmlns + "g", new XAttribute("transform", $"scale({transform.Scale} {transform.Scale})"));
+                        scale.Push(transform.Scale);
+                        foreach (var tag in ProcessCommandList(transform.Commands))
+                        {
+                            group.Add(tag);
+                        }
+                        scale.Pop();
+                        yield return group;
+                        break;
+                }
+            }
+        }
+
         public XElement RenderShape(Shape shape)
         {
             var tag = CreatePath(shape);
 
             tag.Add(new XAttribute("fill", shape.Fill.SVG()));
-            tag.Add(shape.Stroke.SVG(scale));
+            tag.Add(shape.Stroke.SVG(scale.Peek()));
 
             return tag;
         }
@@ -55,12 +89,12 @@ namespace Thousand.Render
                 tag.Add(new XAttribute("marker-end", $"url(#{DeclareMarker(line.Stroke.Colour)})"));
             }
 
-            tag.Add(line.Stroke.SVG(scale));
+            tag.Add(line.Stroke.SVG(scale.Peek()));
 
             return tag;
         }
 
-        public XElement RenderLabel(LabelBlock label)
+        private XElement RenderLabel(Label label)
         {
             var tag = new XElement(xmlns + "text",
                 new XAttribute("dominant-baseline", "text-before-edge"),

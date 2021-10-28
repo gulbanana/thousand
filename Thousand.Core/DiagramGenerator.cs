@@ -53,12 +53,12 @@ namespace Thousand
                 }
             }
 
-            if (state.HasErrors() || !Evaluate.Evaluator.TryEvaluate(documents, state, out var rules))
+            if (state.HasErrors() || !Evaluate.Evaluator.TryEvaluate(documents, state, out var root))
             {
                 return state.GetErrors();
             }
 
-            if (!Compose.Composer.TryCompose(rules, state, out var diagram))
+            if (!Compose.Composer.TryCompose(root, state, out var diagram))
             {
                 return state.GetErrors();
             }

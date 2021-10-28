@@ -16,6 +16,8 @@ namespace Thousand.API
 
         public static IEnumerable<Definition> All()
         {
+            yield return Definition.Create("scale", Value.CountingDecimal, value => new AST.RegionScaleAttribute(value));
+
             yield return Definition.Create("fill", Value.Colour.OrNull(), value => new AST.RegionFillAttribute(value));
 
             yield return Definition.Create("padding", Value.Border, value => new AST.RegionPaddingAttribute(value));

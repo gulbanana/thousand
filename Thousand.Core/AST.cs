@@ -6,12 +6,9 @@ using Thousand.Model;
 // Intermediate representation shared between Parse and Canonicalise stages
 namespace Thousand.AST
 {
-    /**********************************
-     * Shared AST - mostly attributes *
-     **********************************/
-    public abstract record DiagramAttribute;
-    public record DiagramScaleAttribute(decimal Value) : DiagramAttribute;
-
+    /***********************************************************************************
+     * Attributes - produced from UntypedAttribute as part of the typechecking process *
+     ***********************************************************************************/
     public abstract record TextAttribute;
     public record TextFontFamilyAttribute(string Name) : TextAttribute;
     public record TextFontSizeAttribute(int Value) : TextAttribute;
@@ -44,6 +41,7 @@ namespace Thousand.AST
     public record EntityLabelAttribute(Point? Offset, Text? Content, AlignmentKind? Justify) : EntityAttribute;
 
     public abstract record RegionAttribute;
+    public record RegionScaleAttribute(decimal Value) : RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
     public record RegionPaddingAttribute(Border Value) : RegionAttribute;
 
@@ -83,14 +81,9 @@ namespace Thousand.AST
     public record ArrowOffsetStartAttribute(Point Offset) : ArrowAttribute;
     public record ArrowOffsetEndAttribute(Point Offset) : ArrowAttribute;
 
-    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<EntityAttribute, NodeAttribute, TextAttribute, RegionAttribute> { }
-    [GenerateOneOf] public partial class LineAttribute : OneOfBase<EntityAttribute, ArrowAttribute> { }
-    [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<DiagramAttribute, TextAttribute, RegionAttribute> { }
-
-    public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
-    {
-        public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
-    }
+    [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<RegionAttribute, TextAttribute> { }
+    [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<EntityAttribute, NodeAttribute, RegionAttribute, TextAttribute> { }
+    [GenerateOneOf] public partial class LineAttribute : OneOfBase<EntityAttribute, ArrowAttribute, TextAttribute> { }    
 
     /*****************************************************************************
      * Error-tolerant AST, containing invalid declarations and unresolved macros *
@@ -125,6 +118,10 @@ namespace Thousand.AST
         public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
     }
 
+    public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
+    {
+        public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
+    }
     public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, UntypedAttribute[] Attributes);
 
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }

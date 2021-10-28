@@ -9,37 +9,45 @@ namespace Thousand.Render
 {
     internal class SkiaRenderState
     {
-        public readonly Dictionary<Layout.Shape, SKPath> ShapePaths;
+        private readonly SKCanvas canvas;
 
-        public SkiaRenderState()
+        public SkiaRenderState(SKCanvas canvas)
         {
-            ShapePaths = new();
+            this.canvas = canvas;
         }
 
-        public void PaintDiagram(SKCanvas canvas, Layout.Diagram diagram)
+        public void ProcessCommandList(IReadOnlyList<Layout.Command> commands)
         {
-            canvas.Scale((float)diagram.Scale);
-            canvas.Clear(diagram.Background.SK());
-        }
-
-        public void PaintLabel(SKCanvas canvas, Layout.LabelBlock block)
-        {
-            foreach (var line in block.Lines)
+            foreach (var command in commands)
             {
-                var text = new RichString()
-                    .FontFamily(block.Font.Family)
-                    .FontSize(block.Font.Size)
-                    .TextColor(block.Font.Colour.SK())
-                    .Add(line.Content);
+                switch (command)
+                {
+                    case Layout.Shape shape:
+                        PaintShape(shape);
+                        break;
 
-                text.Paint(canvas, line.Bounds.Origin.SK());
+                    case Layout.Line line:
+                        PaintLine(line);
+                        break;
+
+                    case Layout.Label label:
+                        PaintLabel(label);
+                        break;
+
+                    case Layout.Transform transform:
+                        var saveMatrix = canvas.TotalMatrix;
+                        canvas.Scale((float)transform.Scale);
+                        ProcessCommandList(transform.Commands);
+                        canvas.SetMatrix(saveMatrix);
+                        break;
+                }
             }
         }
 
-        public void PaintShape(SKCanvas canvas, Layout.Shape shape)
+        private void PaintShape(Layout.Shape shape)
         {
-            var path = ShapePaths[shape];
-            
+            var path = SkiaPath.Create(shape);
+
             var fill = new SKPaint { Color = shape.Fill.SK(), IsAntialias = true };
             canvas.DrawPath(path, fill);
 
@@ -54,10 +62,10 @@ namespace Thousand.Render
                 };
 
                 canvas.DrawPath(path, stroke);
-            }                        
+            }
         }
 
-        public void PaintLine(SKCanvas canvas, Layout.Line line)
+        private void PaintLine(Layout.Line line)
         {
             var start = line.Start.SK();
             var end = line.End.SK();
@@ -89,6 +97,20 @@ namespace Thousand.Render
             {
                 var arrowhead = CreateArrowhead(start, end);
                 canvas.DrawPath(arrowhead, fill);
+            }
+        }
+
+        private void PaintLabel(Layout.Label block)
+        {
+            foreach (var line in block.Lines)
+            {
+                var text = new RichString()
+                    .FontFamily(block.Font.Family)
+                    .FontSize(block.Font.Size)
+                    .TextColor(block.Font.Colour.SK())
+                    .Add(line.Content);
+
+                text.Paint(canvas, line.Bounds.Origin.SK());
             }
         }
 

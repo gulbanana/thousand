@@ -19,7 +19,6 @@ namespace Thousand.Parse
          * Base attribute groups, delegated to metadata definitions *
          ************************************************************/
         public static TokenListParser<TokenKind, AST.ArrowAttribute> ArrowAttribute { get; } = Attribute.From(ArrowAttributes.All());
-        public static TokenListParser<TokenKind, AST.DiagramAttribute> DiagramAttribute { get; } = Attribute.From(DiagramAttributes.All());
         public static TokenListParser<TokenKind, AST.EntityAttribute> EntityAttribute { get; } = Attribute.From(EntityAttributes.All());
         public static TokenListParser<TokenKind, AST.NodeAttribute> NodeAttribute { get; } = Attribute.From(NodeAttributes.All());
         public static TokenListParser<TokenKind, AST.RegionAttribute> RegionAttribute { get; } = Attribute.From(RegionAttributes.All());
@@ -29,8 +28,7 @@ namespace Thousand.Parse
          * Attribute group combinations which apply to each class of document entity. *
          ******************************************************************************/
         public static TokenListParser<TokenKind, AST.DocumentAttribute> DocumentAttribute { get; } =
-            DiagramAttribute.Select(x => (AST.DocumentAttribute)x)
-                .Or(RegionAttribute.Select(x => (AST.DocumentAttribute)x))
+            RegionAttribute.Select(x => (AST.DocumentAttribute)x)
                 .Or(TextAttribute.Select(x => (AST.DocumentAttribute)x));
 
         public static TokenListParser<TokenKind, AST.ObjectAttribute> ObjectAttribute { get; } =
