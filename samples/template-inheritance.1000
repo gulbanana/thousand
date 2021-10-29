@@ -1,17 +1,10 @@
-class s($x) [stroke=$x]
+class s($x):object [stroke=$x]
 class f($y) [fill=$y]
 class sred : s(red)
 class both($c) : s($c).f($c)
 
-group [grid=rows] {
+diagram.column {
     sred red-white
     s(green).f(blue) green-blue
     both(yellow) yellow-yellow
 }
-
-class a($x) [stroke=$x]
-class b($y) [fill=$y]
-class c($c) : a($c).b($c)
-class d($z) : c($z)
-
-c(yellow) x // change to d to demonstrate bug

@@ -42,7 +42,7 @@ namespace Thousand.Evaluate
         private Evaluator(GenerationState state)
         {
             this.state = state;
-            rootScope = new("diagram", state);
+            rootScope = new("root", state);
             rootEntities = new();
 
             rootFont = new Font();

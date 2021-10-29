@@ -71,8 +71,6 @@ namespace Thousand.Parse
             // repeatedly resolve concrete classes with template base classes
             var p = 2;
             var pass2AST = Untyped.Document(pass2Tokens);
-            var resolveableDecs = pass2AST.Value.Declarations.Count(d => d.Value.IsT2 && Resolveable(d.Value.AsT2));
-            var lastDecs = 0;
             do
             {
                 if (!pass2AST.HasValue)
@@ -88,18 +86,8 @@ namespace Thousand.Parse
                     return null;
                 }
 
-                lastDecs = resolveableDecs;
                 pass2AST = Untyped.Document(pass2Tokens);
-                resolveableDecs = pass2AST.Value.Declarations.Count(d => d.Value.IsT2 && Resolveable(d.Value.AsT2));
-            } while (!pass2AST.HasValue || (resolveableDecs > 0 && resolveableDecs < lastDecs));
-
-            if (resolveableDecs > 0)
-            {
-                foreach (var dec in pass2AST.Value.Declarations.Where(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)))
-                {
-                    state.AddWarning(dec.Value.AsT2.Name, ErrorKind.Internal, "Macro resolution failed.");
-                }                
-            }
+            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)));
 
             // remove remaining template classes
             var typedAST = new Preprocessor(state, p).Pass3(pass2AST.Value);
@@ -168,6 +156,11 @@ namespace Thousand.Parse
             if (cl != null)
             {
                 ResolveClass(cl.Value);
+                if (!instantiations.Any(kvp => kvp.Value.Any()))
+                {
+                    state.AddError(cl.Value.Name, ErrorKind.Internal, "failed to resolve macro in base classes of {0}.", cl.Value.Name);
+                    return untypedTokens;
+                }
             }
 
             GenerateInstantiations();
@@ -320,6 +313,10 @@ namespace Thousand.Parse
 
                 var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
                 instantiations[(klass.Name.Text, call.Arguments.Length)].Add(instantiation);
+            }
+            else if (call.Arguments.Any())
+            {
+                state.AddErrorEx(call.Name, ErrorKind.Reference, "class {0} is not defined (classes with arguments can only be defined in the root scope)", (call.Name, $"/{call.Arguments.Length}"));
             }
         }
 
