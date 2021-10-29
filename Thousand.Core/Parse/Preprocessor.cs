@@ -71,6 +71,8 @@ namespace Thousand.Parse
             // repeatedly resolve concrete classes with template base classes
             var p = 2;
             var pass2AST = Untyped.Document(pass2Tokens);
+            var resolveableDecs = pass2AST.Value.Declarations.Count(d => d.Value.IsT2 && Resolveable(d.Value.AsT2));
+            var lastDecs = 0;
             do
             {
                 if (!pass2AST.HasValue)
@@ -86,8 +88,18 @@ namespace Thousand.Parse
                     return null;
                 }
 
+                lastDecs = resolveableDecs;
                 pass2AST = Untyped.Document(pass2Tokens);
-            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)));
+                resolveableDecs = pass2AST.Value.Declarations.Count(d => d.Value.IsT2 && Resolveable(d.Value.AsT2));
+            } while (!pass2AST.HasValue || (resolveableDecs > 0 && resolveableDecs < lastDecs));
+
+            if (resolveableDecs > 0)
+            {
+                foreach (var dec in pass2AST.Value.Declarations.Where(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)))
+                {
+                    state.AddWarning(dec.Value.AsT2.Name, ErrorKind.Internal, "Macro resolution failed.");
+                }                
+            }
 
             // remove remaining template classes
             var typedAST = new Preprocessor(state, p).Pass3(pass2AST.Value);

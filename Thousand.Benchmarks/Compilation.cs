@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using System.IO;
+using System.Threading;
 using Thousand.LSP;
 using Thousand.LSP.Analyse;
 
@@ -46,7 +47,7 @@ namespace Thousand.Benchmarks
         [Benchmark]
         public Analysis Interactive()
         {
-            return analysisService.Analyse(options, key: key);
+            return analysisService.Analyse(options, key: key, CancellationToken.None);
         }
     }
 }

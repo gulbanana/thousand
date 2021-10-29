@@ -65,7 +65,15 @@ namespace Thousand.Parse
                     if (result.HasValue)
                     {
                         results.Add(result.Value);
-                        input = result.Remainder;
+
+                        if (input.Position == result.Remainder.Position)
+                        {
+                            break;
+                        }
+                        else
+                        { 
+                            input = result.Remainder;
+                        }
                     }
                     else
                     {

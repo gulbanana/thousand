@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Thousand.Parse;
 
@@ -13,7 +14,7 @@ namespace Thousand.LSP.Analyse
 {
     public class AnalysisService
     {
-        private readonly Dictionary<DocumentUri, Task<Analysis>> analyses = new();
+        private readonly Dictionary<DocumentUri, (Task<Analysis> task, CancellationTokenSource cts)> analyses = new();
         private readonly ILogger<AnalysisService> logger;
         private readonly BufferService documentService;
         private readonly IDiagnosticService diagnosticService;
@@ -49,25 +50,30 @@ namespace Thousand.LSP.Analyse
 
         public void Reparse(DocumentUri key, ServerOptions options)
         {
+            var cts = new CancellationTokenSource();
             lock (analyses)
             {
-                if (!analyses.TryGetValue(key, out var t))
+                if (!analyses.TryGetValue(key, out var pending))
                 {
-                    analyses[key] = Task.Run(() => Analyse(options, key));
+                    analyses[key] = (Task.Run(() => Analyse(options, key, cts.Token)), cts);
                 }
                 else
                 {
-                    if (t.IsCompleted)
+                    if (pending.task.IsCompleted)
                     {
-                        analyses[key] = Task.Run(() => Analyse(options, key));
+                        analyses[key] = (Task.Run(() => Analyse(options, key, cts.Token)), cts);
                     }
                     else
                     {
-                        analyses[key] = Task.Run(async () =>
+                        analyses[key] = (Task.Run(async () =>
                         {
-                            await t;
-                            return Analyse(options, key);
-                        });
+                            await Task.WhenAny(pending.task, Task.Delay(100)); // XXX the problem with this is that it will leave an infinitely looping t looping 
+                            if (!pending.task.IsCompleted)
+                            {
+                                logger.LogWarning($"Hanging analysis leaked for {key}");
+                            }
+                            return Analyse(options, key, cts.Token);
+                        }), cts);
                     }
                 }
             }
@@ -75,10 +81,10 @@ namespace Thousand.LSP.Analyse
 
         public Task<Analysis> GetAnalysisAsync(DocumentUri key)
         {
-            return analyses[key];
+            return analyses[key].task;
         }
 
-        public Analysis Analyse(ServerOptions options, DocumentUri key)
+        public Analysis Analyse(ServerOptions options, DocumentUri key, CancellationToken ct)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -88,7 +94,7 @@ namespace Thousand.LSP.Analyse
 
             try
             {
-                AnalyseSyntax(options, state, doc, key, source);
+                AnalyseSyntax(options, state, doc, key, source, ct);
             }
             catch (Exception e)
             {
@@ -97,6 +103,8 @@ namespace Thousand.LSP.Analyse
 
             stopwatch.Stop();
             logger.LogInformation("Analysed {Uri} in {ElapsedMilliseconds}ms", key, stopwatch.ElapsedMilliseconds);
+
+            if (ct.IsCancellationRequested) return doc;
 
             diagnosticService.Update(key, state);
 
@@ -107,7 +115,7 @@ namespace Thousand.LSP.Analyse
 
             try
             {
-                AnalyseSemantics(doc);
+                AnalyseSemantics(doc, ct);
             }
             catch (Exception e)
             {
@@ -117,7 +125,7 @@ namespace Thousand.LSP.Analyse
             return doc;
         }
 
-        private void AnalyseSyntax(ServerOptions options, GenerationState state, Analysis analysis, DocumentUri uri, string source)
+        private void AnalyseSyntax(ServerOptions options, GenerationState state, Analysis analysis, DocumentUri uri, string source, CancellationToken ct)
         {
             // tokenize the whole document. unlike parsing, this is not line-by-line, so a single
             // ! will result in untypedTokens.Location extending to the end of the document
@@ -142,6 +150,7 @@ namespace Thousand.LSP.Analyse
             }
 
             analysis.Tokens = untypedTokens.Value;
+            if (ct.IsCancellationRequested) return;
 
             // parse the document into an error-tolerant structure which preserves errors as well as valid content
             var untypedAST = Untyped.Document(untypedTokens.Value);
@@ -152,6 +161,7 @@ namespace Thousand.LSP.Analyse
             }
 
             analysis.Main = new ParsedDocument(uri, source, untypedAST.Value);
+            if (ct.IsCancellationRequested) return;
 
             // apply the next stages of parsing, jumping into the pipeline mid-stream
             if (!Preprocessor.TryPreprocess(state, untypedTokens.Value, untypedAST.Value, out var syntax))
@@ -165,6 +175,7 @@ namespace Thousand.LSP.Analyse
             }
 
             analysis.ValidSyntax = typedAST;
+            if (ct.IsCancellationRequested) return;
 
             // generate as much of the diagram as possible
             if (options.NoStandardLibrary)
@@ -175,6 +186,7 @@ namespace Thousand.LSP.Analyse
                 }
 
                 analysis.Root = rules;
+                if (ct.IsCancellationRequested) return;
 
                 if (!Compose.Composer.TryCompose(rules, state, out var diagram))
                 {
@@ -193,6 +205,7 @@ namespace Thousand.LSP.Analyse
                 }
 
                 analysis.Root = rules;
+                if (ct.IsCancellationRequested) return;
 
                 if (!Compose.Composer.TryCompose(rules, state, out var diagram))
                 {
@@ -203,7 +216,7 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        private void AnalyseSemantics(Analysis analysis)
+        private void AnalyseSemantics(Analysis analysis, CancellationToken ct)
         {
             var root = new AnalysisScope();
             
@@ -211,6 +224,8 @@ namespace Thousand.LSP.Analyse
             {
                 Walker.WalkDocument(analysis, analysis.Stdlib, root);
             }
+
+            if (ct.IsCancellationRequested) return;
 
             if (analysis.Main != null)
             {

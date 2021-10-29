@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using System.Linq;
+using System.Threading;
 using Thousand.LSP;
 using Thousand.LSP.Analyse;
 using Thousand.Model;
@@ -25,7 +26,7 @@ namespace Thousand.Tests.LSP
         {
             var key = DocumentUri.From("file://test.1000");
             buffers.Add(key, source);
-            return semantics.Analyse(new ServerOptions(), key);
+            return semantics.Analyse(new ServerOptions(), key, CancellationToken.None);
         }
 
         [Fact]
