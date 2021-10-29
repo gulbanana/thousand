@@ -66,7 +66,7 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.BaseClasses)
             {
-                var klass = scope.FindClass(callMacro.Value.Name);
+                var klass = callMacro.Value == null ? null : scope.FindClass(callMacro.Value.Name);
                 analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
                 if (klass is not null)
                 {
@@ -134,7 +134,7 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in syntax.Classes)
             {
-                var klass = scope.FindClass(callMacro.Value.Name);
+                var klass = callMacro.Value == null ? null : scope.FindClass(callMacro.Value.Name);
                 analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
                 if (klass is not null)
                 {
@@ -202,7 +202,8 @@ namespace Thousand.LSP.Analyse
 
             foreach (var callMacro in syntax.Classes)
             {
-                analysis.ClassReferences.Add(new(doc.Uri, scope.FindClass(callMacro.Value.Name), callMacro));
+                var klass = callMacro.Value == null ? null : scope.FindClass(callMacro.Value.Name);
+                analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
             }
         }
     }

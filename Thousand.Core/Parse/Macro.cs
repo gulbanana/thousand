@@ -10,9 +10,14 @@ namespace Thousand.Parse
     // XXX basically ITemplated with concrete init - extract the interface somehow
     public record Macro(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder)
     {
-        public static TokenListParser<TokenKind, Macro> Empty { get; } = input =>
+        public static TokenListParser<TokenKind, Macro> Empty() => input =>
         {
             return TokenListParserResult.Value(new Macro(input, input), input, input);
+        };
+
+        public static TokenListParser<TokenKind, Macro<T>> Empty<T>(T defaultValue) => input =>
+        {
+            return TokenListParserResult.Value(new Macro<T>(input, input, defaultValue), input, input);
         };
 
         public static TokenListParser<TokenKind, Macro> Raw(params TokenKind[] terminators) => input =>

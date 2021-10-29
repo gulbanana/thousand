@@ -125,11 +125,16 @@ namespace Thousand.Parse
                 state.AddError(invalidDeclaration.Location, Typed.ObjectContent(invalidDeclaration.Location));
             }
 
+            foreach (var missingBaseClass in ast.BaseClasses.Where(d => d.Value == null))
+            {
+                state.AddError(missingBaseClass.Location, Shared.ClassReference(missingBaseClass.Location));
+            }
+
             if (ast.Declarations.Any())
             {
                 return new AST.ObjectClass(
                     ast.Name,
-                    ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                    ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                     ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
                     ast.Declarations.SelectMany(CheckObjectContent).ToArray()
                 );
@@ -141,7 +146,7 @@ namespace Thousand.Parse
                 {
                     return new AST.LineClass(
                         ast.Name,
-                        ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                        ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                         ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
                     );
                 }
@@ -149,7 +154,7 @@ namespace Thousand.Parse
                 {
                     return new AST.ObjectClass(
                         ast.Name,
-                        ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                        ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                         ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
                         ast.Declarations.SelectMany(CheckObjectContent).ToArray()
                     );
@@ -158,7 +163,7 @@ namespace Thousand.Parse
 
             return new AST.ObjectOrLineClass(
                 ast.Name,
-                ast.BaseClasses.Select(c => c.Value.Name).ToArray(),
+                ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                 ast.Attributes.Select(CheckEntityAttribute).WhereNotNull().ToArray()
             );
         }
@@ -170,8 +175,13 @@ namespace Thousand.Parse
                 state.AddError(invalidDeclaration.Location, Typed.ObjectContent(invalidDeclaration.Location));
             }
 
+            foreach (var missingClass in ast.Classes.Where(d => d.Value == null))
+            {
+                state.AddError(missingClass.Location, Shared.ClassReference(missingClass.Location));
+            }
+
             return new AST.TypedObject(
-                ast.Classes.Select(c => c.Value.Name).ToArray(),
+                ast.Classes.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                 ast.Name,
                 ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
                 ast.Declarations.SelectMany(CheckObjectContent).ToArray()
@@ -180,8 +190,13 @@ namespace Thousand.Parse
 
         private AST.TypedLine CheckLine(AST.UntypedLine ast)
         {
+            foreach (var missingClass in ast.Classes.Where(d => d.Value == null))
+            {
+                state.AddError(missingClass.Location, Shared.ClassReference(missingClass.Location));
+            }
+
             return new AST.TypedLine(
-                ast.Classes.Select(c => c.Value.Name).ToArray(),
+                ast.Classes.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                 ast.Segments.Select(s => new AST.LineSegment<AST.TypedObject>(s.Target.Match<OneOf<Identifier, AST.TypedObject>>(x => x, x => CheckObject(x.Value)), s.Direction)).ToArray(),
                 ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
             );

@@ -27,11 +27,14 @@ namespace Thousand.Parse
          * Subclass/object/line parts. *
          *******************************/
 
-        public static TokenListParser<TokenKind, Identifier> ObjectName { get; } =
-            Value.StringIdentifier.Or(Identifier.Any);
+        public static TokenListParser<TokenKind, Identifier> ClassReference { get; } =
+            Identifier.Any.Named("class name");
+
+        public static TokenListParser<TokenKind, Identifier> ObjectReference { get; } =
+            Value.StringIdentifier.Or(Identifier.Any).Named("object name");
 
         public static TokenListParser<TokenKind, Identifier[]> ClassList { get; } =
-            Identifier.Any.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+            ClassReference.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
         public static TokenListParser<TokenKind, Identifier[]> BaseClasses { get; } =
             Token.EqualTo(TokenKind.Colon)
@@ -49,7 +52,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, OneOf<Identifier, T>> SegmentTarget<T>(TokenListParser<TokenKind, T> pT) =>
             Inline(pT).Select(x => (OneOf<Identifier, T>)x)
-                .Or(ObjectName.Select(x => (OneOf<Identifier, T>)x));
+                .Or(ObjectReference.Select(x => (OneOf<Identifier, T>)x));
 
         public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> TerminalSegment<T>(TokenListParser<TokenKind, T> pT) =>
             from dst in SegmentTarget(pT)

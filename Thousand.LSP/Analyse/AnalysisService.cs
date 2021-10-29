@@ -106,7 +106,7 @@ namespace Thousand.LSP.Analyse
 
             if (ct.IsCancellationRequested) return doc;
 
-            diagnosticService.Update(key, state);
+            diagnosticService.Update(key, state, source);
 
             if (doc.Diagram != null)
             {

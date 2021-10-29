@@ -33,7 +33,7 @@ namespace Thousand.LSP
             current.Remove(uri);
         }
 
-        public void Update(DocumentUri uri, GenerationState state)
+        public void Update(DocumentUri uri, GenerationState state, string source)
         {
             if (!current.ContainsKey(uri))
             { 
@@ -50,11 +50,16 @@ namespace Thousand.LSP
                 return;
             }
 
+            var lines = source.Split("\n");
+            var row = lines.Length - 1;
+            var col = lines[lines.Length - 1].Length-1;
+            var endOfFile = new Range(row, col, row, col);
+
             var warnings = state.GetWarnings().Select(w => new Diagnostic
             {
                 Severity = DiagnosticSeverity.Warning,
                 Source = "thousand",
-                Range = w.Span.AsRange(),
+                Range = w.Span.IsAtEnd ? endOfFile : w.Span.AsRange(),
                 Code = w.Kind.ToString(),
                 Message = w.Message
             });
@@ -63,7 +68,7 @@ namespace Thousand.LSP
             {
                 Severity = DiagnosticSeverity.Error,
                 Source = "thousand",
-                Range = w.Span.AsRange(),
+                Range = w.Span.IsAtEnd ? endOfFile : w.Span.AsRange(),
                 Code = w.Kind.ToString(),
                 Message = w.Message
             });

@@ -31,11 +31,12 @@ namespace Thousand.LSP
         {
             var builder = new StringBuilder();
 
-            builder.Append(Canonicalise(ast.Classes.First().Value));
-            foreach (var call in ast.Classes.Skip(1))
+            var classes = ast.Classes.Select(b => b.Value).WhereNotNull();
+            builder.Append(Canonicalise(classes.First()));
+            foreach (var call in classes.Skip(1))
             {
                 builder.Append('.');
-                builder.Append(Canonicalise(call.Value));
+                builder.Append(Canonicalise(call));
             }
 
             if (ast.Name != null)
@@ -57,11 +58,12 @@ namespace Thousand.LSP
         {
             var builder = new StringBuilder();
 
-            builder.Append(Canonicalise(ast.Classes.First().Value));
-            foreach (var call in ast.Classes.Skip(1))
+            var classes = ast.Classes.Select(b => b.Value).WhereNotNull();
+            builder.Append(Canonicalise(classes.First()));
+            foreach (var call in classes.Skip(1))
             {
                 builder.Append('.');
-                builder.Append(Canonicalise(call.Value));
+                builder.Append(Canonicalise(call));
             }
 
             foreach (var segment in ast.Segments)
@@ -118,14 +120,15 @@ namespace Thousand.LSP
                 builder.Append(')');
             }
 
-            if (ast.BaseClasses.Any())
+            var bases = ast.BaseClasses.Select(b => b.Value).WhereNotNull();
+            if (bases.Any())
             {
                 builder.Append(" : ");
-                builder.Append(Canonicalise(ast.BaseClasses.First().Value));
-                foreach (var call in ast.BaseClasses.Skip(1))
+                builder.Append(Canonicalise(bases.First()));
+                foreach (var call in bases.Skip(1))
                 {
                     builder.Append('.');
-                    builder.Append(Canonicalise(call.Value));
+                    builder.Append(Canonicalise(call));
                 }
             }
 

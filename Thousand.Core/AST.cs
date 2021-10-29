@@ -97,10 +97,10 @@ namespace Thousand.AST
 
     public record Argument(Parse.Identifier Name, Parse.Macro? Default);
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall?>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
-    public record UntypedObject(Parse.Macro<ClassCall>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
+    public record UntypedObject(Parse.Macro<ClassCall?>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
     {
         private readonly Lazy<string> typeName = new(() =>
         {
@@ -122,7 +122,7 @@ namespace Thousand.AST
     {
         public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
     }
-    public record UntypedLine(Parse.Macro<ClassCall>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, UntypedAttribute[] Attributes);
+    public record UntypedLine(Parse.Macro<ClassCall?>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, UntypedAttribute[] Attributes);
 
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
     public record UntypedDocument(Parse.Macro<UntypedDocumentContent>[] Declarations);

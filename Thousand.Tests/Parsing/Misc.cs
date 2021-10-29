@@ -130,7 +130,7 @@ bar""");
             var result = Untyped.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Classes.First()?.Value.Name.Text);
+            Assert.Equal("foo", result.Value.Classes.First()?.Value?.Name.Text);
             Assert.Equal(3, result.Value.Classes.First()?.Span().Length);
         }
 
@@ -152,8 +152,8 @@ bar""");
             var result = Untyped.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("line", result.Value.Classes[0].Value.Name.Text);
-            Assert.Single(result.Value.Classes[0].Value.Arguments);
+            Assert.Equal("line", result.Value.Classes[0].Value?.Name.Text);
+            Assert.Single(result.Value.Classes[0].Value?.Arguments);
         }
 
         [Fact]

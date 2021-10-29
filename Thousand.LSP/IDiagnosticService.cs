@@ -7,7 +7,7 @@ namespace Thousand.LSP
     {
         public bool HasDiagnostics(DocumentUri uri, Position position);
         public void Track(DocumentUri uri);
-        public void Update(DocumentUri uri, GenerationState state);
+        public void Update(DocumentUri uri, GenerationState state, string source);
         public void Untrack(DocumentUri uri);
     }
 }

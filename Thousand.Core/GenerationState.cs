@@ -82,7 +82,9 @@ namespace Thousand
 
         public void AddError<T>(TokenList<Parse.TokenKind> tokens, TokenListParserResult<Parse.TokenKind, T> error)
         {
-            var badSpan = error.Location.IsAtEnd ? tokens.Last().Span : error.Location.First().Span;
+            var badSpan = error.Location.IsAtEnd ? 
+                tokens.IsAtEnd ? TextSpan.Empty :
+                tokens.Last().Span : error.Location.First().Span;
             AddError(badSpan, ErrorKind.Syntax, error.FormatErrorMessageFragment());
         }
 

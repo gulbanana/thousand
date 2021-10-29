@@ -207,7 +207,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in Shared.ClassList
-            from name in Shared.ObjectName.AsNullable().OptionalOrDefault()
+            from name in Shared.ObjectReference.AsNullable().OptionalOrDefault()
             from attrs in Shared.List(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
             select new AST.TypedObject(classes, name, attrs, children);

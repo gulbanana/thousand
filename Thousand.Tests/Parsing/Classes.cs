@@ -55,7 +55,7 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value?.Name.Text), "baz");
         }
 
         [Fact]
@@ -66,7 +66,7 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value.Name.Text), "baz");
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value?.Name.Text), "baz");
         }
 
         [Fact]

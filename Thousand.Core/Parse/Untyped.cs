@@ -21,7 +21,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.UntypedAttribute[]> AttributeList { get; } =
             from begin in Token.EqualTo(TokenKind.LeftBracket)
-            from values in Attribute.Or(Macro.Empty.Select(finalValue => new AST.UntypedAttribute(new Identifier("") { Span = finalValue.Span() }, false, finalValue))).ManyDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from values in Attribute.Or(Macro.Empty().Select(finalValue => new AST.UntypedAttribute(new Identifier("") { Span = finalValue.Span() }, false, finalValue))).ManyDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 
@@ -62,8 +62,10 @@ namespace Thousand.Parse
             from arguments in CallArgs.OptionalOrDefault(Array.Empty<Macro>())
             select new AST.ClassCall(name, arguments);
 
-        public static TokenListParser<TokenKind, Macro<AST.ClassCall>[]> ClassCallList { get; } =
-            Macro.Of(ClassCall).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
+        public static TokenListParser<TokenKind, Macro<AST.ClassCall?>[]> ClassCallList { get; } =
+            Macro.Of(ClassCall.AsNullable())
+                .Or(Macro.Empty(default(AST.ClassCall?)))
+                .AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
         /**************************************************************
          * Classes, which may be templates requiring macro-expansion. *
@@ -84,7 +86,7 @@ namespace Thousand.Parse
             from keyword in Token.EqualTo(TokenKind.ClassKeyword)
             from name in Identifier.Any
             from arguments in Macro.Of(ClassArgs.OptionalOrDefault(Array.Empty<AST.Argument>()))
-            from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall>>())
+            from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall?>>())
             from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = Ref(() => ObjectContent!).Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
             from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
@@ -162,7 +164,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.UntypedObject> Object { get; } =
             from classes in ClassCallList
-            from name in Shared.ObjectName.AsNullable().OptionalOrDefault()
+            from name in Shared.ObjectReference.AsNullable().OptionalOrDefault()
             from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = ObjectContent.Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
             from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())

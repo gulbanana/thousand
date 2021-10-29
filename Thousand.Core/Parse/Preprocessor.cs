@@ -97,7 +97,7 @@ namespace Thousand.Parse
 
         private static bool Resolveable(AST.UntypedClass klass)
         {
-            return !klass.Arguments.Value.Any() && klass.BaseClasses.Any(b => b.Value.Arguments.Any());
+            return !klass.Arguments.Value.Any() && klass.BaseClasses.Any(b => b.Value != null && b.Value.Arguments.Any());
         }
 
         private readonly GenerationState state;
@@ -273,8 +273,13 @@ namespace Thousand.Parse
             }
         }
 
-        private void Invoke(Macro<AST.ClassCall> callMacro)
+        private void Invoke(Macro<AST.ClassCall?> callMacro)
         {
+            if (callMacro.Value == null)
+            {
+                return;
+            }
+
             var call = callMacro.Value;
             if (templates.ContainsKey((call.Name.Text, call.Arguments.Length)))
             {
@@ -360,7 +365,7 @@ namespace Thousand.Parse
             }
 
             // substitute variables into base class list
-            foreach (var a in klass.BaseClasses.SelectMany(b => b.Value.Arguments))
+            foreach (var a in klass.BaseClasses.Select(b => b.Value).WhereNotNull().SelectMany(b => b.Arguments))
             {
                 var replacements = new List<Token>();
                 foreach (var token in a.Sequence())
