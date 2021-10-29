@@ -89,6 +89,7 @@ namespace Thousand.AST
      * Error-tolerant AST, containing invalid declarations and unresolved macros *
      *****************************************************************************/
     public record InvalidDeclaration;
+    public record EmptyDeclaration;
 
     public record UntypedAttribute(Parse.Identifier Key, bool HasEqualsSign, Parse.Macro Value)
     {
@@ -99,7 +100,7 @@ namespace Thousand.AST
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
     public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall?>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
-    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
+    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine, EmptyDeclaration> { }
     public record UntypedObject(Parse.Macro<ClassCall?>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
     {
         private readonly Lazy<string> typeName = new(() =>
@@ -124,7 +125,7 @@ namespace Thousand.AST
     }
     public record UntypedLine(Parse.Macro<ClassCall?>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, UntypedAttribute[] Attributes);
 
-    [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine> { }
+    [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine, EmptyDeclaration> { }
     public record UntypedDocument(Parse.Macro<UntypedDocumentContent>[] Declarations);
 
     /****************************************************************

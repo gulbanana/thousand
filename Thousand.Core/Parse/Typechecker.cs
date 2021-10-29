@@ -207,7 +207,8 @@ namespace Thousand.Parse
             x => CheckDocumentAttribute(x) is AST.DocumentAttribute a ? new AST.TypedDocumentContent[] { a } : Array.Empty<AST.TypedDocumentContent>(),
             x => new AST.TypedDocumentContent[] { CheckClass(x) },
             x => new AST.TypedDocumentContent[] { CheckObject(x) },
-            x => new AST.TypedDocumentContent[] { CheckLine(x) }
+            x => new AST.TypedDocumentContent[] { CheckLine(x) },
+            x => Array.Empty<AST.TypedDocumentContent>()
         );
 
         private IEnumerable<AST.TypedObjectContent> CheckObjectContent(Macro<AST.UntypedObjectContent> declaration) => declaration.Value.Match(
@@ -215,7 +216,8 @@ namespace Thousand.Parse
             x => CheckObjectAttribute(x) is AST.ObjectAttribute a ? new AST.TypedObjectContent[] { a } : Array.Empty<AST.TypedObjectContent>(),
             x => new AST.TypedObjectContent[] { CheckClass(x) },
             x => new AST.TypedObjectContent[] { CheckObject(x) },
-            x => new AST.TypedObjectContent[] { CheckLine(x) }
+            x => new AST.TypedObjectContent[] { CheckLine(x) },
+            x => Array.Empty<AST.TypedObjectContent>()
         );
     }
 }

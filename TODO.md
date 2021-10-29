@@ -12,7 +12,7 @@ TO DO
 * syntax: import files?
 * syntax: import templates (not the same as above! applies to the stdlib)
 * feature: line labels (composition+, align vs justify)
-* feature: object offset from position 
+* feature: object/label offset from position (parsed/styled)
 * feature: drop shadows (object/line, though different)
 * feature: customisable arrowheads
 * feature: track-span (maybe)
@@ -23,15 +23,13 @@ TO DO
 * extension: basic browser entry point.. maybe. it wouldn't do much without the language server
 * extension: improve previewer - easier to turn it off, close/open when parent closes/opens, etc
 * extension: preview *features* - export, zoom?
+* extension: reliably turn off editor.wordBasedSuggestions
+* language server: object name completions (basically just lines, but quite important there!)
 * website: fix monaco errors failing to clear
 * website: docs - generated for attrs? or just handwrite it all?
 * website: web components lib (e.g. make it easy to do a lot of previews in the docs)
 * website: attempt wasm. this does make font support an issue, and might require the latest skia, but it seems possible
 * website: get some of the analysis features in - monaco supports a lot of it
-* language server: inline doc (hovers for attribute keys?)
-* language server: completion features 
-* language server: definition/declaration features
-* language server: outline provider
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
@@ -43,6 +41,3 @@ TO DO
 * reconsider name of space/gutter (css calls it gap)
 * runtime colour names
 * document all attributes
-* implement node/label offsets (they are already parsed & styled)
-* improve completions enough to turn off text based ones
-* fix complex inheritance bug in template-inheritance.1000

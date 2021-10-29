@@ -1,6 +1,7 @@
 ﻿using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,37 +42,91 @@ namespace Thousand.Parse
         }
 
         // produces better error messages than ManyDelimitedBy by making some assumptions
-        public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimited<T>(this TokenListParser<TokenKind, T> parser, TokenKind? terminator = null) => originalInput =>
+        public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimited<T>(
+            this TokenListParser<TokenKind, T> parser, 
+            TokenKind? terminator = null,
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null,
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? fallback = null) => originalInput =>
         {
             var results = new List<T>();
+            var provisionalResult = default((T result, TokenList<TokenKind> input)?);
 
             var input = originalInput;
+            var beganLine = default(TokenList<TokenKind>?);
             while (!input.IsAtEnd)
             {
                 var first = input.ConsumeToken();
                 if (!first.HasValue) return TokenListParserResult.Empty<TokenKind, IReadOnlyList<T>>(input, "!IsAtEnd, but no token present");
 
+                // found an alternate terminator
                 if (terminator != null && first.Value.Kind == terminator.Value)
                 {
+                    if (provisionalResult.HasValue)
+                    {
+                        results.Add(provisionalResult.Value.result);
+                        provisionalResult = null;
+                    }
+                    else if (fallback != null && beganLine.HasValue)
+                    {
+                        results.Add(fallback(beganLine.Value, input));
+                    }
+
+                    beganLine = input;
                     break;
                 }
+
+                // found a primary terminator
                 else if (first.Value.Kind == TokenKind.LineSeparator)
                 {
-                    input = first.Remainder;
+                    if (provisionalResult.HasValue)
+                    {
+                        results.Add(provisionalResult.Value.result);
+                        provisionalResult = null;
+                    }
+                    else if (fallback != null && beganLine.HasValue)
+                    {
+                        results.Add(fallback(beganLine.Value, input));
+                    }
+
+                    beganLine = input;
+                    input = first.Remainder;                    
                 }
+
+                // found a trailer - nonterminal tokens after a parsed result. add an invalid result instead and skip to the next line
+                else if (invalid != null && provisionalResult.HasValue)
+                {
+                    var remainder = provisionalResult.Value.input;
+                    while (!remainder.IsAtEnd && remainder.First().Kind != TokenKind.LineSeparator && (!terminator.HasValue || remainder.First().Kind != terminator.Value))
+                    {
+                        remainder = remainder.ConsumeToken().Remainder;
+                    }
+
+                    results.Add(invalid(provisionalResult.Value.input, remainder));
+                    provisionalResult = null;
+                    input = remainder;
+                }
+
+                // attempt to find a result
                 else
                 {
                     var result = parser(input);
                     if (result.HasValue)
                     {
-                        results.Add(result.Value);
+                        if (invalid != null)
+                        {
+                            provisionalResult = (result.Value, input);
+                        }
+                        else
+                        {
+                            results.Add(result.Value);
+                        }
 
                         if (input.Position == result.Remainder.Position)
                         {
                             break;
                         }
                         else
-                        { 
+                        {
                             input = result.Remainder;
                         }
                     }
@@ -80,6 +135,15 @@ namespace Thousand.Parse
                         return TokenListParserResult.CastEmpty<TokenKind, T, IReadOnlyList<T>>(result);
                     }
                 }
+            }
+
+            if (provisionalResult.HasValue)
+            {
+                results.Add(provisionalResult.Value.result);
+            }
+            else if (fallback != null && beganLine.HasValue)
+            {
+                results.Add(fallback(beganLine.Value, input));
             }
 
             return TokenListParserResult.Value<TokenKind, IReadOnlyList<T>>(results, originalInput, input);

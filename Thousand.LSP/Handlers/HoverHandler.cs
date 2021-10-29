@@ -43,7 +43,7 @@ namespace Thousand.LSP.Handlers
                     return new Hover
                     {
                         Range = loc,
-                        Contents = Format.CodeBlock(tooltip)
+                        Contents = new MarkedStringsOrMarkupContent(Format.CodeBlock(tooltip))
                     };
                 }
             }
@@ -57,7 +57,7 @@ namespace Thousand.LSP.Handlers
                     return new Hover
                     {
                         Range = loc,
-                        Contents = Format.CodeBlock(tooltip)
+                        Contents = new MarkedStringsOrMarkupContent(Format.CodeBlock(tooltip))
                     };
                 }
             }
@@ -67,12 +67,11 @@ namespace Thousand.LSP.Handlers
                 foreach (var ctx in analysis.Main.Attributes)
                 {
                     var key = ctx.Syntax.Key;
-                    var loc = key.Span.AsRange();
-                    if (loc.Contains(request.Position) && api.Documentation.ContainsKey(key.Text))
+                    if (ctx.KeyLocation.Contains(request.Position) && api.Documentation.ContainsKey(ctx.Syntax.Key.Text))
                     {
                         return new Hover
                         {
-                            Range = key.Span.AsRange(),
+                            Range = ctx.KeyLocation,
                             Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[key.Text] })
                         };
                     }

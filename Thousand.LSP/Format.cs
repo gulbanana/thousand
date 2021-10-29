@@ -8,9 +8,9 @@ namespace Thousand.LSP
 {
     static class Format
     {
-        public static MarkedStringsOrMarkupContent CodeBlock(string content)
+        public static MarkupContent CodeBlock(string content)
         {
-            return new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = "```\n" + content + "\n```" });
+            return new MarkupContent { Kind = MarkupKind.Markdown, Value = "```\n" + content + "\n```" };
         }
 
         public static string Target(Identifier name)

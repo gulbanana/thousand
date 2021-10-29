@@ -6,16 +6,22 @@ namespace Thousand.LSP.Analyse
 {
     // XXX this duplicates the algorithm (but not the structure) used by Evaluate.Scope
     // there's an irritating tradeoff here between the batch-compilation model and error tolerance
-    sealed class AnalysisScope
+    public sealed class UntypedScope
     {
-        private readonly List<AnalysisScope> children = new();
-        public AnalysisScope? Parent { get; private init; }
+        private readonly string name;
+        private readonly List<UntypedScope> children = new();
+        public UntypedScope? Parent { get; private init; }
         public Dictionary<string, AST.UntypedClass> Classes { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, AST.UntypedObject> Objects { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-        public AnalysisScope Push()
+        public UntypedScope(string name)
         {
-            var result = new AnalysisScope { Parent = this };
+            this.name = name;
+        }
+
+        public UntypedScope Push(string name)
+        {
+            var result = new UntypedScope(name) { Parent = this };
             children.Add(result);
             return result;
         }
@@ -39,14 +45,6 @@ namespace Thousand.LSP.Analyse
         {
             foreach (var child in children)
             {
-                foreach (var c in child.Classes)
-                {
-                    if (!Classes.ContainsKey(c.Key))
-                    {
-                        Classes[c.Key] = c.Value;
-                    }
-                }
-
                 foreach (var o in child.Objects)
                 {
                     if (!Objects.ContainsKey(o.Key))
@@ -87,6 +85,11 @@ namespace Thousand.LSP.Analyse
             {
                 return null;
             }
+        }
+
+        public override string ToString()
+        {
+            return (Parent == null ? "" : Parent.ToString() + "::") + name;
         }
     }
 }

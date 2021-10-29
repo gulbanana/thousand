@@ -218,7 +218,7 @@ namespace Thousand.LSP.Analyse
 
         private void AnalyseSemantics(Analysis analysis, CancellationToken ct)
         {
-            var root = new AnalysisScope();
+            var root = new UntypedScope("root");
             
             if (analysis.Stdlib != null)
             {

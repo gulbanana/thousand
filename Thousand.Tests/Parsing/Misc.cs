@@ -285,6 +285,31 @@ object ""bar""");
         }
 
         [Fact]
+        public void Document_EmptyLines_Untyped()
+        {
+            var tokens = tokenizer.Tokenize(@"class object
+");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(2, result.Value.Declarations.Length);
+        }
+
+        [Fact]
+        public void Document_EmptyLines_Spans()
+        {
+            var tokens = tokenizer.Tokenize(@"class object
+
+");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.Equal(3, result.Value.Declarations.Length);
+            Assert.Equal(1, result.Value.Declarations[1].Location.First().Span.Position.Line);
+            Assert.Equal(2, result.Value.Declarations[2].Location.First().Span.Position.Line);
+        }
+
+        [Fact]
         public void Document_SingleSeparatedLine()
         {
             var tokens = tokenizer.Tokenize(@"object ""foo""; object ""bar""");

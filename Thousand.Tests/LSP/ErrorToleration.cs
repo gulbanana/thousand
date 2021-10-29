@@ -101,7 +101,7 @@ object a
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Main!.Syntax.Declarations);
+            Assert.Single(document.Main!.Syntax.Declarations.Where(d => !d.Value.IsT0 && !d.Value.IsT5));
         }
 
         [Fact(Skip = "not yet implemented")]

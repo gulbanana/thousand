@@ -1,5 +1,6 @@
 ﻿using OneOf;
 using Superpower;
+using Superpower.Model;
 using Superpower.Parsers;
 using System;
 using System.Collections.Generic;
@@ -17,9 +18,9 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 
-        public static TokenListParser<TokenKind, T[]> Scope<T>(TokenListParser<TokenKind, T> pT) =>
+        public static TokenListParser<TokenKind, T[]> Scope<T>(TokenListParser<TokenKind, T> pT, Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null, Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? fallback = null) =>
             from begin in Token.EqualTo(TokenKind.LeftBrace)
-            from decs in pT.ManyOptionalDelimited(terminator: TokenKind.RightBrace)
+            from decs in pT.ManyOptionalDelimited(terminator: TokenKind.RightBrace, invalid: invalid, fallback: fallback)
             from end in Token.EqualTo(TokenKind.RightBrace)
             select decs.ToArray();
 

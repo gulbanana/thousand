@@ -89,7 +89,11 @@ namespace Thousand.Parse
             from bases in Token.EqualTo(TokenKind.Colon).IgnoreThen(ClassCallList).OptionalOrDefault(Array.Empty<Macro<AST.ClassCall?>>())
             from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = Ref(() => ObjectContent!).Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
-            from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
+            from children in Shared.Scope(
+                Macro.Of(declaration),
+                invalid: (input, remainder) => new Macro<AST.UntypedObjectContent>(input, remainder, new AST.InvalidDeclaration()),
+                fallback: (input, remainder) => new Macro<AST.UntypedObjectContent>(input, remainder, new AST.EmptyDeclaration())
+            ).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
             select new AST.UntypedClass(name, arguments, bases, attrs, children);
 
         /*************************************************************************************
@@ -167,7 +171,11 @@ namespace Thousand.Parse
             from name in Shared.ObjectReference.AsNullable().OptionalOrDefault()
             from attrs in AttributeList.OptionalOrDefault(Array.Empty<AST.UntypedAttribute>())
             let declaration = ObjectContent.Try().Or(InvalidDeclaration.Select(x => (AST.UntypedObjectContent)x))
-            from children in Shared.Scope(Macro.Of(declaration)).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
+            from children in Shared.Scope(
+                Macro.Of(declaration),
+                invalid: (input, remainder) => new Macro<AST.UntypedObjectContent>(input, remainder, new AST.InvalidDeclaration()),
+                fallback: (input, remainder) => new Macro<AST.UntypedObjectContent>(input, remainder, new AST.EmptyDeclaration())
+            ).OptionalOrDefault(Array.Empty<Macro<AST.UntypedObjectContent>>())
             select new AST.UntypedObject(classes, name, attrs, children);
 
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
@@ -244,7 +252,9 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.UntypedDocument> Document { get; } =
             Macro.Of(DocumentContent.Try().Or(InvalidDeclaration.Select(x => (AST.UntypedDocumentContent)x)))
-                .ManyOptionalDelimited()
+                .ManyOptionalDelimited(
+                    invalid: (input, remainder) => new Macro<AST.UntypedDocumentContent>(input, remainder, new AST.InvalidDeclaration()),
+                    fallback: (input, remainder) => new Macro<AST.UntypedDocumentContent>(input, remainder, new AST.EmptyDeclaration()))
                 .Select(decs => new AST.UntypedDocument(decs.ToArray()))
                 .AtEnd();
     }

@@ -8,7 +8,7 @@ namespace Thousand.LSP.Analyse
     // XXX this is basically just Evaluator through a kaleidoscope. can/should they be merged?
     class Walker
     {
-        public static void WalkDocument(Analysis analysis, ParsedDocument doc, AnalysisScope root)
+        public static void WalkDocument(Analysis analysis, ParsedDocument doc, UntypedScope root)
         {
             new Walker(analysis, doc, root);
         }
@@ -16,7 +16,7 @@ namespace Thousand.LSP.Analyse
         private readonly Analysis analysis;
         private readonly ParsedDocument doc;
 
-        private Walker(Analysis analysis, ParsedDocument doc, AnalysisScope root)
+        private Walker(Analysis analysis, ParsedDocument doc, UntypedScope root)
         {
             this.analysis = analysis;
             this.doc = doc;
@@ -37,11 +37,14 @@ namespace Thousand.LSP.Analyse
                 }, asLine =>
                 {
                     doc.Symbols.AddRange(WalkLine(root, asLine));
+                }, asEmpty =>
+                {
+                    doc.ClassNames.Add(new(root, dec.Span()));
                 });
             }
         }
 
-        private DocumentSymbol SymbolicateClass(AnalysisScope scope, Macro declaration, AST.UntypedClass syntax)
+        private DocumentSymbol SymbolicateClass(UntypedScope scope, Macro declaration, AST.UntypedClass syntax)
         {
             var result = new DocumentSymbol
             {
@@ -57,7 +60,7 @@ namespace Thousand.LSP.Analyse
             return result;
         }
 
-        private IEnumerable<DocumentSymbol> WalkClass(AnalysisScope scope, AST.UntypedClass ast)
+        private IEnumerable<DocumentSymbol> WalkClass(UntypedScope scope, AST.UntypedClass ast)
         {
             analysis.ClassDefinitions[ast] = new Location { Uri = doc.Uri, Range = ast.Name.Span.AsRange() };
 
@@ -66,11 +69,16 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in ast.BaseClasses)
             {
-                var klass = callMacro.Value == null ? null : scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
-                if (klass is not null)
+                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span() : callMacro.Value.Name.Span));
+
+                if (callMacro.Value != null)
                 {
-                    classes.Add(klass);
+                    var klass = scope.FindClass(callMacro.Value.Name);
+                    analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                    if (klass is not null)
+                    {
+                        classes.Add(klass);
+                    }
                 }
             }
             analysis.ClassClasses[ast] = classes;
@@ -81,7 +89,7 @@ namespace Thousand.LSP.Analyse
                 doc.Attributes.Add(new(attribute, ParentKind.Class, allAttributes));
             }
 
-            var contents = scope.Push();
+            var contents = scope.Push("class "+ast.Name.Text);
             foreach (var dec in ast.Declarations)
             {
                 if (dec.Value.IsT1)
@@ -102,11 +110,15 @@ namespace Thousand.LSP.Analyse
                     {
                         yield return symbol;
                     }
+                } 
+                else if (dec.Value.IsT5)
+                {
+                    doc.ClassNames.Add(new(contents, dec.Span()));
                 }
             }
         }
 
-        private DocumentSymbol SymbolicateObject(AnalysisScope scope, Macro declaration, AST.UntypedObject syntax)
+        private DocumentSymbol SymbolicateObject(UntypedScope scope, Macro declaration, AST.UntypedObject syntax)
         {
             var result = new DocumentSymbol
             {
@@ -122,7 +134,7 @@ namespace Thousand.LSP.Analyse
             return result;
         }
 
-        private IEnumerable<DocumentSymbol> WalkObject(AnalysisScope scope, AST.UntypedObject syntax)
+        private IEnumerable<DocumentSymbol> WalkObject(UntypedScope scope, AST.UntypedObject syntax)
         {
             analysis.ObjectDefinitions[syntax] = new Location { Uri = doc.Uri, Range = (syntax.Name?.Span ?? syntax.TypeSpan).AsRange() };
 
@@ -134,11 +146,16 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in syntax.Classes)
             {
-                var klass = callMacro.Value == null ? null : scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
-                if (klass is not null)
+                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span() : callMacro.Value.Name.Span));
+
+                if (callMacro.Value != null)
                 {
-                    classes.Add(klass);
+                    var klass = scope.FindClass(callMacro.Value.Name);
+                    analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                    if (klass is not null)
+                    {
+                        classes.Add(klass);
+                    }
                 }
             }
             analysis.ObjectClasses[syntax] = classes;
@@ -149,7 +166,7 @@ namespace Thousand.LSP.Analyse
                 doc.Attributes.Add(new(attribute, ParentKind.Object, allAttributes));
             }
 
-            var contents = scope.Push();
+            var contents = scope.Push("object "+ syntax.Name?.Text);
             foreach (var dec in syntax.Declarations)
             {
                 if (dec.Value.IsT1)
@@ -171,10 +188,14 @@ namespace Thousand.LSP.Analyse
                         yield return symbol;
                     }
                 }
+                else if (dec.Value.IsT5)
+                {
+                    doc.ClassNames.Add(new(contents, dec.Span()));
+                }
             }
         }
 
-        IEnumerable<DocumentSymbol> WalkLine(AnalysisScope scope, AST.UntypedLine syntax)
+        IEnumerable<DocumentSymbol> WalkLine(UntypedScope scope, AST.UntypedLine syntax)
         {
             var allAttributes = syntax.Attributes.Select(a => a.Key.Text).Distinct().ToArray();
             if (syntax.Attributes != null)
@@ -202,8 +223,13 @@ namespace Thousand.LSP.Analyse
 
             foreach (var callMacro in syntax.Classes)
             {
-                var klass = callMacro.Value == null ? null : scope.FindClass(callMacro.Value.Name);
-                analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span() : callMacro.Value.Name.Span));
+
+                if (callMacro.Value != null)
+                {
+                    var klass = scope.FindClass(callMacro.Value.Name);
+                    analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                }
             }
         }
     }
