@@ -34,10 +34,9 @@ namespace Thousand.Evaluate
         private readonly GenerationState state;
         private readonly Scope rootScope;
         private readonly List<IR.Entity> rootEntities;
-
         private Font rootFont;
-        public IR.Config Config { get; private set; }
 
+        public IR.Config Config { get; private set; }
         public IReadOnlyList<IR.Entity> Entities => rootEntities;
 
         private Evaluator(GenerationState state)
@@ -47,7 +46,7 @@ namespace Thousand.Evaluate
             rootEntities = new();
 
             rootFont = new Font();
-            Config = new IR.Config(1m, Colour.White, FlowKind.Auto, 0, new(5), new(0), new(new EqualContentSize()), new(AlignmentKind.Center));
+            Config = new IR.Config();
         }
 
         private void AddDocument(AST.TypedDocument diagram)
@@ -136,8 +135,8 @@ namespace Thousand.Evaluate
         private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, Scope scope)
         {
             var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
-            
-            var regionConfig = new IR.Config(1m, null, FlowKind.Auto, 0, new(15), new(0), new(new PackedSize()), new(AlignmentKind.Start));
+
+            var regionConfig = new IR.Config();
 
             // names are a separate thing, but if a node has one, it is also the default label
             var shared = new SharedStyles(node.Name?.Text, AlignmentKind.Center, new Stroke());

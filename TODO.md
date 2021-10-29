@@ -1,10 +1,11 @@
 TO DO
 =====
 
-* bug: fix LSP getting stuck (content modified)
 * bug: use fill-opacity for SVG transparency (https://gitlab.com/inkscape/inbox/-/issues/1195)
 * bug: using diamond as a container seems to be broken somehow
 * bug: (line) anchors and offsets probably don't combine correctly
+* bug: end-padding is broken when scaling - see nested-scaling.1000
+* bug: line edge intersection from center is broken when scaling - see nested-scaling.1000
 * syntax: possible big redo with class->style, possible scope changes - alists should be line scopes; clists should be available for lines and *maybe* the only form. = is : and : is basedon, etc
 * syntax: path names (perhaps use [] for anon)
 * syntax: class contents placeholder inserts - right now it's all prepended (but how would this work with a classlist?)
@@ -20,6 +21,8 @@ TO DO
 * feature: *parent* flow - instead of defaulting to row, default to "row unless i contain rows"
 * extension: download the language server automatically instead of requiring people to dotnet tool install --global Thousand.LSP
 * extension: basic browser entry point.. maybe. it wouldn't do much without the language server
+* extension: improve previewer - easier to turn it off, close/open when parent closes/opens, etc
+* extension: preview *features* - export, zoom?
 * website: fix monaco errors failing to clear
 * website: docs - generated for attrs? or just handwrite it all?
 * website: web components lib (e.g. make it easy to do a lot of previews in the docs)
@@ -32,15 +35,14 @@ TO DO
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
 * bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
-* reevaluate padding algorithm - is it correct to ignore padding when there is no (unanchored) content? we could disable padding for shape=none instead. the current situation may be ok, i just need to think about it
 * consider line caps (butt etc) 
 * regularity control (a square is a regular rectangle) (not so sure about this, it makes the code simpler but the api more complex...). otoh autoregularising shapes confuse me (diamond vs rhombus)
-* do a defaults pass, picking values which produce a nice appearance without customisation
+* do a defaults pass, picking values which produce a nice appearance without customisation - font-size should definitely be 16 probably
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
-* reconsider space/gutter/gap
+* reconsider name of space/gutter (css calls it gap)
 * runtime colour names
-* position -> shared -> entity?
 * document all attributes
 * implement node/label offsets (they are already parsed & styled)
-* diagram is just a class, the root has no defaults
+* improve completions enough to turn off text based ones
+* fix complex inheritance bug in template-inheritance.1000

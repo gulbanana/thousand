@@ -2,16 +2,19 @@ class box [shape=rect, stroke=2, padding=0]
 class box100 : box [shape=octagon,min-width=100, min-height=100]
 class postit : label [shape=rect,fill=#ff8,margin=5]
 
-grid=3 columns
-box { box100 [margin=20] }
-box { box100 [margin=5] }
-box { box100 [margin=0] }
-box { box100 [margin=5] {
-    postit "nne" [anchor=nne]
-} }
-box { box100 [margin=5] {
-    postit "ene" [anchor=ene]
-} }
-box { box100 [margin=5] {
-    postit "ssw" [anchor=ssw]
-} }
+diagram [grid=3 columns] {
+    // XXX implement span in order to add a title here
+
+    box { box100 [margin=20] }
+    box { box100 [margin=5] }
+    box { box100 [margin=0] }
+    box { box100 [margin=5] {
+        postit "nne" [anchor=nne]
+    } }
+    box { box100 [margin=5] {
+        postit "ene" [anchor=ene]
+    } }
+    box { box100 [margin=5] {
+        postit "ssw" [anchor=ssw]
+    } }
+}

@@ -7,7 +7,7 @@ class title : label [font=20, label-align=start]
 class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
 class tline [stroke=red, offset=0 -20]; class bline [stroke=blue, offset=0 20]
 
-column [space=20]  {
+diagram.column [layout=pack]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
 will draw arrowheads at the corresponding ends."
     group [space=40, grid=4 columns] {

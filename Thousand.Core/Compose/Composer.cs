@@ -283,11 +283,7 @@ namespace Thousand.Compose
                 layout.Rows.Add(trackHeight);
             }
 
-            // calculate own size
-            var intrinsicPadding = intrinsicSize == Point.Zero ? new Border(0) : region.Config.Padding;
-            var paddedIntrinsicSize = new Point(intrinsicSize.X + intrinsicPadding.X, intrinsicSize.Y + intrinsicPadding.Y);
-            var regionPadding = rowCount + columnCount + layout.PositionNodes.Count == 0 ? new Border(0) : region.Config.Padding;
-
+            // calculate own size           
             var gridWidth = layout.Columns.Sum() + (columnCount - 1) * region.Config.Gutter.Columns;
             var gridHeight = layout.Rows.Sum() + (rowCount - 1) * region.Config.Gutter.Rows;
 
@@ -295,8 +291,9 @@ namespace Thousand.Compose
             var absoluteWidth = absoluteRects.Select(r => r.Right).Prepend(0).Max();
             var absoluteHeight = absoluteRects.Select(r => r.Bottom).Prepend(0).Max();
 
-            var contentSize = new Point(Math.Max(absoluteWidth, gridWidth) + regionPadding.X, Math.Max(absoluteHeight, gridHeight) + regionPadding.Y);
-            var regionSize = new Point(Math.Max(paddedIntrinsicSize.X, contentSize.X), Math.Max(paddedIntrinsicSize.Y, contentSize.Y));
+            var paddedContentSize = new Point(Math.Max(absoluteWidth, gridWidth) + region.Config.Padding.X, Math.Max(absoluteHeight, gridHeight) + region.Config.Padding.Y);
+            var paddedIntrinsicSize = new Point(intrinsicSize.X + region.Config.Padding.X, intrinsicSize.Y + region.Config.Padding.Y);
+            var regionSize = new Point(Math.Max(paddedIntrinsicSize.X, paddedContentSize.X), Math.Max(paddedIntrinsicSize.Y, paddedContentSize.Y));
             
             return regionSize * region.Config.Scale;
         }

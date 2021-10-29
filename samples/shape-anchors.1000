@@ -1,8 +1,8 @@
-class object [stroke=green 2,font=green]
+class green:object [stroke=green 2,font=green]
 
-object [shape=rect,fill=blue,padding=40,margin=40] {
-    object A
-    object C [anchor=ne]
-    object B
-    object D [anchor=se,fill=red]
+green [shape=rect,fill=blue,padding=40,margin=40] {
+    green A
+    green C [anchor=ne]
+    green B
+    green D [anchor=se,fill=red]
 }

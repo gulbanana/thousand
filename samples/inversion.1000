@@ -1,9 +1,9 @@
-class inverse [fill=black] {
+class inverse:object [fill=black] {
     class line [stroke=white]
-    class object [stroke=white,font=white]
+    class object:object [stroke=white,font=white]
 }
 
-column {
+diagram.column {
     group [gutter=10] {
         object a
         object b 

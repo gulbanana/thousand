@@ -49,7 +49,7 @@
 
     protected override void OnParametersSet()
     {
-        sample = $"samples.{Name??"demo"}.1000";
+        sample = $"samples.{Name??"flowchart"}.1000";
         var file = provider.GetFileInfo(sample);
         using (var sourceStream = file.CreateReadStream())
         {

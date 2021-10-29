@@ -1,22 +1,22 @@
-// XXX rewrite this
-layout=pack; space=25
+class initial:object [fill=#f88]
+class terminal:object [fill=#8f4]
+class choice [shape=rhombus,padding=15 30,fill=#ff7]
 
-class stage [shape=oval, stroke=green, padding=10, min-height=60]
-class platStage : stage [stroke=blue]
-class artefact [shape=square, fill=#eee, padding=10, min-width=70]
+diagram [grid=4 rows, layout=pack, justify=stretch center, gutter=45] {
+    line |initial "Lamp doesn't work"|         
+        -> |choice "Lamp\nplugged in?"|         
+        -> |choice "Bulb\nburned out?"|         
+        -> |terminal "Repair Lamp"|
 
-stage "Tokenize/Parse" 
-artefact AST 
-stage Evaluate
-artefact IR
-stage Compose
-artefact Layout [row=2,col=5]
-// should be grouped
-platStage Measure [row=3,col=3]
-platStage Render [col=5]
-artefact Image
-platStage Encode 
+    line "Lamp\nplugged in?" -> |terminal "Plug in lamp" [row=2]|
 
-line "Tokenize/Parse" -> AST -> Evaluate -> IR -> Compose -> Layout -> Render -> Image -> Encode
-line Evaluate -> Measure [offset=-5 0]
-line Evaluate <- Measure [offset=5 0]
+    line "Bulb\nburned out?" -> |terminal "Replace bulb"|
+
+    class yes:label [label="Yes"]
+    class no:label [label="No"]
+    
+    no [pos=205 125]
+    yes [pos=205 280]
+    yes [pos=110 220]
+    no [pos=110 377]
+}

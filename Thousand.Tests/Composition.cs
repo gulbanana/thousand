@@ -202,7 +202,7 @@ namespace Thousand.Tests
             Assert.True(result, state.JoinErrors());
 
             var textSize = layout!.Commands.OfType<Layout.Label>().ElementAt(0).Bounds.Size;
-            Assert.Equal(Point.Zero, layout.Commands.OfType<Layout.Shape>().ElementAt(0).Bounds.Size);
+            Assert.Equal(new Point(2, 2), layout.Commands.OfType<Layout.Shape>().ElementAt(0).Bounds.Size);
             Assert.Equal(textSize, layout.Commands.OfType<Layout.Shape>().ElementAt(1).Bounds.Size);
             Assert.Equal(textSize + new Point(2, 2), layout.Commands.OfType<Layout.Shape>().ElementAt(2).Bounds.Size);
             Assert.Equal(textSize + new Point(20, 20), layout.Commands.OfType<Layout.Shape>().ElementAt(3).Bounds.Size);
@@ -244,9 +244,9 @@ namespace Thousand.Tests
             var result = Composer.TryCompose(root, state, out var layout);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(new Point(62, 13), new Point(layout!.Width, layout.Height));
+            Assert.Equal(new Point(64, 13), new Point(layout!.Width, layout.Height));
             AssertEx.Sequence(layout!.Commands.OfType<Layout.Shape>().Where(s => s.Kind != ShapeKind.Circle).Select(s => s.Bounds.Size),
-                new Point(0, 0),
+                new Point(2, 2),
                 new Point(10, 11),
                 new Point(20, 10),
                 new Point(12, 12),

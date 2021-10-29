@@ -8,3 +8,10 @@ group [grid=rows] {
     s(green).f(blue) green-blue
     both(yellow) yellow-yellow
 }
+
+class a($x) [stroke=$x]
+class b($y) [fill=$y]
+class c($c) : a($c).b($c)
+class d($z) : c($z)
+
+c(yellow) x // change to d to demonstrate bug

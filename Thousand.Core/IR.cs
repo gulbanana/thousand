@@ -43,7 +43,7 @@ namespace Thousand.IR
 
     public record Config(decimal Scale, Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
-        public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
+        public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Start)) { }
     }
 
     public abstract record Entity;

@@ -1,23 +1,21 @@
 class red [fill=red]; class blue [fill=blue]; class yellow [fill=yellow]
 class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10, padding=0]
 class m3 [margin=3]
+ 
+class header : label [font=24]
+class example : group [margin=5,align=center,justify=center,grid=rows]
+class example($x) : example { header $x }
 
-class area [padding=0, label=none, stroke=none]
-class group : area [margin=5,justify=center, grid=rows]
-class header : label [font=32]
-
-group {
-	header "layout=pack"
-	area.red [grid=3] {
+example("layout=pack") {	
+	group.red [grid=3] {
 		box; box(50); box
 		box(100,50) [col=3]
 		box [col=3]
 	}
 }
 
-group {
-	header "layout=equal-content"
-	area.red [layout=equal-content] {
+example("layout=equal-content") {
+	group.red [layout=equal-content] {
 		box(50,50)
 		box(25,50) [row=3,col=2]
 		box(50,25) [row=4,col=5]
@@ -25,14 +23,14 @@ group {
 	}
 }
 
-group {
-	header "layout=equal-area"
-	area.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
+example {
+	header "layout=equal-group"
+	group.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
 		box(50,50)
 		box(50,50)
 		box(50,50)		
 	}
-	area.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
+	group.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
 		box(50,50)
 		box(50,50)
 		box(50,50)
@@ -40,18 +38,18 @@ group {
 	}
 }
 
-group {
+example {
 	header "layout=fixed(125)"
-	area.red [grid=2, layout=125] {
+	group.red [grid=2, layout=125] {
 		box
 		box
 		box [align=end]
 	}
 }
 
-group [row=2] {
+example [row=2] {
 	header "justify=center"
-	area.blue [justify=center] {
+	group.blue [justify=center] {
 		box [label="j"]
 		column.red {
 			box(50)
@@ -62,9 +60,9 @@ group [row=2] {
 	}
 }
 
-group {
+example {
 	header "align=center/end"
-	area.blue {
+	group.blue {
 		box "a=c" [align=center]
 		column.red {
 			box(50)
@@ -75,9 +73,9 @@ group {
 	}
 }
 
-group {
+example {
 	header "align=stretch"
-	area.blue {
+	group.blue {
 		box "a=c" [align=stretch]
 		column.red {
 			box(50)
@@ -88,18 +86,18 @@ group {
 	}
 }
 
-group {
+example {
 	header "axial alignment"
-	area.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
+	group.blue [grid=3 columns, justify-rows=start, justify-columns=end] {
 		box; box(50,50) [label="s/e"]; box(50,50) [label="s"]
 		box(50,50) [label="s/e"]; box ; box(50,50) [label="s"]
 		box(50,50) [label="e"]; box(50,50) [label="e"]; box(50,50)
 	}
 }
 
-group [row=3] {
+example [row=3] {
 	header "uniform margins"
-	area.yellow [min-height=250] {
+	group.yellow [min-height=250] {
 		box(44).m3
 		box(44).m3
 		box(44).m3
@@ -108,9 +106,9 @@ group [row=3] {
 	}
 }
 
-group {
+example {
 	header "uniform padding"
-	area.yellow [min-height=250,padding=5] {
+	group.yellow [min-height=250,padding=5] {
 		box(48)
 		box(48)
 		box(48)
@@ -119,12 +117,30 @@ group {
 	}
 }
 
-group [row=3] {
+example [row=3] {
 	header "variable margins"
-	area.yellow [min-width=250] {
+	group.yellow [min-width=250] {
 		box(50,250) [margin=0 0 5 0]
 		box(50,230) [margin=0 10 10 10]
 		box(50,210) [margin=0 20 20 20]
 		box(50,190) [margin=0 30]
+	}
+}
+
+// XXX this one sucks
+example("justify vs align") {
+	class content-row [padding=0, gutter=10, layout=content, fill=red]
+	col.blue [min-height=250, layout-rows=equal-area] {
+		content-row [justify=center] {
+			box(20,83.3); box(83.3,83.3); box(40,83.3)
+		}
+
+		content-row [justify=stretch] {
+			box(20,83.3); box(83.3,83.3); box(40,83.3)
+		}
+
+		content-row [justify=stretch] {
+			box(20,83.3) [align=right]; box(83.3,83.3); box(40,83.3)
+		}
 	}
 }

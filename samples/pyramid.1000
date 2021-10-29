@@ -1,7 +1,7 @@
 class piece [label=none, stroke=none, fill=#cfb53b]
 class slice : piece [shape=trapezoid, min-height=40,corner=24]
 
-column [space=19, justify=center] {
+diagram.column [space=19, justify=center] {
     slice [shape=triangle, min-width=60]
     slice [min-width=125]
     slice [min-width=190]

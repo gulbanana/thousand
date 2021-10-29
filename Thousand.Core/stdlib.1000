@@ -1,9 +1,12 @@
-class object [shape=roundrect] // attr only to enforce object-identity
+class object [padding=15]
 class point [shape=none, label=none]
-class label [stroke=none, fill=none, padding=0]
+class label [stroke=none, fill=none]
 
-class line [offset=0 0] // attr only to enforce line-identity
+class line [anchor=none]
 
-class group [shape=rect, stroke=none, label=none, padding=0]
+class group [shape=rect, stroke=none, label=none]
 class row : group [grid-flow=columns]
 class column : group [grid-flow=rows]; class col : column
+
+// some useful defaults for a top-level group
+class diagram : group [fill=white, grid=auto, padding=5, gutter=10, layout=equal-content, justify=center]
