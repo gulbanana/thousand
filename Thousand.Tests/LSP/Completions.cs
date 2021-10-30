@@ -224,5 +224,37 @@ foo f
             var list = handler.GenerateCompletions(analysis, new Position(1, 5));
             Assert.Empty(list.Items);
         }
+
+        [Fact]
+        public void FindObject()
+        {
+            var analysis = Parse(@"object foo
+line foo--foo");
+            
+            var src = handler.GenerateCompletions(analysis, new Position(1, 8));
+            Assert.Single(src.Items);
+            Assert.Contains(src.Items, i => i.Label == "foo");
+
+            var dst = handler.GenerateCompletions(analysis, new Position(1, 13));
+            Assert.Single(dst.Items);
+            Assert.Contains(dst.Items, i => i.Label == "foo");
+        }
+
+        [Fact]
+        public void FindObject_Multiple()
+        {
+            var analysis = Parse(@"object foo; object bar
+line foo--foo");
+
+            var src = handler.GenerateCompletions(analysis, new Position(1, 8));
+            Assert.Equal(2, src.Items.Count());
+            Assert.Contains(src.Items, i => i.Label == "foo");
+            Assert.Contains(src.Items, i => i.Label == "bar");
+
+            var dst = handler.GenerateCompletions(analysis, new Position(1, 13));
+            Assert.Equal(2, dst.Items.Count());
+            Assert.Contains(dst.Items, i => i.Label == "foo");
+            Assert.Contains(dst.Items, i => i.Label == "bar");
+        }
     }
 }

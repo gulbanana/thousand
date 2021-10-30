@@ -17,6 +17,10 @@ namespace Thousand.LSP.Handlers
         private readonly ILogger<CompletionHandler> logger;
         private readonly AnalysisService analysisService;
         private readonly API.Metadata api;
+        private readonly Container<string> commitAttribute = new[] { " ", "=", "]" };
+        private readonly Container<string> commitClass = new[] { " ", ";", ".", "(" };
+        private readonly Container<string> commitKeyword = new[] { " " };
+        private readonly Container<string> commitObject = new[] { " ", "-", "|" };
 
         public CompletionHandler(ILogger<CompletionHandler> logger, API.Metadata api, AnalysisService analysisService)
         {
@@ -72,7 +76,7 @@ namespace Thousand.LSP.Handlers
                                     Label = name,
                                     InsertText = aCtx.Syntax.HasEqualsSign ? name : $"{name}=",
                                     Documentation = candidate.Documentation != null ? new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation } : null,
-                                    CommitCharacters = new[] { " ", "=", "]" }
+                                    CommitCharacters = commitAttribute
                                 });
                             }
                         }
@@ -100,7 +104,7 @@ namespace Thousand.LSP.Handlers
                             Label = candidate.Name.Text,
                             TextEdit = new TextEdit { NewText = completion, Range = location },
                             Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
-                            CommitCharacters = new[] { " ", ";", ".", "(" }
+                            CommitCharacters = commitClass
                         });
                     }
 
@@ -110,7 +114,33 @@ namespace Thousand.LSP.Handlers
                         {
                             Kind = CompletionItemKind.Keyword,
                             Label = "class",
-                            CommitCharacters = new[] { " " }
+                            CommitCharacters = commitKeyword
+                        });
+                    }
+                }
+
+                var oCtx = analysis.Main.ObjectNames.FirstOrDefault(c => c.Location.Contains(position));
+                if (oCtx != null)
+                {
+                    var existing = oCtx.Span.ToStringValue();
+
+                    var candidates = analysis.ObjectDefinitions.Keys;
+                    foreach (var candidate in candidates.Where(c => c.Name != null && oCtx.Scope.FindObject(c.Name) != null))
+                    {
+                        var completion = candidate.Name!.Text;
+                        var existingStart = existing.IndexOf(completion[0]);
+                        var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
+                        var location = new Range(position.Delta(0, -existingLength), position);
+
+                        logger.LogInformation($"suggesting completion: {completion}@{location}");
+
+                        completions.Add(new CompletionItem
+                        {
+                            Kind = CompletionItemKind.Variable,
+                            Label = candidate.Name.Text,
+                            TextEdit = new TextEdit { NewText = completion, Range = location },
+                            Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
+                            CommitCharacters = commitObject
                         });
                     }
                 }

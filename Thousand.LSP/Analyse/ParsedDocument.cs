@@ -12,5 +12,6 @@ namespace Thousand.LSP.Analyse
         public List<DocumentSymbol> Symbols { get; } = new();
         public List<AttributeContext> Attributes { get; } = new();
         public List<ClassNameContext> ClassNames { get; } = new();
+        public List<ObjectNameContext> ObjectNames { get; } = new();
     }
 }
