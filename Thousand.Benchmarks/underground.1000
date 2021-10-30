@@ -48,7 +48,7 @@ org("Victus Indomitus").minor {
 				vampire ruth [label="Ruth Gardener?"] { t-mekhet }
 			}
 			row [layout=area,justify=center] {
-				point vi1; point vi2 point vi3; point vi4; point vi5; point vi6; point; point
+				point vi1; point vi2; point vi3; point vi4; point vi5; point vi6; point; point
 			}
 		}
 
