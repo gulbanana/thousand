@@ -80,13 +80,31 @@ namespace Thousand.Tests.LSP
         }
 
         [Fact]
+        public void FindKeyword()
+        {
+            var analysis = Parse(@"");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 0));
+            Assert.Single(list.Items);
+            Assert.Equal("class", list.Items.Single().Label);
+        }
+
+        [Fact]
+        public void FindKeyword_Partial()
+        {
+            var analysis = Parse(@"cl");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 0));
+            Assert.Single(list.Items);
+            Assert.Equal("class", list.Items.Single().Label);
+        }
+
+        [Fact]
         public void FindClass()
         {
             var analysis = Parse(@"class object
 obj");
             var list = handler.GenerateCompletions(analysis, new Position(1, 3));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -95,9 +113,9 @@ obj");
             var analysis = Parse(@"class a; class b
 obj");
             var list = handler.GenerateCompletions(analysis, new Position(1, 3));
-            Assert.Equal(2, list.Items.Count());
-            Assert.Equal("a", list.Items.First().Label);
-            Assert.Equal("b", list.Items.Last().Label);
+            Assert.Equal(3, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "a");
+            Assert.Contains(list.Items, i => i.Label == "b");
         }
 
         [Fact]
@@ -108,8 +126,8 @@ group {
     obj
 }");
             var list = handler.GenerateCompletions(analysis, new Position(2, 7));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -120,7 +138,7 @@ group {
 }
 obj");
             var list = handler.GenerateCompletions(analysis, new Position(3, 3));
-            Assert.Empty(list.Items);
+            Assert.Single(list.Items);
         }
 
         [Fact]
@@ -131,8 +149,8 @@ obj");
     obj
 }");
             var list = handler.GenerateCompletions(analysis, new Position(2, 7));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -143,8 +161,8 @@ obj");
     
 }");
             var list = handler.GenerateCompletions(analysis, new Position(2, 4));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -154,8 +172,8 @@ obj");
 
 ");
             var list = handler.GenerateCompletions(analysis, new Position(1, 0));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -164,8 +182,8 @@ obj");
             var analysis = Parse(@"class object
 ");
             var list = handler.GenerateCompletions(analysis, new Position(1, 0));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -173,8 +191,8 @@ obj");
         {
             var analysis = Parse(@"class object;");
             var list = handler.GenerateCompletions(analysis, new Position(0, 13));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]
@@ -182,8 +200,8 @@ obj");
         {
             var analysis = Parse(@"class object;;");
             var list = handler.GenerateCompletions(analysis, new Position(0, 13));
-            Assert.Single(list.Items);
-            Assert.Equal("object", list.Items.Single().Label);
+            Assert.Equal(2, list.Items.Count());
+            Assert.Contains(list.Items, i => i.Label == "object");
         }
 
         [Fact]

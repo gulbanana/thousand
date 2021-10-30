@@ -4,7 +4,7 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace Thousand.LSP.Analyse
 {
-    public record ClassNameContext(UntypedScope Scope, TextSpan Span)
+    public record ClassNameContext(UntypedScope Scope, bool IsAtStart, TextSpan Span)
     {
         private Lazy<Range> location = new Lazy<Range>(() => Span.AsRange());
         public Range Location => location.Value;

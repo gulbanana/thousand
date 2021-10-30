@@ -3,7 +3,6 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Superpower.Model;
 using System.Collections.Generic;
 using Thousand.AST;
-using Position = Superpower.Model.Position;
 
 namespace Thousand.LSP.Analyse
 {

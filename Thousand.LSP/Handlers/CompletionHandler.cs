@@ -82,11 +82,12 @@ namespace Thousand.LSP.Handlers
                 var cCtx = analysis.Main.ClassNames.FirstOrDefault(c => c.Location.Contains(position));
                 if (cCtx != null)
                 {
+                    var existing = cCtx.Span.ToStringValue();
+
                     var candidates = analysis.ClassDefinitions.Keys;
                     foreach (var candidate in candidates.Where(c => cCtx.Scope.FindClass(c.Name) != null))
                     {
                         var completion = candidate.Name.Text;
-                        var existing = cCtx.Span.ToStringValue();
                         var existingStart = existing.IndexOf(completion[0]);
                         var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
                         var location = new Range(position.Delta(0, -existingLength), position);
@@ -100,6 +101,16 @@ namespace Thousand.LSP.Handlers
                             TextEdit = new TextEdit { NewText = completion, Range = location },
                             Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
                             CommitCharacters = new[] { " ", ";", ".", "(" }
+                        });
+                    }
+
+                    if (cCtx.IsAtStart)
+                    {
+                        completions.Add(new CompletionItem
+                        {
+                            Kind = CompletionItemKind.Keyword,
+                            Label = "class",
+                            CommitCharacters = new[] { " " }
                         });
                     }
                 }

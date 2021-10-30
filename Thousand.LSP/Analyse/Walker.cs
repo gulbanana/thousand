@@ -44,7 +44,7 @@ namespace Thousand.LSP.Analyse
                     doc.Symbols.AddRange(WalkLine(root, asLine));
                 }, asEmpty =>
                 {
-                    doc.ClassNames.Add(new(root, dec.Span(doc.EndSpan)));
+                    doc.ClassNames.Add(new(root, true, dec.Span(doc.EndSpan)));
                 });
             }
         }
@@ -74,7 +74,7 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in syntax.BaseClasses)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
+                doc.ClassNames.Add(new(scope, false, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
 
                 if (callMacro.Value != null)
                 {
@@ -124,7 +124,7 @@ namespace Thousand.LSP.Analyse
                 } 
                 else if (dec.Value.IsT5)
                 {
-                    doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan)));
+                    doc.ClassNames.Add(new(contents, true, dec.Span(doc.EndSpan)));
                 }
             }
         }
@@ -155,9 +155,10 @@ namespace Thousand.LSP.Analyse
             }
 
             var classes = new List<AST.UntypedClass>();
+            var first = true;
             foreach (var callMacro in syntax.Classes)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
+                doc.ClassNames.Add(new(scope, first, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
 
                 if (callMacro.Value != null)
                 {
@@ -168,6 +169,7 @@ namespace Thousand.LSP.Analyse
                         classes.Add(klass);
                     }
                 }
+                first = false;
             }
             analysis.ObjectClasses[syntax] = classes;
 
@@ -207,7 +209,7 @@ namespace Thousand.LSP.Analyse
                 }
                 else if (dec.Value.IsT5)
                 {
-                    doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan)));
+                    doc.ClassNames.Add(new(contents, true, dec.Span(doc.EndSpan)));
                 }
             }
         }
@@ -244,15 +246,18 @@ namespace Thousand.LSP.Analyse
                 }
             }
 
+            var first = true;
             foreach (var callMacro in syntax.Classes)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
+                doc.ClassNames.Add(new(scope, first, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
 
                 if (callMacro.Value != null)
                 {
                     var klass = scope.FindClass(callMacro.Value.Name);
                     analysis.ClassReferences.Add(new(doc, klass, callMacro));
                 }
+
+                first = false;
             }
         }
     }
