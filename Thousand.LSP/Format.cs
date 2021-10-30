@@ -150,14 +150,14 @@ namespace Thousand.LSP
 
             if (call.Arguments.Any())
             {
-                builder.Append("(");
+                builder.Append('(');
                 builder.Append(call.Arguments.First().SpanOrEmpty().ToStringValue());
                 foreach (var arg in call.Arguments.Skip(1))
                 {
                     builder.Append(", ");
                     builder.Append(arg.SpanOrEmpty().ToStringValue());
                 }
-                builder.Append(")");
+                builder.Append(')');
             }
 
             return builder.ToString();

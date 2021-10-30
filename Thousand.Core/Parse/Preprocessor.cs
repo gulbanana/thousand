@@ -87,7 +87,7 @@ namespace Thousand.Parse
                 }
 
                 pass2AST = Untyped.Document(pass2Tokens);
-            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.Any(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)));
+            } while (!pass2AST.HasValue || pass2AST.Value.Declarations.OfType<IMacro<AST.UntypedClass>>().Any(d => Resolveable(d.Value)));
 
             // remove remaining template classes
             var typedAST = new Preprocessor(state, p).Pass3(pass2AST.Value);
@@ -102,7 +102,7 @@ namespace Thousand.Parse
 
         private readonly GenerationState state;
         private readonly int p;
-        private readonly Dictionary<(string, int), Macro<AST.UntypedClass>> templates;
+        private readonly Dictionary<(string, int), IMacro<AST.UntypedClass>> templates;
         private readonly Dictionary<(string, int), List<Token[]>> instantiations;
         private readonly List<Splice> splices;
 
@@ -124,14 +124,14 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
-            foreach (var o in untypedAST.Declarations.Where(d => d.Value.IsT3).Select(d => d.Value.AsT3))
+            foreach (var o in untypedAST.Declarations.OfType<IMacro<AST.UntypedObject>>())
             {
-                ResolveObject(o);
+                ResolveObject(o.Value);
             }
 
-            foreach (var l in untypedAST.Declarations.Where(d => d.Value.IsT4).Select(d => d.Value.AsT4))
+            foreach (var l in untypedAST.Declarations.OfType<IMacro<AST.UntypedLine>>())
             {
-                ResolveLine(l);
+                ResolveLine(l.Value);
             }
 
             GenerateInstantiations();
@@ -152,7 +152,7 @@ namespace Thousand.Parse
                 return untypedTokens;
             }
 
-            var cl = untypedAST.Declarations.Where(d => d.Value.IsT2 && Resolveable(d.Value.AsT2)).Select(d => d.Select(x => x.AsT2)).LastOrDefault();
+            var cl = untypedAST.Declarations.OfType<IMacro<AST.UntypedClass>>().Where(d => Resolveable(d.Value)).LastOrDefault();
             if (cl != null)
             {
                 ResolveClass(cl.Value);
@@ -183,7 +183,7 @@ namespace Thousand.Parse
         private bool GatherTemplates(AST.UntypedDocument untypedAST)
         {
             var allClasses = new HashSet<(string, int)>();
-            foreach (var klass in untypedAST.Declarations.Where(d => d.Value.IsT2).Select(d => d.Value.AsT2))
+            foreach (var klass in untypedAST.Declarations.OfType<IMacro<AST.UntypedClass>>().Select(d => d.Value))
             {
                 for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
                 {
@@ -195,7 +195,7 @@ namespace Thousand.Parse
                 }
             }
 
-            foreach (var macro in untypedAST.Declarations.Where(d => d.Value.IsT2).Select(d => d.Select(x => x.AsT2)))
+            foreach (var macro in untypedAST.Declarations.OfType<IMacro<AST.UntypedClass>>())
             {
                 var klass = macro.Value;
                 if (!klass.Arguments.Value.Any())
@@ -241,14 +241,14 @@ namespace Thousand.Parse
                 Invoke(call);
             }
 
-            foreach (var child in objekt.Declarations.Where(d => d.Value.IsT3).Select(d => d.Value.AsT3))
+            foreach (var child in objekt.Declarations.OfType<IMacro<AST.UntypedObject>>())
             {
-                ResolveObject(child);
+                ResolveObject(child.Value);
             }
 
-            foreach (var child in objekt.Declarations.Where(d => d.Value.IsT4).Select(d => d.Value.AsT4))
+            foreach (var child in objekt.Declarations.OfType<IMacro<AST.UntypedLine>>())
             {
-                ResolveLine(child);
+                ResolveLine(child.Value);
             }
         }
 
@@ -273,7 +273,7 @@ namespace Thousand.Parse
             }
         }
 
-        private void Invoke(Macro<AST.ClassCall?> callMacro)
+        private void Invoke(IMacro<AST.ClassCall?> callMacro)
         {
             if (callMacro.Value == null)
             {
@@ -325,7 +325,7 @@ namespace Thousand.Parse
             }
         }
 
-        private Token[] Instantiate(Macro<AST.UntypedClass> macro, Token[] name, Dictionary<string, Token[]> substitutions)
+        private Token[] Instantiate(IMacro<AST.UntypedClass> macro, Token[] name, Dictionary<string, Token[]> substitutions)
         {
             var klass = macro.Value;
             var relativeSplices = new List<Splice>();
@@ -443,19 +443,22 @@ namespace Thousand.Parse
             }
         }
 
-        private AST.UntypedDocument RemoveDocumentTemplates(AST.UntypedDocument ast)
+        private static AST.UntypedDocument RemoveDocumentTemplates(AST.UntypedDocument ast)
         {
             return new AST.UntypedDocument(
                 ast.Declarations
-                    .Where(d => !d.Value.IsT2 || d.Value.AsT2.Arguments.Value.Length == 0)
-                    .Select(d => d.Value.IsT2 ? d.Select(x => (AST.UntypedDocumentContent)RemoveClassTemplates(x.AsT2))
-                               : d.Value.IsT3 ? d.Select(x => (AST.UntypedDocumentContent)RemoveObjectTemplates(x.AsT3))
-                               : d)
+                    .Where(d => d.Value is not AST.UntypedClass c || c.Arguments.Value.Length == 0)
+                    .Select(d => d.Select(v => v switch 
+                    { 
+                        AST.UntypedClass c => RemoveClassTemplates(c), 
+                        AST.UntypedObject o => RemoveObjectTemplates(o), 
+                        _ => v 
+                    }))
                     .ToArray()
             );
         }
 
-        private AST.UntypedClass RemoveClassTemplates(AST.UntypedClass ast)
+        private static AST.UntypedClass RemoveClassTemplates(AST.UntypedClass ast)
         {
             return new AST.UntypedClass(
                 ast.Name,
@@ -463,25 +466,31 @@ namespace Thousand.Parse
                 ast.BaseClasses,
                 ast.Attributes,
                 ast.Declarations
-                    .Where(d => !d.Value.IsT2 || d.Value.AsT2.Arguments.Value.Length == 0)
-                    .Select(d => d.Value.IsT2 ? d.Select(x => (AST.UntypedObjectContent)RemoveClassTemplates(x.AsT2))
-                               : d.Value.IsT3 ? d.Select(x => (AST.UntypedObjectContent)RemoveObjectTemplates(x.AsT3))
-                               : d)
+                    .Where(d => d.Value is not AST.UntypedClass c || c.Arguments.Value.Length == 0)
+                    .Select(d => d.Select(v => v switch
+                    {
+                        AST.UntypedClass c => RemoveClassTemplates(c),
+                        AST.UntypedObject o => RemoveObjectTemplates(o),
+                        _ => v
+                    }))
                     .ToArray()
             );
         }
 
-        private AST.UntypedObject RemoveObjectTemplates(AST.UntypedObject ast)
+        private static AST.UntypedObject RemoveObjectTemplates(AST.UntypedObject ast)
         {
             return new AST.UntypedObject(
                 ast.Classes,
                 ast.Name,
                 ast.Attributes,
                 ast.Declarations
-                    .Where(d => !d.Value.IsT2 || d.Value.AsT2.Arguments.Value.Length == 0)
-                    .Select(d => d.Value.IsT2 ? d.Select(x => (AST.UntypedObjectContent)RemoveClassTemplates(x.AsT2))
-                               : d.Value.IsT3 ? d.Select(x => (AST.UntypedObjectContent)RemoveObjectTemplates(x.AsT3))
-                               : d)
+                    .Where(d => d.Value is not AST.UntypedClass c || c.Arguments.Value.Length == 0)
+                    .Select(d => d.Select(v => v switch
+                    {
+                        AST.UntypedClass c => RemoveClassTemplates(c),
+                        AST.UntypedObject o => RemoveObjectTemplates(o),
+                        _ => v
+                    }))
                     .ToArray()
             );
         }

@@ -6,19 +6,19 @@ using System.Linq;
 
 namespace Thousand.Parse
 {
-    public record Macro(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder)
+    public record Macro(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder) : IMacro
     {
-        public static TokenListParser<TokenKind, Macro> Empty() => input =>
+        public static TokenListParser<TokenKind, IMacro> Empty() => input =>
         {
-            return TokenListParserResult.Value(new Macro(input, input), input, input);
+            return TokenListParserResult.Value<TokenKind, IMacro>(new Macro(input, input), input, input);
         };
 
-        public static TokenListParser<TokenKind, Macro<T>> Empty<T>(T defaultValue) => input =>
+        public static TokenListParser<TokenKind, IMacro<T>> Empty<T>(T defaultValue) => input =>
         {
-            return TokenListParserResult.Value(new Macro<T>(input, input, defaultValue), input, input);
+            return TokenListParserResult.Value<TokenKind, IMacro<T>>(new Macro<T>(input, input, defaultValue), input, input);
         };
 
-        public static TokenListParser<TokenKind, Macro> Raw(params TokenKind[] terminators) => input =>
+        public static TokenListParser<TokenKind, IMacro> Raw(params TokenKind[] terminators) => input =>
         {
             var remainder = input;
             while (!remainder.IsAtEnd)
@@ -32,19 +32,19 @@ namespace Thousand.Parse
                 remainder = next.Remainder;
             }
 
-            return TokenListParserResult.Value(new Macro(input, remainder), input, remainder);
+            return TokenListParserResult.Value<TokenKind, IMacro>(new Macro(input, remainder), input, remainder);
         };
 
-        public static TokenListParser<TokenKind, Macro<T>> Of<T>(TokenListParser<TokenKind, T> pT) => input =>
-        {            
+        public static TokenListParser<TokenKind, IMacro<T>> Of<T>(TokenListParser<TokenKind, T> pT) => input =>
+        {
             var t = pT(input);
             if (t.HasValue)
             {
-                return TokenListParserResult.Value(new Macro<T>(input, t.Remainder, t.Value), input, t.Remainder);
+                return TokenListParserResult.Value<TokenKind, IMacro<T>>(new Macro<T>(input, t.Remainder, t.Value), input, t.Remainder);
             }
             else
             {
-                return TokenListParserResult.CastEmpty<TokenKind, T, Macro<T>>(t);
+                return TokenListParserResult.CastEmpty<TokenKind, T, IMacro<T>>(t);
             }
         };
 
@@ -95,9 +95,9 @@ namespace Thousand.Parse
         }
     }
 
-    public record Macro<T>(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder, T Value) : Macro(Location, Remainder)
+    public record Macro<T>(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder, T Value) : Macro(Location, Remainder), IMacro<T>
     {
-        public Macro<U> Select<U>(Func<T, U> f)
+        public IMacro<U> Select<U>(Func<T, U> f)
         {
             return new Macro<U>(Location, Remainder, f(Value));
         }

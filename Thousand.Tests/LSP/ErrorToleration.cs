@@ -44,7 +44,7 @@ line bar -- baz [stroke=blue]");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(4, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(4, document.Main!.Syntax.Declarations.Count(d => d.Value is not AST.InvalidDeclaration));
         }
 
         [Fact]
@@ -65,7 +65,7 @@ template(1) a -- b");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(5, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(5, document.Main!.Syntax.Declarations.Count(d => d.Value is not AST.InvalidDeclaration));
         }
 
         [Fact]
@@ -101,7 +101,7 @@ object a
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Main!.Syntax.Declarations.Where(d => !d.Value.IsT0 && !d.Value.IsT5));
+            Assert.Single(document.Main!.Syntax.Declarations.Where(d => d.Value is not AST.EmptyDeclaration));
         }
 
         [Fact(Skip = "not yet implemented")]
@@ -135,7 +135,7 @@ line bar -- bar [stroke=blue] // good");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => d.Value is not AST.InvalidDeclaration));
             Assert.Equal(3, document.ValidSyntax!.Declarations.Count());
         }
 
@@ -154,7 +154,7 @@ line bar -- baz [stroke=blue] // good");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(3, document.Main!.Syntax.Declarations.Count(d => d.Value is not AST.InvalidDeclaration));
             Assert.Equal(3, document.ValidSyntax!.Declarations.Count());
         }
 
@@ -170,7 +170,7 @@ line bar -- baz [stroke=blue] // good");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(2, document.Main!.Syntax.Declarations.Count(d => !d.Value.IsT0));
+            Assert.Equal(2, document.Main!.Syntax.Declarations.Count(d => d.Value is not AST.InvalidDeclaration));
         }
 
         [Fact]

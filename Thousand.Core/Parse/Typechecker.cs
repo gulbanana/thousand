@@ -97,11 +97,6 @@ namespace Thousand.Parse
             return null;
         }
 
-        private AST.DocumentAttribute? CheckDocumentAttribute(AST.UntypedAttribute ast)
-        {
-            return CheckAttribute(ast, api.DocumentDefinitions, api.DocumentNames);
-        }
-
         private AST.ObjectAttribute? CheckObjectAttribute(AST.UntypedAttribute ast)
         {
             return CheckAttribute(ast, api.ObjectDefinitions, api.ObjectNames);
@@ -119,7 +114,7 @@ namespace Thousand.Parse
 
         private AST.TypedDocument CheckDocument(AST.UntypedDocument ast)
         {
-            foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
+            foreach (var invalidDeclaration in ast.Declarations.OfType<IMacro<AST.InvalidDeclaration>>())
             {
                 state.AddError(invalidDeclaration.Location, endSpan, Typed.DocumentContent(invalidDeclaration.Location));
             }
@@ -131,7 +126,7 @@ namespace Thousand.Parse
 
         private AST.TypedClass CheckClass(AST.UntypedClass ast)
         {
-            foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
+            foreach (var invalidDeclaration in ast.Declarations.OfType<IMacro<AST.InvalidDeclaration>>())
             {
                 state.AddError(invalidDeclaration.Location, endSpan, Typed.ObjectContent(invalidDeclaration.Location));
             }
@@ -191,7 +186,7 @@ namespace Thousand.Parse
 
         private AST.TypedObject CheckObject(AST.UntypedObject ast)
         {
-            foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
+            foreach (var invalidDeclaration in ast.Declarations.OfType<IMacro<AST.InvalidDeclaration>>())
             {
                 state.AddError(invalidDeclaration.Location, endSpan, Typed.ObjectContent(invalidDeclaration.Location));
             }
@@ -233,22 +228,20 @@ namespace Thousand.Parse
             );
         }
 
-        private IEnumerable<AST.TypedDocumentContent> CheckDocumentContent(Macro<AST.UntypedDocumentContent> declaration) => declaration.Value.Match(
-            _ => Array.Empty<AST.TypedDocumentContent>(),
-            x => CheckDocumentAttribute(x) is AST.DocumentAttribute a ? new AST.TypedDocumentContent[] { a } : Array.Empty<AST.TypedDocumentContent>(),
-            x => new AST.TypedDocumentContent[] { CheckClass(x) },
-            x => new AST.TypedDocumentContent[] { CheckObject(x) },
-            x => new AST.TypedDocumentContent[] { CheckLine(x) },
-            x => Array.Empty<AST.TypedDocumentContent>()
-        );
+        private IEnumerable<AST.TypedDocumentContent> CheckDocumentContent(IMacro<AST.UntypedDeclaration> declaration) => declaration.Value switch
+        {
+            AST.UntypedClass c => new AST.TypedDocumentContent[] { CheckClass(c) },
+            AST.UntypedObject o => new AST.TypedDocumentContent[] { CheckObject(o) },
+            AST.UntypedLine l => new AST.TypedDocumentContent[] { CheckLine(l) },
+            _ => Array.Empty<AST.TypedDocumentContent>()
+        };
 
-        private IEnumerable<AST.TypedObjectContent> CheckObjectContent(Macro<AST.UntypedObjectContent> declaration) => declaration.Value.Match(
-            _ => Array.Empty<AST.TypedObjectContent>(),
-            x => CheckObjectAttribute(x) is AST.ObjectAttribute a ? new AST.TypedObjectContent[] { a } : Array.Empty<AST.TypedObjectContent>(),
-            x => new AST.TypedObjectContent[] { CheckClass(x) },
-            x => new AST.TypedObjectContent[] { CheckObject(x) },
-            x => new AST.TypedObjectContent[] { CheckLine(x) },
-            x => Array.Empty<AST.TypedObjectContent>()
-        );
+        private IEnumerable<AST.TypedObjectContent> CheckObjectContent(IMacro<AST.UntypedDeclaration> declaration) => declaration.Value switch
+        { 
+            AST.UntypedClass c => new AST.TypedObjectContent[] { CheckClass(c) },
+            AST.UntypedObject o => new AST.TypedObjectContent[] { CheckObject(o) },
+            AST.UntypedLine l => new AST.TypedObjectContent[] { CheckLine(l) },
+            _ => Array.Empty<AST.TypedObjectContent>()
+        };
     }
 }

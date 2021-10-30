@@ -90,15 +90,16 @@ namespace Thousand.AST
     /*****************************************************************************
      * Error-tolerant AST, containing invalid declarations and unresolved macros *
      *****************************************************************************/
-    public record InvalidDeclaration;
-    public record EmptyDeclaration;
+    public abstract record UntypedDeclaration;
+    public record InvalidDeclaration : UntypedDeclaration;
+    public record EmptyDeclaration : UntypedDeclaration;
 
-    public record UntypedAttribute(Parse.Identifier? Key, bool HasEqualsSign, Parse.Macro Value)
+    public record UntypedAttribute(Parse.Identifier? Key, bool HasEqualsSign, Parse.IMacro Value)
     {
         public bool HasValue => Value.Location.Position < Value.Remainder.Position;
     }
 
-    public record Attributes(Parse.Macro<bool> IsComplete, params UntypedAttribute[] Values) : IReadOnlyList<UntypedAttribute>
+    public record Attributes(Parse.IMacro<bool> IsComplete, params UntypedAttribute[] Values) : IReadOnlyList<UntypedAttribute>
     {
         public UntypedAttribute this[int index] => ((IReadOnlyList<UntypedAttribute>)Values)[index];
         public int Count => ((IReadOnlyCollection<UntypedAttribute>)Values).Count;
@@ -106,12 +107,11 @@ namespace Thousand.AST
         IEnumerator IEnumerable.GetEnumerator() => Values.GetEnumerator();
     }
 
-    public record Argument(Parse.Identifier Name, Parse.Macro? Default);
-    public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall?>[] BaseClasses, Attributes Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
+    public record Argument(Parse.Identifier Name, Parse.IMacro? Default);
+    public record ClassCall(Parse.Identifier Name, Parse.IMacro[] Arguments); // XXX it would be nice if inheritance could call classes
+    public record UntypedClass(Parse.Identifier Name, Parse.IMacro<Argument[]> Arguments, Parse.IMacro<ClassCall?>[] BaseClasses, Attributes Attributes, Parse.IMacro<UntypedDeclaration>[] Declarations) : UntypedDeclaration;
 
-    [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine, EmptyDeclaration> { }
-    public record UntypedObject(Parse.Macro<ClassCall?>[] Classes, Parse.Identifier? Name, Attributes Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
+    public record UntypedObject(Parse.IMacro<ClassCall?>[] Classes, Parse.Identifier? Name, Attributes Attributes, Parse.IMacro<UntypedDeclaration>[] Declarations) : UntypedDeclaration
     {
         private readonly Lazy<string> typeName = new(() =>
         {
@@ -133,10 +133,9 @@ namespace Thousand.AST
     {
         public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
     }
-    public record UntypedLine(Parse.Macro<ClassCall?>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, Attributes Attributes);
+    public record UntypedLine(Parse.IMacro<ClassCall?>[] Classes, LineSegment<Parse.IMacro<UntypedObject>>[] Segments, Attributes Attributes) : UntypedDeclaration;
 
-    [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine, EmptyDeclaration> { }
-    public record UntypedDocument(Parse.Macro<UntypedDocumentContent>[] Declarations);
+    public record UntypedDocument(Parse.IMacro<UntypedDeclaration>[] Declarations);
 
     /****************************************************************
      * Strict AST, with macros resolved and attributes fully parsed *

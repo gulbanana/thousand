@@ -102,9 +102,7 @@ namespace Thousand.Evaluate
 
         public IR.Object? FindObject(Parse.Identifier name)
         {
-            var result = default(IR.Object?);
-
-            if (!canonicalObjects.TryGetValue(name.Text, out result) && !bubbledObjects.TryGetValue(name.Text, out result) && Parent != null)
+            if (!canonicalObjects.TryGetValue(name.Text, out var result) && !bubbledObjects.TryGetValue(name.Text, out result) && Parent != null)
             {
                 result = Parent.FindObject(name);
             }

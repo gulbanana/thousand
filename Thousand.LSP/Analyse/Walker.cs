@@ -21,35 +21,30 @@ namespace Thousand.LSP.Analyse
             this.analysis = analysis;
             this.doc = doc;
 
-            var allAttributes = doc.Syntax.Declarations.Where(d => d.Value.IsT1)
-                .Select(a => a.Value.AsT1.Key)
-                .WhereNotNull()
-                .Select(k => k.Text)
-                .Distinct()
-                .ToArray();
-
             foreach (var dec in doc.Syntax.Declarations)
             {
-                dec.Value.Switch(invalid => { }, asAttribute =>
+                switch (dec.Value)
                 {
-                    doc.Attributes.Add(new(asAttribute, ParentKind.Document, allAttributes, doc.EndSpan));
-                }, asClass =>
-                {
-                    doc.Symbols.Add(SymbolicateClass(root, dec, asClass));
-                }, asObject =>
-                {
-                    doc.Symbols.Add(SymbolicateObject(root, dec, asObject));
-                }, asLine =>
-                {
-                    doc.Symbols.AddRange(WalkLine(root, asLine));
-                }, asEmpty =>
-                {
-                    doc.ClassNames.Add(new(root, dec.Span(doc.EndSpan), true));
-                });
+                    case AST.UntypedClass asClass:
+                        doc.Symbols.Add(SymbolicateClass(root, dec, asClass));
+                        break;
+
+                    case AST.UntypedObject asObject:
+                        doc.Symbols.Add(SymbolicateObject(root, dec, asObject));
+                        break;
+
+                    case AST.UntypedLine asLine:
+                        doc.Symbols.AddRange(WalkLine(root, asLine));
+                        break;
+
+                    case AST.EmptyDeclaration asEmpty:
+                        doc.ClassNames.Add(new(root, dec.Span(doc.EndSpan), true));
+                        break;
+                }
             }
         }
 
-        private DocumentSymbol SymbolicateClass(UntypedScope scope, Macro declaration, AST.UntypedClass syntax)
+        private DocumentSymbol SymbolicateClass(UntypedScope scope, IMacro declaration, AST.UntypedClass syntax)
         {
             var result = new DocumentSymbol
             {
@@ -89,7 +84,6 @@ namespace Thousand.LSP.Analyse
             analysis.ClassClasses[syntax] = classes;
 
             var allAttributes = syntax.Attributes
-                .Concat(syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1))
                 .Select(a => a.Key)
                 .WhereNotNull()
                 .Select(k => k.Text)
@@ -103,33 +97,31 @@ namespace Thousand.LSP.Analyse
             var contents = scope.Push("class "+syntax.Name.Text);
             foreach (var dec in syntax.Declarations)
             {
-                if (dec.Value.IsT1)
+                switch (dec.Value)
                 {
-                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Class, allAttributes, doc.EndSpan));
-                }
-                else if (dec.Value.IsT2)
-                {
-                    yield return SymbolicateClass(contents, dec, dec.Value.AsT2);
-                }
-                else if (dec.Value.IsT3)
-                {
-                    yield return SymbolicateObject(contents, dec, dec.Value.AsT3);
-                }
-                else if (dec.Value.IsT4)
-                {
-                    foreach (var symbol in WalkLine(contents, dec.Value.AsT4))
-                    {
-                        yield return symbol;
-                    }
-                } 
-                else if (dec.Value.IsT5)
-                {
-                    doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan), true));
+                    case AST.UntypedClass asClass:
+                        yield return SymbolicateClass(contents, dec, asClass);
+                        break;
+
+                    case AST.UntypedObject asObject:
+                        yield return SymbolicateObject(contents, dec, asObject);
+                        break;
+
+                    case AST.UntypedLine asLine:
+                        foreach (var symbol in WalkLine(contents, asLine))
+                        {
+                            yield return symbol;
+                        }
+                        break;
+
+                    case AST.EmptyDeclaration:
+                        doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan), true));
+                        break;
                 }
             }
         }
 
-        private DocumentSymbol SymbolicateObject(UntypedScope scope, Macro declaration, AST.UntypedObject syntax)
+        private DocumentSymbol SymbolicateObject(UntypedScope scope, IMacro declaration, AST.UntypedObject syntax)
         {
             var result = new DocumentSymbol
             {
@@ -175,7 +167,6 @@ namespace Thousand.LSP.Analyse
             analysis.ObjectClasses[syntax] = classes;
 
             var allAttributes = syntax.Attributes
-                .Concat(syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1))
                 .Select(a => a.Key)
                 .WhereNotNull()
                 .Select(k => k.Text)
@@ -189,28 +180,26 @@ namespace Thousand.LSP.Analyse
             var contents = scope.Push("object "+ syntax.Name?.Text);
             foreach (var dec in syntax.Declarations)
             {
-                if (dec.Value.IsT1)
+                switch (dec.Value)
                 {
-                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Object, allAttributes, doc.EndSpan));
-                }
-                else if (dec.Value.IsT2)
-                {
-                    yield return SymbolicateClass(contents, dec, dec.Value.AsT2);
-                }
-                else if (dec.Value.IsT3)
-                {
-                    yield return SymbolicateObject(contents, dec, dec.Value.AsT3);
-                }
-                else if (dec.Value.IsT4)
-                {
-                    foreach (var symbol in WalkLine(contents, dec.Value.AsT4))
-                    {
-                        yield return symbol;
-                    }
-                }
-                else if (dec.Value.IsT5)
-                {
-                    doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan), true));
+                    case AST.UntypedClass asClass:
+                        yield return SymbolicateClass(contents, dec, asClass);
+                        break;
+
+                    case AST.UntypedObject asObject:
+                        yield return SymbolicateObject(contents, dec, asObject);
+                        break;
+
+                    case AST.UntypedLine asLine:
+                        foreach (var symbol in WalkLine(contents, asLine))
+                        {
+                            yield return symbol;
+                        }
+                        break;
+
+                    case AST.EmptyDeclaration:
+                        doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan), true));
+                        break;
                 }
             }
         }

@@ -314,7 +314,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.AttributeList(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(2, result.Value.Count());
+            Assert.Equal(2, result.Value.Count);
         }
     }
 }

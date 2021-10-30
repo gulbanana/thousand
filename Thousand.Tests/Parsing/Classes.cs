@@ -211,7 +211,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Single(result.Value.Declarations.Where(d => d.Value.IsT2));
+            Assert.Single(result.Value.Declarations.Where(d => d.Value is AST.UntypedClass));
         }
 
         [Fact]

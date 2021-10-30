@@ -15,7 +15,7 @@ namespace Thousand.LSP.Analyse
             range = new Lazy<Range>(() => location.Span.AsRange());
         }
 
-        public Located(ParsedDocument doc, T value, Macro location) : base(doc.Uri, value)
+        public Located(ParsedDocument doc, T value, IMacro location) : base(doc.Uri, value)
         {
             range = new Lazy<Range>(() => location.Span(doc.EndSpan).AsRange());
         }
