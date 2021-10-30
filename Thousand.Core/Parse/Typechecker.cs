@@ -1,5 +1,6 @@
 ﻿using OneOf;
 using Superpower;
+using Superpower.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -10,12 +11,12 @@ namespace Thousand.Parse
     // Invariant: accepts only untyped AST which has already been preprocessed. Will fail hard on unpreprocessed input!
     public class Typechecker
     {
-        public static bool TryTypecheck(API.Metadata api, GenerationState state, AST.UntypedDocument inputAST, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
+        public static bool TryTypecheck(API.Metadata api, GenerationState state, AST.UntypedDocument inputAST, TextSpan inputEnd, bool allowErrors, [NotNullWhen(true)] out AST.TypedDocument? outputAST)
         {
             try
             {
                 var errors = state.ErrorCount();
-                outputAST = new Typechecker(api, state).CheckDocument(inputAST);
+                outputAST = new Typechecker(api, state, inputEnd).CheckDocument(inputAST);
                 return allowErrors || state.ErrorCount() == errors;
             }
             catch (Exception e)
@@ -29,18 +30,27 @@ namespace Thousand.Parse
 
         private readonly API.Metadata api;
         private readonly GenerationState state;
+        private readonly TextSpan endSpan;
 
-        private Typechecker(API.Metadata api, GenerationState state)
+        private Typechecker(API.Metadata api, GenerationState state, TextSpan endSpan)
         {
             this.api = api;
             this.state = state;
+            this.endSpan = endSpan;
         }
 
         private T? CheckAttribute<T>(AST.UntypedAttribute ast, TokenListParser<TokenKind, T> pT) where T : class
         {
             if (!ast.HasValue)
             {
-                state.AddError(ast.Value.Span(), ErrorKind.Syntax, $"attribute has no value");
+                if (ast.Key != null)
+                {
+                    state.AddError(ast.Key, ErrorKind.Syntax, $"attribute {{0}} has no value", ast.Key);
+                }
+                else
+                {
+                    state.AddError(ast.Value.Span(endSpan), ErrorKind.Syntax, $"attribute has no value");
+                }
                 return null;
             }
 
@@ -60,16 +70,17 @@ namespace Thousand.Parse
             }
             else
             {
-                state.AddError(ast.Value.Location, parse);
+                state.AddError(ast.Value.Location, endSpan, parse);
                 return null;
             }
         }
 
         private T? CheckAttribute<T>(AST.UntypedAttribute ast, IEnumerable<API.AttributeDefinition<T>> metadata, IEnumerable<string> validNames) where T : class
         {
-            if (string.IsNullOrEmpty(ast.Key.Text))
+            // XXX this will produce a bad error position
+            if (string.IsNullOrEmpty(ast.Key?.Text))
             {
-                state.AddError(ast.Key, ErrorKind.Syntax, "expected attribute");
+                state.AddError(ast.Key?.Span ?? ast.Value.Span(endSpan), ErrorKind.Syntax, "expected attribute");
                 return null;
             }
 
@@ -110,7 +121,7 @@ namespace Thousand.Parse
         {
             foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                state.AddError(invalidDeclaration.Location, Typed.DocumentContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, endSpan, Typed.DocumentContent(invalidDeclaration.Location));
             }
 
             return new AST.TypedDocument(
@@ -122,12 +133,12 @@ namespace Thousand.Parse
         {
             foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                state.AddError(invalidDeclaration.Location, Typed.ObjectContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, endSpan, Typed.ObjectContent(invalidDeclaration.Location));
             }
 
             foreach (var missingBaseClass in ast.BaseClasses.Where(d => d.Value == null))
             {
-                state.AddError(missingBaseClass.Location, Shared.ClassReference(missingBaseClass.Location));
+                state.AddError(missingBaseClass.Location, endSpan, Shared.ClassReference(missingBaseClass.Location));
             }
 
             if (ast.Declarations.Any())
@@ -142,6 +153,11 @@ namespace Thousand.Parse
 
             foreach (var attr in ast.Attributes)
             {
+                if (attr.Key == null)
+                {
+                    state.AddError(attr.Value.Span(endSpan), ErrorKind.Syntax, "expected attribute");
+                    continue;
+                }
                 if (api.LineOnlyNames.Contains(attr.Key.Text)) 
                 {
                     return new AST.LineClass(
@@ -161,6 +177,11 @@ namespace Thousand.Parse
                 }
             }
 
+            if (!ast.Attributes.IsComplete.Value)
+            {
+                state.AddError(ast.Attributes.IsComplete.Span(endSpan), ErrorKind.Syntax, "expected `]`");
+            }
+
             return new AST.ObjectOrLineClass(
                 ast.Name,
                 ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
@@ -172,12 +193,17 @@ namespace Thousand.Parse
         {
             foreach (var invalidDeclaration in ast.Declarations.Where(d => d.Value.IsT0))
             {
-                state.AddError(invalidDeclaration.Location, Typed.ObjectContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, endSpan, Typed.ObjectContent(invalidDeclaration.Location));
             }
 
             foreach (var missingClass in ast.Classes.Where(d => d.Value == null))
             {
-                state.AddError(missingClass.Location, Shared.ClassReference(missingClass.Location));
+                state.AddError(missingClass.Location, endSpan, Shared.ClassReference(missingClass.Location));
+            }
+
+            if (!ast.Attributes.IsComplete.Value)
+            {
+                state.AddError(ast.Attributes.IsComplete.Span(endSpan), ErrorKind.Syntax, "expected `]`");
             }
 
             return new AST.TypedObject(
@@ -192,7 +218,12 @@ namespace Thousand.Parse
         {
             foreach (var missingClass in ast.Classes.Where(d => d.Value == null))
             {
-                state.AddError(missingClass.Location, Shared.ClassReference(missingClass.Location));
+                state.AddError(missingClass.Location, endSpan, Shared.ClassReference(missingClass.Location));
+            }
+
+            if (!ast.Attributes.IsComplete.Value)
+            {
+                state.AddError(ast.Attributes.IsComplete.Span(endSpan), ErrorKind.Syntax, "expected `]`");
             }
 
             return new AST.TypedLine(

@@ -38,13 +38,16 @@ namespace Thousand.LSP.Analyse
 
             var stdlibState = new GenerationState();
             var stdlibSource = DiagramGenerator.ReadStdlib();
-            if (!Preprocessor.TryPreprocess(stdlibState, DiagramGenerator.ReadStdlib(), out var stdlibSyntax) || !Typechecker.TryTypecheck(api, stdlibState, stdlibSyntax, allowErrors: false, out typedStdlib))
+            var stdlibEnd = Shared.GetEnd(stdlibSource);
+            var stdlibTokens = tokenizer.TryTokenize(stdlibSource);
+            if (!stdlibTokens.HasValue || !Preprocessor.TryPreprocess(stdlibState, stdlibEnd, stdlibTokens.Value, out var stdlibSyntax) 
+                                       || !Typechecker.TryTypecheck(api, stdlibState, stdlibSyntax, stdlibEnd, allowErrors: false, out typedStdlib))
             {
                 logger.LogError($"Failed to parse stdlib: {stdlibState.JoinErrors()}");
             }
             else
             {
-                stdlib = new ParsedDocument(new DocumentUri("thousand", null, "stdlib.1000", null, null), stdlibSource, stdlibSyntax);
+                stdlib = new ParsedDocument(new DocumentUri("thousand", null, "stdlib.1000", null, null), stdlibEnd, stdlibSyntax);
             }
         }
 
@@ -153,23 +156,24 @@ namespace Thousand.LSP.Analyse
             if (ct.IsCancellationRequested) return;
 
             // parse the document into an error-tolerant structure which preserves errors as well as valid content
+            var end = Shared.GetEnd(source);
             var untypedAST = Untyped.Document(untypedTokens.Value);
             if (!untypedAST.HasValue || !untypedAST.Remainder.IsAtEnd)
             {
-                state.AddError(untypedTokens.Value, untypedAST);
+                state.AddError(untypedTokens.Value, end, untypedAST);
                 return;
             }
 
-            analysis.Main = new ParsedDocument(uri, source, untypedAST.Value);
+            analysis.Main = new ParsedDocument(uri, end, untypedAST.Value);
             if (ct.IsCancellationRequested) return;
 
             // apply the next stages of parsing, jumping into the pipeline mid-stream
-            if (!Preprocessor.TryPreprocess(state, untypedTokens.Value, untypedAST.Value, out var syntax))
+            if (!Preprocessor.TryPreprocess(state, analysis.Main.EndSpan, untypedTokens.Value, untypedAST.Value, out var syntax))
             {
                 return;
             }
 
-            if (!Typechecker.TryTypecheck(api, state, syntax, allowErrors: true, out var typedAST))
+            if (!Typechecker.TryTypecheck(api, state, syntax, analysis.Main.EndSpan, allowErrors: true, out var typedAST))
             {
                 return;
             }

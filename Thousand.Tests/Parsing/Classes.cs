@@ -221,7 +221,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Single(result.Value.Attributes.Where(a => a.Key.Text == "fill"));
+            Assert.Single(result.Value.Attributes.Where(a => a.Key?.Text == "fill"));
         }
 
         [Fact]

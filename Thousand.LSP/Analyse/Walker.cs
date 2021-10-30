@@ -5,7 +5,7 @@ using Thousand.Parse;
 
 namespace Thousand.LSP.Analyse
 {
-    // XXX this is basically just Evaluator through a kaleidoscope. can/should they be merged?
+    // this is is like the presentation compiler to Evaluator's batch compiler
     class Walker
     {
         public static void WalkDocument(Analysis analysis, ParsedDocument doc, UntypedScope root)
@@ -21,13 +21,18 @@ namespace Thousand.LSP.Analyse
             this.analysis = analysis;
             this.doc = doc;
 
-            var allAttributes = doc.Syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1.Key.Text).Distinct().ToArray();
+            var allAttributes = doc.Syntax.Declarations.Where(d => d.Value.IsT1)
+                .Select(a => a.Value.AsT1.Key)
+                .WhereNotNull()
+                .Select(k => k.Text)
+                .Distinct()
+                .ToArray();
 
             foreach (var dec in doc.Syntax.Declarations)
             {
                 dec.Value.Switch(invalid => { }, asAttribute =>
                 {
-                    doc.Attributes.Add(new(asAttribute, ParentKind.Document, allAttributes));
+                    doc.Attributes.Add(new(asAttribute, ParentKind.Document, allAttributes, doc.EndSpan));
                 }, asClass =>
                 {
                     doc.Symbols.Add(SymbolicateClass(root, dec, asClass));
@@ -39,7 +44,7 @@ namespace Thousand.LSP.Analyse
                     doc.Symbols.AddRange(WalkLine(root, asLine));
                 }, asEmpty =>
                 {
-                    doc.ClassNames.Add(new(root, dec.Span()));
+                    doc.ClassNames.Add(new(root, dec.Span(doc.EndSpan)));
                 });
             }
         }
@@ -49,7 +54,7 @@ namespace Thousand.LSP.Analyse
             var result = new DocumentSymbol
             {
                 Kind = SymbolKind.Class,
-                Range = declaration.Span().AsRange(),
+                Range = declaration.Span(doc.EndSpan).AsRange(),
                 SelectionRange = syntax.Name.Span.AsRange(),
                 Name = "class " + syntax.Name.Text,
                 Children = WalkClass(scope, syntax).ToArray()
@@ -60,41 +65,47 @@ namespace Thousand.LSP.Analyse
             return result;
         }
 
-        private IEnumerable<DocumentSymbol> WalkClass(UntypedScope scope, AST.UntypedClass ast)
+        private IEnumerable<DocumentSymbol> WalkClass(UntypedScope scope, AST.UntypedClass syntax)
         {
-            analysis.ClassDefinitions[ast] = new Location { Uri = doc.Uri, Range = ast.Name.Span.AsRange() };
+            analysis.ClassDefinitions[syntax] = new Location { Uri = doc.Uri, Range = syntax.Name.Span.AsRange() };
 
-            analysis.ClassReferences.Add(new(doc.Uri, ast, ast.Name));
+            analysis.ClassReferences.Add(new(doc.Uri, syntax, syntax.Name));
 
             var classes = new List<AST.UntypedClass>();
-            foreach (var callMacro in ast.BaseClasses)
+            foreach (var callMacro in syntax.BaseClasses)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span() : callMacro.Value.Name.Span));
+                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
 
                 if (callMacro.Value != null)
                 {
                     var klass = scope.FindClass(callMacro.Value.Name);
-                    analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                    analysis.ClassReferences.Add(new(doc, klass, callMacro));
                     if (klass is not null)
                     {
                         classes.Add(klass);
                     }
                 }
             }
-            analysis.ClassClasses[ast] = classes;
+            analysis.ClassClasses[syntax] = classes;
 
-            var allAttributes = ast.Attributes.Concat(ast.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1)).Select(a => a.Key.Text).Distinct().ToArray();
-            foreach (var attribute in ast.Attributes)
+            var allAttributes = syntax.Attributes
+                .Concat(syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1))
+                .Select(a => a.Key)
+                .WhereNotNull()
+                .Select(k => k.Text)
+                .Distinct().ToArray();
+
+            foreach (var attribute in syntax.Attributes)
             {
-                doc.Attributes.Add(new(attribute, ParentKind.Class, allAttributes));
+                doc.Attributes.Add(new(attribute, ParentKind.Class, allAttributes, doc.EndSpan));
             }
 
-            var contents = scope.Push("class "+ast.Name.Text);
-            foreach (var dec in ast.Declarations)
+            var contents = scope.Push("class "+syntax.Name.Text);
+            foreach (var dec in syntax.Declarations)
             {
                 if (dec.Value.IsT1)
                 {
-                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Class, allAttributes));
+                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Class, allAttributes, doc.EndSpan));
                 }
                 else if (dec.Value.IsT2)
                 {
@@ -113,7 +124,7 @@ namespace Thousand.LSP.Analyse
                 } 
                 else if (dec.Value.IsT5)
                 {
-                    doc.ClassNames.Add(new(contents, dec.Span()));
+                    doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan)));
                 }
             }
         }
@@ -123,7 +134,7 @@ namespace Thousand.LSP.Analyse
             var result = new DocumentSymbol
             {
                 Kind = SymbolKind.Object,
-                Range = declaration.Span().AsRange(),
+                Range = declaration.Span(doc.EndSpan).AsRange(),
                 SelectionRange = (syntax.Name?.Span ?? syntax.TypeSpan).AsRange(),
                 Name = syntax.TypeName + (syntax.Name == null ? "" : $" {syntax.Name.Text}"),
                 Children = WalkObject(scope, syntax).ToArray()
@@ -146,12 +157,12 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in syntax.Classes)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span() : callMacro.Value.Name.Span));
+                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
 
                 if (callMacro.Value != null)
                 {
                     var klass = scope.FindClass(callMacro.Value.Name);
-                    analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                    analysis.ClassReferences.Add(new(doc, klass, callMacro));
                     if (klass is not null)
                     {
                         classes.Add(klass);
@@ -160,10 +171,16 @@ namespace Thousand.LSP.Analyse
             }
             analysis.ObjectClasses[syntax] = classes;
 
-            var allAttributes = syntax.Attributes.Concat(syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1)).Select(a => a.Key.Text).Distinct().ToArray();
+            var allAttributes = syntax.Attributes
+                .Concat(syntax.Declarations.Where(d => d.Value.IsT1).Select(d => d.Value.AsT1))
+                .Select(a => a.Key)
+                .WhereNotNull()
+                .Select(k => k.Text)
+                .Distinct().ToArray();
+
             foreach (var attribute in syntax.Attributes)
             {
-                doc.Attributes.Add(new(attribute, ParentKind.Object, allAttributes));
+                doc.Attributes.Add(new(attribute, ParentKind.Object, allAttributes, doc.EndSpan));
             }
 
             var contents = scope.Push("object "+ syntax.Name?.Text);
@@ -171,7 +188,7 @@ namespace Thousand.LSP.Analyse
             {
                 if (dec.Value.IsT1)
                 {
-                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Object, allAttributes));
+                    doc.Attributes.Add(new(dec.Value.AsT1, ParentKind.Object, allAttributes, doc.EndSpan));
                 }
                 else if (dec.Value.IsT2)
                 {
@@ -190,19 +207,25 @@ namespace Thousand.LSP.Analyse
                 }
                 else if (dec.Value.IsT5)
                 {
-                    doc.ClassNames.Add(new(contents, dec.Span()));
+                    doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan)));
                 }
             }
         }
 
         IEnumerable<DocumentSymbol> WalkLine(UntypedScope scope, AST.UntypedLine syntax)
         {
-            var allAttributes = syntax.Attributes.Select(a => a.Key.Text).Distinct().ToArray();
+            var allAttributes = syntax.Attributes
+                .Select(a => a.Key)
+                .WhereNotNull()
+                .Select(k => k.Text)
+                .Distinct()
+                .ToArray();
+
             if (syntax.Attributes != null)
             {
                 foreach (var attribute in syntax.Attributes)
                 {
-                    doc.Attributes.Add(new(attribute, ParentKind.Line, allAttributes));
+                    doc.Attributes.Add(new(attribute, ParentKind.Line, allAttributes, doc.EndSpan));
                 }
             }
 
@@ -223,12 +246,12 @@ namespace Thousand.LSP.Analyse
 
             foreach (var callMacro in syntax.Classes)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span() : callMacro.Value.Name.Span));
+                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span));
 
                 if (callMacro.Value != null)
                 {
                     var klass = scope.FindClass(callMacro.Value.Name);
-                    analysis.ClassReferences.Add(new(doc.Uri, klass, callMacro));
+                    analysis.ClassReferences.Add(new(doc, klass, callMacro));
                 }
             }
         }

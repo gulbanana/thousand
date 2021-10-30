@@ -41,112 +41,94 @@ namespace Thousand.Parse
                    select firstAndSecond;
         }
 
-        // produces better error messages than ManyDelimitedBy by making some assumptions
-        public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimited<T>(
-            this TokenListParser<TokenKind, T> parser, 
+        // extended version of ManyDelimitedBy. supports missing and/or invalid elements and produces better error messages
+        public static TokenListParser<TokenKind, T[]> ManyOptionalDelimitedBy<T>(
+            this TokenListParser<TokenKind, T> elementParser,
+            TokenKind delimiter,
             TokenKind? terminator = null,
-            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null,
-            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? fallback = null) => originalInput =>
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? empty = null,
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null) where T : class => input =>
         {
             var results = new List<T>();
-            var provisionalResult = default((T result, TokenList<TokenKind> input)?);
+            var provisionalResult = default(T?);
 
-            var input = originalInput;
-            var beganLine = default(TokenList<TokenKind>?);
-            while (!input.IsAtEnd)
+            var remainder = input;
+            var element = input;
+            while (true)
             {
-                var first = input.ConsumeToken();
-                if (!first.HasValue) return TokenListParserResult.Empty<TokenKind, IReadOnlyList<T>>(input, "!IsAtEnd, but no token present");
+                var next = remainder.ConsumeToken();
 
-                // found an alternate terminator
-                if (terminator != null && first.Value.Kind == terminator.Value)
+                // terminate/delimit: produce a result, then...
+                if (!next.HasValue || next.Value.Kind == delimiter || (terminator != null && next.Value.Kind == terminator))
                 {
-                    if (provisionalResult.HasValue)
+                    if (provisionalResult != null)
                     {
-                        results.Add(provisionalResult.Value.result);
-                        provisionalResult = null;
+                        results.Add(provisionalResult);
                     }
-                    else if (fallback != null && beganLine.HasValue)
+                    else if (remainder.Position == element.Position)
                     {
-                        results.Add(fallback(beganLine.Value, input));
+                        if (empty != null)
+                        {
+                            results.Add(empty(element, remainder));
+                        }
                     }
-
-                    beganLine = input;
-                    break;
-                }
-
-                // found a primary terminator
-                else if (first.Value.Kind == TokenKind.LineSeparator)
-                {
-                    if (provisionalResult.HasValue)
-                    {
-                        results.Add(provisionalResult.Value.result);
-                        provisionalResult = null;
-                    }
-                    else if (fallback != null && beganLine.HasValue)
-                    {
-                        results.Add(fallback(beganLine.Value, input));
-                    }
-
-                    beganLine = input;
-                    input = first.Remainder;                    
-                }
-
-                // found a trailer - nonterminal tokens after a parsed result. add an invalid result instead and skip to the next line
-                else if (invalid != null && provisionalResult.HasValue)
-                {
-                    var remainder = provisionalResult.Value.input;
-                    while (!remainder.IsAtEnd && remainder.First().Kind != TokenKind.LineSeparator && (!terminator.HasValue || remainder.First().Kind != terminator.Value))
-                    {
-                        remainder = remainder.ConsumeToken().Remainder;
-                    }
-
-                    results.Add(invalid(provisionalResult.Value.input, remainder));
-                    provisionalResult = null;
-                    input = remainder;
-                }
-
-                // attempt to find a result
-                else
-                {
-                    var result = parser(input);
-                    if (result.HasValue)
+                    else 
                     {
                         if (invalid != null)
                         {
-                            provisionalResult = (result.Value, input);
+                            results.Add(invalid(element, remainder));
                         }
                         else
                         {
-                            results.Add(result.Value);
+                            return TokenListParserResult.Empty<TokenKind, T[]>(input);
                         }
+                    }
 
-                        if (input.Position == result.Remainder.Position)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            input = result.Remainder;
-                        }
+                    // ...begin the element
+                    if (next.HasValue && next.Value.Kind == delimiter)
+                    {
+                        provisionalResult = null;
+                        element = next.Remainder;
+                        remainder = next.Remainder;
+                    }
+
+                    // ...return
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // trailer: invalidate the interim result (subsequent content leaves it invalid)
+                else if (provisionalResult != null)
+                {
+                    provisionalResult = null;
+                    remainder = next.Remainder;
+                }
+
+                // content: produce an interim result, so that it can consume separators
+                else if (element.Position == remainder.Position)
+                {
+                    var result = elementParser(element);
+                    if (result.HasValue)
+                    {
+                        provisionalResult = result.Value;
+                        remainder = result.Remainder;
                     }
                     else
                     {
-                        return TokenListParserResult.CastEmpty<TokenKind, T, IReadOnlyList<T>>(result);
+                        remainder = next.Remainder;
                     }
+                }
+
+                // continued trailers
+                else
+                {
+                    remainder = next.Remainder;
                 }
             }
 
-            if (provisionalResult.HasValue)
-            {
-                results.Add(provisionalResult.Value.result);
-            }
-            else if (fallback != null && beganLine.HasValue)
-            {
-                results.Add(fallback(beganLine.Value, input));
-            }
-
-            return TokenListParserResult.Value<TokenKind, IReadOnlyList<T>>(results, originalInput, input);
+            return TokenListParserResult.Value(results.ToArray(), input, remainder);
         };
 
         public static TextParser<T> Located<T>(this TextParser<T> parser) where T : ILocated

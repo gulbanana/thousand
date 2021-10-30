@@ -38,11 +38,12 @@ namespace Thousand.Benchmarks
             var api = new Metadata();
             var state = new GenerationState();
 
-            Preprocessor.TryPreprocess(state, DiagramGenerator.ReadStdlib(), out var stdlibMacros);
-            Typechecker.TryTypecheck(api, state, stdlibMacros, false, out stdlib);
+            var stdlibSource = DiagramGenerator.ReadStdlib();
+            Preprocessor.TryPreprocess(state, stdlibSource, out var stdlibMacros);
+            Typechecker.TryTypecheck(api, state, stdlibMacros, Shared.GetEnd(stdlibSource), false, out stdlib);
 
             Preprocessor.TryPreprocess(state, source, out var macros);
-            Typechecker.TryTypecheck(api, state, macros, false, out ast);
+            Typechecker.TryTypecheck(api, state, macros, Shared.GetEnd(source), false, out ast);
             Evaluator.TryEvaluate(new[] { stdlib, ast }, state, out root);
             Composer.TryCompose(root, state, out diagram);
 

@@ -19,7 +19,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Single()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square]");
-            var result = Shared.List(Typed.NodeAttribute)(tokens);
+            var result = Typed.AttributeList(Typed.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -29,7 +29,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Multiple()
         {
             var tokens = tokenizer.Tokenize(@"[shape=square,shape=oval]");
-            var result = Shared.List(Typed.NodeAttribute)(tokens);
+            var result = Typed.AttributeList(Typed.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Ellipse));
@@ -39,7 +39,7 @@ namespace Thousand.Tests.Parsing
         public void AttributeList_Whitespace()
         {
             var tokens = tokenizer.Tokenize(@"[ shape=square,shape = square, shape=square]");
-            var result = Shared.List(Typed.NodeAttribute)(tokens);
+            var result = Typed.AttributeList(Typed.NodeAttribute)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square));
@@ -131,7 +131,7 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.Classes.First()?.Value?.Name.Text);
-            Assert.Equal(3, result.Value.Classes.First()?.Span().Length);
+            Assert.Equal(3, result.Value.Classes.First()?.SpanOrEmpty().Length);
         }
 
         [Fact]
@@ -211,7 +211,7 @@ bar""");
         public void Scope_Empty()
         {
             var tokens = tokenizer.Tokenize(@"{}");
-            var result = Shared.Scope(Typed.ObjectContent)(tokens);
+            var result = Typed.DeclarationScope(Typed.ObjectContent)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Empty(result.Value);
@@ -225,7 +225,7 @@ bar""");
     object bar 
     line foo <- bar
 }");
-            var result = Shared.Scope(Typed.ObjectContent)(tokens);
+            var result = Typed.DeclarationScope(Typed.ObjectContent)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Length);
@@ -305,8 +305,8 @@ object ""bar""");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Declarations.Length);
-            Assert.Equal(1, result.Value.Declarations[1].Location.First().Span.Position.Line);
-            Assert.Equal(2, result.Value.Declarations[2].Location.First().Span.Position.Line);
+            Assert.Equal(3, result.Value.Declarations[1].Location.Position);
+            Assert.Equal(4, result.Value.Declarations[2].Location.Position);
         }
 
         [Fact]

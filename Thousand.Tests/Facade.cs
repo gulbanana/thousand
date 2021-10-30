@@ -14,7 +14,7 @@ namespace Thousand.Tests
                 return false;
             }
 
-            if (!Typechecker.TryTypecheck(new Metadata(), state, syntax, allowErrors: false, out outputSyntax))
+            if (!Typechecker.TryTypecheck(new Metadata(), state, syntax, Shared.GetEnd(text), allowErrors: false, out outputSyntax))
             {
                 return false;
             }

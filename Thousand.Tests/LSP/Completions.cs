@@ -35,6 +35,51 @@ namespace Thousand.Tests.LSP
         }
 
         [Fact]
+        public void FindAttribute()
+        {
+            var analysis = Parse(@"object []");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 8));
+            Assert.NotEmpty(list.Items);
+            Assert.Contains(list.Items, item => item.Label == "shape");
+        }
+
+        [Fact]
+        public void FindAttribute_LastToken()
+        {
+            var analysis = Parse(@"object [");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 8));
+            Assert.NotEmpty(list.Items);
+            Assert.Contains(list.Items, item => item.Label == "shape");
+        }
+
+        [Fact]
+        public void FindAttribute_Existing()
+        {
+            var analysis = Parse(@"object [stroke=none]");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 14));
+            Assert.NotEmpty(list.Items);
+            Assert.Contains(list.Items, item => item.Label == "shape");
+        }
+
+        [Fact]
+        public void FindAttribute_AfterExisting()
+        {
+            var analysis = Parse(@"object [stroke=none,]");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 20));
+            Assert.NotEmpty(list.Items);
+            Assert.Contains(list.Items, item => item.Label == "shape");
+        }
+
+        [Fact]
+        public void FindAttribute_AfterEmpty()
+        {
+            var analysis = Parse(@"object [stroke,]");
+            var list = handler.GenerateCompletions(analysis, new Position(0, 15));
+            Assert.NotEmpty(list.Items);
+            Assert.Contains(list.Items, item => item.Label == "shape");
+        }
+
+        [Fact]
         public void FindClass()
         {
             var analysis = Parse(@"class object
@@ -152,7 +197,7 @@ foo.
             Assert.Equal("foo", list.Items.Single().Label);
         }
 
-        [Fact(Skip = "xxx broken")]
+        [Fact]
         public void Dont_FindClass_ForObjectName()
         {
             var analysis = Parse(@"class foo

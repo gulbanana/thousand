@@ -1,4 +1,5 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Thousand.Model;
@@ -150,11 +151,11 @@ namespace Thousand.LSP
             if (call.Arguments.Any())
             {
                 builder.Append("(");
-                builder.Append(call.Arguments.First().Span().ToStringValue());
+                builder.Append(call.Arguments.First().SpanOrEmpty().ToStringValue());
                 foreach (var arg in call.Arguments.Skip(1))
                 {
                     builder.Append(", ");
-                    builder.Append(arg.Span().ToStringValue());
+                    builder.Append(arg.SpanOrEmpty().ToStringValue());
                 }
                 builder.Append(")");
             }
@@ -162,24 +163,25 @@ namespace Thousand.LSP
             return builder.ToString();
         }
 
-        public static string Attributes(AST.UntypedAttribute[] list)
+        public static string Attributes(IReadOnlyList<AST.UntypedAttribute> attrs)
         {
+            var validAttrs = attrs.Where(a => a.Key != null);
             var builder = new StringBuilder();
 
             builder.Append('[');
 
-            var firstAttr = list.First();
-            builder.Append(firstAttr.Key.Text);
+            var firstAttr = validAttrs.First();
+            builder.Append(firstAttr.Key!.Text);
             builder.Append('=');
-            builder.Append(firstAttr.Value.Span().ToStringValue());
+            builder.Append(firstAttr.Value.SpanOrEmpty().ToStringValue());
 
-            foreach (var attr in list.Skip(1))
+            foreach (var attr in validAttrs.Skip(1))
             {
                 builder.Append(',');
                 builder.Append(' ');
-                builder.Append(attr.Key.Text);
+                builder.Append(attr.Key!.Text);
                 builder.Append('=');
-                builder.Append(attr.Value.Span().ToStringValue());
+                builder.Append(attr.Value.SpanOrEmpty().ToStringValue());
             }
 
             builder.Append(']');

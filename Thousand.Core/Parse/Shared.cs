@@ -12,21 +12,21 @@ namespace Thousand.Parse
 {
     public static class Shared
     {
-        public static TokenListParser<TokenKind, TA[]> List<TA>(TokenListParser<TokenKind, TA> attributeParser) =>
-            from begin in Token.EqualTo(TokenKind.LeftBracket)
-            from values in attributeParser.ManyDelimitedBy(Token.EqualTo(TokenKind.Comma))
-            from end in Token.EqualTo(TokenKind.RightBracket)
-            select values;
+        public static TextSpan GetEnd(string source)
+        {
+            var p = Position.Zero;
 
-        public static TokenListParser<TokenKind, T[]> Scope<T>(TokenListParser<TokenKind, T> pT, Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null, Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? fallback = null) =>
-            from begin in Token.EqualTo(TokenKind.LeftBrace)
-            from decs in pT.ManyOptionalDelimited(terminator: TokenKind.RightBrace, invalid: invalid, fallback: fallback)
-            from end in Token.EqualTo(TokenKind.RightBrace)
-            select decs.ToArray();
+            for (var i = 0; i < source.Length; ++i)
+            {
+                p = p.Advance(source[p.Absolute]);
+            }
 
-        /*******************************
-         * Subclass/object/line parts. *
-         *******************************/
+            return new TextSpan(source, p, 0);
+        }
+
+        /***********************
+         * Class/object parts. *
+         ***********************/
 
         public static TokenListParser<TokenKind, Identifier> ClassReference { get; } =
             Identifier.Any.Named("class name");

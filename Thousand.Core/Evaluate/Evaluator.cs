@@ -32,7 +32,7 @@ namespace Thousand.Evaluate
         }
 
         private readonly GenerationState state;
-        private readonly Scope rootScope;
+        private readonly TypedScope rootScope;
         private readonly List<IR.Entity> rootEntities;
         private Font rootFont;
 
@@ -76,7 +76,7 @@ namespace Thousand.Evaluate
             }
         }
 
-        private void AddClass(AST.TypedClass c, Scope scope)
+        private void AddClass(AST.TypedClass c, TypedScope scope)
         {
             foreach (var b in c.BaseClasses)
             {
@@ -132,7 +132,7 @@ namespace Thousand.Evaluate
             }
         }
 
-        private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, Scope scope)
+        private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, TypedScope scope)
         {
             var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
 
@@ -284,7 +284,7 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        private (IEnumerable<IR.Object>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, Scope scope)
+        private (IEnumerable<IR.Object>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, TypedScope scope)
         {
             var objects = new List<IR.Object>();
             var edges = new List<IR.Edge>();

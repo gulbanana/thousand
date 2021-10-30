@@ -4,26 +4,26 @@ using System.Text;
 
 namespace Thousand.Evaluate
 {
-    internal sealed class Scope
+    internal sealed class TypedScope
     {
         private readonly string name;
         private readonly GenerationState state;
-        public Scope? Parent { get; private init; }
+        public TypedScope? Parent { get; private init; }
 
         private readonly Dictionary<string, IR.Object> canonicalObjects = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IR.Object> bubbledObjects = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ObjectContent> objectClasses = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, LineContent> lineClasses = new(StringComparer.OrdinalIgnoreCase);
 
-        public Scope(string name, GenerationState state)
+        public TypedScope(string name, GenerationState state)
         {
             this.name = name;
             this.state = state;
         }
 
-        public Scope Chain(string name)
+        public TypedScope Chain(string name)
         {
-            return new Scope(name, state) { Parent = this };
+            return new TypedScope(name, state) { Parent = this };
         }
 
         public bool HasRequiredClass(Parse.Identifier b)

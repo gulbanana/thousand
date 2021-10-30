@@ -67,11 +67,17 @@ namespace Thousand.LSP.Handlers
                 foreach (var ctx in analysis.Main.Attributes)
                 {
                     var key = ctx.Syntax.Key;
-                    if (ctx.KeyLocation.Contains(request.Position) && api.Documentation.ContainsKey(ctx.Syntax.Key.Text))
+                    if (key == null)
+                    {
+                        continue;
+                    }
+
+                    var range = ctx.KeySpan.AsRange();                    
+                    if (range.Contains(request.Position) && api.Documentation.ContainsKey(key.Text))
                     {
                         return new Hover
                         {
-                            Range = ctx.KeyLocation,
+                            Range = range,
                             Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[key.Text] })
                         };
                     }

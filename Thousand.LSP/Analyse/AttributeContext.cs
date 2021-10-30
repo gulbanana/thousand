@@ -1,11 +1,21 @@
-﻿using System;
-using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+﻿using Superpower.Model;
+using Thousand.AST;
 
 namespace Thousand.LSP.Analyse
 {
-    public record AttributeContext(AST.UntypedAttribute Syntax, ParentKind ParentKind, string[] ParentAttributes)
+    public class AttributeContext
     {
-        private Lazy<Range> keyLocation = new Lazy<Range>(() => Syntax.Key.Span.AsRange());
-        public Range KeyLocation => keyLocation.Value;
+        public UntypedAttribute Syntax { get; }
+        public ParentKind ParentKind { get; }
+        public string[] ParentAttributes { get; }
+        public TextSpan KeySpan { get; }
+
+        public AttributeContext(UntypedAttribute syntax, ParentKind parentKind, string[] parentAttributes, TextSpan endSpan)
+        {
+            Syntax = syntax;
+            ParentKind = parentKind;
+            ParentAttributes = parentAttributes;
+            KeySpan = syntax.Key?.Span ?? syntax.Value.Span(endSpan);
+        }
     }
 }

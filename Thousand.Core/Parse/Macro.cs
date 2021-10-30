@@ -3,11 +3,9 @@ using Superpower.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Thousand.AST;
 
 namespace Thousand.Parse
 {
-    // XXX basically ITemplated with concrete init - extract the interface somehow
     public record Macro(TokenList<TokenKind> Location, TokenList<TokenKind> Remainder)
     {
         public static TokenListParser<TokenKind, Macro> Empty() => input =>
@@ -62,17 +60,19 @@ namespace Thousand.Parse
             return start..end;
         }
 
-        public TextSpan Span()
+        public TextSpan SpanOrEmpty() => Span(TextSpan.Empty);
+
+        public TextSpan Span(TextSpan endSpan)
         {
             if (Location.IsAtEnd)
             {
-                return TextSpan.Empty;
+                return endSpan;
             }
 
             var first = Location.First().Span;
             if (first.Source == null)
             {
-                return TextSpan.Empty;
+                throw new InvalidOperationException("macro location token span has no source");
             }
 
             if (Remainder.IsAtEnd)

@@ -48,7 +48,7 @@ namespace Thousand.LSP.Handlers
 
             if (analysis.Main != null)
             {
-                var aCtx = analysis.Main.Attributes.FirstOrDefault(a => a.KeyLocation.Contains(position));
+                var aCtx = analysis.Main.Attributes.FirstOrDefault(a => a.KeySpan.AsRange().Contains(position));
                 if (aCtx != null)
                 {
                     var candidates = aCtx.ParentKind switch
@@ -61,7 +61,7 @@ namespace Thousand.LSP.Handlers
 
                     foreach (var candidate in candidates)
                     {
-                        if (candidate.Names.Contains(aCtx.Syntax.Key.Text, StringComparer.OrdinalIgnoreCase) || !candidate.Names.Any(name => aCtx.ParentAttributes.Contains(name)))
+                        if (candidate.Names.Contains(aCtx.KeySpan.ToStringValue(), StringComparer.OrdinalIgnoreCase) || !candidate.Names.Any(name => aCtx.ParentAttributes.Contains(name)))
                         {
                             foreach (var name in candidate.Names)
                             {

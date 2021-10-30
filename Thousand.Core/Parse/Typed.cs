@@ -15,6 +15,18 @@ namespace Thousand.Parse
      *************************************************************************************/
     public static class Typed
     {
+        public static TokenListParser<TokenKind, TA[]> AttributeList<TA>(TokenListParser<TokenKind, TA> attributeParser) =>
+            from begin in Token.EqualTo(TokenKind.LeftBracket)
+            from values in attributeParser.ManyDelimitedBy(Token.EqualTo(TokenKind.Comma))
+            from end in Token.EqualTo(TokenKind.RightBracket)
+            select values;
+
+        public static TokenListParser<TokenKind, T[]> DeclarationScope<T>(TokenListParser<TokenKind, T> pT) where T : class =>
+            from begin in Token.EqualTo(TokenKind.LeftBrace)
+            from decs in pT.ManyOptionalDelimitedBy(TokenKind.LineSeparator, TokenKind.RightBrace)
+            from end in Token.EqualTo(TokenKind.RightBrace)
+            select decs.ToArray();
+
         /************************************************************
          * Base attribute groups, delegated to metadata definitions *
          ************************************************************/
@@ -46,15 +58,15 @@ namespace Thousand.Parse
          **********************************************************************/
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Identifier name, Identifier[] bases) =>
-            from attrs in Shared.List(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
-            from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
+            from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from children in DeclarationScope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
             select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
+            AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
-            Shared.List(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
+            AttributeList(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
 
         public static TokenListParser<TokenKind, AST.TypedClass> ClassBody(Identifier name, Identifier[] bases) => input =>
         {
@@ -208,8 +220,8 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in Shared.ClassList
             from name in Shared.ObjectReference.AsNullable().OptionalOrDefault()
-            from attrs in Shared.List(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
-            from children in Shared.Scope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
+            from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
+            from children in DeclarationScope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
             select new AST.TypedObject(classes, name, attrs, children);
 
         /*********************************
@@ -219,7 +231,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
             from content in Shared.LineSegments(Object)
-            from attrs in Shared.List(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
+            from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
             select new AST.TypedLine(classes, content.ToArray(), attrs);
 
         /***************************************************************************
@@ -290,7 +302,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedDocument> Document { get; } =
             DocumentContent
-                .ManyOptionalDelimited()
+                .ManyOptionalDelimitedBy(TokenKind.LineSeparator)
                 .Select(decs => new AST.TypedDocument(decs.ToArray()))
                 .AtEnd();
     }

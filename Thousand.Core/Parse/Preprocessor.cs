@@ -17,48 +17,48 @@ namespace Thousand.Parse
             return state.ErrorCount() == errors;
         }
 
-        public static bool TryPreprocess(GenerationState state, TokenList inputTokens, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
+        public static bool TryPreprocess(GenerationState state, TextSpan endSpan, TokenList inputTokens, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
         {
             var errors = state.ErrorCount();
-            outputSyntax = Preprocess(state, inputTokens);
+            outputSyntax = Preprocess(state, endSpan, inputTokens);
             return state.ErrorCount() == errors;
         }
 
-        public static bool TryPreprocess(GenerationState state, TokenList inputTokens, AST.UntypedDocument inputSyntax, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
+        public static bool TryPreprocess(GenerationState state, TextSpan endSpan, TokenList inputTokens, AST.UntypedDocument inputSyntax, [NotNullWhen(true)] out AST.UntypedDocument? outputSyntax)
         {
             var errors = state.ErrorCount();
-            outputSyntax = Preprocess(state, inputTokens, inputSyntax);
+            outputSyntax = Preprocess(state, endSpan, inputTokens, inputSyntax);
             return state.ErrorCount() == errors;
         }
 
-        private static AST.UntypedDocument? Preprocess(GenerationState state, string text)
+        private static AST.UntypedDocument? Preprocess(GenerationState state, string source)
         {
             var tokenizer = Tokenizer.Build();
 
             // XXX consider merging this with the version in AnalysisService (and they could both use Tokenizer?)
-            var untypedTokens = tokenizer.TryTokenize(text);
+            var untypedTokens = tokenizer.TryTokenize(source);
             if (!untypedTokens.HasValue)
             {
                 state.AddError(untypedTokens.Location, ErrorKind.Syntax, untypedTokens.FormatErrorMessageFragment());
                 return null;
             }
 
-            return Preprocess(state, untypedTokens.Value);
+            return Preprocess(state, Shared.GetEnd(source), untypedTokens.Value);
         }
 
-        private static AST.UntypedDocument? Preprocess(GenerationState state, TokenList untypedTokens)
+        private static AST.UntypedDocument? Preprocess(GenerationState state, TextSpan endSpan, TokenList untypedTokens)
         {
             var untypedAST = Untyped.Document(untypedTokens);
             if (!untypedAST.HasValue)
             {
-                state.AddError(untypedTokens, untypedAST);
+                state.AddError(untypedTokens, endSpan, untypedAST);
                 return null;
             }
 
-            return Preprocess(state, untypedTokens, untypedAST.Value);
+            return Preprocess(state, endSpan, untypedTokens, untypedAST.Value);
         }
 
-        private static AST.UntypedDocument? Preprocess(GenerationState state, TokenList pass1Tokens, AST.UntypedDocument pass1AST)
+        private static AST.UntypedDocument? Preprocess(GenerationState state, TextSpan endSpan, TokenList pass1Tokens, AST.UntypedDocument pass1AST)
         {
             // resolve objects and lines with template base classes (turning those classes concrete)
             var errors = state.ErrorCount();
@@ -75,7 +75,7 @@ namespace Thousand.Parse
             {
                 if (!pass2AST.HasValue)
                 {
-                    state.AddError(pass2Tokens, pass2AST);
+                    state.AddError(pass2Tokens, endSpan, pass2AST);
                     return null;
                 }
 

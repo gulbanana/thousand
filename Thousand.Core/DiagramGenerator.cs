@@ -39,10 +39,11 @@ namespace Thousand
             var documents = new List<AST.TypedDocument>();
             foreach (var s in sources)
             {
+                var end = Parse.Shared.GetEnd(s);
                 var tokens = tokenizer.TryTokenize(s);
                 if (tokens.HasValue)
                 {
-                    if (Parse.Preprocessor.TryPreprocess(state, tokens.Value, out var syntax) && Parse.Typechecker.TryTypecheck(api, state, syntax, allowErrors: false, out var document))
+                    if (Parse.Preprocessor.TryPreprocess(state, end, tokens.Value, out var syntax) && Parse.Typechecker.TryTypecheck(api, state, syntax, end, allowErrors: false, out var document))
                     {
                         documents.Add(document);
                     }

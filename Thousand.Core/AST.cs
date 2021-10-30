@@ -1,5 +1,7 @@
 ﻿using OneOf;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Thousand.Model;
 
@@ -91,27 +93,35 @@ namespace Thousand.AST
     public record InvalidDeclaration;
     public record EmptyDeclaration;
 
-    public record UntypedAttribute(Parse.Identifier Key, bool HasEqualsSign, Parse.Macro Value)
+    public record UntypedAttribute(Parse.Identifier? Key, bool HasEqualsSign, Parse.Macro Value)
     {
         public bool HasValue => Value.Location.Position < Value.Remainder.Position;
     }
 
+    public record Attributes(Parse.Macro<bool> IsComplete, params UntypedAttribute[] Values) : IReadOnlyList<UntypedAttribute>
+    {
+        public UntypedAttribute this[int index] => ((IReadOnlyList<UntypedAttribute>)Values)[index];
+        public int Count => ((IReadOnlyCollection<UntypedAttribute>)Values).Count;
+        public IEnumerator<UntypedAttribute> GetEnumerator() => ((IEnumerable<UntypedAttribute>)Values).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => Values.GetEnumerator();
+    }
+
     public record Argument(Parse.Identifier Name, Parse.Macro? Default);
     public record ClassCall(Parse.Identifier Name, Parse.Macro[] Arguments); // XXX it would be nice if inheritance could call classes
-    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall?>[] BaseClasses, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
+    public record UntypedClass(Parse.Identifier Name, Parse.Macro<Argument[]> Arguments, Parse.Macro<ClassCall?>[] BaseClasses, Attributes Attributes, Parse.Macro<UntypedObjectContent>[] Declarations);
 
     [GenerateOneOf] public partial class UntypedObjectContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine, EmptyDeclaration> { }
-    public record UntypedObject(Parse.Macro<ClassCall?>[] Classes, Parse.Identifier? Name, UntypedAttribute[] Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
+    public record UntypedObject(Parse.Macro<ClassCall?>[] Classes, Parse.Identifier? Name, Attributes Attributes, Parse.Macro<UntypedObjectContent>[] Declarations)
     {
         private readonly Lazy<string> typeName = new(() =>
         {
-            return string.Join('.', Classes.Select(c => c.Span().ToStringValue()));
+            return string.Join('.', Classes.Select(c => c.SpanOrEmpty().ToStringValue()));
         });
 
         private readonly Lazy<Superpower.Model.TextSpan> typeSpan = new(() =>
         {
             var first = Classes[0].Location.First().Span;
-            var last = Classes.Last().Span();
+            var last = Classes.Last().Location.First().Span;
             return new(first.Source!, first.Position, last.Position.Absolute - first.Position.Absolute + last.Length);
         });
 
@@ -123,7 +133,7 @@ namespace Thousand.AST
     {
         public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
     }
-    public record UntypedLine(Parse.Macro<ClassCall?>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, UntypedAttribute[] Attributes);
+    public record UntypedLine(Parse.Macro<ClassCall?>[] Classes, LineSegment<Parse.Macro<UntypedObject>>[] Segments, Attributes Attributes);
 
     [GenerateOneOf] public partial class UntypedDocumentContent : OneOfBase<InvalidDeclaration, UntypedAttribute, UntypedClass, UntypedObject, UntypedLine, EmptyDeclaration> { }
     public record UntypedDocument(Parse.Macro<UntypedDocumentContent>[] Declarations);
