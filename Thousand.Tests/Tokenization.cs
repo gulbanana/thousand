@@ -160,5 +160,21 @@ bar""", output.ElementAt(1).ToStringValue());
 
             AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.LineSeparator, TokenKind.LineSeparator);
         }
+
+        [Fact]
+        public void Parentheses_Unbound()
+        {
+            var output = sut.Tokenize("foo ()");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier, TokenKind.LeftParenthesisUnbound, TokenKind.RightParenthesis);
+        }
+
+        [Fact]
+        public void Parentheses_Bound()
+        {
+            var output = sut.Tokenize("foo()");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.Identifier, TokenKind.LeftParenthesisBound, TokenKind.RightParenthesis);
+        }
     }
 }

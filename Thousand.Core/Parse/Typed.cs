@@ -194,7 +194,7 @@ namespace Thousand.Parse
                 {
                     return Ref(() => Object!).Select(x => (AST.TypedDeclaration)x)(input);
                 }
-                else if (second.Value.Kind == TokenKind.Pipe)
+                else if (second.Value.Kind == TokenKind.LeftParenthesisUnbound)
                 {
                     return Ref(() => Line!).Select(x => (AST.TypedDeclaration)x)(input);
                 }
@@ -208,7 +208,7 @@ namespace Thousand.Parse
                         {
                             return Ref(() => Object!).Select(x => (AST.TypedDeclaration)x)(input);
                         }
-                        else if (identifierOrInline.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
+                        else if (identifierOrInline.Value.Kind == TokenKind.LeftParenthesisUnbound) // a line which begins with an inline object
                         {
                             return Ref(() => Line!).Select(x => (AST.TypedDeclaration)x)(input);
                         }

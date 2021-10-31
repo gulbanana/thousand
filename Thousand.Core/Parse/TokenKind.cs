@@ -19,13 +19,13 @@ namespace Thousand.Parse
         RightBrace,
 
         [Token(Example = "(")]
-        LeftParenthesis,
+        LeftParenthesisBound,
+
+        [Token(Example = "(")]
+        LeftParenthesisUnbound,
 
         [Token(Example = ")")]
         RightParenthesis,
-
-        [Token(Example = "|")]
-        Pipe,
 
         [Token(Example = "=")]
         EqualsSign,

@@ -3,14 +3,14 @@ class terminal:object [fill=#8f4]
 class choice [shape=rhombus,padding=15 30,fill=#ff7]
 
 diagram [grid=4 rows, layout=pack, justify=stretch center, gutter=45] {
-    line |initial "Lamp doesn't work"|         
-        -> |choice "Lamp\nplugged in?"|         
-        -> |choice "Bulb\nburned out?"|         
-        -> |terminal "Repair Lamp"|
+    line (initial "Lamp doesn't work")
+      -> (choice "Lamp\nplugged in?")        
+      -> (choice "Bulb\nburned out?")         
+      -> (terminal "Repair Lamp")
 
-    line "Lamp\nplugged in?" -> |terminal "Plug in lamp" [row=2]|
+    line "Lamp\nplugged in?" -> (terminal "Plug in lamp" [row=2])
 
-    line "Bulb\nburned out?" -> |terminal "Replace bulb"|
+    line "Bulb\nburned out?" -> (terminal "Replace bulb")
 
     class yes:label [label="Yes"]
     class no:label [label="No"]

@@ -179,7 +179,7 @@ bar""");
         [Fact]
         public void Line_WithInline()
         {
-            var tokens = tokenizer.Tokenize(@"line |object foo|->bar");
+            var tokens = tokenizer.Tokenize(@"line (object foo) -> bar");
             var result = Typed.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -189,7 +189,7 @@ bar""");
         [Fact]
         public void Line_WithInline_Untyped()
         {
-            var tokens = tokenizer.Tokenize(@"line |object foo|->bar");
+            var tokens = tokenizer.Tokenize(@"line (object foo) -> bar");
             var result = Untyped.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -199,7 +199,7 @@ bar""");
         [Fact]
         public void Line_WithInline_MultiSeg()
         {
-            var tokens = tokenizer.Tokenize(@"line |object ""Lamp doesn't work""| -> ""Lamp\nplugged in?"" -> ""Bulb\nburned out?"" -> ""Repair Lamp""");
+            var tokens = tokenizer.Tokenize(@"line (object ""Lamp doesn't work"") -> ""Lamp\nplugged in?"" -> ""Bulb\nburned out?"" -> ""Repair Lamp""");
             var result = Typed.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());

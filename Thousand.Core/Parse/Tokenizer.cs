@@ -27,16 +27,15 @@ namespace Thousand.Parse
             singles[']'] = TokenKind.RightBracket;
             singles['{'] = TokenKind.LeftBrace;
             singles['}'] = TokenKind.RightBrace;
-            singles['('] = TokenKind.LeftParenthesis;
+            singles['('] = TokenKind.LeftParenthesisUnbound;
             singles[')'] = TokenKind.RightParenthesis;
-            singles['|'] = TokenKind.Pipe;
             singles['='] = TokenKind.EqualsSign;
             singles[','] = TokenKind.Comma;
             singles[':'] = TokenKind.Colon;
             singles['.'] = TokenKind.Period;
         }
-
-        protected override IEnumerable<Result<TokenKind>> Tokenize(TextSpan span)
+        
+        protected override IEnumerable<Result<TokenKind>> Tokenize(TextSpan span, TokenizationState<TokenKind> state)
         {
             var next = SkipWhitespaceAndComments(span);
             if (!next.HasValue)
@@ -46,7 +45,12 @@ namespace Thousand.Parse
 
             do
             {
-                if (next.Value < singles.Length && singles[next.Value] != TokenKind.None)
+                if (next.Value == '(' && state.Previous.HasValue && state.Previous.Value.Position.Absolute + state.Previous.Value.Span.Length == next.Location.Position.Absolute)
+                {
+                    yield return Result.Value(TokenKind.LeftParenthesisBound, next.Location, next.Remainder);
+                    next = SkipWhitespaceAndComments(next.Remainder);
+                }
+                else if (next.Value < singles.Length && singles[next.Value] != TokenKind.None)
                 {
                     yield return Result.Value(singles[next.Value], next.Location, next.Remainder);
                     next = SkipWhitespaceAndComments(next.Remainder);

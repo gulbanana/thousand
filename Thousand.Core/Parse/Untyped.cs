@@ -19,7 +19,7 @@ namespace Thousand.Parse
          **************************************************/
 
         public static TokenListParser<TokenKind, IMacro[]> CallArgs { get; } =
-            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            from begin in Token.EqualTo(TokenKind.LeftParenthesisBound)
             from arguments in Macro.Raw(TokenKind.Comma, TokenKind.RightParenthesis).AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select arguments;
@@ -100,7 +100,7 @@ namespace Thousand.Parse
                 {
                     return o(input);
                 }
-                else if (second.Value.Kind == TokenKind.Pipe) // line with an inline
+                else if (second.Value.Kind == TokenKind.LeftParenthesisUnbound) // line with an inline
                 {
                     return l(input);
                 }
@@ -114,7 +114,7 @@ namespace Thousand.Parse
                         {
                             return o(input);
                         }
-                        else if (identifier.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
+                        else if (identifier.Value.Kind == TokenKind.LeftParenthesisUnbound) // a line which begins with an inline object
                         {
                             return l(input);
                         }
@@ -161,7 +161,7 @@ namespace Thousand.Parse
             select new AST.Argument(name, @default);
 
         public static TokenListParser<TokenKind, AST.Argument[]> ClassArgs { get; } =
-            from begin in Token.EqualTo(TokenKind.LeftParenthesis)
+            from begin in Token.EqualTo(TokenKind.LeftParenthesisBound)
             from arguments in ClassArg.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Comma))
             from end in Token.EqualTo(TokenKind.RightParenthesis)
             select arguments;

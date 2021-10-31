@@ -46,9 +46,9 @@ namespace Thousand.Parse
          * Line parts. *
          ***************/
         public static TokenListParser<TokenKind, T> Inline<T>(TokenListParser<TokenKind, T> pT) =>
-            from begin in Token.EqualTo(TokenKind.Pipe)
+            from begin in Token.EqualTo(TokenKind.LeftParenthesisUnbound)
             from t in pT
-            from end in Token.EqualTo(TokenKind.Pipe)
+            from end in Token.EqualTo(TokenKind.RightParenthesis)
             select t;
 
         public static TokenListParser<TokenKind, OneOf<Identifier, T>> SegmentTarget<T>(TokenListParser<TokenKind, T> pT) =>
