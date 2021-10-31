@@ -4,6 +4,8 @@ namespace Thousand.Parse
 {
     public enum TokenKind
     {
+        None = 0,
+
         [Token(Example = "[")]
         LeftBracket,
 
@@ -37,19 +39,9 @@ namespace Thousand.Parse
         [Token(Example = ".")]
         Period,
 
-        [Token(Example = "$*")]
-        Placeholder,
-
         LineSeparator,
 
-        [Token(Category = "arrow")]
-        LeftArrow,
-        [Token(Category = "arrow")]
-        RightArrow,
-        [Token(Category = "arrow")]
-        NoArrow,
-        [Token(Category = "arrow")]
-        DoubleArrow,
+        Arrow,
 
         [Token(Example = "none")]
         NoneKeyword,

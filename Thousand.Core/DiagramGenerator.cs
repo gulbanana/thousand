@@ -22,7 +22,7 @@ namespace Thousand
         public DiagramGenerator()
         {
             api = new();
-            tokenizer = Parse.Tokenizer.Build();
+            tokenizer = new Parse.Tokenizer();
         }
 
         /// <summary>Create a diagram from source code.</summary>

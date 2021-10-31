@@ -2,9 +2,9 @@
 {
     public enum ArrowKind
     {
+        Neither,
         Forward,
         Backward,
-        Neither,
         Both
     }
 }

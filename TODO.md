@@ -41,3 +41,5 @@ TO DO
 * reconsider name of space/gutter (css calls it gap)
 * runtime colour names
 * document all attributes
+* stop triggering completion on comma?
+* escaped strings don't tokenize properly in vscode

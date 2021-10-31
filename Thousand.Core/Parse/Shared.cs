@@ -61,10 +61,13 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, ArrowKind> Arrow { get; } =
             from begin in Token.EqualTo(TokenKind.LineSeparator).Optional()
-            from arrow in Token.EqualTo(TokenKind.RightArrow).Value(ArrowKind.Forward)
-                .Or(Token.EqualTo(TokenKind.LeftArrow).Value(ArrowKind.Backward))
-                .Or(Token.EqualTo(TokenKind.NoArrow).Value(ArrowKind.Neither))
-                .Or(Token.EqualTo(TokenKind.DoubleArrow).Value(ArrowKind.Both))
+            from arrow in Token.EqualTo(TokenKind.Arrow).Select(t => t.ToStringValue() switch
+            {
+                "->" => ArrowKind.Forward,
+                "<-" => ArrowKind.Backward,
+                "<>" => ArrowKind.Both,
+                "--" or _ => ArrowKind.Neither
+            })
             from end in Token.EqualTo(TokenKind.LineSeparator).Optional()
             select arrow;
 

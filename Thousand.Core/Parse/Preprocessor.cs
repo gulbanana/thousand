@@ -33,7 +33,7 @@ namespace Thousand.Parse
 
         private static AST.UntypedDocument? Preprocess(GenerationState state, string source)
         {
-            var tokenizer = Tokenizer.Build();
+            var tokenizer = new Tokenizer();
 
             // XXX consider merging this with the version in AnalysisService (and they could both use Tokenizer?)
             var untypedTokens = tokenizer.TryTokenize(source);

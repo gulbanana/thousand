@@ -30,7 +30,7 @@ namespace Thousand.Benchmarks
 
         public Stages()
         {
-            tokenizer = Tokenizer.Build();
+            tokenizer = new Tokenizer();
             renderer = new SVGRenderer();
         }
 

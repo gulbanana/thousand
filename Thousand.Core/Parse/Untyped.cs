@@ -159,7 +159,7 @@ namespace Thousand.Parse
                         }
 
                         var arrow = identifier.Remainder.ConsumeToken();
-                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.Arrow)
                         {
                             return Ref(() => Line!).Select(x => (AST.UntypedObjectContent)x)(input);
                         }
@@ -243,7 +243,7 @@ namespace Thousand.Parse
                         }
 
                         var arrow = identifierOrInline.Remainder.ConsumeToken();
-                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.LeftArrow or TokenKind.RightArrow or TokenKind.NoArrow or TokenKind.DoubleArrow)
+                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.Arrow)
                         {
                             return Line.Select(x => (AST.UntypedDocumentContent)x)(input);
                         }

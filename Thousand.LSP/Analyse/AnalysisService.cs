@@ -34,7 +34,7 @@ namespace Thousand.LSP.Analyse
             this.generationService = generationService;
 
             this.api = api;
-            this.tokenizer = Tokenizer.Build();
+            this.tokenizer = new Tokenizer();
 
             var stdlibState = new GenerationState();
             var stdlibSource = DiagramGenerator.ReadStdlib();

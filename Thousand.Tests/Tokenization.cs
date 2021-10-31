@@ -11,7 +11,7 @@ namespace Thousand.Tests
 
         public Tokenization()
         {
-            sut = Tokenizer.Build();
+            sut = new Tokenizer();
         }
 
         [Fact]
@@ -118,21 +118,47 @@ bar""", output.ElementAt(1).ToStringValue());
 
             AssertEx.Sequence(output.Select(t => t.Kind), 
                 TokenKind.Identifier, // foo
-                TokenKind.NoArrow,    // --
+                TokenKind.Arrow,    // --
                 TokenKind.Identifier, // foo-bar
-                TokenKind.LeftArrow,  // <-
+                TokenKind.Arrow,  // <-
                 TokenKind.Identifier, // f
-                TokenKind.RightArrow, // ->
+                TokenKind.Arrow, // ->
                 TokenKind.Identifier, // b-f
                 TokenKind.Identifier, // b--f
-                TokenKind.NoArrow,    // b--f
+                TokenKind.Arrow,    // b--f
                 TokenKind.Identifier, // b--f
                 TokenKind.Identifier, // b
-                TokenKind.NoArrow,    // --
+                TokenKind.Arrow,    // --
                 TokenKind.Identifier, // f
                 TokenKind.Number,     // -1
                 TokenKind.Identifier  // f
             );
+        }
+
+        [Fact]
+        public void MultipleBlankLines()
+        {
+            var output = sut.Tokenize(@"
+
+");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.LineSeparator, TokenKind.LineSeparator);
+        }
+
+        [Fact]
+        public void MultipleBlankLines_Unix()
+        {
+            var output = sut.Tokenize("\n\n");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.LineSeparator, TokenKind.LineSeparator);
+        }
+
+        [Fact]
+        public void MultipleBlankLines_Windows()
+        {
+            var output = sut.Tokenize("\r\n\r\n");
+
+            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.LineSeparator, TokenKind.LineSeparator);
         }
     }
 }
