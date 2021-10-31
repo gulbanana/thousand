@@ -7,7 +7,7 @@ namespace Thousand.LSP
 {
     static class BufferExtensions
     {
-        public static Range AsRange(this Superpower.Model.TextSpan span)
+        public static Range AsRange(this TextSpan span)
         {
             var start = span.Position;
             var end = span.Skip(span.Length).Position;

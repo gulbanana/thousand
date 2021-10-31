@@ -59,7 +59,7 @@ namespace Thousand.LSP
             {
                 Severity = DiagnosticSeverity.Warning,
                 Source = "thousand",
-                Range = w.Span.IsAtEnd ? endOfFile : w.Span.AsRange(),
+                Range = w.Span.AsRange(),
                 Code = w.Kind.ToString(),
                 Message = w.Message
             });
@@ -68,7 +68,7 @@ namespace Thousand.LSP
             {
                 Severity = DiagnosticSeverity.Error,
                 Source = "thousand",
-                Range = w.Span.IsAtEnd ? endOfFile : w.Span.AsRange(),
+                Range = w.Span.AsRange(),
                 Code = w.Kind.ToString(),
                 Message = w.Message
             });
