@@ -20,5 +20,6 @@
 
   <ItemGroup>
     <Content Include="..\samples\*.1000" CopyToOutputDirectory="PreserveNewest" Link="samples\%(Filename).1000" />
+    <Content Include="..\Thousand.Benchmarks\*.1000" CopyToOutputDirectory="PreserveNewest" Link="benchmarks\%(Filename).1000" />
   </ItemGroup>
 </Project>

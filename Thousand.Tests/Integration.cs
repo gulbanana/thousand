@@ -26,6 +26,14 @@ namespace Thousand.Tests
             }
         }
 
+        private static IEnumerable<object[]> Benchmarks()
+        {
+            foreach (var filename in Directory.GetFiles("benchmarks"))
+            {
+                yield return new object[] { Path.GetFileName(filename) };
+            }
+        }
+
         [Fact]
         public void ParseStdlib()
         {
@@ -45,6 +53,18 @@ namespace Thousand.Tests
             generator
                 .GenerateImage(graph)
                 .Switch(result => Assert.Empty(result.Warnings), errors => AssertEx.Fail(errors.First().ToString()));            
+        }
+
+        [Theory, MemberData(nameof(Benchmarks))]
+        public void RenderBenchmark(string filename)
+        {
+            var graph = File.ReadAllText(@"benchmarks\" + filename);
+
+            using var generator = new DiagramGenerator<SkiaSharp.SKImage>(new Render.SkiaRenderer());
+
+            generator
+                .GenerateImage(graph)
+                .Switch(result => Assert.Empty(result.Warnings), errors => AssertEx.Fail(errors.First().ToString()));
         }
 
         [Fact]
