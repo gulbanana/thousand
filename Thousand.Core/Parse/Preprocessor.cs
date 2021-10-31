@@ -448,12 +448,18 @@ namespace Thousand.Parse
             return new AST.UntypedDocument(
                 ast.Declarations
                     .Where(d => d.Value is not AST.UntypedClass c || c.Arguments.Value.Length == 0)
-                    .Select(d => d.Select(v => v switch 
-                    { 
-                        AST.UntypedClass c => RemoveClassTemplates(c), 
-                        AST.UntypedObject o => RemoveObjectTemplates(o), 
-                        _ => v 
-                    }))
+                    .Select(d => d switch
+                    {
+                        IMacro<AST.UntypedClass> c => c.Select(RemoveClassTemplates),
+                        IMacro<AST.UntypedObject> o => o.Select(RemoveObjectTemplates),
+                        _ => d
+                    })
+                    //.Select(d => d.Select(v => v switch 
+                    //{ 
+                    //    AST.UntypedClass c => RemoveClassTemplates(c), 
+                    //    AST.UntypedObject o => RemoveObjectTemplates(o), 
+                    //    _ => v 
+                    //}))
                     .ToArray()
             );
         }

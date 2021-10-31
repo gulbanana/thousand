@@ -414,5 +414,50 @@ object bar");
             Assert.IsAssignableFrom<AST.TypedClass>(result.Value.Declarations[0]);
             Assert.IsType<AST.TypedObject>(result.Value.Declarations[1]);
         }
+
+        [Fact]
+        public void Declaration_Untyped_Object()
+        {
+            var tokens = tokenizer.Tokenize(@"object foo");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Single(result.Value.Declarations);
+            Assert.Single(result.Value.Declarations.OfType<IMacro<AST.UntypedObject>>());
+        }
+
+        [Fact]
+        public void Declaration_Untyped_Empty()
+        {
+            var tokens = tokenizer.Tokenize(@"");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Single(result.Value.Declarations);
+            Assert.Single(result.Value.Declarations.OfType<IMacro<AST.EmptyDeclaration>>());
+        }
+
+        [Fact]
+        public void Declaration_Untyped_Invalid()
+        {
+            var tokens = tokenizer.Tokenize(@"object foo bar");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Single(result.Value.Declarations);
+            Assert.Single(result.Value.Declarations.OfType<IMacro<AST.InvalidDeclaration>>());
+        }
+
+        [Fact]
+        public void Declaration_Untyped_Invalid_Multiline()
+        {
+            var tokens = tokenizer.Tokenize(@"object foo {
+} bar");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue);
+            Assert.Single(result.Value.Declarations);
+            Assert.Single(result.Value.Declarations.OfType<IMacro<AST.InvalidDeclaration>>());
+        }
     }
 }

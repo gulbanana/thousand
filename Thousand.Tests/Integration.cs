@@ -142,11 +142,17 @@ namespace Thousand.Tests
             Assert.Equal(new AnyAnchor(), line.To.Anchor);
         }
 
-
         [Fact]
         public void Regression_MultiwordEntityAttribute_UsingASTTypechecker()
         {
             Assert.True(Facade.TryParse(@"class x [stroke-colour=black]", state, out var document), state.JoinErrors());
+        }
+
+        [Fact]
+        public void Regression_DeclarationTrailersAreErrors()
+        {
+            Facade.TryParse(@"object foo; object bar {} baz", state, out var doc);
+            Assert.True(state.HasErrors());
         }
     }
 }

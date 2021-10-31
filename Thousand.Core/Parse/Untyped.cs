@@ -146,8 +146,8 @@ namespace Thousand.Parse
             from decs in Declaration.ManyOptionalDelimitedBy(
                 TokenKind.LineSeparator, 
                 TokenKind.RightBrace, 
-                empty: (input, remainder) => new Macro<AST.UntypedDeclaration>(input, remainder, new AST.EmptyDeclaration()),
-                invalid: (input, remainder) => new Macro<AST.UntypedDeclaration>(input, remainder, new AST.InvalidDeclaration()))
+                empty: (input, remainder) => new Macro<AST.EmptyDeclaration>(input, remainder, new AST.EmptyDeclaration()),
+                invalid: (input, remainder) => new Macro<AST.InvalidDeclaration>(input, remainder, new AST.InvalidDeclaration()))
             from end in Token.EqualTo(TokenKind.RightBrace)
             select decs;
 
@@ -200,8 +200,8 @@ namespace Thousand.Parse
             Declaration
                  .ManyOptionalDelimitedBy(
                      TokenKind.LineSeparator,
-                     invalid: (input, remainder) => new Macro<AST.UntypedDeclaration>(input, remainder, new AST.InvalidDeclaration()),
-                     empty: (input, remainder) => new Macro<AST.UntypedDeclaration>(input, remainder, new AST.EmptyDeclaration()))
+                     invalid: (input, remainder) => new Macro<AST.InvalidDeclaration>(input, remainder, new AST.InvalidDeclaration()),
+                     empty: (input, remainder) => new Macro<AST.EmptyDeclaration>(input, remainder, new AST.EmptyDeclaration()))
                  .Select(decs => new AST.UntypedDocument(decs))
                  .AtEnd();
     }
