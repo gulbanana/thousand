@@ -52,96 +52,114 @@ namespace Thousand.LSP.Handlers
 
             if (analysis.Main != null)
             {
-                var aCtx = analysis.Main.Attributes.FirstOrDefault(a => a.Range.Contains(position));
-                if (aCtx.Syntax != null)
+                for (var i = 0; i < analysis.Main.Attributes.Count; i++)
                 {
-                    var candidates = aCtx.ParentKind switch
+                    if (analysis.Main.Attributes[i].Range.Contains(position))
                     {
-                        ParentKind.Class => api.ClassAttributes.AsEnumerable(),
-                        ParentKind.Document => api.EntityDefinitions,
-                        ParentKind.Object => api.ObjectDefinitions,
-                        ParentKind.Line => api.LineDefinitions,
-                    };
+                        var syntax = analysis.Main.Attributes[i].Syntax;
 
-                    foreach (var candidate in candidates)
-                    {
-                        if (aCtx.Syntax.Key == null || (candidate.Names.Contains(aCtx.Syntax.Key.Text, StringComparer.OrdinalIgnoreCase) || !candidate.Names.Any(name => aCtx.ParentAttributes.Contains(name))))
+                        var candidates = analysis.Main.Attributes[i].ParentKind switch
                         {
-                            foreach (var name in candidate.Names)
+                            ParentKind.Class => api.ClassAttributes.AsEnumerable(),
+                            ParentKind.Document => api.EntityDefinitions,
+                            ParentKind.Object => api.ObjectDefinitions,
+                            ParentKind.Line => api.LineDefinitions,
+                        };
+
+                        foreach (var candidate in candidates)
+                        {
+                            if (syntax.Key == null || 
+                                candidate.Names.Contains(syntax.Key.Text, StringComparer.OrdinalIgnoreCase) || 
+                                !candidate.Names.Any(name => analysis.Main.Attributes[i].ParentAttributes.Contains(name)))
                             {
-                                logger.LogInformation($"{name} doc: {api.Documentation.ContainsKey(name)}");
-                                completions.Add(new CompletionItem
+                                foreach (var name in candidate.Names)
                                 {
-                                    Kind = CompletionItemKind.Enum,
-                                    Label = name,
-                                    InsertText = aCtx.Syntax.HasEqualsSign ? name : $"{name}=",
-                                    Documentation = candidate.Documentation != null ? new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation } : null,
-                                    CommitCharacters = commitAttribute
-                                });
+                                    logger.LogInformation($"{name} doc: {api.Documentation.ContainsKey(name)}");
+                                    completions.Add(new CompletionItem
+                                    {
+                                        Kind = CompletionItemKind.Enum,
+                                        Label = name,
+                                        InsertText = syntax.HasEqualsSign ? name : $"{name}=",
+                                        Documentation = candidate.Documentation != null ? new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation } : null,
+                                        CommitCharacters = commitAttribute
+                                    });
+                                }
                             }
                         }
+
+                        break;
                     }
                 }
 
-                var cCtx = analysis.Main.ClassNames.FirstOrDefault(c => c.Range.Contains(position));
-                if (cCtx.Text != null)
+                for (var i = 0; i < analysis.Main.ClassNames.Count; i++)
                 {
-                    var existing = cCtx.Text;
-
-                    var candidates = analysis.ClassDefinitions.Keys;
-                    foreach (var candidate in candidates.Where(c => cCtx.Scope.FindClass(c.Name) != null))
+                    if (analysis.Main.ClassNames[i].Range.Contains(position))
                     {
-                        var completion = candidate.Name.Text;
-                        var existingStart = existing.IndexOf(completion[0]);
-                        var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
-                        var location = new Range(position.Delta(0, -existingLength), position);
+                        var existing = analysis.Main.ClassNames[i].Text;
+                        var candidates = analysis.ClassDefinitions.Keys;
+                        var scope = analysis.Main.ClassNames[i].Scope;
 
-                        logger.LogInformation($"suggesting completion: {completion}@{location}");
-
-                        completions.Add(new CompletionItem
+                        foreach (var candidate in candidates.Where(c => scope.FindClass(c.Name) != null))
                         {
-                            Kind = CompletionItemKind.Class,
-                            Label = candidate.Name.Text,
-                            TextEdit = new TextEdit { NewText = completion, Range = location },
-                            Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
-                            CommitCharacters = commitClass
-                        });
-                    }
+                            var completion = candidate.Name.Text;
+                            var existingStart = existing.IndexOf(completion[0]);
+                            var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
+                            var location = new Range(position.Delta(0, -existingLength), position);
 
-                    if (cCtx.IsAtStart)
-                    {
-                        completions.Add(new CompletionItem
+                            logger.LogInformation($"suggesting completion: {completion}@{location}");
+
+                            completions.Add(new CompletionItem
+                            {
+                                Kind = CompletionItemKind.Class,
+                                Label = candidate.Name.Text,
+                                TextEdit = new TextEdit { NewText = completion, Range = location },
+                                Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
+                                CommitCharacters = commitClass
+                            });
+                        }
+
+                        if (analysis.Main.ClassNames[i].IsAtStart)
                         {
-                            Kind = CompletionItemKind.Keyword,
-                            Label = "class",
-                            CommitCharacters = commitKeyword
-                        });
+                            completions.Add(new CompletionItem
+                            {
+                                Kind = CompletionItemKind.Keyword,
+                                Label = "class",
+                                CommitCharacters = commitKeyword
+                            });
+                        }
+
+                        break;
                     }
                 }
 
-                var oCtx = analysis.Main.ObjectNames.FirstOrDefault(c => c.Range.Contains(position));
-                if (oCtx.Text != null)
+                for (var i = 0; i < analysis.Main.ObjectNames.Count; i++)
                 {
-                    var existing = oCtx.Text;
-
-                    var candidates = analysis.ObjectDefinitions.Keys;
-                    foreach (var candidate in candidates.Where(c => c.Name != null && oCtx.Scope.FindObject(c.Name) != null))
+                    if (analysis.Main.ObjectNames[i].Range.Contains(position))
                     {
-                        var completion = candidate.Name!.Text;
-                        var existingStart = existing.IndexOf(completion[0]);
-                        var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
-                        var location = new Range(position.Delta(0, -existingLength), position);
+                        var existing = analysis.Main.ObjectNames[i].Text;
+                        var candidates = analysis.ObjectDefinitions.Keys;
+                        var scope = analysis.Main.ObjectNames[i].Scope;
 
-                        logger.LogInformation($"suggesting completion: {completion}@{location}");
-
-                        completions.Add(new CompletionItem
+                        foreach (var candidate in candidates.Where(c => c.Name != null && scope.FindObject(c.Name) != null))
                         {
-                            Kind = CompletionItemKind.Variable,
-                            Label = candidate.Name.Text,
-                            TextEdit = new TextEdit { NewText = completion, Range = location },
-                            Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
-                            CommitCharacters = commitObject
-                        });
+                            var completion = candidate.Name!.Text;
+                            var existingStart = existing.IndexOf(completion[0]);
+                            var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
+                            var location = new Range(position.Delta(0, -existingLength), position);
+
+                            logger.LogInformation($"suggesting completion: {completion}@{location}");
+
+                            completions.Add(new CompletionItem
+                            {
+                                Kind = CompletionItemKind.Variable,
+                                Label = candidate.Name.Text,
+                                TextEdit = new TextEdit { NewText = completion, Range = location },
+                                Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
+                                CommitCharacters = commitObject
+                            });
+                        }
+
+                        break;
                     }
                 }
             }
