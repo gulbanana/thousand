@@ -18,10 +18,7 @@ namespace Thousand.Tests
         [Fact]
         public void IntegrationTest()
         {
-            var document = new AST.TypedDocument(new AST.TypedDocumentContent[]
-            {
-                new AST.DocumentAttribute(new AST.RegionFillAttribute(Colour.Blue)),
-
+            var document = new AST.TypedDocument(
                 new AST.ObjectClass("object"),
                 new AST.LineClass("line"),
                 new AST.ObjectClass("big", new AST.TextFontSizeAttribute(50)), // increases font
@@ -32,24 +29,22 @@ namespace Thousand.Tests
                     new AST.RegionLayoutRowsAttribute(new EqualContentSize())
                 ),
 
-                new AST.TypedObject(new Parse.Identifier[]{new("big"), new("group")}, null, Array.Empty<AST.ObjectAttribute>(), new AST.TypedObjectContent[] //uses larger font
-                {
+                new AST.TypedObject(new Parse.Identifier[]{new("big"), new("group")}, null, Array.Empty<AST.ObjectAttribute>(), //uses larger font                
                     new AST.TypedObject("object", "foo"),
-                    new AST.TypedObject("object", "bar", new AST.TextFontSizeAttribute(40)), // reduces font again
-                }),
+                    new AST.TypedObject("object", "bar", new AST.TextFontSizeAttribute(40)) // reduces font again
+                ),
 
                 new AST.TypedObject("big", "baz"), //uses larger font
                 new AST.TypedObject("object", "qux"), 
 
                 // chain containing two edges, both from foo to bar
                 new AST.TypedLine("line", new AST.LineSegment<AST.TypedObject>[]{ new("foo", ArrowKind.Forward), new("bar", ArrowKind.Backward), new("foo", null) })
-            });
+            );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(Colour.Blue, root!.Config.Fill);
-            Assert.Equal(5, root.WalkObjects().Count());
+            Assert.Equal(5, root!.WalkObjects().Count());
             Assert.Equal(3, root.Objects.Count); // group, big baz
             Assert.Equal(2, root.Objects[0].Region.Objects.Count); // group { foo, bar }
             Assert.Equal(2, root.Edges.Count);
@@ -62,13 +57,12 @@ namespace Thousand.Tests
         [Fact]
         public void ScopeSibling()
         {
-            var document = new AST.TypedDocument(new AST.TypedDocumentContent[]
-            {
+            var document = new AST.TypedDocument(
                 new AST.ObjectClass("object"),
                 new AST.LineClass("line"),
                 new AST.TypedObject("object", "foo"),
                 new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
-            });
+            );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
@@ -79,15 +73,14 @@ namespace Thousand.Tests
         [Fact]
         public void ScopeBubble()
         {
-            var document = new AST.TypedDocument(new AST.TypedDocumentContent[]
-            {
+            var document = new AST.TypedDocument(
                 new AST.ObjectClass("object"),
                 new AST.LineClass("line"),
                 new AST.TypedObject("object", null, Array.Empty<AST.ObjectAttribute>(),
                     new AST.TypedObject("object", "foo")
                 ),                
                 new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
-            });
+            );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
@@ -98,8 +91,7 @@ namespace Thousand.Tests
         [Fact]
         public void ScopeShadow()
         {
-            var document = new AST.TypedDocument(new AST.TypedDocumentContent[]
-            {
+            var document = new AST.TypedDocument(
                 new AST.ObjectClass("object"),
                 new AST.LineClass("line"),
                 new AST.TypedObject("object", "foo", new AST.NodeShapeAttribute(ShapeKind.Octagon)),
@@ -108,7 +100,7 @@ namespace Thousand.Tests
                     new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
                 ),
                 new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
-            });
+            );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());

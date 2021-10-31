@@ -18,7 +18,7 @@ class foo($w) [min-width=$w]
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            Assert.Empty(ast!.Declarations.Where(d => d.IsT1));
+            Assert.Empty(ast!.Declarations.OfType<AST.ObjectClass>());
         }
 
         [Fact]
@@ -30,7 +30,7 @@ foo(1) bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
         }
@@ -45,7 +45,7 @@ foo(2) a--b
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.LineClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.LineClass>().First();
 
             Assert.Contains(new AST.EntityStrokeAttribute(null, null, new PositiveWidth(2)), klass.Attributes);
         }
@@ -60,7 +60,7 @@ bar baz
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
         }
@@ -75,8 +75,8 @@ bar(1) baz
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var foo = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
-            var bar = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).Last();
+            var foo = ast!.Declarations.OfType<AST.ObjectClass>().First();
+            var bar = ast!.Declarations.OfType<AST.ObjectClass>().Last();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), foo.Attributes);
             Assert.Contains(new AST.NodeMinHeightAttribute(1), bar.Attributes);
@@ -93,8 +93,8 @@ baz(1) quux
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var foo = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).ElementAt(0);
-            var bar = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).ElementAt(1);
+            var foo = ast!.Declarations.OfType<AST.ObjectClass>().ElementAt(0);
+            var bar = ast!.Declarations.OfType<AST.ObjectClass>().ElementAt(1);
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), foo.Attributes);
             Assert.Contains(new AST.NodeMinHeightAttribute(1), bar.Attributes);
@@ -110,11 +110,11 @@ foo(2) baz
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klasses = ast!.Declarations.Where(d => d.IsT1).Select(d => (AST.ObjectClass)d).ToList();
+            var klasses = ast!.Declarations.OfType<AST.ObjectClass>().ToList();
             Assert.Equal(2, klasses.Count);
             Assert.NotEqual(klasses[0].Name.Text, klasses[1].Name.Text);
 
-            var objekts = ast!.Declarations.Where(d => d.IsT2).Select(d => (AST.TypedObject)d).ToList();
+            var objekts = ast!.Declarations.OfType<AST.TypedObject>().ToList();
             Assert.Equal(2, objekts.Count);
             Assert.NotEqual(objekts[0].Classes[0].Text, objekts[1].Classes[0].Text);
         }
@@ -131,7 +131,7 @@ foo({shape}) bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeShapeAttribute(Enum.Parse<ShapeKind>(shape)), klass.Attributes);
         }
@@ -145,7 +145,7 @@ foo(1, 2) bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
             Assert.Contains(new AST.NodeMinHeightAttribute(2), klass.Attributes);
@@ -172,7 +172,7 @@ object { foo(1) }
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
         }
@@ -186,7 +186,7 @@ object { object { foo(1) } }
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(1), klass.Attributes);
         }
@@ -201,7 +201,7 @@ foo("""")
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var objekt = (AST.TypedObject)ast!.Declarations.Where(d => d.IsT2).FirstOrDefault();
+            var objekt = ast!.Declarations.OfType<AST.TypedObject>().FirstOrDefault();
 
             Assert.NotNull(objekt);
         }
@@ -217,7 +217,7 @@ foo("""")
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var objekt = (AST.TypedObject)ast!.Declarations.Where(d => d.IsT2).FirstOrDefault();
+            var objekt = ast!.Declarations.OfType<AST.TypedObject>().FirstOrDefault();
 
             Assert.NotNull(objekt);
         }
@@ -231,7 +231,7 @@ foo bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
-            var klass = (AST.ObjectClass)ast!.Declarations.Where(d => d.IsT1).First();
+            var klass = ast!.Declarations.OfType<AST.ObjectClass>().First();
 
             Assert.Contains(new AST.NodeMinWidthAttribute(100), klass.Attributes);
         }

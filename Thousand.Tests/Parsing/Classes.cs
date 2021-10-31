@@ -152,42 +152,42 @@ namespace Thousand.Tests.Parsing
         [Fact] 
         public void WithScope()
         {
-            var tokens = tokenizer.Tokenize(@"class foo {shape=square}");
+            var tokens = tokenizer.Tokenize(@"class foo {class bar}");
             var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+            Assert.IsType<AST.ObjectOrLineClass>(((AST.ObjectClass)result.Value).Declarations.Single());
         }
 
         [Fact]
         public void WithScope_AfterAttrs()
         {
-            var tokens = tokenizer.Tokenize(@"class foo [shape=rect] {shape=square}");
+            var tokens = tokenizer.Tokenize(@"class foo [shape=rect] {class bar}");
             var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
             AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Rect));
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.NodeShapeAttribute(ShapeKind.Square));
+            Assert.IsType<AST.ObjectOrLineClass>(((AST.ObjectClass)result.Value).Declarations.Single());
         }
 
         [Fact]
         public void WithScope_AfterAttrs_OLC()
         {
-            var tokens = tokenizer.Tokenize(@"class foo [stroke-colour=black] {stroke-colour=black}");
+            var tokens = tokenizer.Tokenize(@"class foo [stroke-colour=black] {class bar}");
             var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.IsType<AST.ObjectClass>(result.Value);
             AssertEx.Sequence(((AST.ObjectClass)result.Value).Attributes, (AST.ObjectAttribute)new AST.EntityStrokeColourAttribute(Colour.Black));
-            AssertEx.Sequence(((AST.ObjectClass)result.Value).Declarations, (AST.ObjectAttribute)new AST.EntityStrokeColourAttribute(Colour.Black));
+            Assert.IsType<AST.ObjectOrLineClass>(((AST.ObjectClass)result.Value).Declarations.Single());
         }
 
         [Fact]
         public void WithScope_Untyped()
         {
-            var tokens = tokenizer.Tokenize(@"class foo {shape=square}");
+            var tokens = tokenizer.Tokenize(@"class foo {class bar}");
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
@@ -197,7 +197,7 @@ namespace Thousand.Tests.Parsing
         [Fact]
         public void WithScope_Untyped_AfterAttrs()
         {
-            var tokens = tokenizer.Tokenize(@"class foo [shape=rect] {shape=square}");
+            var tokens = tokenizer.Tokenize(@"class foo [shape=rect] {class bar}");
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());

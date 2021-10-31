@@ -50,28 +50,24 @@ namespace Thousand.Evaluate
         }
 
         private void AddDocument(AST.TypedDocument diagram)
-        {
-            foreach (var attr in diagram.Declarations.Where(d => d.IsT0).Select(d => d.AsT0))
-            {
-                attr.Switch(region => Config = ApplyRegionAttributes(Config, region),
-                text => rootFont = ApplyFontAttributes(rootFont, text));
-            }
-            
+        {                       
             foreach (var declaration in diagram.Declarations)
             {
-                if (declaration.IsT1)
+                switch (declaration)
                 {
-                    AddClass(declaration.AsT1, rootScope);
-                }
-                else if (declaration.IsT2)
-                {
-                    rootEntities.Add(AddObject(declaration.AsT2, rootFont, rootScope));
-                }
-                else if (declaration.IsT3)
-                {
-                    var (objects, edges) = AddLine(declaration.AsT3, rootFont, rootScope);
-                    rootEntities.AddRange(objects);
-                    rootEntities.AddRange(edges);
+                    case AST.TypedClass c:
+                        AddClass(c, rootScope);
+                        break;
+
+                    case AST.TypedObject o:
+                        rootEntities.Add(AddObject(o, rootFont, rootScope));
+                        break;
+
+                    case AST.TypedLine l:
+                        var (objects, edges) = AddLine(l, rootFont, rootScope);
+                        rootEntities.AddRange(objects);
+                        rootEntities.AddRange(edges);
+                        break;
                 }
             }
         }
@@ -98,7 +94,7 @@ namespace Thousand.Evaluate
                 var localChildren = c switch
                 {
                     AST.ObjectClass oc => oc.Declarations,
-                    _ => Enumerable.Empty<AST.TypedObjectContent>()
+                    _ => Enumerable.Empty<AST.TypedDeclaration>()
                 };
 
                 var allAttrs = c.BaseClasses
@@ -156,10 +152,7 @@ namespace Thousand.Evaluate
             var shape = new ShapeKind?(ShapeKind.Roundrect);
             var cornerRadius = 15;
 
-            foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes)
-                .Concat(node.Classes.SelectMany(c => scope.FindObjectClass(c, false).Children.Where(d => d.IsT0).Select(d => d.AsT0)))
-                .Concat(node.Attributes)
-                .Concat(node.Declarations.Where(d => d.IsT0).Select(d => d.AsT0)))
+            foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes).Concat(node.Attributes))
             {
                 attr.Switch(e =>
                 {
@@ -252,19 +245,21 @@ namespace Thousand.Evaluate
 
                 foreach (var declaration in childContent)
                 {
-                    if (declaration.IsT1)
+                    switch (declaration)
                     {
-                        AddClass(declaration.AsT1, objectScope);
-                    }
-                    else if (declaration.IsT2)
-                    {
-                        childEntities.Add(AddObject(declaration.AsT2, font, objectScope));
-                    }
-                    else if (declaration.IsT3)
-                    {
-                        var (objects, edges) = AddLine(declaration.AsT3, font, objectScope);
-                        childEntities.AddRange(objects);
-                        childEntities.AddRange(edges);
+                        case AST.TypedClass c:
+                            AddClass(c, objectScope);
+                            break;
+
+                        case AST.TypedObject o:
+                            childEntities.Add(AddObject(o, font, objectScope));
+                            break;
+
+                        case AST.TypedLine l:
+                            var (objects, edges) = AddLine(l, font, objectScope);
+                            childEntities.AddRange(objects);
+                            childEntities.AddRange(edges);
+                            break;
                     }
                 }
             }

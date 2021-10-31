@@ -46,7 +46,7 @@ namespace Thousand.Evaluate
 
         public ObjectContent FindObjectClass(Parse.Identifier name, bool warn)
         {
-            var result = new ObjectContent(false, Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedObjectContent>());
+            var result = new ObjectContent(false, Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedDeclaration>());
 
             if (objectClasses.TryGetValue(name.Text, out var newResult))
             {

@@ -211,7 +211,7 @@ bar""");
         public void Scope_Empty()
         {
             var tokens = tokenizer.Tokenize(@"{}");
-            var result = Typed.DeclarationScope(Typed.ObjectContent)(tokens);
+            var result = Typed.DeclarationScope(Typed.Declaration)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Empty(result.Value);
@@ -225,7 +225,7 @@ bar""");
     object bar 
     line foo <- bar
 }");
-            var result = Typed.DeclarationScope(Typed.ObjectContent)(tokens);
+            var result = Typed.DeclarationScope(Typed.Declaration)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal(3, result.Value.Length);
@@ -235,7 +235,6 @@ bar""");
         public void Scope_InContext()
         {
             var tokens = tokenizer.Tokenize(@"object {
-    shape=rect
     class foo
 	object bar
     object baz
@@ -244,7 +243,7 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(5, result.Value.Declarations.Length);
+            Assert.Equal(4, result.Value.Declarations.Length);
         }
 
         [Fact]
@@ -255,7 +254,7 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Single(result.Value.Declarations);
-            Assert.True(result.Value.Declarations.Single().IsT2);
+            Assert.IsType<AST.TypedObject>(result.Value.Declarations.Single());
         }
 
         [Fact]
@@ -268,7 +267,7 @@ object ""baz""");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar", "baz");
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.Text), "foo", "bar", "baz");
         }
 
         [Fact]
@@ -281,7 +280,7 @@ object ""bar""");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.Text), "foo", "bar");
         }
 
         [Fact]
@@ -317,7 +316,7 @@ object ""bar""");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.Where(d => d.IsT2).Select(n => n.AsT2.Name?.Text), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.Text), "foo", "bar");
         }
 
         [Fact]
@@ -330,102 +329,90 @@ line foo -> bar");
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Collection(result.Value.Declarations,
-                d => Assert.True(d.IsT2),
-                d => Assert.True(d.IsT2),
-                d => Assert.True(d.IsT3)
+                d => Assert.IsType<AST.TypedObject>(d),
+                d => Assert.IsType<AST.TypedObject>(d),
+                d => Assert.IsType<AST.TypedLine>(d)
             );
-        }
-
-        [Fact]
-        public void Declaration_Attribute()
-        {
-            var tokens = tokenizer.Tokenize(@"fill=black");
-            var result = Typed.DocumentContent(tokens);
-
-            Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT0);
         }
 
         [Fact]
         public void Declaration_Class()
         {
             var tokens = tokenizer.Tokenize(@"class foo [stroke=none]");
-            var result = Typed.DocumentContent(tokens);
+            var result = Typed.Declaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT1);
+            Assert.IsType<AST.ObjectOrLineClass>(result.Value);
         }
 
         [Fact]
         public void Declaration_Object()
         {
             var tokens = tokenizer.Tokenize(@"object foo [shape=square]");
-            var result = Typed.DocumentContent(tokens);
+            var result = Typed.Declaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT2);
+            Assert.IsType<AST.TypedObject>(result.Value);
         }
 
         [Fact]
         public void Declaration_AnonymousObject()
         {
             var tokens = tokenizer.Tokenize(@"object {}");
-            var result = Typed.DocumentContent(tokens);
+            var result = Typed.Declaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT2);
+            Assert.IsType<AST.TypedObject>(result.Value);
         }
 
         [Fact]
         public void Declaration_WhollyAnonymousObject()
         {
             var tokens = tokenizer.Tokenize(@"object");
-            var result = Typed.DocumentContent(tokens);
+            var result = Typed.Declaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT2);
+            Assert.IsType<AST.TypedObject>(result.Value);
         }
 
         [Fact]
         public void Declaration_Line()
         {
             var tokens = tokenizer.Tokenize(@"line foo->bar [stroke=none]");
-            var result = Typed.DocumentContent(tokens);
+            var result = Typed.Declaration(tokens);
 
             Assert.True(result.HasValue);
-            Assert.True(result.Value.IsT3);
+            Assert.IsType<AST.TypedLine>(result.Value);
         }
 
         [Fact]
         public void Declaration_All()
         {
-            var tokens = tokenizer.Tokenize(@"fill=black
-class foo [stroke=none]
+            var tokens = tokenizer.Tokenize(@"class foo [stroke=none]
 object foo [shape=square]
 line foo->bar [offset=1 1]");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue);
-            Assert.Equal(4, result.Value.Declarations.Length);
-            Assert.True(result.Value.Declarations[0].IsT0);
-            Assert.True(result.Value.Declarations[1].IsT1);
-            Assert.True(result.Value.Declarations[2].IsT2);
-            Assert.True(result.Value.Declarations[3].IsT3);
+            Assert.Equal(3, result.Value.Declarations.Length);
+            Assert.IsAssignableFrom<AST.TypedClass>(result.Value.Declarations[0]);
+            Assert.IsType<AST.TypedObject>(result.Value.Declarations[1]);
+            Assert.IsType<AST.TypedLine>(result.Value.Declarations[2]);
         }
 
         [Fact]
         public void Declaration_BlankLines()
         {
-            var tokens = tokenizer.Tokenize(@"fill=black
+            var tokens = tokenizer.Tokenize(@"class foo [stroke=none]
 
 
-class foo [stroke=none]");
+object bar");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue);
             Assert.Equal(2, result.Value.Declarations.Length);
-            Assert.True(result.Value.Declarations[0].IsT0);
-            Assert.True(result.Value.Declarations[1].IsT1);
+            Assert.IsAssignableFrom<AST.TypedClass>(result.Value.Declarations[0]);
+            Assert.IsType<AST.TypedObject>(result.Value.Declarations[1]);
         }
     }
 }

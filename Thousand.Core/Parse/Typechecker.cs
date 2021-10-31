@@ -116,11 +116,11 @@ namespace Thousand.Parse
         {
             foreach (var invalidDeclaration in ast.Declarations.OfType<IMacro<AST.InvalidDeclaration>>())
             {
-                state.AddError(invalidDeclaration.Location, endSpan, Typed.DocumentContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, endSpan, Typed.Declaration(invalidDeclaration.Location));
             }
 
             return new AST.TypedDocument(
-                ast.Declarations.SelectMany(CheckDocumentContent).ToArray()
+                ast.Declarations.SelectMany(CheckDeclaration).ToArray()
             );
         }
 
@@ -128,7 +128,7 @@ namespace Thousand.Parse
         {
             foreach (var invalidDeclaration in ast.Declarations.OfType<IMacro<AST.InvalidDeclaration>>())
             {
-                state.AddError(invalidDeclaration.Location, endSpan, Typed.ObjectContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, endSpan, Typed.Declaration(invalidDeclaration.Location));
             }
 
             foreach (var missingBaseClass in ast.BaseClasses.Where(d => d.Value == null))
@@ -142,7 +142,7 @@ namespace Thousand.Parse
                     ast.Name,
                     ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                     ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
-                    ast.Declarations.SelectMany(CheckObjectContent).ToArray()
+                    ast.Declarations.SelectMany(CheckDeclaration).ToArray()
                 );
             }
 
@@ -167,7 +167,7 @@ namespace Thousand.Parse
                         ast.Name,
                         ast.BaseClasses.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                         ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
-                        ast.Declarations.SelectMany(CheckObjectContent).ToArray()
+                        ast.Declarations.SelectMany(CheckDeclaration).ToArray()
                     );
                 }
             }
@@ -188,7 +188,7 @@ namespace Thousand.Parse
         {
             foreach (var invalidDeclaration in ast.Declarations.OfType<IMacro<AST.InvalidDeclaration>>())
             {
-                state.AddError(invalidDeclaration.Location, endSpan, Typed.ObjectContent(invalidDeclaration.Location));
+                state.AddError(invalidDeclaration.Location, endSpan, Typed.Declaration(invalidDeclaration.Location));
             }
 
             foreach (var missingClass in ast.Classes.Where(d => d.Value == null))
@@ -205,7 +205,7 @@ namespace Thousand.Parse
                 ast.Classes.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
                 ast.Name,
                 ast.Attributes.Select(CheckObjectAttribute).WhereNotNull().ToArray(),
-                ast.Declarations.SelectMany(CheckObjectContent).ToArray()
+                ast.Declarations.SelectMany(CheckDeclaration).ToArray()
             );
         }
 
@@ -228,20 +228,12 @@ namespace Thousand.Parse
             );
         }
 
-        private IEnumerable<AST.TypedDocumentContent> CheckDocumentContent(IMacro<AST.UntypedDeclaration> declaration) => declaration.Value switch
+        private IEnumerable<AST.TypedDeclaration> CheckDeclaration(IMacro<AST.UntypedDeclaration> declaration) => declaration.Value switch
         {
-            AST.UntypedClass c => new AST.TypedDocumentContent[] { CheckClass(c) },
-            AST.UntypedObject o => new AST.TypedDocumentContent[] { CheckObject(o) },
-            AST.UntypedLine l => new AST.TypedDocumentContent[] { CheckLine(l) },
-            _ => Array.Empty<AST.TypedDocumentContent>()
-        };
-
-        private IEnumerable<AST.TypedObjectContent> CheckObjectContent(IMacro<AST.UntypedDeclaration> declaration) => declaration.Value switch
-        { 
-            AST.UntypedClass c => new AST.TypedObjectContent[] { CheckClass(c) },
-            AST.UntypedObject o => new AST.TypedObjectContent[] { CheckObject(o) },
-            AST.UntypedLine l => new AST.TypedObjectContent[] { CheckLine(l) },
-            _ => Array.Empty<AST.TypedObjectContent>()
+            AST.UntypedClass c => new[] { CheckClass(c) },
+            AST.UntypedObject o => new[] { CheckObject(o) },
+            AST.UntypedLine l => new[] { CheckLine(l) },
+            _ => Array.Empty<AST.TypedDeclaration>()
         };
     }
 }

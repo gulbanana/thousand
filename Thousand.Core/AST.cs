@@ -140,10 +140,12 @@ namespace Thousand.AST
     /****************************************************************
      * Strict AST, with macros resolved and attributes fully parsed *
      ****************************************************************/
-    public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses);
-    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, TypedObjectContent[] Declarations) : TypedClass(Name, BaseClasses)
+    public abstract record TypedDeclaration;
+
+    public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses) : TypedDeclaration;
+    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, params TypedDeclaration[] Declarations) : TypedClass(Name, BaseClasses)
     {
-        public ObjectClass(string name, params ObjectAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs, Array.Empty<TypedObjectContent>()) { }
+        public ObjectClass(string name, params ObjectAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs, Array.Empty<TypedDeclaration>()) { }
     }
     public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses)
     {
@@ -151,11 +153,10 @@ namespace Thousand.AST
     }
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
 
-    [GenerateOneOf] public partial class TypedObjectContent : OneOfBase<ObjectAttribute, TypedClass, TypedObject, TypedLine> { }
-    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, TypedObjectContent[] Declarations)
+    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, params TypedDeclaration[] Declarations) : TypedDeclaration
     {
-        public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedObjectContent[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }
-        public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedObjectContent>()) { }
+        public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedDeclaration[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }
+        public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedDeclaration>()) { }
 
         // XXX not a true sourced span - doesn't matter where it's used, but we need to get this into the type system
         private readonly Lazy<Superpower.Model.TextSpan> typeSpan = new(() =>
@@ -168,11 +169,10 @@ namespace Thousand.AST
         public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
     }
 
-    public record TypedLine(Parse.Identifier[] Classes, LineSegment<TypedObject>[] Segments, LineAttribute[] Attributes)
+    public record TypedLine(Parse.Identifier[] Classes, LineSegment<TypedObject>[] Segments, LineAttribute[] Attributes) : TypedDeclaration
     {
         public TypedLine(string klass, params LineSegment<TypedObject>[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<LineAttribute>()) { }
     }
 
-    [GenerateOneOf] public partial class TypedDocumentContent : OneOfBase<DocumentAttribute, TypedClass, TypedObject, TypedLine> { }
-    public record TypedDocument(TypedDocumentContent[] Declarations);
+    public record TypedDocument(params TypedDeclaration[] Declarations);
 }

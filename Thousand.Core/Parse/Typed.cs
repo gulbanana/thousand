@@ -59,7 +59,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Identifier name, Identifier[] bases) =>
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
-            from children in DeclarationScope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
+            from children in DeclarationScope(Ref(() => Declaration!)).OptionalOrDefault(Array.Empty<AST.TypedDeclaration>())
             select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
         public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
@@ -151,77 +151,11 @@ namespace Thousand.Parse
          * Objects, containing intrinsic drawable content and more objects. *
          ********************************************************************/
 
-        public static TokenListParser<TokenKind, AST.TypedObjectContent> ObjectContent { get; } = input =>
-        {
-            var fail = TokenListParserResult.Empty<TokenKind, AST.TypedObjectContent>(input, new[] { "attribute", "class", "object", "line" });
-
-            var first = input.ConsumeToken();
-            if (!first.HasValue)
-            {
-                return fail;
-            }
-            else if (first.Value.Kind == TokenKind.ClassKeyword)
-            {
-                return Class.Select(x => (AST.TypedObjectContent)x)(input);
-            }
-            else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
-            {
-                var second = first.Remainder.ConsumeToken();
-
-                if (!second.HasValue) // this is a trivial object!
-                {
-                    return Ref(() => Object!).Select(x => (AST.TypedObjectContent)x)(input);
-                }
-                else if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
-                {
-                    return ObjectAttribute.Select(x => (AST.TypedObjectContent)x)(input);
-                }
-                else if (second.Value.Kind == TokenKind.Pipe)
-                {
-                    return Ref(() => Line!).Select(x => (AST.TypedObjectContent)x)(input);
-                }
-                else // could still be an object or a line
-                {
-                    var classList = Shared.ClassList(input);
-                    if (classList.HasValue)
-                    {
-                        var identifierOrInline = classList.Remainder.ConsumeToken(); // object declaration or first object of line
-                        if (!identifierOrInline.HasValue) // a slightly less trivial object 
-                        {
-                            return Ref(() => Object!).Select(x => (AST.TypedObjectContent)x)(input);
-                        }
-                        else if (identifierOrInline.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
-                        {
-                            return Ref(() => Line!).Select(x => (AST.TypedObjectContent)x)(input);
-                        }
-
-                        var arrow = identifierOrInline.Remainder.ConsumeToken();
-                        if (arrow.HasValue && arrow.Value.Kind is TokenKind.Arrow)
-                        {
-                            return Ref(() => Line!).Select(x => (AST.TypedObjectContent)x)(input);
-                        }
-                        else
-                        {
-                            return Ref(() => Object!).Select(x => (AST.TypedObjectContent)x)(input);
-                        }
-                    }
-                    else
-                    {
-                        return fail;
-                    }
-                }
-            }
-            else
-            {
-                return fail;
-            }
-        };
-
         public static TokenListParser<TokenKind, AST.TypedObject> Object { get; } =
             from classes in Shared.ClassList
             from name in Shared.ObjectReference.AsNullable().OptionalOrDefault()
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
-            from children in DeclarationScope(ObjectContent).OptionalOrDefault(Array.Empty<AST.TypedObjectContent>())
+            from children in DeclarationScope(Ref(() => Declaration!)).OptionalOrDefault(Array.Empty<AST.TypedDeclaration>())
             select new AST.TypedObject(classes, name, attrs, children);
 
         /*********************************
@@ -238,14 +172,18 @@ namespace Thousand.Parse
          * Entire parsed documents, multiple of which can contribute to a diagram. *
          ***************************************************************************/
 
-        public static TokenListParser<TokenKind, AST.TypedDocumentContent> DocumentContent { get; } = input =>
+        public static TokenListParser<TokenKind, AST.TypedDeclaration> Declaration { get; } = input =>
         {
-            var fail = TokenListParserResult.Empty<TokenKind, AST.TypedDocumentContent>(input, new[] { "attribute", "class", "object", "line" });
+            var fail = TokenListParserResult.Empty<TokenKind, AST.TypedDeclaration>(input, new[] { "attribute", "class", "object", "line" });
 
             var first = input.ConsumeToken();
-            if (first.Value.Kind == TokenKind.ClassKeyword) // could be a class declaration
+            if (!first.HasValue)
             {
-                return Class.Select(x => (AST.TypedDocumentContent)x)(input);
+                return fail;
+            }
+            else if (first.Value.Kind == TokenKind.ClassKeyword)
+            {
+                return Class.Select(x => (AST.TypedDeclaration)x)(input);
             }
             else if (first.Value.Kind == TokenKind.Identifier) // could be an attribute, an object or a line
             {
@@ -253,15 +191,11 @@ namespace Thousand.Parse
 
                 if (!second.HasValue) // this is a trivial object!
                 {
-                    return Object.Select(x => (AST.TypedDocumentContent)x)(input);
-                }
-                if (second.Value.Kind == TokenKind.EqualsSign) // can only be an attribute
-                {
-                    return DocumentAttribute.Select(x => (AST.TypedDocumentContent)x)(input);
+                    return Ref(() => Object!).Select(x => (AST.TypedDeclaration)x)(input);
                 }
                 else if (second.Value.Kind == TokenKind.Pipe)
                 {
-                    return Line.Select(x => (AST.TypedDocumentContent)x)(input);
+                    return Ref(() => Line!).Select(x => (AST.TypedDeclaration)x)(input);
                 }
                 else // could still be an object or a line
                 {
@@ -271,21 +205,21 @@ namespace Thousand.Parse
                         var identifierOrInline = classList.Remainder.ConsumeToken(); // object declaration or first object of line
                         if (!identifierOrInline.HasValue) // a slightly less trivial object 
                         {
-                            return Object.Select(x => (AST.TypedDocumentContent)x)(input);
+                            return Ref(() => Object!).Select(x => (AST.TypedDeclaration)x)(input);
                         }
                         else if (identifierOrInline.Value.Kind == TokenKind.Pipe) // a line which begins with an inline object
                         {
-                            return Line.Select(x => (AST.TypedDocumentContent)x)(input);
+                            return Ref(() => Line!).Select(x => (AST.TypedDeclaration)x)(input);
                         }
 
                         var arrow = identifierOrInline.Remainder.ConsumeToken();
                         if (arrow.HasValue && arrow.Value.Kind is TokenKind.Arrow)
                         {
-                            return Line.Select(x => (AST.TypedDocumentContent)x)(input);
+                            return Ref(() => Line!).Select(x => (AST.TypedDeclaration)x)(input);
                         }
                         else
                         {
-                            return Object.Select(x => (AST.TypedDocumentContent)x)(input);
+                            return Ref(() => Object!).Select(x => (AST.TypedDeclaration)x)(input);
                         }
                     }
                     else
@@ -301,7 +235,7 @@ namespace Thousand.Parse
         };
 
         public static TokenListParser<TokenKind, AST.TypedDocument> Document { get; } =
-            DocumentContent
+            Declaration
                 .ManyOptionalDelimitedBy(TokenKind.LineSeparator)
                 .Select(decs => new AST.TypedDocument(decs.ToArray()))
                 .AtEnd();
