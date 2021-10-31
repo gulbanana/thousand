@@ -81,7 +81,6 @@ namespace Thousand.LSP.Analyse
                     }
                 }
             }
-            analysis.ClassClasses[syntax] = classes;
 
             var allAttributes = syntax.Attributes
                 .Select(a => a.Key)
@@ -164,7 +163,6 @@ namespace Thousand.LSP.Analyse
 
                 first = false;
             }
-            analysis.ObjectClasses[syntax] = classes;
 
             var allAttributes = syntax.Attributes
                 .Select(a => a.Key)

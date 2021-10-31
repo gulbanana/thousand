@@ -22,9 +22,5 @@ namespace Thousand.LSP.Analyse
         
         public List<Located<UntypedClass?>> ClassReferences { get; } = new();        
         public List<Located<UntypedObject>> ObjectReferences { get; } = new();
-
-        // XXX only used for defunct go-to-type-definition
-        public Dictionary<UntypedClass, List<UntypedClass>> ClassClasses { get; } = new();
-        public Dictionary<UntypedObject, List<UntypedClass>> ObjectClasses { get; } = new();
     }
 }
