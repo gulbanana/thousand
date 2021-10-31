@@ -221,9 +221,17 @@ namespace Thousand.Parse
                 state.AddError(ast.Attributes.IsComplete.Span(endSpan), ErrorKind.Syntax, "expected `]`");
             }
 
+            foreach (var segment in ast.Segments)
+            {
+                if (segment.Target.IsT1 && !segment.Target.AsT1.IsComplete.Value)
+                {
+                    state.AddError(segment.Target.AsT1.IsComplete.Span(endSpan), ErrorKind.Syntax, "expected `)`");
+                }
+            }
+
             return new AST.TypedLine(
                 ast.Classes.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
-                ast.Segments.Select(s => new AST.LineSegment<AST.TypedObject>(s.Target.Match<OneOf<Identifier, AST.TypedObject>>(x => x, x => CheckObject(x.Value)), s.Direction)).ToArray(),
+                ast.Segments.Select(s => new AST.LineSegment<AST.TypedObject>(s.Target.Match<OneOf<Identifier, AST.TypedObject>>(x => x, x => CheckObject(x.Declaration.Value)), s.Direction)).ToArray(),
                 ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
             );
         }

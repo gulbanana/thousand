@@ -45,17 +45,17 @@ namespace Thousand.Parse
         /***************
          * Line parts. *
          ***************/
-        public static TokenListParser<TokenKind, T> Inline<T>(TokenListParser<TokenKind, T> pT) =>
+        public static TokenListParser<TokenKind, T> Inline<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
             from begin in Token.EqualTo(TokenKind.LeftParenthesisUnbound)
             from t in pT
-            from end in Token.EqualTo(TokenKind.RightParenthesis)
-            select t;
+            from end in Macro.Of(Token.EqualTo(TokenKind.RightParenthesis).Value(true).OptionalOrDefault(false))
+            select t(end);
 
-        public static TokenListParser<TokenKind, OneOf<Identifier, T>> SegmentTarget<T>(TokenListParser<TokenKind, T> pT) =>
+        public static TokenListParser<TokenKind, OneOf<Identifier, T>> SegmentTarget<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
             Inline(pT).Select(x => (OneOf<Identifier, T>)x)
                 .Or(ObjectReference.Select(x => (OneOf<Identifier, T>)x));
 
-        public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> TerminalSegment<T>(TokenListParser<TokenKind, T> pT) =>
+        public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> TerminalSegment<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
             from dst in SegmentTarget(pT)
             select Enumerable.Repeat(new AST.LineSegment<T>(dst, null), 1);
 
@@ -71,7 +71,7 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.LineSeparator).Optional()
             select arrow;
 
-        public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> LineSegments<T>(TokenListParser<TokenKind, T> pT) =>
+        public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> LineSegments<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
             from src in SegmentTarget(pT)
             from arrow in Arrow
             from next in Ref(() => LineSegments(pT)!).Try().Or(TerminalSegment(pT))

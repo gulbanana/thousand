@@ -232,7 +232,7 @@ namespace Thousand.LSP.Analyse
                 }
                 else if (segment.Target.IsT1)
                 {
-                    yield return SymbolicateObject(scope, segment.Target.AsT1, segment.Target.AsT1.Value);
+                    yield return SymbolicateObject(scope, segment.Target.AsT1.Declaration, segment.Target.AsT1.Declaration.Value);
                 }
             }
 

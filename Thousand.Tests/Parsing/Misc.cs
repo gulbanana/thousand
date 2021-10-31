@@ -138,7 +138,7 @@ bar""");
         public void Line_Bare()
         {
             var tokens = tokenizer.Tokenize(@"""foo"" -> ""bar""");
-            var result = Shared.LineSegments(Typed.Object)(tokens);
+            var result = Shared.LineSegments(Typed.ObjectFactory)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
             Assert.Equal("foo", result.Value.First().Target.AsT0.Text);

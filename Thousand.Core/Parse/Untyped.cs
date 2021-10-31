@@ -186,9 +186,12 @@ namespace Thousand.Parse
             from children in DeclarationScope.OptionalOrDefault(Array.Empty<Macro<AST.UntypedDeclaration>>())
             select new AST.UntypedObject(classes, name, attrs, children);
 
+        public static TokenListParser<TokenKind, Func<IMacro<bool>, AST.UntypedInline>> Inline { get; } =
+            Macro.Of(Object).Select<TokenKind, IMacro<AST.UntypedObject>, Func<IMacro<bool>, AST.UntypedInline>>(o => b => new AST.UntypedInline(b, o));
+
         public static TokenListParser<TokenKind, AST.UntypedLine> Line { get; } =
             from calls in ClassCallList
-            from chain in Shared.LineSegments(Macro.Of(Object))
+            from chain in Shared.LineSegments(Inline)
             from attrs in AttributeList.Or(Macro.Empty(true).Select(m => new AST.Attributes(m, Array.Empty<AST.UntypedAttribute>())))
             select new AST.UntypedLine(calls, chain.ToArray(), attrs);
 

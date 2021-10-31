@@ -163,9 +163,12 @@ namespace Thousand.Parse
          * Lines, which connect objects. *
          *********************************/
 
+        public static TokenListParser<TokenKind, Func<IMacro<bool>, AST.TypedObject>> ObjectFactory { get; } =
+            Object.Select<TokenKind, AST.TypedObject, Func<IMacro<bool>, AST.TypedObject>>(o => _ => o);
+
         public static TokenListParser<TokenKind, AST.TypedLine> Line { get; } =
             from classes in Shared.ClassList
-            from content in Shared.LineSegments(Object)
+            from content in Shared.LineSegments(ObjectFactory)
             from attrs in AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>())
             select new AST.TypedLine(classes, content.ToArray(), attrs);
 

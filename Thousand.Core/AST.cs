@@ -85,7 +85,12 @@ namespace Thousand.AST
 
     [GenerateOneOf] public partial class DocumentAttribute : OneOfBase<RegionAttribute, TextAttribute> { }
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<EntityAttribute, NodeAttribute, RegionAttribute, TextAttribute> { }
-    [GenerateOneOf] public partial class LineAttribute : OneOfBase<EntityAttribute, ArrowAttribute, TextAttribute> { }    
+    [GenerateOneOf] public partial class LineAttribute : OneOfBase<EntityAttribute, ArrowAttribute, TextAttribute> { }
+
+    public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
+    {
+        public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
+    }
 
     /*****************************************************************************
      * Error-tolerant AST, containing invalid declarations and unresolved macros *
@@ -140,11 +145,8 @@ namespace Thousand.AST
         public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
     }
 
-    public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
-    {
-        public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
-    }
-    public record UntypedLine(Parse.IMacro<ClassCall?>[] Classes, LineSegment<Parse.IMacro<UntypedObject>>[] Segments, Attributes Attributes) : UntypedDeclaration;
+    public record UntypedInline(Parse.IMacro<bool> IsComplete, Parse.IMacro<UntypedObject> Declaration);
+    public record UntypedLine(Parse.IMacro<ClassCall?>[] Classes, LineSegment<UntypedInline>[] Segments, Attributes Attributes) : UntypedDeclaration;
 
     public record UntypedDocument(IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations);
 

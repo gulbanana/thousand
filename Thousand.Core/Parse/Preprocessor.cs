@@ -261,7 +261,7 @@ namespace Thousand.Parse
 
             foreach (var seg in line.Segments.Where(t => t.Target.IsT1))
             {
-                ResolveObject(seg.Target.AsT1.Value);
+                ResolveObject(seg.Target.AsT1.Declaration.Value);
             }
         }
 

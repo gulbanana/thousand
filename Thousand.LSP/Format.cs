@@ -76,7 +76,7 @@ namespace Thousand.LSP
                 }
                 else if (segment.Target.IsT1)
                 {
-                    builder.Append(Canonicalise(segment.Target.AsT1.Value));
+                    builder.Append(Canonicalise(segment.Target.AsT1.Declaration.Value));
                 }
 
                 if (segment.Direction.HasValue)
