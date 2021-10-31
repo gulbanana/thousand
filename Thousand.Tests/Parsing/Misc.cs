@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Superpower.Model;
+using System;
 using System.Linq;
 using Thousand.Model;
 using Thousand.Parse;
@@ -43,6 +44,31 @@ namespace Thousand.Tests.Parsing
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value, new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square), new AST.NodeShapeAttribute(ShapeKind.Square));
+        }
+
+        [Fact]
+        public void AttributeList_Incomplete()
+        {
+            var tokens = tokenizer.Tokenize(@"[shape=square;[other=stuff]");
+            var result = Untyped.AttributeList(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            Assert.False(result.Value.IsComplete.Value);
+            Assert.Equal(13, result.Value.IsComplete.Span(TextSpan.None).Position.Absolute);
+        }
+
+        [Fact]
+        public void AttributeList_Incomplete_InDocument()
+        {
+            var tokens = tokenizer.Tokenize(@"object [shape=square
+object [shape=square]");
+            var result = Untyped.Document(tokens);
+
+            Assert.True(result.HasValue, result.ToString());
+            var list = (result.Value.Declarations.First().Value as AST.UntypedObject)!.Attributes;
+
+            Assert.False(list.IsComplete.Value);
+            Assert.Equal(20, list.IsComplete.Span(TextSpan.None).Position.Absolute);
         }
 
         [Fact]

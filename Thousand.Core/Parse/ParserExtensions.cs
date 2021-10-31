@@ -45,7 +45,14 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimitedBy<T>(
             this TokenListParser<TokenKind, T> elementParser,
             TokenKind delimiter,
-            TokenKind? terminator = null,
+            TokenKind terminator,
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? empty = null,
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null) => ManyOptionalDelimitedBy(elementParser, delimiter, new[] { terminator }, empty, invalid);
+            
+        public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimitedBy<T>(
+            this TokenListParser<TokenKind, T> elementParser,
+            TokenKind delimiter,
+            TokenKind[]? terminators = null,
             Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? empty = null,
             Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null) => input =>
         {
@@ -60,7 +67,7 @@ namespace Thousand.Parse
                 var next = remainder.ConsumeToken();
 
                 // terminate/delimit: produce a result, then...
-                if (!next.HasValue || next.Value.Kind == delimiter || (terminator != null && next.Value.Kind == terminator))
+                if (!next.HasValue || next.Value.Kind == delimiter || (terminators != null && terminators.Contains(next.Value.Kind)))
                 {
                     if (hasProvisionalResult)
                     {

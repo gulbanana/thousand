@@ -50,7 +50,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, AST.Attributes> AttributeList { get; } =
             from begin in Token.EqualTo(TokenKind.LeftBracket)
-            from values in Attribute.ManyOptionalDelimitedBy(TokenKind.Comma, TokenKind.RightBracket, empty: (input, remainder) => new AST.UntypedAttribute(null, false, new Macro(input, remainder)))
+            from values in Attribute.ManyOptionalDelimitedBy(TokenKind.Comma, new[] { TokenKind.RightBracket, TokenKind.LineSeparator }, empty: (input, remainder) => new AST.UntypedAttribute(null, false, new Macro(input, remainder)))
             from end in Macro.Of(Token.EqualTo(TokenKind.RightBracket).Value(true).OptionalOrDefault(false))
             select new AST.Attributes(end, values);
 
