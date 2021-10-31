@@ -38,7 +38,7 @@ namespace Thousand.LSP.Analyse
                         break;
 
                     case AST.EmptyDeclaration asEmpty:
-                        doc.ClassNames.Add(new(root, dec.Span(doc.EndSpan), true));
+                        doc.ClassNames.Add(new(root, true, dec.AsRange(doc.EndSpan)));
                         break;
                 }
             }
@@ -49,7 +49,7 @@ namespace Thousand.LSP.Analyse
             var result = new DocumentSymbol
             {
                 Kind = SymbolKind.Class,
-                Range = declaration.Span(doc.EndSpan).AsRange(),
+                Range = declaration.AsRange(doc.EndSpan),
                 SelectionRange = syntax.Name.Span.AsRange(),
                 Name = "class " + syntax.Name.Text,
                 Children = WalkClass(scope, syntax).ToArray()
@@ -69,7 +69,7 @@ namespace Thousand.LSP.Analyse
             var classes = new List<AST.UntypedClass>();
             foreach (var callMacro in syntax.BaseClasses)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span, false));
+                doc.ClassNames.Add(callMacro.Value == null ? new(scope, false, callMacro.AsRange(doc.EndSpan)) : new(scope, false, callMacro.Value.Name));
 
                 if (callMacro.Value != null)
                 {
@@ -114,7 +114,7 @@ namespace Thousand.LSP.Analyse
                         break;
 
                     case AST.EmptyDeclaration:
-                        doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan), true));
+                        doc.ClassNames.Add(new(contents, true, dec.AsRange(doc.EndSpan)));
                         break;
                 }
             }
@@ -125,7 +125,7 @@ namespace Thousand.LSP.Analyse
             var result = new DocumentSymbol
             {
                 Kind = SymbolKind.Variable,
-                Range = declaration.Span(doc.EndSpan).AsRange(),
+                Range = declaration.AsRange(doc.EndSpan),
                 SelectionRange = (syntax.Name?.Span ?? syntax.TypeSpan).AsRange(),
                 Name = syntax.TypeName + (syntax.Name == null ? "" : $" {syntax.Name.Text}"),
                 Children = WalkObject(scope, syntax).ToArray()
@@ -149,7 +149,7 @@ namespace Thousand.LSP.Analyse
             var first = true;
             foreach (var callMacro in syntax.Classes)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span, first));
+                doc.ClassNames.Add(callMacro.Value == null ? new(scope, first, callMacro.AsRange(doc.EndSpan)) : new(scope, first, callMacro.Value.Name));
 
                 if (callMacro.Value != null)
                 {
@@ -196,7 +196,7 @@ namespace Thousand.LSP.Analyse
                         break;
 
                     case AST.EmptyDeclaration:
-                        doc.ClassNames.Add(new(contents, dec.Span(doc.EndSpan), true));
+                        doc.ClassNames.Add(new(contents, true, dec.AsRange(doc.EndSpan)));
                         break;
                 }
             }
@@ -223,7 +223,7 @@ namespace Thousand.LSP.Analyse
             {
                 if (segment.Target.IsT0)
                 {
-                    doc.ObjectNames.Add(new(scope, segment.Target.AsT0.Span));
+                    doc.ObjectNames.Add(new(scope, segment.Target.AsT0));
 
                     if (scope.FindObject(segment.Target.AsT0) is AST.UntypedObject objekt)
                     {
@@ -239,7 +239,7 @@ namespace Thousand.LSP.Analyse
             var first = true;
             foreach (var callMacro in syntax.Classes)
             {
-                doc.ClassNames.Add(new(scope, callMacro.Value == null ? callMacro.Span(doc.EndSpan) : callMacro.Value.Name.Span, first));
+                doc.ClassNames.Add(callMacro.Value == null ? new(scope, first, callMacro.AsRange(doc.EndSpan)) : new(scope, first, callMacro.Value.Name));
 
                 if (callMacro.Value != null)
                 {

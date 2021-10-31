@@ -1,21 +1,22 @@
-﻿using Superpower.Model;
+﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Superpower.Model;
 using Thousand.AST;
 
 namespace Thousand.LSP.Analyse
 {
-    public class AttributeContext
+    public struct AttributeContext
     {
+        public Range Range { get; }
         public UntypedAttribute Syntax { get; }
         public ParentKind ParentKind { get; }
         public string[] ParentAttributes { get; }
-        public TextSpan KeySpan { get; }
 
         public AttributeContext(UntypedAttribute syntax, ParentKind parentKind, string[] parentAttributes, TextSpan endSpan)
         {
             Syntax = syntax;
             ParentKind = parentKind;
             ParentAttributes = parentAttributes;
-            KeySpan = syntax.Key?.Span ?? syntax.Value.Span(endSpan);
+            Range = syntax.Key?.Span.AsRange() ?? syntax.Value.AsRange(endSpan);
         }
     }
 }

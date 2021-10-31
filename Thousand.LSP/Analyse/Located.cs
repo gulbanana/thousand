@@ -1,23 +1,27 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol;
-using System;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Thousand.Parse;
-using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace Thousand.LSP.Analyse
 {
-    public sealed class Located<T> : Owned<T>
+    public struct Located<T>
     {
-        private readonly Lazy<Range> range;
-        public Range Range => range.Value;
+        public DocumentUri Uri { get; }
+        public T Value { get; }
+        public Range Range { get; }
 
-        public Located(DocumentUri uri, T value, ILocated location) : base(uri, value)
+        public Located(DocumentUri uri, T value, ILocated location)
         {
-            range = new Lazy<Range>(() => location.Span.AsRange());
+            Uri = uri;
+            Value = value;
+            Range = location.Span.AsRange();
         }
 
-        public Located(ParsedDocument doc, T value, IMacro location) : base(doc.Uri, value)
+        public Located(ParsedDocument doc, T value, IMacro location)
         {
-            range = new Lazy<Range>(() => location.Span(doc.EndSpan).AsRange());
+            Uri = doc.Uri;
+            Value = value;
+            Range = location.AsRange(doc.EndSpan);
         }
 
         public void Deconstruct(out DocumentUri u, out Range r, out T v)

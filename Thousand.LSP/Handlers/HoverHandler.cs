@@ -72,12 +72,11 @@ namespace Thousand.LSP.Handlers
                         continue;
                     }
 
-                    var range = ctx.KeySpan.AsRange();                    
-                    if (range.Contains(request.Position) && api.Documentation.ContainsKey(key.Text))
+                    if (ctx.Range.Contains(request.Position) && api.Documentation.ContainsKey(key.Text))
                     {
                         return new Hover
                         {
-                            Range = range,
+                            Range = ctx.Range,
                             Contents = new MarkedStringsOrMarkupContent(new MarkupContent { Kind = MarkupKind.Markdown, Value = api.Documentation[key.Text] })
                         };
                     }

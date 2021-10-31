@@ -52,8 +52,8 @@ namespace Thousand.LSP.Handlers
 
             if (analysis.Main != null)
             {
-                var aCtx = analysis.Main.Attributes.FirstOrDefault(a => a.KeySpan.AsRange().Contains(position));
-                if (aCtx != null)
+                var aCtx = analysis.Main.Attributes.FirstOrDefault(a => a.Range.Contains(position));
+                if (aCtx.Syntax != null)
                 {
                     var candidates = aCtx.ParentKind switch
                     {
@@ -65,7 +65,7 @@ namespace Thousand.LSP.Handlers
 
                     foreach (var candidate in candidates)
                     {
-                        if (candidate.Names.Contains(aCtx.KeySpan.ToStringValue(), StringComparer.OrdinalIgnoreCase) || !candidate.Names.Any(name => aCtx.ParentAttributes.Contains(name)))
+                        if (aCtx.Syntax.Key == null || (candidate.Names.Contains(aCtx.Syntax.Key.Text, StringComparer.OrdinalIgnoreCase) || !candidate.Names.Any(name => aCtx.ParentAttributes.Contains(name))))
                         {
                             foreach (var name in candidate.Names)
                             {
@@ -83,10 +83,10 @@ namespace Thousand.LSP.Handlers
                     }
                 }
 
-                var cCtx = analysis.Main.ClassNames.FirstOrDefault(c => c.Location.Contains(position));
-                if (cCtx != null)
+                var cCtx = analysis.Main.ClassNames.FirstOrDefault(c => c.Range.Contains(position));
+                if (cCtx.Text != null)
                 {
-                    var existing = cCtx.Span.ToStringValue();
+                    var existing = cCtx.Text;
 
                     var candidates = analysis.ClassDefinitions.Keys;
                     foreach (var candidate in candidates.Where(c => cCtx.Scope.FindClass(c.Name) != null))
@@ -119,10 +119,10 @@ namespace Thousand.LSP.Handlers
                     }
                 }
 
-                var oCtx = analysis.Main.ObjectNames.FirstOrDefault(c => c.Location.Contains(position));
-                if (oCtx != null)
+                var oCtx = analysis.Main.ObjectNames.FirstOrDefault(c => c.Range.Contains(position));
+                if (oCtx.Text != null)
                 {
-                    var existing = oCtx.Span.ToStringValue();
+                    var existing = oCtx.Text;
 
                     var candidates = analysis.ObjectDefinitions.Keys;
                     foreach (var candidate in candidates.Where(c => c.Name != null && oCtx.Scope.FindObject(c.Name) != null))

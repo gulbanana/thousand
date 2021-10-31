@@ -1,12 +1,19 @@
-﻿using Superpower.Model;
-using System;
-using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Thousand.Parse;
 
 namespace Thousand.LSP.Analyse
 {
-    public record ObjectNameContext(UntypedScope Scope, TextSpan Span)
+    public struct ObjectNameContext
     {
-        private Lazy<Range> location = new Lazy<Range>(() => Span.AsRange());
-        public Range Location => location.Value;
+        public Range Range { get; }
+        public UntypedScope Scope { get; }
+        public string Text { get; }
+
+        public ObjectNameContext(UntypedScope scope, Identifier identifier)
+        {
+            Scope = scope;
+            Text = identifier.Text;
+            Range = identifier.Span.AsRange();
+        }
     }
 }
