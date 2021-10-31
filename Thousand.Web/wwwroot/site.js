@@ -33,7 +33,7 @@
 				[/#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?/, 'number.hex'],
 
 				// arrows
-				[/--*-|<-*-|--*>|<-*>/, 'keyword'],
+				[/--|<-|->|<>/, 'keyword'],
 
 				// strings
 				[/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-teminated string

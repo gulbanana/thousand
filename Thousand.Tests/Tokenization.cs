@@ -111,17 +111,6 @@ bar""", output.ElementAt(1).ToStringValue());
             }
         }
 
-        [Theory]
-        [InlineData("->")]
-        [InlineData("-->")]
-        [InlineData("---->")]
-        public void RightArrow(string input)
-        {
-            var output = sut.Tokenize(input);
-
-            AssertEx.Sequence(output.Select(t => t.Kind), TokenKind.RightArrow);
-        }
-
         [Fact]
         public void IdentifiersAndArrows()
         {

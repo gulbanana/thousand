@@ -1,5 +1,3 @@
-font-size=16
-
 class c [justify=center]
 class box($w=100, $h=100) [min-width=$w, min-height=$h, label=none, stroke=2]
 class spacer($x) [shape=none, min-width=$x]
@@ -7,7 +5,7 @@ class title : label [font=20, label-align=start]
 class sline [stroke=2]; class aline [anchor=any, stroke=red 2]; class cline [anchor=corners, stroke=blue 2]; class gline [stroke=green 2]
 class tline [stroke=red, offset=0 -20]; class bline [stroke=blue, offset=0 20]
 
-diagram.column [layout=pack]  {
+diagram.column [layout=pack, font-size=16]  {
     title "Lines can be drawn between objects with ---. Adding arrows (-->, <--)
 will draw arrowheads at the corresponding ends."
     group [space=40, grid=4 columns] {
@@ -15,10 +13,10 @@ will draw arrowheads at the corresponding ends."
         box a-2; box b-2; box c-2; box d-2
 
         line a-1 -> b-1 <- c-1 -- d-1
-        line a-2 --- b-2 --> c-2 <-- d-2
+        line a-2 -- b-2 -> c-2 <- d-2
 
         line a-1 <> a-2
-        line d-1 <-> d-2
+        line d-1 <> d-2
     }
 
     title "Lines can be attached to anchors - explicitly, or based on relative position."
