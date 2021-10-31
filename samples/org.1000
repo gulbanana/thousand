@@ -1,0 +1,46 @@
+class job : object [shape=rect]
+class division($title) [stroke=2, padding=20 40] {
+    object $title [anchor=n,fill=white,padding=15 5,shape=pill]
+}
+class execs [layout=content,justify=stretch,space=10]
+class line [stroke=2,anchor=corner s]
+
+diagram [layout=area] {
+    label "Some sort of org chart" [font="Castellar" 32, align=top center]
+
+    division("Operations") [pos=0 100] {
+        execs.column {
+            job "President"
+            job "Vice-President"
+            job "Vice-Vice-President"
+        }
+    }
+
+    division("Marketing") [pos=300 100] {
+        execs.group [grid=2 columns] {
+            job "Head of Sales"
+            job "Head of Support"
+            job "QA Lead"
+            job "QV Lead"
+            job "BS Lead"
+            job "Producer"
+            job "Spanish Sales"
+            job "English Sales"
+            job "Italian Sales"
+            job "French Sales"
+            job "Irish Sales"
+            job "Swiss Sales"
+            job "Even More"
+        }
+    }
+
+    division("Synergy") [pos=30 400,space=20] {
+        label "Value" [font=red]
+        label "Paradigm" [font=blue]
+    }
+
+    division("Customers") customers [pos=0 540, label="Big Beautiful Friendships"]
+
+    line customers <> Paradigm
+    line customers <> Value
+}
