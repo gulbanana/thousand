@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Thousand.Benchmarks.Stages-20211031-185208</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19043.1288 (21H1/May2021Update)
+AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
+Frequency=14318180 Hz, Resolution=69.8413 ns, Timer=HPET
+.NET SDK=6.0.100-preview.5.21302.13
+  [Host]     : .NET 5.0.9 (5.0.921.35908), X64 RyuJIT
+  DefaultJob : .NET 5.0.9 (5.0.921.35908), X64 RyuJIT
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>     Input</th><th>Mean</th><th>Error</th><th>StdDev</th>
+</tr>
+</thead><tbody><tr><td>Tokenize</td><td>connectors.1000</td><td>384.1 &mu;s</td><td>1.54 &mu;s</td><td>1.44 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>connectors.1000</td><td>5,765.1 &mu;s</td><td>68.36 &mu;s</td><td>63.94 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>connectors.1000</td><td>512.1 &mu;s</td><td>2.00 &mu;s</td><td>1.87 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>connectors.1000</td><td>122.1 &mu;s</td><td>0.32 &mu;s</td><td>0.28 &mu;s</td>
+</tr><tr><td>Compose</td><td>connectors.1000</td><td>1,214.8 &mu;s</td><td>7.69 &mu;s</td><td>6.82 &mu;s</td>
+</tr><tr><td>Render</td><td>connectors.1000</td><td>150.8 &mu;s</td><td>0.91 &mu;s</td><td>0.85 &mu;s</td>
+</tr><tr><td>Tokenize</td><td>tetris.1000</td><td>300.4 &mu;s</td><td>0.54 &mu;s</td><td>0.50 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>tetris.1000</td><td>2,127.6 &mu;s</td><td>4.64 &mu;s</td><td>3.87 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>tetris.1000</td><td>136.7 &mu;s</td><td>0.30 &mu;s</td><td>0.25 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>tetris.1000</td><td>205.0 &mu;s</td><td>0.68 &mu;s</td><td>0.63 &mu;s</td>
+</tr><tr><td>Compose</td><td>tetris.1000</td><td>323.0 &mu;s</td><td>1.23 &mu;s</td><td>1.09 &mu;s</td>
+</tr><tr><td>Render</td><td>tetris.1000</td><td>165.1 &mu;s</td><td>0.96 &mu;s</td><td>0.90 &mu;s</td>
+</tr><tr><td>Tokenize</td><td>underground.1000</td><td>808.5 &mu;s</td><td>3.51 &mu;s</td><td>3.29 &mu;s</td>
+</tr><tr><td>Preprocess</td><td>underground.1000</td><td>8,886.4 &mu;s</td><td>103.48 &mu;s</td><td>96.79 &mu;s</td>
+</tr><tr><td>Typecheck</td><td>underground.1000</td><td>768.8 &mu;s</td><td>2.47 &mu;s</td><td>2.31 &mu;s</td>
+</tr><tr><td>Evaluate</td><td>underground.1000</td><td>399.6 &mu;s</td><td>1.81 &mu;s</td><td>1.69 &mu;s</td>
+</tr><tr><td>Compose</td><td>underground.1000</td><td>2,703.2 &mu;s</td><td>51.23 &mu;s</td><td>52.61 &mu;s</td>
+</tr><tr><td>Render</td><td>underground.1000</td><td>532.8 &mu;s</td><td>3.77 &mu;s</td><td>3.15 &mu;s</td>
+</tr></tbody></table>
+</body>
+</html>
