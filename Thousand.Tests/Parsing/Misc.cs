@@ -228,7 +228,7 @@ bar""");
             var result = Typed.DeclarationScope(Typed.Declaration)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(3, result.Value.Length);
+            Assert.Equal(3, result.Value.Count);
         }
 
         [Fact]
@@ -243,7 +243,7 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(4, result.Value.Declarations.Length);
+            Assert.Equal(4, result.Value.Declarations.Count);
         }
 
         [Fact]
@@ -291,7 +291,7 @@ object ""bar""");
             var result = Untyped.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(2, result.Value.Declarations.Length);
+            Assert.Equal(2, result.Value.Declarations.Count);
         }
 
         [Fact]
@@ -303,7 +303,7 @@ object ""bar""");
             var result = Untyped.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal(3, result.Value.Declarations.Length);
+            Assert.Equal(3, result.Value.Declarations.Count);
             Assert.Equal(3, result.Value.Declarations[1].Location.Position);
             Assert.Equal(4, result.Value.Declarations[2].Location.Position);
         }
@@ -394,7 +394,7 @@ line foo->bar [offset=1 1]");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue);
-            Assert.Equal(3, result.Value.Declarations.Length);
+            Assert.Equal(3, result.Value.Declarations.Count);
             Assert.IsAssignableFrom<AST.TypedClass>(result.Value.Declarations[0]);
             Assert.IsType<AST.TypedObject>(result.Value.Declarations[1]);
             Assert.IsType<AST.TypedLine>(result.Value.Declarations[2]);
@@ -410,7 +410,7 @@ object bar");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue);
-            Assert.Equal(2, result.Value.Declarations.Length);
+            Assert.Equal(2, result.Value.Declarations.Count);
             Assert.IsAssignableFrom<AST.TypedClass>(result.Value.Declarations[0]);
             Assert.IsType<AST.TypedObject>(result.Value.Declarations[1]);
         }

@@ -42,15 +42,16 @@ namespace Thousand.Parse
         }
 
         // extended version of ManyDelimitedBy. supports missing and/or invalid elements and produces better error messages
-        public static TokenListParser<TokenKind, T[]> ManyOptionalDelimitedBy<T>(
+        public static TokenListParser<TokenKind, IReadOnlyList<T>> ManyOptionalDelimitedBy<T>(
             this TokenListParser<TokenKind, T> elementParser,
             TokenKind delimiter,
             TokenKind? terminator = null,
             Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? empty = null,
-            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null) where T : class => input =>
+            Func<TokenList<TokenKind>, TokenList<TokenKind>, T>? invalid = null) => input =>
         {
             var results = new List<T>();
-            var provisionalResult = default(T?);
+            var provisionalResult = default(T);
+            var hasProvisionalResult = false;
 
             var remainder = input;
             var element = input;
@@ -61,9 +62,9 @@ namespace Thousand.Parse
                 // terminate/delimit: produce a result, then...
                 if (!next.HasValue || next.Value.Kind == delimiter || (terminator != null && next.Value.Kind == terminator))
                 {
-                    if (provisionalResult != null)
+                    if (hasProvisionalResult)
                     {
-                        results.Add(provisionalResult);
+                        results.Add(provisionalResult!);
                     }
                     else if (remainder.Position == element.Position)
                     {
@@ -80,14 +81,14 @@ namespace Thousand.Parse
                         }
                         else
                         {
-                            return TokenListParserResult.Empty<TokenKind, T[]>(input);
+                            return TokenListParserResult.Empty<TokenKind, IReadOnlyList<T>>(input);
                         }
                     }
 
                     // ...begin the element
                     if (next.HasValue && next.Value.Kind == delimiter)
                     {
-                        provisionalResult = null;
+                        hasProvisionalResult = false;
                         element = next.Remainder;
                         remainder = next.Remainder;
                     }
@@ -100,9 +101,9 @@ namespace Thousand.Parse
                 }
 
                 // trailer: invalidate the interim result (subsequent content leaves it invalid)
-                else if (provisionalResult != null)
+                else if (hasProvisionalResult)
                 {
-                    provisionalResult = null;
+                    hasProvisionalResult = false;
                     remainder = next.Remainder;
                 }
 
@@ -113,6 +114,7 @@ namespace Thousand.Parse
                     if (result.HasValue)
                     {
                         provisionalResult = result.Value;
+                        hasProvisionalResult = true;
                         remainder = result.Remainder;
                     }
                     else
@@ -128,7 +130,7 @@ namespace Thousand.Parse
                 }
             }
 
-            return TokenListParserResult.Value(results.ToArray(), input, remainder);
+            return TokenListParserResult.Value<TokenKind, IReadOnlyList<T>>(results, input, remainder);
         };
 
         public static TextParser<T> Located<T>(this TextParser<T> parser) where T : ILocated

@@ -2,6 +2,7 @@
 using Superpower.Model;
 using Superpower.Parsers;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Thousand.API;
 using static Superpower.Parse;
@@ -21,11 +22,11 @@ namespace Thousand.Parse
             from end in Token.EqualTo(TokenKind.RightBracket)
             select values;
 
-        public static TokenListParser<TokenKind, T[]> DeclarationScope<T>(TokenListParser<TokenKind, T> pT) where T : class =>
+        public static TokenListParser<TokenKind, IReadOnlyList<T>> DeclarationScope<T>(TokenListParser<TokenKind, T> pT) =>
             from begin in Token.EqualTo(TokenKind.LeftBrace)
             from decs in pT.ManyOptionalDelimitedBy(TokenKind.LineSeparator, TokenKind.RightBrace)
             from end in Token.EqualTo(TokenKind.RightBrace)
-            select decs.ToArray();
+            select decs;
 
         /************************************************************
          * Base attribute groups, delegated to metadata definitions *
@@ -237,7 +238,7 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, AST.TypedDocument> Document { get; } =
             Declaration
                 .ManyOptionalDelimitedBy(TokenKind.LineSeparator)
-                .Select(decs => new AST.TypedDocument(decs.ToArray()))
+                .Select(decs => new AST.TypedDocument(decs))
                 .AtEnd();
     }
 }

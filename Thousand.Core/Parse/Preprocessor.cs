@@ -361,7 +361,7 @@ namespace Thousand.Parse
                         replacements.Add(token);
                     }
                 }
-                relativeSplices.Add(new(a.Value.Range(macro.Location.Position), replacements.ToArray()));
+                relativeSplices.Add(new(a.Value.Range(macro.Location.Position), replacements));
             }
 
             // substitute variables into base class list
@@ -385,7 +385,7 @@ namespace Thousand.Parse
                         }
                     }
                 }
-                relativeSplices.Add(new(a.Range(macro.Location.Position), replacements.ToArray()));
+                relativeSplices.Add(new(a.Range(macro.Location.Position), replacements));
             }
 
             // substitute variables into scope
@@ -413,16 +413,16 @@ namespace Thousand.Parse
                         replacements.Add(token);
                     }
                 }
-                relativeSplices.Add(new(decMacro.Range(macro.Location.Position), replacements.ToArray()));
+                relativeSplices.Add(new(decMacro.Range(macro.Location.Position), replacements));
             }
 
-            var template = new TokenList(macro.Location.Take(macro.Remainder.Position - macro.Location.Position).ToArray());
+            var template = macro.Location.Take(macro.Remainder.Position - macro.Location.Position).ToArray();
             foreach (var splice in relativeSplices.OrderByDescending(s => s.Location.Start.Value))
             {
                 template = splice.Apply(template);
             }
 
-            return template.ToArray();
+            return template;
         }
 
         private void GenerateInstantiations()
@@ -439,7 +439,7 @@ namespace Thousand.Parse
                         replacements.AddRange(instantiation);
                     }
                 }
-                splices.Add(new(kvpg.Key, replacements.ToArray()));
+                splices.Add(new(kvpg.Key, replacements));
             }
         }
 

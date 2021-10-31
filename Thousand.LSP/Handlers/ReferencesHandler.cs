@@ -32,8 +32,7 @@ namespace Thousand.LSP.Handlers
                 {
                     var refs = analysis.ObjectReferences
                         .Where(r => ReferenceEquals(r.Value, ast))
-                        .Select(r => new Location { Uri = r.Uri, Range = r.Range })
-                        .ToArray();
+                        .Select(r => new Location { Uri = r.Uri, Range = r.Range });
 
                     return new LocationContainer(refs);
                 }
@@ -45,8 +44,7 @@ namespace Thousand.LSP.Handlers
                 {
                     var refs = analysis.ClassReferences
                         .Where(r => ReferenceEquals(r.Value, ast))
-                        .Select(r => new Location { Uri = r.Uri, Range = r.Range })
-                        .ToArray();
+                        .Select(r => new Location { Uri = r.Uri, Range = r.Range });
 
                     return new LocationContainer(refs);
                 }

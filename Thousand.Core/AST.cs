@@ -94,24 +94,35 @@ namespace Thousand.AST
     public record InvalidDeclaration : UntypedDeclaration;
     public record EmptyDeclaration : UntypedDeclaration;
 
-    public record UntypedAttribute(Parse.Identifier? Key, bool HasEqualsSign, Parse.IMacro Value)
+    public struct UntypedAttribute
     {
+        public Parse.Identifier? Key { get; }
+        public bool HasEqualsSign { get; }
+        public Parse.IMacro Value { get; }
+
+        public UntypedAttribute(Parse.Identifier? key, bool hasEqualsSign, Parse.IMacro value)
+        {
+            Key = key;
+            HasEqualsSign = hasEqualsSign;
+            Value = value;
+        }
+
         public bool HasValue => Value.Location.Position < Value.Remainder.Position;
     }
 
-    public record Attributes(Parse.IMacro<bool> IsComplete, params UntypedAttribute[] Values) : IReadOnlyList<UntypedAttribute>
+    public record Attributes(Parse.IMacro<bool> IsComplete, IReadOnlyList<UntypedAttribute> Values) : IReadOnlyList<UntypedAttribute>
     {
-        public UntypedAttribute this[int index] => ((IReadOnlyList<UntypedAttribute>)Values)[index];
-        public int Count => ((IReadOnlyCollection<UntypedAttribute>)Values).Count;
-        public IEnumerator<UntypedAttribute> GetEnumerator() => ((IEnumerable<UntypedAttribute>)Values).GetEnumerator();
+        public UntypedAttribute this[int index] => Values[index];
+        public int Count => Values.Count;
+        public IEnumerator<UntypedAttribute> GetEnumerator() => Values.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => Values.GetEnumerator();
     }
 
     public record Argument(Parse.Identifier Name, Parse.IMacro? Default);
     public record ClassCall(Parse.Identifier Name, Parse.IMacro[] Arguments); // XXX it would be nice if inheritance could call classes
-    public record UntypedClass(Parse.Identifier Name, Parse.IMacro<Argument[]> Arguments, Parse.IMacro<ClassCall?>[] BaseClasses, Attributes Attributes, Parse.IMacro<UntypedDeclaration>[] Declarations) : UntypedDeclaration;
+    public record UntypedClass(Parse.Identifier Name, Parse.IMacro<Argument[]> Arguments, Parse.IMacro<ClassCall?>[] BaseClasses, Attributes Attributes, IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations) : UntypedDeclaration;
 
-    public record UntypedObject(Parse.IMacro<ClassCall?>[] Classes, Parse.Identifier? Name, Attributes Attributes, Parse.IMacro<UntypedDeclaration>[] Declarations) : UntypedDeclaration
+    public record UntypedObject(Parse.IMacro<ClassCall?>[] Classes, Parse.Identifier? Name, Attributes Attributes, IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations) : UntypedDeclaration
     {
         private readonly Lazy<string> typeName = new(() =>
         {
@@ -135,7 +146,7 @@ namespace Thousand.AST
     }
     public record UntypedLine(Parse.IMacro<ClassCall?>[] Classes, LineSegment<Parse.IMacro<UntypedObject>>[] Segments, Attributes Attributes) : UntypedDeclaration;
 
-    public record UntypedDocument(Parse.IMacro<UntypedDeclaration>[] Declarations);
+    public record UntypedDocument(IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations);
 
     /****************************************************************
      * Strict AST, with macros resolved and attributes fully parsed *
@@ -143,7 +154,7 @@ namespace Thousand.AST
     public abstract record TypedDeclaration;
 
     public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses) : TypedDeclaration;
-    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, params TypedDeclaration[] Declarations) : TypedClass(Name, BaseClasses)
+    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, IReadOnlyList<TypedDeclaration> Declarations) : TypedClass(Name, BaseClasses)
     {
         public ObjectClass(string name, params ObjectAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs, Array.Empty<TypedDeclaration>()) { }
     }
@@ -153,8 +164,9 @@ namespace Thousand.AST
     }
     public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
 
-    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, params TypedDeclaration[] Declarations) : TypedDeclaration
+    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, IReadOnlyList<TypedDeclaration> Declarations) : TypedDeclaration
     {
+        public TypedObject(Parse.Identifier[] classes, Parse.Identifier? name, ObjectAttribute[] attrs, params TypedDeclaration[] content) : this(classes, name, attrs, content as IReadOnlyList<TypedDeclaration>) { }
         public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedDeclaration[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }
         public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedDeclaration>()) { }
 
@@ -174,5 +186,8 @@ namespace Thousand.AST
         public TypedLine(string klass, params LineSegment<TypedObject>[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<LineAttribute>()) { }
     }
 
-    public record TypedDocument(params TypedDeclaration[] Declarations);
+    public record TypedDocument(IReadOnlyList<TypedDeclaration> Declarations)
+    {
+        public TypedDocument(params TypedDeclaration[] declarations) : this(declarations as IReadOnlyList<TypedDeclaration>) { }
+    }
 }
