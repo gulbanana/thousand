@@ -332,7 +332,7 @@ namespace Thousand.Evaluate
                 }, text => font = ApplyFontAttributes(font, text));
             }
 
-            var nodes = new List<(ArrowKind? direction, IR.Object? target)>();
+            var nodes = new List<(ArrowKind? direction, IR.Object? target, Parse.Identifier? name)>();
             foreach (var seg in line.Segments)
             {
                 var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);
@@ -340,7 +340,7 @@ namespace Thousand.Evaluate
                 {
                     objects.Add(target!);
                 }
-                nodes.Add((seg.Direction, target));
+                nodes.Add((seg.Direction, target, seg.Target.IsT0 ? seg.Target.AsT0 : target?.Name));
             }
 
             var label = shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel);
@@ -349,17 +349,14 @@ namespace Thousand.Evaluate
                 var from = nodes[i];
                 var to = nodes[i + 1];
                 
-                if (from.target != null && to.target != null && from.direction.HasValue)
+                if (from.target != null && from.name != null && to.target != null && to.name != null && from.direction.HasValue)
                 {
-                    var fromName = from.target.Name;
-                    var toName = from.target.Name;
-
                     switch (from.direction.Value)
                     {
                         case ArrowKind.Backward:
                             edges.Add(new(
-                                new IR.Endpoint(toName, to.target, null, anchorStart, offsetStart), 
-                                new IR.Endpoint(fromName, from.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd), 
+                                new IR.Endpoint(to.name, to.target, null, anchorStart, offsetStart), 
+                                new IR.Endpoint(from.name, from.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd), 
                                 shared.Stroke, 
                                 label
                             ));
@@ -367,8 +364,8 @@ namespace Thousand.Evaluate
 
                         case ArrowKind.Forward:
                             edges.Add(new(
-                                new IR.Endpoint(fromName, from.target, null, anchorStart, offsetStart),
-                                new IR.Endpoint(toName, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
+                                new IR.Endpoint(from.name, from.target, null, anchorStart, offsetStart),
+                                new IR.Endpoint(to.name, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
                                 shared.Stroke,
                                 label
                             ));
@@ -376,8 +373,8 @@ namespace Thousand.Evaluate
 
                         case ArrowKind.Neither:
                             edges.Add(new(
-                                new IR.Endpoint(fromName, from.target, null, anchorStart, offsetStart),
-                                new IR.Endpoint(toName, to.target, null, anchorEnd, offsetEnd),
+                                new IR.Endpoint(from.name, from.target, null, anchorStart, offsetStart),
+                                new IR.Endpoint(to.name, to.target, null, anchorEnd, offsetEnd),
                                 shared.Stroke,
                                 label
                             ));
@@ -385,15 +382,15 @@ namespace Thousand.Evaluate
 
                         case ArrowKind.Both:
                             edges.Add(new(
-                                new IR.Endpoint(fromName, from.target, MarkerKind.Arrowhead, anchorStart, offsetStart),
-                                new IR.Endpoint(toName, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
+                                new IR.Endpoint(from.name, from.target, MarkerKind.Arrowhead, anchorStart, offsetStart),
+                                new IR.Endpoint(to.name, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
                                 shared.Stroke,
                                 label
                             ));
                             break;
                             
                         default:
-                            state.AddError(fromName, ErrorKind.Internal, $"unknown ArrowKind {from.direction.Value} from object {0}", fromName);
+                            state.AddError(from.name, ErrorKind.Internal, $"unknown ArrowKind {from.direction.Value} from {0} to {1}", from.name, to.name);
                             break;
                     }
                 }
