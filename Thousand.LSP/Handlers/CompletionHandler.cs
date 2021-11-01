@@ -17,7 +17,7 @@ namespace Thousand.LSP.Handlers
         private readonly ILogger<CompletionHandler> logger;
         private readonly AnalysisService analysisService;
         private readonly API.Metadata api;
-        private readonly Container<string> commitAttribute = new[] { " ", "=", "]" };
+        private readonly Container<string> commitAttribute = new[] { "=", "]" };
         private readonly Container<string> commitClass = new[] { " ", ";", ".", "(" };
         private readonly Container<string> commitKeyword = new[] { " " };
         private readonly Container<string> commitObject = new[] { " ", "-", "|" };
@@ -79,7 +79,7 @@ namespace Thousand.LSP.Handlers
                                     {
                                         Kind = CompletionItemKind.Enum,
                                         Label = name,
-                                        InsertText = syntax.HasEqualsSign ? name : $"{name}=",
+                                        InsertText = name, // syntax.HasEqualsSign ? name : $"{name}=",
                                         Documentation = candidate.Documentation != null ? new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation } : null,
                                         CommitCharacters = commitAttribute
                                     });
