@@ -11,6 +11,7 @@ TO DO
 * syntax: class contents placeholder inserts - right now it's all prepended (but how would this work with a classlist?)
 * syntax: import files?
 * syntax: import templates (not the same as above! applies to the stdlib)
+* syntax: templates within scopes
 * feature: line labels (composition+, align vs justify, shorthand syntax)
 * feature: object/label offset from position (parsed/styled)
 * feature: drop shadows (object/line, though different)
