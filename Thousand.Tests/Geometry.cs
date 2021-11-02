@@ -30,7 +30,7 @@ namespace Thousand.Tests
         [Fact]
         public void FindArcMidpoint()
         {
-            var anchors = Shapes.Anchors(ShapeKind.Roundsquare, 10, new Rect(0, 0, 100, 100));
+            var anchors = Shapes.Anchors(new(ShapeKind.Roundsquare, 10), new Rect(0, 0, 100, 100));
 
             AssertEx.Eta(new Point(3, 3), anchors[CompassKind.NW].Location);
             AssertEx.Eta(new Point(97, 3), anchors[CompassKind.NE].Location);

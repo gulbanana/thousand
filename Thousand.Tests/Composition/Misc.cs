@@ -65,8 +65,8 @@ namespace Thousand.Tests.Composition
         [Fact]
         public void LinePosition_Horizontal()
         {
-            var left = Object() with { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
-            var right = Object() with { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
+            var left = Object() with { MinWidth = 10, MinHeight = 10 };
+            var right = Object() with { MinWidth = 10, MinHeight = 10 };
 
             var root = Region(
                 Config() with { Gutter = new(10) },
@@ -86,8 +86,8 @@ namespace Thousand.Tests.Composition
         [Fact]
         public void LinePosition_45Degree()
         {
-            var left = Object() with { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10 };
-            var right = Object() with { Shape = ShapeKind.Square, MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 };
+            var left = Object() with { MinWidth = 10, MinHeight = 10 };
+            var right = Object() with { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 };
 
             var root = Region(
                 Config() with { Gutter = new(10) },
@@ -118,10 +118,10 @@ namespace Thousand.Tests.Composition
             Assert.True(result, state.JoinErrors());
 
             var textSize = layout!.Commands.OfType<Layout.Label>().ElementAt(0).Bounds.Size;
-            Assert.Equal(new Point(2, 2), layout.Commands.OfType<Layout.Shape>().ElementAt(0).Bounds.Size);
-            Assert.Equal(textSize, layout.Commands.OfType<Layout.Shape>().ElementAt(1).Bounds.Size);
-            Assert.Equal(textSize + new Point(2, 2), layout.Commands.OfType<Layout.Shape>().ElementAt(2).Bounds.Size);
-            Assert.Equal(textSize + new Point(20, 20), layout.Commands.OfType<Layout.Shape>().ElementAt(3).Bounds.Size);
+            Assert.Equal(new Point(2, 2), layout.Commands.OfType<Layout.Drawing>().ElementAt(0).Bounds.Size);
+            Assert.Equal(textSize, layout.Commands.OfType<Layout.Drawing>().ElementAt(1).Bounds.Size);
+            Assert.Equal(textSize + new Point(2, 2), layout.Commands.OfType<Layout.Drawing>().ElementAt(2).Bounds.Size);
+            Assert.Equal(textSize + new Point(20, 20), layout.Commands.OfType<Layout.Drawing>().ElementAt(3).Bounds.Size);
         }
 
         [Fact]
@@ -136,24 +136,24 @@ namespace Thousand.Tests.Composition
                 Object
                 (
                     Config() with { Padding = new(0, 0, 0, 1) },
-                    Object() with { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 ),
                 Object
                 (
                     Config() with { Padding = new(0) },
-                    Object() with { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 },
-                    Object() with { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 },
+                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 ),
                 Object
                 (
                     Config() with { Padding = new(1) },
-                    Object() with { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 ),
                 Object
                 (
                     Config() with { Padding = new(0, 1) },
-                    Object() with { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 },
-                    Object() with { Shape = ShapeKind.Circle, MinWidth = 10, MinHeight = 10 }
+                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 },
+                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 )
             );
 
@@ -161,7 +161,7 @@ namespace Thousand.Tests.Composition
             Assert.True(result, state.JoinErrors());
 
             Assert.Equal(new Point(64, 13), new Point(layout!.Width, layout.Height));
-            AssertEx.Sequence(layout!.Commands.OfType<Layout.Shape>().Where(s => s.Kind != ShapeKind.Circle).Select(s => s.Bounds.Size),
+            AssertEx.Sequence(layout!.Commands.OfType<Layout.Drawing>().Where(s => s.Shape.Style != ShapeKind.Circle).Select(s => s.Bounds.Size),
                 new Point(2, 2),
                 new Point(10, 11),
                 new Point(20, 10),

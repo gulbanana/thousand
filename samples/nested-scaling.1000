@@ -10,9 +10,9 @@ group [padding=10,fill=#ccc,layout=equal-area,scale=2] {
     line a--b [anchor=se sw] //unscaled thickness
 
     // line positions adjusted for scaling, overlaid in order
-    box x [pos=20 120]
-    box z [pos=180 120]
+    box x [pos=00 120]
+    box z [pos=160 120]
     line x--z [anchor=ne none]
-    box y [pos=100 120]
+    box y [pos=80 120]
     line x--z [anchor=none sw]
 }

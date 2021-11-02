@@ -5,7 +5,6 @@ TO DO
 * bug: using diamond as a container seems to be broken somehow
 * bug: (line) anchors and offsets probably don't combine correctly
 * bug: end-padding is broken when scaling - see nested-scaling.1000
-* bug: line edge intersection from center is broken when scaling - see nested-scaling.1000
 * syntax: class->style maybe
 * syntax: should alists use lineseps instead of commas? should they use : instead of =?
 * syntax: path names (perhaps use [] for anon)
@@ -24,6 +23,7 @@ TO DO
 * extension: basic browser entry point.. maybe. it wouldn't do much without the language server
 * extension: improve previewer - easier to turn it off, close/open when parent closes/opens, etc
 * extension: preview *features* - export, zoom?
+* extension: escaped strings don't tokenize properly
 * language server: object name completions behaviour is not very good, due to syntax ambiguity
 * language server: bad behaviour when typing the - of  line (and when handling bad tokens in general!)
 * website: fix monaco errors failing to clear
@@ -43,4 +43,3 @@ TO DO
 * reconsider name of space/gutter (css calls it gap)
 * runtime colour names
 * document all attributes
-* escaped strings don't tokenize properly in vscode

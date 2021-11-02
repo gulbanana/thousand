@@ -7,7 +7,7 @@ namespace Thousand
 {
     public static class Shapes
     {
-        public static IReadOnlyDictionary<CompassKind, Connector> Anchors(ShapeKind shape, int cornerRadius, Rect bounds) => shape switch
+        public static IReadOnlyDictionary<CompassKind, Connector> Anchors(Shape shape, Rect bounds) => shape.Style switch
         {
             ShapeKind.Square or ShapeKind.Rect => new Dictionary<CompassKind, Connector>
             {
@@ -24,10 +24,10 @@ namespace Thousand
             
             ShapeKind.Roundsquare or ShapeKind.Roundrect => new Dictionary<CompassKind, Connector>
             {
-                { CompassKind.NW, new(Point.ArcMidpoint(new(bounds.Left, bounds.Top+cornerRadius), new(bounds.Left+cornerRadius, bounds.Top)), true) },
-                { CompassKind.NE, new(Point.ArcMidpoint(new(bounds.Right-cornerRadius, bounds.Top), new(bounds.Right, bounds.Top+cornerRadius)), true) },
-                { CompassKind.SE, new(Point.ArcMidpoint(new(bounds.Right, bounds.Bottom-cornerRadius), new(bounds.Right-cornerRadius, bounds.Bottom)), true) },
-                { CompassKind.SW, new(Point.ArcMidpoint(new(bounds.Left+cornerRadius, bounds.Bottom), new(bounds.Left, bounds.Bottom-cornerRadius)), true) },
+                { CompassKind.NW, new(Point.ArcMidpoint(new(bounds.Left, bounds.Top+shape.CornerRadius), new(bounds.Left+shape.CornerRadius, bounds.Top)), true) },
+                { CompassKind.NE, new(Point.ArcMidpoint(new(bounds.Right-shape.CornerRadius, bounds.Top), new(bounds.Right, bounds.Top+shape.CornerRadius)), true) },
+                { CompassKind.SE, new(Point.ArcMidpoint(new(bounds.Right, bounds.Bottom-shape.CornerRadius), new(bounds.Right-shape.CornerRadius, bounds.Bottom)), true) },
+                { CompassKind.SW, new(Point.ArcMidpoint(new(bounds.Left+shape.CornerRadius, bounds.Bottom), new(bounds.Left, bounds.Bottom-shape.CornerRadius)), true) },
 
                 { CompassKind.N, new(bounds.Center.X, bounds.Top, false) },
                 { CompassKind.E, new(bounds.Right, bounds.Center.Y, false) },
@@ -60,8 +60,8 @@ namespace Thousand
 
             ShapeKind.Trapezium => new Dictionary<CompassKind, Connector>
             {
-                { CompassKind.NW, new(bounds.Left + cornerRadius, bounds.Top, true) },
-                { CompassKind.NE, new(bounds.Right - cornerRadius, bounds.Top, true) },
+                { CompassKind.NW, new(bounds.Left + shape.CornerRadius, bounds.Top, true) },
+                { CompassKind.NE, new(bounds.Right - shape.CornerRadius, bounds.Top, true) },
                 { CompassKind.SE, new(bounds.Right, bounds.Bottom, true) },
                 { CompassKind.SW, new(bounds.Left, bounds.Bottom, true) },
 
@@ -109,7 +109,7 @@ namespace Thousand
             new(box.Right, box.Bottom)
         };
 
-        public static Point[] Trapezium(Rect box, int corner) => new Point[]
+        public static Point[] Trapezium(Rect box, decimal corner) => new Point[]
         {
             new(box.Left, box.Bottom),
             new(box.Left+corner, box.Top),

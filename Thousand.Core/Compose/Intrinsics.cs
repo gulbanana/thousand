@@ -48,7 +48,7 @@ namespace Thousand.Compose
             return new BlockMeasurements(new Point(pixelWidth, pixelHeight), lines);
         }
 
-        public static (Point? from, Point? to) Line(Point fromPoint, Point toPoint, Layout.Shape? fromShape, Layout.Shape? toShape)
+        public static (Point? from, Point? to) Line(Point fromPoint, Point toPoint, (Shape shape, Rect bounds)? fromShape, (Shape shape, Rect bounds)? toShape)
         {
             var start = fromPoint.SK();
             var end = toPoint.SK();
@@ -69,12 +69,12 @@ namespace Thousand.Compose
             // subtract the rectangle regions within src/dst shapes, producing a potentially complex thin region
             if (fromShape != null)
             {
-                var fromPath = SkiaPath.Create(fromShape);
+                var fromPath = SkiaPath.Create(fromShape.Value.shape, fromShape.Value.bounds);
                 path = path.Op(fromPath, SKPathOp.Difference)??path;
             }
             if (toShape != null)
             {
-                var toPath = SkiaPath.Create(toShape);
+                var toPath = SkiaPath.Create(toShape.Value.shape, toShape.Value.bounds);
                 path = path.Op(toPath, SKPathOp.Difference)??path;
             }
 

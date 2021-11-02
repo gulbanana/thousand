@@ -267,11 +267,11 @@ namespace Thousand.Evaluate
             var result = new IR.Node(
                 name,
                 new IR.Region(regionConfig, childEntities), 
-                shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel), 
+                shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel),
+                !shape.HasValue ? null : new Shape(shape.Value, cornerRadius),
+                shared.Stroke,
                 alignment, margin, width, height, 
-                row, column, position, anchor, offset, 
-                shape, cornerRadius, 
-                shared.Stroke
+                row, column, position, anchor, offset                 
             );
 
             scope.AddObject(node.Name, result);

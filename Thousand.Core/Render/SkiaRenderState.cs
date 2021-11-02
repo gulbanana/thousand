@@ -22,7 +22,7 @@ namespace Thousand.Render
             {
                 switch (command)
                 {
-                    case Layout.Shape shape:
+                    case Layout.Drawing shape:
                         PaintShape(shape);
                         break;
 
@@ -44,7 +44,7 @@ namespace Thousand.Render
             }
         }
 
-        private void PaintShape(Layout.Shape shape)
+        private void PaintShape(Layout.Drawing shape)
         {
             var path = SkiaPath.Create(shape);
 
@@ -58,7 +58,7 @@ namespace Thousand.Render
                 {
                     HairlineWidth => 0,
                     PositiveWidth(var w) => w,
-                    _ => throw new NotSupportedException($"unknown shape `{shape.Kind}`")
+                    _ => throw new NotSupportedException($"unknown width `{shape.Stroke.Width}`")
                 };
 
                 canvas.DrawPath(path, stroke);

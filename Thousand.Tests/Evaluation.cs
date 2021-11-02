@@ -105,8 +105,8 @@ namespace Thousand.Tests
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
             Assert.True(result, state.JoinErrors());
 
-            Assert.Equal(ShapeKind.Circle, root!.Nodes[1].Region.Edges[0].From.Target.Shape);
-            Assert.Equal(ShapeKind.Octagon, root!.Edges[0].From.Target.Shape);
+            Assert.Equal(ShapeKind.Circle, root!.Nodes[1].Region.Edges[0].From.Target.Shape?.Style);
+            Assert.Equal(ShapeKind.Octagon, root!.Edges[0].From.Target.Shape?.Style);
         }
     }
 }

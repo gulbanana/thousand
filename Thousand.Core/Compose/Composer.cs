@@ -58,7 +58,6 @@ namespace Thousand.Compose
         private readonly IR.Region root;
         private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, LayoutState> layouts;
-        private readonly Dictionary<IR.Node, Layout.Shape> globalShapes; // XXX replace this with some sort of `childShapes` in Arrange/PlaceEdge? is there a point given the below?
         private readonly Dictionary<IR.Node, Rect> globalBounds; // XXX this sucks but it's how object scope bubbling works 
         private readonly Stack<List<Layout.Command>> outputCommands;
         private decimal outputTransform;
@@ -71,7 +70,6 @@ namespace Thousand.Compose
             this.textMeasures = textMeasures;
 
             layouts = new(ReferenceEqualityComparer.Instance);
-            globalShapes = new(ReferenceEqualityComparer.Instance);
             globalBounds = new Dictionary<IR.Node, Rect>(ReferenceEqualityComparer.Instance);
 
             outputCommands = new();
@@ -91,7 +89,7 @@ namespace Thousand.Compose
             // while still using the diagram entity, apply its defaults
             if (root.Config.Fill != null)
             {
-                rootCommands.Add(new Layout.Shape(new Rect(rootSize), ShapeKind.Rect, 0, new Stroke(new ZeroWidth()), root.Config.Fill));
+                rootCommands.Add(new Layout.Drawing(new Shape(ShapeKind.Rect, 0), new Rect(rootSize), new Stroke(new ZeroWidth()), root.Config.Fill));
             }
 
             // create labels and shapes, laid out according to the measurements above and each region's settings
@@ -126,7 +124,7 @@ namespace Thousand.Compose
                 desiredSize = desiredSize with { Y = Math.Max(objekt.MinHeight.Value, desiredSize.Y) };
             }
 
-            if (objekt.Shape is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
+            if (objekt.Shape?.Style is ShapeKind.Square or ShapeKind.Roundsquare or ShapeKind.Circle or ShapeKind.Diamond)
             {
                 var longestSide = Math.Max(desiredSize.X, desiredSize.Y);
                 desiredSize = new Point(longestSide, longestSide);
@@ -306,12 +304,11 @@ namespace Thousand.Compose
         // layout objects back-to-front: shape, then intrinsic (text) content, then children
         private void Arrange(IR.Node objekt, Rect bounds)
         {
-            if (objekt.Shape.HasValue)
+            if (objekt.Shape != null)
             {
-                outputCommands.Peek().Add(new Layout.Shape(bounds, objekt.Shape.Value, objekt.CornerRadius, objekt.Stroke, objekt.Region.Config.Fill));
-                globalShapes[objekt] = new Layout.Shape(bounds / outputTransform, objekt.Shape.Value, objekt.CornerRadius, objekt.Stroke, objekt.Region.Config.Fill);
+                outputCommands.Peek().Add(new Layout.Drawing(objekt.Shape, bounds, objekt.Stroke, objekt.Region.Config.Fill));
 
-                foreach (var kvp in Shapes.Anchors(objekt.Shape.Value, objekt.CornerRadius, bounds))
+                foreach (var kvp in Shapes.Anchors(objekt.Shape, bounds))
                 {
                     layouts[objekt.Region].Anchors.Add(kvp.Key, kvp.Value.Location);
                 }
@@ -493,103 +490,98 @@ namespace Thousand.Compose
 
             var fromBox = globalBounds[edge.From.Target] / outputTransform;
             var toBox = globalBounds[edge.To.Target] / outputTransform;
-            try
+            (Shape, Rect)? fromShape = edge.From.Target.Shape == null ? null : (edge.From.Target.Shape, fromBox);
+            (Shape, Rect)? toShape = edge.To.Target.Shape == null ? null : (edge.To.Target.Shape, toBox);
+
+            var (start, end) = Intrinsics.Line(fromBox.Center + edge.From.Offset, toBox.Center + edge.To.Offset, fromShape, toShape);
+
+            if (start == null)
             {
-                var (start, end) = Intrinsics.Line(fromBox.Center + edge.From.Offset, toBox.Center + edge.To.Offset, globalShapes.GetValueOrDefault(edge.From.Target), globalShapes.GetValueOrDefault(edge.To.Target));
-
-                if (start == null)
-                {
-                    state.AddWarning(edge.From.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
-                }
-
-                if (end == null)
-                {
-                    state.AddWarning(edge.To.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
-                }
-
-                if (start == null || end == null)
-                {
-                    return;
-                }
-
-                if (edge.From.Target.Shape.HasValue)
-                {
-                    var anchors = Shapes.Anchors(edge.From.Target.Shape.Value, edge.From.Target.CornerRadius, fromBox);
-
-                    switch (edge.From.Anchor)
-                    {
-                        case AnyAnchor:
-                            start = start.ClosestTo(anchors.Values.Select(c => c.Location));
-                            break;
-
-                        case CornerAnchor:
-                            start = start.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
-                            break;
-
-                        case SpecificAnchor(var dir):
-                            start = anchors.GetValueOrDefault(dir)?.Location ?? start;
-                            break;
-                    }
-
-                    if (edge.From.Anchor is not NoAnchor && edge.To.Anchor is NoAnchor)
-                    {
-                        (_, end) = Intrinsics.Line(start, toBox.Center + edge.To.Offset, null, globalShapes.GetValueOrDefault(edge.To.Target));
-                        if (end == null)
-                        {
-                            state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
-                            return;
-                        }
-                    }
-                }
-
-                if (edge.To.Target.Shape.HasValue)
-                {
-                    var anchors = Shapes.Anchors(edge.To.Target.Shape.Value, edge.To.Target.CornerRadius, toBox);
-
-                    switch (edge.To.Anchor)
-                    {
-                        case AnyAnchor:
-                            end = end.ClosestTo(anchors.Values.Select(c => c.Location));
-                            break;
-
-                        case CornerAnchor:
-                            end = end.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
-                            break;
-
-                        case SpecificAnchor(var dir):
-                            end = anchors.GetValueOrDefault(dir)?.Location ?? end;
-                            break;
-                    }
-
-                    if (edge.To.Anchor is not NoAnchor && edge.From.Anchor is NoAnchor)
-                    {
-                        (start, _) = Intrinsics.Line(fromBox.Center + edge.From.Offset, end, globalShapes.GetValueOrDefault(edge.From.Target), null);
-                        if (start == null)
-                        {
-                            state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
-                            return;
-                        }
-                    }
-                }
-
-                outputCommands.Peek().Add(new Layout.Line(edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
+                state.AddWarning(edge.From.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
             }
-            catch (Exception ex)
+
+            if (end == null)
             {
-                state.AddWarning(ex);
+                state.AddWarning(edge.To.Name, ErrorKind.Layout, $"failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
+            }
+
+            if (start == null || end == null)
+            {
                 return;
             }
+
+            if (edge.From.Target.Shape != null)
+            {
+                var anchors = Shapes.Anchors(edge.From.Target.Shape, fromBox);
+
+                switch (edge.From.Anchor)
+                {
+                    case AnyAnchor:
+                        start = start.ClosestTo(anchors.Values.Select(c => c.Location));
+                        break;
+
+                    case CornerAnchor:
+                        start = start.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
+                        break;
+
+                    case SpecificAnchor(var dir):
+                        start = anchors.GetValueOrDefault(dir)?.Location ?? start;
+                        break;
+                }
+
+                if (edge.From.Anchor is not NoAnchor && edge.To.Anchor is NoAnchor)
+                {
+                    (_, end) = Intrinsics.Line(start, toBox.Center + edge.To.Offset, null, toShape);
+                    if (end == null)
+                    {
+                        state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects destination {1}", edge.From.Name, edge.To.Name);
+                        return;
+                    }
+                }
+            }
+
+            if (edge.To.Target.Shape != null)
+            {
+                var anchors = Shapes.Anchors(edge.To.Target.Shape, toBox);
+
+                switch (edge.To.Anchor)
+                {
+                    case AnyAnchor:
+                        end = end.ClosestTo(anchors.Values.Select(c => c.Location));
+                        break;
+
+                    case CornerAnchor:
+                        end = end.ClosestTo(anchors.Values.Where(c => c.IsCorner).Select(c => c.Location));
+                        break;
+
+                    case SpecificAnchor(var dir):
+                        end = anchors.GetValueOrDefault(dir)?.Location ?? end;
+                        break;
+                }
+
+                if (edge.To.Anchor is not NoAnchor && edge.From.Anchor is NoAnchor)
+                {
+                    (start, _) = Intrinsics.Line(fromBox.Center + edge.From.Offset, end, fromShape, null);
+                    if (start == null)
+                    {
+                        state.AddWarning(edge.From.Name, ErrorKind.Layout, $"after anchoring start, failed to find point where line from {0} to {1} intersects source {0}", edge.From.Name, edge.To.Name);
+                        return;
+                    }
+                }
+            }
+
+            outputCommands.Peek().Add(new Layout.Line(edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
         }
 
         private static Border GetAnchorBorder(AnchorNodeState node, IR.Node parent, Point parentSize)
         {
-            if (!parent.Shape.HasValue)
+            if (parent.Shape == null)
             {
                 return Border.Zero;
             }
 
             var parentBounds = new Rect(parentSize);
-            var parentAnchors = Shapes.Anchors(parent.Shape.Value, parent.CornerRadius, parentBounds);
+            var parentAnchors = Shapes.Anchors(parent.Shape, parentBounds);
 
             if (!parentAnchors.ContainsKey(node.Anchor))
             {

@@ -34,8 +34,8 @@ namespace Thousand.Render
             {
                 switch (command)
                 {
-                    case Shape shape:
-                        yield return RenderShape(shape);
+                    case Drawing drawing:
+                        yield return RenderShape(drawing);
                         break;
 
                     case Line line:
@@ -60,12 +60,12 @@ namespace Thousand.Render
             }
         }
 
-        public XElement RenderShape(Shape shape)
+        public XElement RenderShape(Drawing drawing)
         {
-            var tag = CreatePath(shape);
+            var tag = CreatePath(drawing);
 
-            tag.Add(new XAttribute("fill", shape.Fill.SVG()));
-            tag.Add(shape.Stroke.SVG(scale.Peek()));
+            tag.Add(new XAttribute("fill", drawing.Fill.SVG()));
+            tag.Add(drawing.Stroke.SVG(scale.Peek()));
 
             return tag;
         }
@@ -122,57 +122,57 @@ namespace Thousand.Render
             return $"arrow-{Convert.ToHexString(new[] { c.R, c.G, c.B })}";
         }
 
-        private XElement CreatePath(Shape shape)
+        private XElement CreatePath(Drawing drawing)
         {
-            var cx = shape.Bounds.SK().MidX;
-            var cy = shape.Bounds.SK().MidY;
+            var cx = drawing.Bounds.SK().MidX;
+            var cy = drawing.Bounds.SK().MidY;
 
-            return shape.Kind switch
+            return drawing.Shape.Style switch
             {
                 ShapeKind.Rhombus or ShapeKind.Diamond => new XElement(xmlns + "path", 
-                    new XAttribute("d", Shapes.Diamond(shape.Bounds).SVG())
+                    new XAttribute("d", Shapes.Diamond(drawing.Bounds).SVG())
                 ),
 
                 ShapeKind.Triangle => new XElement(xmlns + "path",
-                    new XAttribute("d", Shapes.Triangle(shape.Bounds).SVG())
+                    new XAttribute("d", Shapes.Triangle(drawing.Bounds).SVG())
                 ),
 
                 ShapeKind.Trapezium => new XElement(xmlns + "path",
-                    new XAttribute("d", Shapes.Trapezium(shape.Bounds, shape.CornerRadius).SVG())
+                    new XAttribute("d", Shapes.Trapezium(drawing.Bounds, drawing.Shape.CornerRadius).SVG())
                 ),
 
                 ShapeKind.Octagon => new XElement(xmlns + "path",
-                    new XAttribute("d", Shapes.Octagon(shape.Bounds).SVG())
+                    new XAttribute("d", Shapes.Octagon(drawing.Bounds).SVG())
                 ),
 
                 ShapeKind.Ellipse or ShapeKind.Circle => new XElement(xmlns + "ellipse", 
                     new XAttribute("cx", cx), 
                     new XAttribute("cy", cy), 
-                    new XAttribute("rx", shape.Bounds.Width / 2m), 
-                    new XAttribute("ry", shape.Bounds.Height / 2m)
+                    new XAttribute("rx", drawing.Bounds.Width / 2m), 
+                    new XAttribute("ry", drawing.Bounds.Height / 2m)
                 ),
 
                 ShapeKind.Roundrect or ShapeKind.Roundsquare => new XElement(xmlns + "rect",
-                    new XAttribute("x", shape.Bounds.Left),
-                    new XAttribute("y", shape.Bounds.Top),
-                    new XAttribute("width", shape.Bounds.Width),
-                    new XAttribute("height", shape.Bounds.Height),
-                    new XAttribute("rx", shape.CornerRadius)
+                    new XAttribute("x", drawing.Bounds.Left),
+                    new XAttribute("y", drawing.Bounds.Top),
+                    new XAttribute("width", drawing.Bounds.Width),
+                    new XAttribute("height", drawing.Bounds.Height),
+                    new XAttribute("rx", drawing.Shape.CornerRadius)
                 ),
 
                 ShapeKind.Pill => new XElement(xmlns + "rect",
-                    new XAttribute("x", shape.Bounds.Left),
-                    new XAttribute("y", shape.Bounds.Top),
-                    new XAttribute("width", shape.Bounds.Width),
-                    new XAttribute("height", shape.Bounds.Height),
-                    new XAttribute("rx", shape.Bounds.Height/2)
+                    new XAttribute("x", drawing.Bounds.Left),
+                    new XAttribute("y", drawing.Bounds.Top),
+                    new XAttribute("width", drawing.Bounds.Width),
+                    new XAttribute("height", drawing.Bounds.Height),
+                    new XAttribute("rx", drawing.Bounds.Height/2)
                 ),
 
                 _ => new XElement(xmlns + "rect",
-                    new XAttribute("x", shape.Bounds.Left),
-                    new XAttribute("y", shape.Bounds.Top),
-                    new XAttribute("width", shape.Bounds.Width),
-                    new XAttribute("height", shape.Bounds.Height)
+                    new XAttribute("x", drawing.Bounds.Left),
+                    new XAttribute("y", drawing.Bounds.Top),
+                    new XAttribute("width", drawing.Bounds.Width),
+                    new XAttribute("height", drawing.Bounds.Height)
                 )
             };
         }
