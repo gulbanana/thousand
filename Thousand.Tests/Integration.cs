@@ -73,7 +73,7 @@ namespace Thousand.Tests
             Assert.True(Facade.TryParse(@"class foo [offset=1 1]; foo bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var objekt = root!.Objects.Single();
+            var objekt = root!.Nodes.Single();
             Assert.Equal(new Point(1, 1), objekt.Offset);
         }
 
@@ -105,7 +105,7 @@ namespace Thousand.Tests
             Assert.True(Facade.TryParse(@"class foo [anchor=n]; foo bar", state, out var document), state.JoinErrors());
             Assert.True(Evaluator.TryEvaluate(new[] { document! }, state, out var root), state.JoinErrors());
 
-            var objekt = root!.Objects.Single();
+            var objekt = root!.Nodes.Single();
             Assert.Equal(CompassKind.N, objekt.Anchor);
         }
 

@@ -21,7 +21,7 @@ namespace Thousand.Compose
                 }
 
                 var composition = new Composer(state, root, textMeasures);
-                diagram = composition.Compose();
+                diagram = composition.Diagram;
 
                 return state.ErrorCount() == errors;
             }
@@ -39,7 +39,7 @@ namespace Thousand.Compose
             {
                 switch (e)
                 {
-                    case IR.Object objekt:
+                    case IR.Node objekt:
                         if (objekt.Label != null) yield return objekt.Label;
                         foreach (var label in WalkLabels(objekt.Region))
                         {
@@ -58,9 +58,11 @@ namespace Thousand.Compose
         private readonly IR.Region root;
         private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
         private readonly Dictionary<IR.Region, LayoutState> layouts;
-        private readonly Dictionary<IR.Object, Layout.Shape> globalShapes; // XXX replace this with some sort of `childShapes` in Arrange/PlaceEdge
+        private readonly Dictionary<IR.Node, Layout.Shape> globalShapes; // XXX replace this with some sort of `childShapes` in Arrange/PlaceEdge? is there a point given the below?
+        private readonly Dictionary<IR.Node, Rect> globalBounds; // XXX this sucks but it's how object scope bubbling works 
         private readonly Stack<List<Layout.Command>> outputCommands;
         private decimal outputTransform;
+        public readonly Layout.Diagram Diagram;
 
         private Composer(GenerationState state, IR.Region root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures)
         {
@@ -70,12 +72,15 @@ namespace Thousand.Compose
 
             layouts = new(ReferenceEqualityComparer.Instance);
             globalShapes = new(ReferenceEqualityComparer.Instance);
+            globalBounds = new Dictionary<IR.Node, Rect>(ReferenceEqualityComparer.Instance);
 
             outputCommands = new();
             outputTransform = 1m;
+
+            Diagram = Compose();
         }
 
-        public Layout.Diagram Compose()
+        private Layout.Diagram Compose()
         {
             var rootCommands = new List<Layout.Command>();
             outputCommands.Push(rootCommands);
@@ -104,7 +109,7 @@ namespace Thousand.Compose
         // b) intrinsic content (a label)
         // c) a shape stroked around (and filled behind) the larger of (a) and (b)
         // all of these, plus padding, contribute to a object's bounding box size
-        private RegionMeasurements Measure(IR.Object objekt)
+        private RegionMeasurements Measure(IR.Node objekt)
         {
             var desiredSize = Measure(
                 objekt.Region,
@@ -146,7 +151,7 @@ namespace Thousand.Compose
             var rowCount = 0;
             var columnCount = 0;
 
-            var childObjects = region.Entities.OfType<IR.Object>();
+            var childObjects = region.Entities.OfType<IR.Node>();
             var childHasExplicitColumnFlow = childObjects.Any(o => o.Region.Config.GridFlow is FlowKind.Columns or FlowKind.ReverseColumns) &&
                                             !childObjects.Any(o => o.Region.Config.GridFlow is FlowKind.Rows or FlowKind.ReverseRows);
 
@@ -170,7 +175,7 @@ namespace Thousand.Compose
                         return Point.Zero;
                     }
 
-                    var node = new AnchorLayoutNode(desiredSize, desiredMargin, child.Anchor.Value, child.Alignment.Select(k => k ?? AlignmentKind.Center));
+                    var node = new AnchorNodeState(desiredSize, desiredMargin, child.Anchor.Value, child.Alignment.Select(k => k ?? AlignmentKind.Center));
                     layout.AllNodes[child] = node;
                     layout.AnchorNodes[child] = node;
                     continue;
@@ -185,7 +190,7 @@ namespace Thousand.Compose
                         return Point.Zero;
                     }
 
-                    var node = new PositionLayoutNode(desiredSize, desiredMargin, child.Position);
+                    var node = new PositionNodeState(desiredSize, desiredMargin, child.Position);
                     layout.AllNodes[child] = node;
                     layout.PositionNodes[child] = node;
                     continue;
@@ -227,7 +232,7 @@ namespace Thousand.Compose
                         currentRow = child.Row ?? currentRow;
                     } 
 
-                    var measurements = new GridLayoutNode(desiredSize, desiredMargin, currentRow, currentColumn);
+                    var measurements = new GridNodeState(desiredSize, desiredMargin, currentRow, currentColumn);
                     layout.GridNodes[child] = measurements;
                     layout.AllNodes[child] = measurements;
 
@@ -299,7 +304,7 @@ namespace Thousand.Compose
         }
 
         // layout objects back-to-front: shape, then intrinsic (text) content, then children
-        private Dictionary<IR.Object, Rect> Arrange(IR.Object objekt, Rect bounds)
+        private void Arrange(IR.Node objekt, Rect bounds)
         {
             if (objekt.Shape.HasValue)
             {
@@ -333,11 +338,11 @@ namespace Thousand.Compose
                 outputCommands.Peek().Add(new Layout.Label(objekt.Label.Font, blockBox, objekt.Label.Content, lines));
             }
 
-            return Arrange(objekt.Region, bounds);
+            Arrange(objekt.Region, bounds);
         }
 
         // layout region context within a given box - bounds are known to parents, so it's just a matter of dividing up the space
-        private Dictionary<IR.Object, Rect> Arrange(IR.Region region, Rect bounds)
+        private void Arrange(IR.Region region, Rect bounds)
         {
             if (region.Config.Scale != 1m)
             {
@@ -381,20 +386,18 @@ namespace Thousand.Compose
             }
 
             // place objects recursively
-            var childBounds = new Dictionary<IR.Object, Rect>(ReferenceEqualityComparer.Instance);
             foreach (var child in region.Entities)
             {
                 switch (child)
                 {
-                    case IR.Object childObject:
-                        foreach (var kvp in PlaceObject(region.Config, bounds, columns, rows, layout, childObject))
-                        {
-                            childBounds.Add(kvp.Key, kvp.Value);
-                        }
+                    case IR.Node childObject:
+                        var childBounds = PlaceObject(region.Config, bounds, columns, rows, layout, childObject);
+                        globalBounds.Add(childObject, childBounds * outputTransform);
+                        Arrange(childObject, childBounds);
                         break;
 
                     case IR.Edge childEdge:
-                        PlaceEdge(childBounds, childEdge);
+                        PlaceEdge(childEdge);
                         break;
                 }
             }
@@ -404,19 +407,16 @@ namespace Thousand.Compose
                 outputTransform /= region.Config.Scale;
                 outputCommands.Pop();
             }
-
-            return childBounds;
         }
 
-        // place objects recursively
-        private IEnumerable<KeyValuePair<IR.Object, Rect>> PlaceObject(IR.Config config, Rect bounds, Track[] columns, Track[] rows, LayoutState layout, IR.Object child)
+        private Rect PlaceObject(IR.Config config, Rect bounds, Track[] columns, Track[] rows, LayoutState layout, IR.Node child)
         {
             var node = layout.AllNodes[child];
 
             var origin = node switch
             {
                 // place within intersection of tracks
-                GridLayoutNode gln => new Point((child.Alignment.Columns ?? config.Alignment.Columns) switch
+                GridNodeState gln => new Point((child.Alignment.Columns ?? config.Alignment.Columns) switch
                 {
                     AlignmentKind.Start or AlignmentKind.Stretch => columns[gln.Column - 1].Start + gln.Margin.Left,
                     AlignmentKind.Center => columns[gln.Column - 1].Center - (gln.Size.X) / 2 + (gln.Margin.Left - gln.Margin.Right) / 2,
@@ -429,7 +429,7 @@ namespace Thousand.Compose
                 }),
 
                 // place *after* anchor = anchor is shape's *origin*
-                AnchorLayoutNode aln when layout.Anchors.ContainsKey(aln.Anchor) => new Point((child.Alignment.Columns ?? AlignmentKind.Center) switch
+                AnchorNodeState aln when layout.Anchors.ContainsKey(aln.Anchor) => new Point((child.Alignment.Columns ?? AlignmentKind.Center) switch
                 {
                     AlignmentKind.Start => (layout.Anchors[aln.Anchor] - node.Size).X,
                     AlignmentKind.Center or AlignmentKind.Stretch => (layout.Anchors[aln.Anchor] - node.Size / 2).X,
@@ -442,14 +442,14 @@ namespace Thousand.Compose
                 }),
 
                 // place at specific loation
-                PositionLayoutNode pln => bounds.Origin + pln.Origin + config.Padding.TopLeft,
+                PositionNodeState pln => bounds.Origin + pln.Origin + config.Padding.TopLeft,
 
                 _ => Point.Zero
             };
 
             var size = node switch
             {
-                GridLayoutNode gln => new Point((child.Alignment.Columns ?? config.Alignment.Columns) switch
+                GridNodeState gln => new Point((child.Alignment.Columns ?? config.Alignment.Columns) switch
                 {
                     AlignmentKind.Stretch => columns[gln.Column - 1].Size,
                     _ => node.Size.X
@@ -461,25 +461,38 @@ namespace Thousand.Compose
                 _ => node.Size
             };
 
-            var childBounds = new Rect(origin, size);
-            yield return new(child, childBounds * outputTransform);
-
-            foreach (var kvp in Arrange(child, childBounds))
-            {
-                yield return kvp;
-            }
+            return new Rect(origin, size);
         }
 
-        // place lines, which are above the whole hierarchy - they need the margin-exclusive laid out bounds of each contained object 
-        private void PlaceEdge(Dictionary<IR.Object, Rect> childBounds, IR.Edge edge)
+        // place lines, which are within the hierarchy but refer to dynamically-scoped nodes via globalBounds
+        private void PlaceEdge(IR.Edge edge)
         {
             if (edge.Label != null)
             {
                 state.AddWarning(edge.To.Name, ErrorKind.Layout, "line labels have not been implemented yet");
             }
 
-            var fromBox = childBounds[edge.From.Target] / outputTransform;
-            var toBox = childBounds[edge.To.Target] / outputTransform;
+            var preconditions = true;
+
+            if (!globalBounds.ContainsKey(edge.From.Target))
+            {
+                state.AddError(edge.From.Name, ErrorKind.Layout, "object {0} has not been laid out before line {0} -- {1}", edge.From.Name, edge.To.Name);
+                preconditions = false;
+            }
+
+            if (!globalBounds.ContainsKey(edge.To.Target))
+            {
+                state.AddError(edge.To.Name, ErrorKind.Layout, "object {1} has not been laid out before line {0} -- {1}", edge.From.Name, edge.To.Name);
+                preconditions = false;
+            }
+
+            if (!preconditions)
+            {
+                return;
+            }
+
+            var fromBox = globalBounds[edge.From.Target] / outputTransform;
+            var toBox = globalBounds[edge.To.Target] / outputTransform;
             try
             {
                 var (start, end) = Intrinsics.Line(fromBox.Center + edge.From.Offset, toBox.Center + edge.To.Offset, globalShapes.GetValueOrDefault(edge.From.Target), globalShapes.GetValueOrDefault(edge.To.Target));
@@ -568,7 +581,7 @@ namespace Thousand.Compose
             }
         }
 
-        private static Border GetAnchorBorder(AnchorLayoutNode node, IR.Object parent, Point parentSize)
+        private static Border GetAnchorBorder(AnchorNodeState node, IR.Node parent, Point parentSize)
         {
             if (!parent.Shape.HasValue)
             {

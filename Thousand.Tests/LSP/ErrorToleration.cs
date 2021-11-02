@@ -84,8 +84,8 @@ foo(""bar"")
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
             
-            Assert.Single(document.Root!.Objects);
-            Assert.Equal("bar", document.Root!.Objects.Single().Region.Objects.Single().Label?.Content);
+            Assert.Single(document.Root!.Nodes);
+            Assert.Equal("bar", document.Root!.Nodes.Single().Region.Nodes.Single().Label?.Content);
         }
 
         [Fact]
@@ -188,8 +188,8 @@ line bar -- baz [stroke=blue] // good");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Root!.Objects);
-            Assert.Single(document.Root!.Objects.Single().Region.Objects);
+            Assert.Single(document.Root!.Nodes);
+            Assert.Single(document.Root!.Nodes.Single().Region.Nodes);
         }
 
         [Fact]
@@ -207,7 +207,7 @@ a");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Equal(AlignmentKind.Start, document.Root!.Objects.Single().Alignment.Columns);
+            Assert.Equal(AlignmentKind.Start, document.Root!.Nodes.Single().Alignment.Columns);
         }
 
         [Fact]
@@ -228,9 +228,9 @@ foo");
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Root!.Objects);
-            Assert.Single(document.Root!.Objects.Single().Region.Objects);
-            Assert.Single(document.Root!.Objects.Single().Region.Objects.Single().Region.Objects);
+            Assert.Single(document.Root!.Nodes);
+            Assert.Single(document.Root!.Nodes.Single().Region.Nodes);
+            Assert.Single(document.Root!.Nodes.Single().Region.Nodes.Single().Region.Nodes);
         }
 
         [Fact]

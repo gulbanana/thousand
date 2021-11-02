@@ -10,8 +10,8 @@ namespace Thousand.Evaluate
         private readonly GenerationState state;
         public TypedScope? Parent { get; private init; }
 
-        private readonly Dictionary<string, IR.Object> canonicalObjects = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, IR.Object> bubbledObjects = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IR.Node> canonicalObjects = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IR.Node> bubbledObjects = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ObjectContent> objectClasses = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, LineContent> lineClasses = new(StringComparer.OrdinalIgnoreCase);
 
@@ -39,7 +39,7 @@ namespace Thousand.Evaluate
             }
         }
 
-        public IEnumerable<IR.Object> GetObjects()
+        public IEnumerable<IR.Node> GetObjects()
         {
             return canonicalObjects.Values;
         }
@@ -100,7 +100,7 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        public IR.Object? FindObject(Parse.Identifier name)
+        public IR.Node? FindObject(Parse.Identifier name)
         {
             if (!canonicalObjects.TryGetValue(name.Text, out var result) && !bubbledObjects.TryGetValue(name.Text, out result) && Parent != null)
             {
@@ -125,7 +125,7 @@ namespace Thousand.Evaluate
             lineClasses[key] = lineClass;
         }
 
-        public void AddObject(Parse.Identifier? key, IR.Object value)
+        public void AddObject(Parse.Identifier? key, IR.Node value)
         {
             if (key?.Text is string name && canonicalObjects.ContainsKey(name))
             {
@@ -137,7 +137,7 @@ namespace Thousand.Evaluate
             }
         }
 
-        private void AddObject(string key, IR.Object value, bool canon)
+        private void AddObject(string key, IR.Node value, bool canon)
         {
             if (Parent != null && !Parent.bubbledObjects.ContainsKey(key))
             {

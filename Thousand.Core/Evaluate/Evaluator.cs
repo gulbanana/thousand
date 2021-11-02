@@ -128,7 +128,7 @@ namespace Thousand.Evaluate
             }
         }
 
-        private IR.Object AddObject(AST.TypedObject node, Font cascadeFont, TypedScope scope)
+        private IR.Node AddObject(AST.TypedObject node, Font cascadeFont, TypedScope scope)
         {
             var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
 
@@ -264,7 +264,7 @@ namespace Thousand.Evaluate
                 }
             }
 
-            var result = new IR.Object(
+            var result = new IR.Node(
                 name,
                 new IR.Region(regionConfig, childEntities), 
                 shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel), 
@@ -279,9 +279,9 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        private (IEnumerable<IR.Object>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, TypedScope scope)
+        private (IEnumerable<IR.Node>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, TypedScope scope)
         {
-            var objects = new List<IR.Object>();
+            var objects = new List<IR.Node>();
             var edges = new List<IR.Edge>();
 
             var shared = new SharedStyles(null, AlignmentKind.Center, new Stroke());
@@ -332,7 +332,7 @@ namespace Thousand.Evaluate
                 }, text => font = ApplyFontAttributes(font, text));
             }
 
-            var nodes = new List<(ArrowKind? direction, IR.Object? target, Parse.Identifier? name)>();
+            var nodes = new List<(ArrowKind? direction, IR.Node? target, Parse.Identifier? name)>();
             foreach (var seg in line.Segments)
             {
                 var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);
