@@ -164,13 +164,15 @@ namespace Thousand.Compose
                     if (child.Row.HasValue || child.Column.HasValue)
                     {
                         state.AddError(child.Name, ErrorKind.Layout, "object {0} has both anchor and grid row/column", child.Name);
-                        return Point.Zero;
+                        layout.AllNodes[child] = new ErrorNodeState();
+                        continue;
                     }
 
                     if (child.Position != null)
                     {
                         state.AddError(child.Name, ErrorKind.Layout, "object {0} has both anchor and position", child.Name);
-                        return Point.Zero;
+                        layout.AllNodes[child] = new ErrorNodeState();
+                        continue;
                     }
 
                     var node = new AnchorNodeState(desiredSize, desiredMargin, child.Anchor.Value, child.Alignment.Select(k => k ?? AlignmentKind.Center));
@@ -185,7 +187,8 @@ namespace Thousand.Compose
                     if (child.Row.HasValue || child.Column.HasValue)
                     {
                         state.AddError(child.Name, ErrorKind.Layout, "object {0} has both position and grid row/column", child.Name);
-                        return Point.Zero;
+                        layout.AllNodes[child] = new ErrorNodeState();
+                        continue;
                     }
 
                     var node = new PositionNodeState(desiredSize, desiredMargin, child.Position);
@@ -455,6 +458,9 @@ namespace Thousand.Compose
                     AlignmentKind.Stretch => rows[gln.Row - 1].Size,
                     _ => node.Size.Y
                 }),
+
+                ErrorNodeState => Point.Zero,
+
                 _ => node.Size
             };
 

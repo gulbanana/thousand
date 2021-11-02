@@ -1,5 +1,6 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Thousand.Model;
 using Thousand.Parse;
 
 namespace Thousand.LSP.Analyse
@@ -10,11 +11,11 @@ namespace Thousand.LSP.Analyse
         public T Value { get; }
         public Range Range { get; }
 
-        public Located(DocumentUri uri, T value, ILocated location)
+        public Located(DocumentUri uri, T value, Name location)
         {
             Uri = uri;
             Value = value;
-            Range = location.Span.AsRange();
+            Range = location.AsLoc.AsRange();
         }
 
         public Located(ParsedDocument doc, T value, IMacro location)

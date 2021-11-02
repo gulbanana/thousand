@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand.Parse
 {
@@ -78,15 +79,15 @@ namespace Thousand.Parse
         private T? CheckAttribute<T>(AST.UntypedAttribute ast, IEnumerable<API.AttributeDefinition<T>> metadata, IEnumerable<string> validNames) where T : class
         {
             // XXX this will produce a bad error position
-            if (string.IsNullOrEmpty(ast.Key?.Text))
+            if (string.IsNullOrEmpty(ast.Key?.AsKey))
             {
-                state.AddError(ast.Key?.Span ?? ast.Value.Span(endSpan), ErrorKind.Syntax, "expected attribute");
+                state.AddError(ast.Key?.AsLoc ?? ast.Value.Span(endSpan), ErrorKind.Syntax, "expected attribute");
                 return null;
             }
 
             foreach (var attr in metadata)
             {
-                if (attr.Names.Contains(ast.Key.Text, StringComparer.OrdinalIgnoreCase))
+                if (attr.Names.Contains(ast.Key.AsKey, StringComparer.OrdinalIgnoreCase))
                 {
                     return CheckAttribute(ast, attr.ValueParser);
                 }
@@ -153,7 +154,7 @@ namespace Thousand.Parse
                     state.AddError(attr.Value.Span(endSpan), ErrorKind.Syntax, "expected attribute");
                     continue;
                 }
-                if (api.LineOnlyNames.Contains(attr.Key.Text)) 
+                if (api.LineOnlyNames.Contains(attr.Key.AsKey)) 
                 {
                     return new AST.LineClass(
                         ast.Name,
@@ -161,7 +162,7 @@ namespace Thousand.Parse
                         ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
                     );
                 }
-                else if (api.ObjectOnlyNames.Contains(attr.Key.Text))
+                else if (api.ObjectOnlyNames.Contains(attr.Key.AsKey))
                 {
                     return new AST.ObjectClass(
                         ast.Name,
@@ -231,7 +232,7 @@ namespace Thousand.Parse
 
             return new AST.TypedLine(
                 ast.Classes.Select(c => c.Value).WhereNotNull().Select(c => c.Name).ToArray(),
-                ast.Segments.Select(s => new AST.LineSegment<AST.TypedObject>(s.Target.Match<OneOf<Identifier, AST.TypedObject>>(x => x, x => CheckObject(x.Declaration.Value)), s.Direction)).ToArray(),
+                ast.Segments.Select(s => new AST.LineSegment<AST.TypedObject>(s.Target.Match<OneOf<Name, AST.TypedObject>>(x => x, x => CheckObject(x.Declaration.Value)), s.Direction)).ToArray(),
                 ast.Attributes.Select(CheckLineAttribute).WhereNotNull().ToArray()
             );
         }

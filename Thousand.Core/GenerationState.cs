@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Thousand.Model;
 
 namespace Thousand
 {
@@ -58,26 +59,26 @@ namespace Thousand
             errors.Add(new(TextSpan.Empty, e));
         }
 
-        public void AddError(TextSpan span, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
+        public void AddError(TextSpan span, ErrorKind kind, string message, params Name[] identifiers)
         {
-            var formatted = string.Format(message.Replace("`{`", "`{{`").Replace("`}`", "`}}`"), identifiers.Select(i => "`" + i.DisplayName(sourceMap) + "`").ToArray());
+            var formatted = string.Format(message.Replace("`{`", "`{{`").Replace("`}`", "`}}`"), identifiers.Select(i => "`" + i.AsMap(sourceMap) + "`").ToArray());
             errors.Add(new(span, kind, formatted));
         }
 
-        public void AddErrorEx(TextSpan span, ErrorKind kind, string message, params (Parse.Identifier name, string suffix)[] identifiers)
+        public void AddErrorEx(TextSpan span, ErrorKind kind, string message, params (Name name, string suffix)[] identifiers)
         {
-            var formatted = string.Format(message.Replace("`{`", "`{{`").Replace("`}`", "`}}`"), identifiers.Select(i => "`" + i.name.DisplayName(sourceMap) + i.suffix + "`").ToArray());
+            var formatted = string.Format(message.Replace("`{`", "`{{`").Replace("`}`", "`}}`"), identifiers.Select(i => "`" + i.name.AsMap(sourceMap) + i.suffix + "`").ToArray());
             errors.Add(new(span, kind, formatted));
         }
 
-        public void AddError(Parse.Identifier source, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
+        public void AddError(Name source, ErrorKind kind, string message, params Name[] identifiers)
         {
-            AddError(source.Span, kind, message, identifiers);
+            AddError(source.AsLoc, kind, message, identifiers);
         }
 
-        public void AddErrorEx(Parse.Identifier source, ErrorKind kind, string message, params (Parse.Identifier, string)[] identifiers)
+        public void AddErrorEx(Name source, ErrorKind kind, string message, params (Name, string)[] identifiers)
         {
-            AddErrorEx(source.Span, kind, message, identifiers);
+            AddErrorEx(source.AsLoc, kind, message, identifiers);
         }
 
         public void AddError<T>(TokenList<Parse.TokenKind> tokens, TextSpan endSpan, TokenListParserResult<Parse.TokenKind, T> error)
@@ -93,15 +94,15 @@ namespace Thousand
             warnings.Add(new(TextSpan.Empty, e));
         }
 
-        public void AddWarning(TextSpan span, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
+        public void AddWarning(TextSpan span, ErrorKind kind, string message, params Name[] identifiers)
         {
-            var formatted = string.Format(message, identifiers.Select(i => "`" + i.DisplayName(sourceMap) + "`").ToArray());
+            var formatted = string.Format(message, identifiers.Select(i => "`" + i.AsMap(sourceMap) + "`").ToArray());
             warnings.Add(new(span, kind, formatted));
         }
 
-        public void AddWarning(Parse.Identifier source, ErrorKind kind, string message, params Parse.Identifier[] identifiers)
+        public void AddWarning(Name source, ErrorKind kind, string message, params Name[] identifiers)
         {
-            AddWarning(source.Span, kind, message, identifiers);
+            AddWarning(source.AsLoc, kind, message, identifiers);
         }
 
         private IEnumerable<GenerationError> Map(IEnumerable<GenerationError> errors)
@@ -113,5 +114,7 @@ namespace Thousand
                 e.Details
             ));
         }
+
+        internal TextSpan UnmapSpan(TextSpan unsource) => sourceMap.ContainsKey(unsource.ToStringValue()) ? sourceMap[unsource.ToStringValue()] : unsource;
     }
 }

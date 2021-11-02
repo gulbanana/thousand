@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Thousand.Parse;
+using Thousand.Model;
 
 namespace Thousand.LSP.Analyse
 {
@@ -28,15 +28,15 @@ namespace Thousand.LSP.Analyse
 
         public void Pop(AST.UntypedClass c)
         {
-            Classes[c.Name.Text] = c;
+            Classes[c.Name.AsKey] = c;
             Pop();
         }
 
         public void Pop(AST.UntypedObject o)
         {
-            if (o.Name != null && !Objects.ContainsKey(o.Name.Text))
+            if (o.Name != null && !Objects.ContainsKey(o.Name.AsKey))
             {
-                Objects.Add(o.Name.Text, o);
+                Objects.Add(o.Name.AsKey, o);
             }
             Pop();
         }
@@ -55,11 +55,11 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        public AST.UntypedObject? FindObject(Identifier name)
+        public AST.UntypedObject? FindObject(Name name)
         {
-            if (Objects.ContainsKey(name.Text))
+            if (Objects.ContainsKey(name.AsKey))
             {
-                return Objects[name.Text];
+                return Objects[name.AsKey];
             }
             else if (Parent != null)
             {
@@ -71,11 +71,11 @@ namespace Thousand.LSP.Analyse
             }
         }
 
-        public AST.UntypedClass? FindClass(Identifier name)
+        public AST.UntypedClass? FindClass(Name name)
         {
-            if (Classes.ContainsKey(name.Text))
+            if (Classes.ContainsKey(name.AsKey))
             {
-                return Classes[name.Text];
+                return Classes[name.AsKey];
             }
             else if (Parent != null)
             {

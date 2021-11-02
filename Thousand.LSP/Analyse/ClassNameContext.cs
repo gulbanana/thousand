@@ -1,4 +1,4 @@
-﻿using Thousand.Parse;
+﻿using Thousand.Model;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace Thousand.LSP.Analyse
@@ -10,12 +10,12 @@ namespace Thousand.LSP.Analyse
         public string Text { get; }
         public bool IsAtStart { get; }
 
-        public ClassNameContext(UntypedScope scope, bool isAtStart, Identifier identifier)
+        public ClassNameContext(UntypedScope scope, bool isAtStart, Name identifier)
         {
             Scope = scope;
             IsAtStart = isAtStart;
-            Text = identifier.Text;
-            Range = identifier.Span.AsRange();
+            Text = identifier.AsKey;
+            Range = identifier.AsLoc.AsRange();
         }
 
         public ClassNameContext(UntypedScope scope, bool isAtStart, Range range)

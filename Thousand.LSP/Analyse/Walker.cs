@@ -50,8 +50,8 @@ namespace Thousand.LSP.Analyse
             {
                 Kind = SymbolKind.Class,
                 Range = declaration.AsRange(doc.EndSpan),
-                SelectionRange = syntax.Name.Span.AsRange(),
-                Name = "class " + syntax.Name.Text,
+                SelectionRange = syntax.Name.AsLoc.AsRange(),
+                Name = "class " + syntax.Name.AsKey,
                 Children = WalkClass(scope, syntax).ToArray()
             };
 
@@ -62,7 +62,7 @@ namespace Thousand.LSP.Analyse
 
         private IEnumerable<DocumentSymbol> WalkClass(UntypedScope scope, AST.UntypedClass syntax)
         {
-            analysis.ClassDefinitions[syntax] = new Location { Uri = doc.Uri, Range = syntax.Name.Span.AsRange() };
+            analysis.ClassDefinitions[syntax] = new Location { Uri = doc.Uri, Range = syntax.Name.AsLoc.AsRange() };
 
             analysis.ClassReferences.Add(new(doc.Uri, syntax, syntax.Name));
 
@@ -85,7 +85,7 @@ namespace Thousand.LSP.Analyse
             var allAttributes = syntax.Attributes
                 .Select(a => a.Key)
                 .WhereNotNull()
-                .Select(k => k.Text)
+                .Select(k => k.AsKey)
                 .Distinct().ToArray();
 
             foreach (var attribute in syntax.Attributes)
@@ -93,7 +93,7 @@ namespace Thousand.LSP.Analyse
                 doc.Attributes.Add(new(attribute, ParentKind.Class, allAttributes, doc.EndSpan));
             }
 
-            var contents = scope.Push("class "+syntax.Name.Text);
+            var contents = scope.Push("class "+syntax.Name.AsKey);
             foreach (var dec in syntax.Declarations)
             {
                 switch (dec.Value)
@@ -126,8 +126,8 @@ namespace Thousand.LSP.Analyse
             {
                 Kind = SymbolKind.Variable,
                 Range = declaration.AsRange(doc.EndSpan),
-                SelectionRange = (syntax.Name?.Span ?? syntax.TypeSpan).AsRange(),
-                Name = syntax.TypeName + (syntax.Name == null ? "" : $" {syntax.Name.Text}"),
+                SelectionRange = (syntax.Name?.AsLoc ?? syntax.TypeSpan).AsRange(),
+                Name = syntax.TypeName + (syntax.Name == null ? "" : $" {syntax.Name.AsKey}"),
                 Children = WalkObject(scope, syntax).ToArray()
             };
 
@@ -138,7 +138,7 @@ namespace Thousand.LSP.Analyse
 
         private IEnumerable<DocumentSymbol> WalkObject(UntypedScope scope, AST.UntypedObject syntax)
         {
-            analysis.ObjectDefinitions[syntax] = new Location { Uri = doc.Uri, Range = (syntax.Name?.Span ?? syntax.TypeSpan).AsRange() };
+            analysis.ObjectDefinitions[syntax] = new Location { Uri = doc.Uri, Range = (syntax.Name?.AsLoc ?? syntax.TypeSpan).AsRange() };
 
             if (syntax.Name != null)
             {
@@ -167,7 +167,7 @@ namespace Thousand.LSP.Analyse
             var allAttributes = syntax.Attributes
                 .Select(a => a.Key)
                 .WhereNotNull()
-                .Select(k => k.Text)
+                .Select(k => k.AsKey)
                 .Distinct().ToArray();
 
             foreach (var attribute in syntax.Attributes)
@@ -175,7 +175,7 @@ namespace Thousand.LSP.Analyse
                 doc.Attributes.Add(new(attribute, ParentKind.Object, allAttributes, doc.EndSpan));
             }
 
-            var contents = scope.Push("object "+ syntax.Name?.Text);
+            var contents = scope.Push("object "+ syntax.Name?.AsKey);
             foreach (var dec in syntax.Declarations)
             {
                 switch (dec.Value)
@@ -207,7 +207,7 @@ namespace Thousand.LSP.Analyse
             var allAttributes = syntax.Attributes
                 .Select(a => a.Key)
                 .WhereNotNull()
-                .Select(k => k.Text)
+                .Select(k => k.AsKey)
                 .Distinct()
                 .ToArray();
 

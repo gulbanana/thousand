@@ -1,5 +1,6 @@
 ﻿@page "/fonts"
 @using SkiaSharp
+@using Superpower.Model 
 @using Thousand
 @using Thousand.Model
 @using Thousand.Compose
@@ -12,7 +13,7 @@
 
         if (Composer.TryCompose(new IR.Region(new IR.Config(), new IR.Entity[]
         {
-            new IR.Node("object", new IR.Config()) with
+            new IR.Node(new Name("object", new TextSpan("object")), new IR.Config()) with
             { 
                 Shape = null, 
                 Label = new IR.StyledText(new Font(typeface.FamilyName, 20, Colour.Black), sample, AlignmentKind.Center) 

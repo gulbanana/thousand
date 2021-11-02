@@ -16,7 +16,7 @@ namespace Thousand.LSP.Analyse
             Syntax = syntax;
             ParentKind = parentKind;
             ParentAttributes = parentAttributes;
-            Range = syntax.Key?.Span.AsRange() ?? syntax.Value.AsRange(endSpan);
+            Range = syntax.Key?.AsLoc.AsRange() ?? syntax.Value.AsRange(endSpan);
         }
     }
 }

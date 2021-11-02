@@ -22,13 +22,13 @@ namespace Thousand.API
                 UseKind.Entity
             );
 
-            yield return Definition.Create("stroke-style", Identifier.Enum<StrokeKind>(), value => new AST.EntityStrokeStyleAttribute(value),
+            yield return Definition.Create("stroke-style", Parse.Identifier.Enum<StrokeKind>(), value => new AST.EntityStrokeStyleAttribute(value),
                 "Controls the pattern used to draw lines.",
                 Format.Names<StrokeKind>(),
                 UseKind.Entity
             );
 
-            yield return Definition.Create("stroke", Attribute.ShorthandRRV(Value.Colour, Value.Width, Identifier.Enum<StrokeKind>()), 
+            yield return Definition.Create("stroke", Attribute.ShorthandRRV(Value.Colour, Value.Width, Parse.Identifier.Enum<StrokeKind>()), 
                                                      values => values switch { (var c, var w, var s) => new AST.EntityStrokeAttribute(c, s, w) }, 
                 "Shorthand for `stroke-colour`, `stroke-width` and `stroke-style`",
                 "any of colour, width and/or style",
@@ -58,7 +58,7 @@ namespace Thousand.API
 
             // XXX add label-offset
 
-            yield return Definition.Create("label", Attribute.ShorthandRVV(Value.Point, Identifier.Enum<AlignmentKind>(), Value.Text),
+            yield return Definition.Create("label", Attribute.ShorthandRVV(Value.Point, Parse.Identifier.Enum<AlignmentKind>(), Value.Text),
                                                     values => values switch { (var offset, var align, var content) => new AST.EntityLabelAttribute(offset, content, align) },
                 "Shorthand for `label-content`, `label-offset` and `label-align`.",
                 "text and/or justification",

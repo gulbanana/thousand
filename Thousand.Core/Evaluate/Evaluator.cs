@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Superpower.Model;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -107,7 +108,7 @@ namespace Thousand.Evaluate
                     .Concat(localChildren)
                     .ToArray();
 
-                scope.AddObjectClass(c.Name.Text, new(true, allAttrs, allChildren));
+                scope.AddObjectClass(c.Name.AsKey, new(true, allAttrs, allChildren));
             }
 
             if (c is AST.LineClass || c is AST.ObjectOrLineClass && c.BaseClasses.All(b => scope.FindLineClass(b, false).Found))
@@ -124,18 +125,26 @@ namespace Thousand.Evaluate
                     .Concat(localAttrs)
                     .ToArray();
 
-                scope.AddLineClass(c.Name.Text, new(true, allAttrs));
+                scope.AddLineClass(c.Name.AsKey, new(true, allAttrs));
             }
         }
 
         private IR.Node AddObject(AST.TypedObject node, Font cascadeFont, TypedScope scope)
         {
-            var name = node.Name ?? new Parse.Identifier(node.TypeSpan.ToStringValue()) { Span = node.TypeSpan };
+            var className = state.UnmapSpan(node.Classes[0].AsLoc);
+            if (node.Classes.Length > 1 && className.Source != null && className.Source.Length > className.Length)
+            {
+                var lastClass = state.UnmapSpan(node.Classes.Last().AsLoc);
+                var totalLength = lastClass.Position.Absolute - className.Position.Absolute + lastClass.Length;
+                className = new TextSpan(className.Source!, className.Position, totalLength);
+            }
+            
+            var displayName = node.Name ?? new Name(className.ToStringValue(), className);
 
             var regionConfig = new IR.Config();
 
             // names are a separate thing, but if a node has one, it is also the default label
-            var shared = new SharedStyles(node.Name?.Text, AlignmentKind.Center, new Stroke());
+            var shared = new SharedStyles(node.Name?.AsKey, AlignmentKind.Center, new Stroke());
             var font = cascadeFont;
 
             var alignment = new IR.Axes<AlignmentKind?>(null, null);
@@ -166,7 +175,7 @@ namespace Thousand.Evaluate
                             else
                             {
                                 // XXX save attr identifiers in the final AST
-                                state.AddError(name, ErrorKind.Type, "object {0} has too many anchors (expected compass direction)", name);
+                                state.AddError(displayName, ErrorKind.Type, "object {0} has too many anchors (expected compass direction)", displayName);
                             }
                             break;
 
@@ -178,7 +187,7 @@ namespace Thousand.Evaluate
                             else
                             {
                                 // XXX save attr identifiers in the final AST
-                                state.AddError(name, ErrorKind.Type, "object {0} has too many offsets (expected point)", name);
+                                state.AddError(displayName, ErrorKind.Type, "object {0} has too many offsets (expected point)", displayName);
                             }
                             break;
                     }
@@ -241,7 +250,7 @@ namespace Thousand.Evaluate
             var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Declarations).ToList();            
             if (childContent.Any())
             {
-                var objectScope = scope.Chain(node.Name?.Text ?? node.Classes.First().Text);
+                var objectScope = scope.Chain(node.Name?.AsKey ?? node.Classes.First().AsKey);
 
                 foreach (var declaration in childContent)
                 {
@@ -265,7 +274,7 @@ namespace Thousand.Evaluate
             }
 
             var result = new IR.Node(
-                name,
+                displayName,
                 new IR.Region(regionConfig, childEntities), 
                 shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel),
                 !shape.HasValue ? null : new Shape(shape.Value, cornerRadius),
@@ -332,7 +341,7 @@ namespace Thousand.Evaluate
                 }, text => font = ApplyFontAttributes(font, text));
             }
 
-            var nodes = new List<(ArrowKind? direction, IR.Node? target, Parse.Identifier? name)>();
+            var nodes = new List<(ArrowKind? direction, IR.Node? target, Name? name)>();
             foreach (var seg in line.Segments)
             {
                 var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);

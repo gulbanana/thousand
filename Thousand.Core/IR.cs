@@ -30,7 +30,7 @@ namespace Thousand.IR
     public record StyledText(Font Font, string Content, AlignmentKind Justification);
     public record Node
     (
-        Parse.Identifier Name, // this is a display name, not a unique identifier - it may have been derived from the classlist
+        Name Name, // this is a display name, not a unique identifier - it may have been derived from the classlist
         Region Region,
         StyledText? Label,
         Shape? Shape, 
@@ -41,10 +41,10 @@ namespace Thousand.IR
         
     ) : Entity
     {
-        public Node(string name, Config config, params Entity[] children) : this(new Parse.Identifier(name), new Region(config, children), null, new Shape(ShapeKind.Rectangle, 0), new Stroke(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null) { }
+        public Node(Name name, Config config, params Entity[] children) : this(name, new Region(config, children), null, new Shape(ShapeKind.Rectangle, 0), new Stroke(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null) { }
     }
     
     // there may be many IR.Edge for a single AST.Line
-    public record Endpoint(Parse.Identifier Name, Node Target, MarkerKind? Marker, Anchor Anchor, Point Offset);
+    public record Endpoint(Name Name, Node Target, MarkerKind? Marker, Anchor Anchor, Point Offset);
     public record Edge(Endpoint From, Endpoint To, Stroke Stroke, StyledText? Label) : Entity;
 }

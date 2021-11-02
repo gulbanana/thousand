@@ -14,15 +14,15 @@ namespace Thousand.LSP
             return new MarkupContent { Kind = MarkupKind.Markdown, Value = "```\n" + content + "\n```" };
         }
 
-        public static string Target(Identifier name)
+        public static string Target(Name name)
         {
             var builder = new StringBuilder();
 
-            var asIdentifier = TextParsers.Identifier(new Superpower.Model.TextSpan(name.Text));
+            var asIdentifier = TextParsers.Identifier(new Superpower.Model.TextSpan(name.AsKey));
             var plainText = asIdentifier.HasValue && asIdentifier.Remainder.IsAtEnd;
 
             if (!plainText) builder.Append('"');
-            builder.Append(name.Text);
+            builder.Append(name.AsKey);
             if (!plainText) builder.Append('"');
 
             return builder.ToString();
@@ -106,17 +106,17 @@ namespace Thousand.LSP
             var builder = new StringBuilder();
 
             builder.Append("class ");
-            builder.Append(ast.Name.Text);
+            builder.Append(ast.Name.AsKey);
 
             if (ast.Arguments.Value.Any())
             {
                 builder.Append('(');
                 builder.Append('$');
-                builder.Append(ast.Arguments.Value.First().Name.Text);
+                builder.Append(ast.Arguments.Value.First().Name.AsKey);
                 foreach (var arg in ast.Arguments.Value.Skip(1))
                 {
                     builder.Append(", $");
-                    builder.Append(arg.Name.Text);
+                    builder.Append(arg.Name.AsKey);
                 }
                 builder.Append(')');
             }
@@ -146,7 +146,7 @@ namespace Thousand.LSP
         {
             var builder = new StringBuilder();
 
-            builder.Append(call.Name.Text);
+            builder.Append(call.Name.AsKey);
 
             if (call.Arguments.Any())
             {
@@ -171,7 +171,7 @@ namespace Thousand.LSP
             builder.Append('[');
 
             var firstAttr = validAttrs.First();
-            builder.Append(firstAttr.Key!.Text);
+            builder.Append(firstAttr.Key!.AsKey);
             builder.Append('=');
             builder.Append(firstAttr.Value.SpanOrEmpty().ToStringValue());
 
@@ -179,7 +179,7 @@ namespace Thousand.LSP
             {
                 builder.Append(',');
                 builder.Append(' ');
-                builder.Append(attr.Key!.Text);
+                builder.Append(attr.Key!.AsKey);
                 builder.Append('=');
                 builder.Append(attr.Value.SpanOrEmpty().ToStringValue());
             }

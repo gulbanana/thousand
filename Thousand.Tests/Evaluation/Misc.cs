@@ -3,10 +3,11 @@ using System.Linq;
 using Thousand.Evaluate;
 using Thousand.Model;
 using Xunit;
+using static Thousand.Tests.Evaluation.DSL;
 
-namespace Thousand.Tests
+namespace Thousand.Tests.Evaluation
 {
-    public class Evaluation : IDisposable
+    public class Misc : IDisposable
     {
         private readonly GenerationState state = new();
 
@@ -18,27 +19,27 @@ namespace Thousand.Tests
         [Fact]
         public void IntegrationTest()
         {
-            var document = new AST.TypedDocument(
-                new AST.ObjectClass("object"),
-                new AST.LineClass("line"),
-                new AST.ObjectClass("big", new AST.TextFontSizeAttribute(50)), // increases font
-                new AST.ObjectClass("group",                
+            var document = Document(
+                OClass("object"),
+                LClass("line"),
+                OClass("big", new AST.TextFontSizeAttribute(50)), // increases font
+                OClass("group",                
                     new AST.NodeShapeAttribute(null), 
                     new AST.EntityLabelAttribute(null, null, null), 
                     new AST.RegionLayoutColumnsAttribute(new EqualContentSize()),
                     new AST.RegionLayoutRowsAttribute(new EqualContentSize())
                 ),
 
-                new AST.TypedObject(new Parse.Identifier[]{new("big"), new("group")}, null, Array.Empty<AST.ObjectAttribute>(), //uses larger font                
-                    new AST.TypedObject("object", "foo"),
-                    new AST.TypedObject("object", "bar", new AST.TextFontSizeAttribute(40)) // reduces font again
+                Object(new[]{"big", "group"}, //uses larger font                
+                    Object("object", "foo"),
+                    Object("object", "bar", new AST.TextFontSizeAttribute(40)) // reduces font again
                 ),
 
-                new AST.TypedObject("big", "baz"), //uses larger font
-                new AST.TypedObject("object", "qux"), 
+                Object("big", "baz"), //uses larger font
+                Object("object", "qux"),
 
                 // chain containing two edges, both from foo to bar
-                new AST.TypedLine("line", new AST.LineSegment<AST.TypedObject>[]{ new("foo", ArrowKind.Forward), new("bar", ArrowKind.Backward), new("foo", null) })
+                Line("line", Segment("foo", ArrowKind.Forward), Segment("bar", ArrowKind.Backward), Segment("foo", null))
             );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
@@ -57,11 +58,11 @@ namespace Thousand.Tests
         [Fact]
         public void ScopeSibling()
         {
-            var document = new AST.TypedDocument(
-                new AST.ObjectClass("object"),
-                new AST.LineClass("line"),
-                new AST.TypedObject("object", "foo"),
-                new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
+            var document = Document(
+                OClass("object"),
+                LClass("line"),
+                Object("object", "foo"),
+                Line("line", Segment("foo", ArrowKind.Neither), Segment("foo", null))
             );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
@@ -73,13 +74,13 @@ namespace Thousand.Tests
         [Fact]
         public void ScopeBubble()
         {
-            var document = new AST.TypedDocument(
-                new AST.ObjectClass("object"),
-                new AST.LineClass("line"),
-                new AST.TypedObject("object", null, Array.Empty<AST.ObjectAttribute>(),
-                    new AST.TypedObject("object", "foo")
-                ),                
-                new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
+            var document = Document(
+                OClass("object"),
+                LClass("line"),
+                Object("object",
+                    Object("object", "foo")
+                ),
+                Line("line", Segment("foo", ArrowKind.Neither), Segment("foo", null))
             );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);
@@ -91,15 +92,15 @@ namespace Thousand.Tests
         [Fact]
         public void ScopeShadow()
         {
-            var document = new AST.TypedDocument(
-                new AST.ObjectClass("object"),
-                new AST.LineClass("line"),
-                new AST.TypedObject("object", "foo", new AST.NodeShapeAttribute(ShapeKind.Octagon)),
-                new AST.TypedObject("object", null, Array.Empty<AST.ObjectAttribute>(),
-                    new AST.TypedObject("object", "foo", new AST.NodeShapeAttribute(ShapeKind.Circle)),
-                    new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
+            var document = Document(
+                OClass("object"),
+                LClass("line"),
+                Object("object", "foo", new AST.NodeShapeAttribute(ShapeKind.Octagon)),
+                Object("object",
+                    Object("object", "foo", new AST.NodeShapeAttribute(ShapeKind.Circle)),
+                    Line("line", Segment("foo", ArrowKind.Neither), Segment("foo", null))
                 ),
-                new AST.TypedLine("line", new("foo", ArrowKind.Neither), new("foo", null))
+                Line("line", Segment("foo", ArrowKind.Neither), Segment("foo", null))
             );
 
             var result = Evaluator.TryEvaluate(new[] { document }, state, out var root);

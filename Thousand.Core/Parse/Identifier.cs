@@ -2,28 +2,45 @@
 using Superpower.Model;
 using Superpower.Parsers;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Thousand.Parse
 {
-    public record Identifier(string Text) : ILocated
+    static class Identifier
     {
-        public TextSpan Span { get; set; }
+        private static readonly Regex uncameller = new("(?<first>[A-Z])(?<second>[A-Z])(?<lower>[a-z])|(?<lEnd>[a-z])(?<uStart>[A-Z])", RegexOptions.Compiled);
 
-        public string DisplayName(IReadOnlyDictionary<string, TextSpan> sourceMap)
+        private static string UnCamel(string val)
         {
-            var spanText = Span.ToStringValue();
-            return sourceMap.ContainsKey(spanText) ? sourceMap[spanText].ToStringValue() : spanText;
+            // convert lowerCamelCase to UpperCamelCase
+            if (val.Length > 0)
+            {
+                val = (val[0..1].ToUpper() + val[1..]).Trim();
+            }
+
+            // "AAAa" -> "AA-Aa", "aA" -> "a-A"
+            return uncameller.Replace(val, "${first}${lEnd}-${second}${lower}${uStart}");
         }
 
-        public static TokenListParser<TokenKind, Identifier> Any { get; } =
-            Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Located());
+        private static TextParser<Model.Name> Wrap(TextParser<string> parser)
+        {
+            return input => {
+                var inner = parser(input);
+                if (!inner.HasValue) return Result.CastEmpty<string, Model.Name>(inner);
+                return Result.Value(new Model.Name(inner.Value, inner.Location.Until(inner.Remainder)), inner.Location, inner.Remainder);
+            };
+        }
 
-        public static TokenListParser<TokenKind, Identifier> Variable { get; } =
-            Token.EqualTo(TokenKind.Variable).Apply(Character.EqualTo('$').IgnoreThen(TextParsers.Identifier).Located());
+        public static TokenListParser<TokenKind, Model.Name> Any { get; } =
+            Token.EqualTo(TokenKind.Identifier).Apply(Wrap(TextParsers.Identifier));
+
+        public static TokenListParser<TokenKind, Model.Name> Variable { get; } =
+            Token.EqualTo(TokenKind.Variable).Apply(Wrap(Character.EqualTo('$').IgnoreThen(TextParsers.Identifier)));
+
+        public static TokenListParser<TokenKind, Model.Name> String { get; } =
+            Token.EqualTo(TokenKind.String).Apply(Wrap(TextParsers.String));
 
         public static TokenListParser<TokenKind, T> Enum<T>() where T : struct, Enum
         {
@@ -81,17 +98,5 @@ namespace Thousand.Parse
             return parser;
         }
 
-        private static readonly Regex uncameller = new("(?<first>[A-Z])(?<second>[A-Z])(?<lower>[a-z])|(?<lEnd>[a-z])(?<uStart>[A-Z])", RegexOptions.Compiled);
-        public static string UnCamel(string val)
-        {
-            // convert lowerCamelCase to UpperCamelCase
-            if (val.Length > 0)
-            {
-                val = (val[0..1].ToUpper() + val[1..]).Trim();
-            }
-
-            // "AAAa" -> "AA-Aa", "aA" -> "a-A"
-            return uncameller.Replace(val, "${first}${lEnd}-${second}${lower}${uStart}");
-        }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using Thousand.Parse;
+using Thousand.Model;
 
 namespace Thousand.LSP.Analyse
 {
@@ -9,11 +9,11 @@ namespace Thousand.LSP.Analyse
         public UntypedScope Scope { get; }
         public string Text { get; }
 
-        public ObjectNameContext(UntypedScope scope, Identifier identifier)
+        public ObjectNameContext(UntypedScope scope, Name identifier)
         {
             Scope = scope;
-            Text = identifier.Text;
-            Range = identifier.Span.AsRange();
+            Text = identifier.AsKey;
+            Range = identifier.AsLoc.AsRange();
         }
     }
 }

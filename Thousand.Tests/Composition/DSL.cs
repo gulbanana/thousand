@@ -15,9 +15,9 @@ namespace Thousand.Tests.Composition
         public static IR.Region Region(IR.Config config, params IR.Entity[] entities) => new IR.Region(config, entities);
         public static IR.Region Region(params IR.Entity[] entities) => new IR.Region(new IR.Config(), entities);
 
-        public static IR.Node Object(IR.Config config, params IR.Entity[] children) => new IR.Node("object", config, children);
-        public static IR.Node Object(string name, params IR.Entity[] children) => new IR.Node(name, new IR.Config(), children);
-        public static IR.Node Object(params IR.Entity[] children) => new IR.Node("object", new IR.Config(), children);
+        public static IR.Node Node(string name, params IR.Entity[] children) => new IR.Node(new Name(name), new IR.Config(), children);
+        public static IR.Node Node(IR.Config config, params IR.Entity[] children) => new IR.Node(new Name("object"), config, children);        
+        public static IR.Node Node(params IR.Entity[] children) => new IR.Node(new Name("object"), new IR.Config(), children);
 
         public static IR.Endpoint Endpoint(IR.Node target) => new IR.Endpoint(target.Name, target, null, new NoAnchor(), Point.Zero);
         public static IR.Endpoint Endpoint(IR.Node target, Point offset) => new IR.Endpoint(target.Name, target, null, new NoAnchor(), offset);
@@ -42,7 +42,7 @@ namespace Thousand.Tests.Composition
 
         public static IR.Node Target(IR.Node node, [CallerMemberName] string caller = null!)
         {
-            return Target(node.Name.Text, node, caller);
+            return Target(node.Name.AsKey, node, caller);
         }
     }
 }

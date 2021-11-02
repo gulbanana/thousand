@@ -1,4 +1,5 @@
 ﻿using OneOf;
+using Superpower.Model;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -87,25 +88,27 @@ namespace Thousand.AST
     [GenerateOneOf] public partial class ObjectAttribute : OneOfBase<EntityAttribute, NodeAttribute, RegionAttribute, TextAttribute> { }
     [GenerateOneOf] public partial class LineAttribute : OneOfBase<EntityAttribute, ArrowAttribute, TextAttribute> { }
 
-    public record LineSegment<T>(OneOf<Parse.Identifier, T> Target, ArrowKind? Direction)
-    {
-        public LineSegment(string target, ArrowKind? direction) : this(new Parse.Identifier(target), direction) { }
-    }
+    /********************
+     * Shared AST parts *
+     ********************/
+
+    public record LineSegment<T>(OneOf<Name, T> Target, ArrowKind? Direction);
 
     /*****************************************************************************
      * Error-tolerant AST, containing invalid declarations and unresolved macros *
      *****************************************************************************/
+
     public abstract record UntypedDeclaration;
     public record InvalidDeclaration : UntypedDeclaration;
     public record EmptyDeclaration : UntypedDeclaration;
 
     public struct UntypedAttribute
     {
-        public Parse.Identifier? Key { get; }
+        public Name? Key { get; }
         public bool HasEqualsSign { get; }
         public Parse.IMacro Value { get; }
 
-        public UntypedAttribute(Parse.Identifier? key, bool hasEqualsSign, Parse.IMacro value)
+        public UntypedAttribute(Name? key, bool hasEqualsSign, Parse.IMacro value)
         {
             Key = key;
             HasEqualsSign = hasEqualsSign;
@@ -123,18 +126,18 @@ namespace Thousand.AST
         IEnumerator IEnumerable.GetEnumerator() => Values.GetEnumerator();
     }
 
-    public record Argument(Parse.Identifier Name, Parse.IMacro? Default);
-    public record ClassCall(Parse.Identifier Name, Parse.IMacro[] Arguments); // XXX it would be nice if inheritance could call classes
-    public record UntypedClass(Parse.Identifier Name, Parse.IMacro<Argument[]> Arguments, Parse.IMacro<ClassCall?>[] BaseClasses, Attributes Attributes, IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations) : UntypedDeclaration;
+    public record Argument(Name Name, Parse.IMacro? Default);
+    public record ClassCall(Name Name, Parse.IMacro[] Arguments); // XXX it would be nice if inheritance could call classes
+    public record UntypedClass(Name Name, Parse.IMacro<Argument[]> Arguments, Parse.IMacro<ClassCall?>[] BaseClasses, Attributes Attributes, IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations) : UntypedDeclaration;
 
-    public record UntypedObject(Parse.IMacro<ClassCall?>[] Classes, Parse.Identifier? Name, Attributes Attributes, IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations) : UntypedDeclaration
+    public record UntypedObject(Parse.IMacro<ClassCall?>[] Classes, Name? Name, Attributes Attributes, IReadOnlyList<Parse.IMacro<UntypedDeclaration>> Declarations) : UntypedDeclaration
     {
         private readonly Lazy<string> typeName = new(() =>
         {
             return string.Join('.', Classes.Select(c => c.SpanOrEmpty().ToStringValue()));
         });
 
-        private readonly Lazy<Superpower.Model.TextSpan> typeSpan = new(() =>
+        private readonly Lazy<TextSpan> typeSpan = new(() =>
         {
             var first = Classes[0].Location.First().Span;
             var last = Classes.Last().Location.First().Span;
@@ -142,7 +145,7 @@ namespace Thousand.AST
         });
 
         public string TypeName => typeName.Value;
-        public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
+        public TextSpan TypeSpan => typeSpan.Value;
     }
 
     public record UntypedInline(Parse.IMacro<bool> IsComplete, Parse.IMacro<UntypedObject> Declaration);
@@ -153,43 +156,17 @@ namespace Thousand.AST
     /****************************************************************
      * Strict AST, with macros resolved and attributes fully parsed *
      ****************************************************************/
+
     public abstract record TypedDeclaration;
 
-    public abstract record TypedClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses) : TypedDeclaration;
-    public record ObjectClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, ObjectAttribute[] Attributes, IReadOnlyList<TypedDeclaration> Declarations) : TypedClass(Name, BaseClasses)
-    {
-        public ObjectClass(string name, params ObjectAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs, Array.Empty<TypedDeclaration>()) { }
-    }
-    public record LineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses)
-    {
-        public LineClass(string name, params LineAttribute[] attrs) : this(new Parse.Identifier(name), Array.Empty<Parse.Identifier>(), attrs) { }
-    }
-    public record ObjectOrLineClass(Parse.Identifier Name, Parse.Identifier[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
+    public abstract record TypedClass(Name Name, Name[] BaseClasses) : TypedDeclaration;
+    public record ObjectClass(Name Name, Name[] BaseClasses, ObjectAttribute[] Attributes, IReadOnlyList<TypedDeclaration> Declarations) : TypedClass(Name, BaseClasses);
+    public record LineClass(Name Name, Name[] BaseClasses, LineAttribute[] Attributes) : TypedClass(Name, BaseClasses);
+    public record ObjectOrLineClass(Name Name, Name[] BaseClasses, EntityAttribute[] Attributes) : TypedClass(Name, BaseClasses);
 
-    public record TypedObject(Parse.Identifier[] Classes, Parse.Identifier? Name, ObjectAttribute[] Attributes, IReadOnlyList<TypedDeclaration> Declarations) : TypedDeclaration
-    {
-        public TypedObject(Parse.Identifier[] classes, Parse.Identifier? name, ObjectAttribute[] attrs, params TypedDeclaration[] content) : this(classes, name, attrs, content as IReadOnlyList<TypedDeclaration>) { }
-        public TypedObject(string klass, string? name, ObjectAttribute[] attrs, params TypedDeclaration[] content) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, content) { }
-        public TypedObject(string klass, string? name, params ObjectAttribute[] attrs) : this(new Parse.Identifier[] { new(klass) }, name == null ? null : new Parse.Identifier(name), attrs, Array.Empty<TypedDeclaration>()) { }
+    public record TypedObject(Name[] Classes, Name? Name, ObjectAttribute[] Attributes, IReadOnlyList<TypedDeclaration> Declarations) : TypedDeclaration;
 
-        // XXX not a true sourced span - doesn't matter where it's used, but we need to get this into the type system
-        private readonly Lazy<Superpower.Model.TextSpan> typeSpan = new(() =>
-        {
-            var classExpression = string.Join('.', Classes.Select(c => c.Text));
-            return new(classExpression);
-        });
+    public record TypedLine(Name[] Classes, LineSegment<TypedObject>[] Segments, LineAttribute[] Attributes) : TypedDeclaration;
 
-        public string TypeName => string.Join('.', Classes.Select(c => c.Text));
-        public Superpower.Model.TextSpan TypeSpan => typeSpan.Value;
-    }
-
-    public record TypedLine(Parse.Identifier[] Classes, LineSegment<TypedObject>[] Segments, LineAttribute[] Attributes) : TypedDeclaration
-    {
-        public TypedLine(string klass, params LineSegment<TypedObject>[] segs) : this(new Parse.Identifier[] { new(klass) }, segs, Array.Empty<LineAttribute>()) { }
-    }
-
-    public record TypedDocument(IReadOnlyList<TypedDeclaration> Declarations)
-    {
-        public TypedDocument(params TypedDeclaration[] declarations) : this(declarations as IReadOnlyList<TypedDeclaration>) { }
-    }
+    public record TypedDocument(IReadOnlyList<TypedDeclaration> Declarations);
 }

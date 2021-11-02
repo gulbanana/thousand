@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Thousand.Model;
 
 namespace Thousand.Evaluate
 {
@@ -26,7 +27,7 @@ namespace Thousand.Evaluate
             return new TypedScope(name, state) { Parent = this };
         }
 
-        public bool HasRequiredClass(Parse.Identifier b)
+        public bool HasRequiredClass(Name b)
         {
             if (FindObjectClass(b, false).Found || FindLineClass(b, false).Found)
             {
@@ -44,11 +45,11 @@ namespace Thousand.Evaluate
             return canonicalObjects.Values;
         }
 
-        public ObjectContent FindObjectClass(Parse.Identifier name, bool warn)
+        public ObjectContent FindObjectClass(Name name, bool warn)
         {
             var result = new ObjectContent(false, Array.Empty<AST.ObjectAttribute>(), Array.Empty<AST.TypedDeclaration>());
 
-            if (objectClasses.TryGetValue(name.Text, out var newResult))
+            if (objectClasses.TryGetValue(name.AsKey, out var newResult))
             {
                 result = newResult;
             }
@@ -72,11 +73,11 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        public LineContent FindLineClass(Parse.Identifier name, bool warn)
+        public LineContent FindLineClass(Name name, bool warn)
         {
             var result = new LineContent(false, Array.Empty<AST.LineAttribute>());
 
-            if (lineClasses.TryGetValue(name.Text, out var newResult))
+            if (lineClasses.TryGetValue(name.AsKey, out var newResult))
             {
                 result = newResult;
             }
@@ -100,9 +101,9 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        public IR.Node? FindObject(Parse.Identifier name)
+        public IR.Node? FindObject(Name name)
         {
-            if (!canonicalObjects.TryGetValue(name.Text, out var result) && !bubbledObjects.TryGetValue(name.Text, out result) && Parent != null)
+            if (!canonicalObjects.TryGetValue(name.AsKey, out var result) && !bubbledObjects.TryGetValue(name.AsKey, out result) && Parent != null)
             {
                 result = Parent.FindObject(name);
             }
@@ -125,15 +126,15 @@ namespace Thousand.Evaluate
             lineClasses[key] = lineClass;
         }
 
-        public void AddObject(Parse.Identifier? key, IR.Node value)
+        public void AddObject(Name? key, IR.Node value)
         {
-            if (key?.Text is string name && canonicalObjects.ContainsKey(name))
+            if (key?.AsKey is string name && canonicalObjects.ContainsKey(name))
             {
                 state.AddError(key, ErrorKind.Reference, $"object {{0}} has already been defined in scope `{RecursiveName()}`", key);
             }
             else
             {
-                AddObject(key?.Text ?? Guid.NewGuid().ToString(), value, true);
+                AddObject(key?.AsKey ?? Guid.NewGuid().ToString(), value, true);
             }
         }
 

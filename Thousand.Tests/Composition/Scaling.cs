@@ -21,10 +21,10 @@ namespace Thousand.Tests.Composition
         public void BoxCorners_LineOutside()
         {
             var root = Region(
-                Target(Object("unscaled") with { MinWidth = 100, MinHeight = 100 }),
-                Object(
+                Target(Node("unscaled") with { MinWidth = 100, MinHeight = 100 }),
+                Node(
                     Config() with { Scale = 2m }, 
-                    Target(Object("scaled") with { MinWidth = 100, MinHeight = 100 })
+                    Target(Node("scaled") with { MinWidth = 100, MinHeight = 100 })
                 ) with { Position = Point.Zero },
                 Edge(Endpoint("unscaled", CompassKind.SE), Endpoint("scaled", CompassKind.SE))
             );
@@ -41,10 +41,10 @@ namespace Thousand.Tests.Composition
         public void BoxCorners_LineWithin()
         {
             var root = Region(                
-                Target(Object("unscaled") with { MinWidth = 100, MinHeight = 100 }),
-                Object(
+                Target(Node("unscaled") with { MinWidth = 100, MinHeight = 100 }),
+                Node(
                     Config() with { Scale = 2m }, 
-                    Target(Object("scaled") with { MinWidth = 100, MinHeight = 100 }),
+                    Target(Node("scaled") with { MinWidth = 100, MinHeight = 100 }),
                     Edge(Endpoint("unscaled", CompassKind.SE), Endpoint("scaled", CompassKind.SE))
                 ) with { Position = Point.Zero }
             );
@@ -61,10 +61,10 @@ namespace Thousand.Tests.Composition
         public void LineIntersects_NoScaling()
         {
             var root = Region(
-                Object(
+                Node(
                     Config() with { Scale = 1m },
-                    Target(Object("from") with { MinWidth = 100, MinHeight = 100 }),
-                    Target(Object("to") with { MinWidth = 100, MinHeight = 100, Position = new Point(200, 0) }),
+                    Target(Node("from") with { MinWidth = 100, MinHeight = 100 }),
+                    Target(Node("to") with { MinWidth = 100, MinHeight = 100, Position = new Point(200, 0) }),
                     Edge("from", "to")
                 )
             );
@@ -81,10 +81,10 @@ namespace Thousand.Tests.Composition
         public void LineIntersects_LineOutside()
         {
             var root = Region(
-                Object(
+                Node(
                     Config() with { Scale = 2m },
-                    Target(Object("from") with { MinWidth = 100, MinHeight = 100 }),
-                    Target(Object("to") with { MinWidth = 100, MinHeight = 100, Position = new Point(200, 0) })
+                    Target(Node("from") with { MinWidth = 100, MinHeight = 100 }),
+                    Target(Node("to") with { MinWidth = 100, MinHeight = 100, Position = new Point(200, 0) })
                 ),
                 Edge("from", "to")
             );
@@ -101,10 +101,10 @@ namespace Thousand.Tests.Composition
         public void LineIntersects_LineWithin()
         {
             var root = Region(
-                Object(
+                Node(
                     Config() with { Scale = 2m },
-                    Target(Object("from") with { MinWidth = 100, MinHeight = 100 }),
-                    Target(Object("to") with { MinWidth = 100, MinHeight = 100, Position = new Point(200, 0) }),
+                    Target(Node("from") with { MinWidth = 100, MinHeight = 100 }),
+                    Target(Node("to") with { MinWidth = 100, MinHeight = 100, Position = new Point(200, 0) }),
                     Edge("from", "to")
                 )
             );

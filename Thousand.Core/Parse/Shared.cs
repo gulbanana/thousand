@@ -28,19 +28,19 @@ namespace Thousand.Parse
          * Class/object parts. *
          ***********************/
 
-        public static TokenListParser<TokenKind, Identifier> ClassReference { get; } =
+        public static TokenListParser<TokenKind, Name> ClassReference { get; } =
             Identifier.Any.Named("class name");
 
-        public static TokenListParser<TokenKind, Identifier> ObjectReference { get; } =
-            Value.StringIdentifier.Or(Identifier.Any).Named("object name");
+        public static TokenListParser<TokenKind, Name> ObjectReference { get; } =
+            Identifier.String.Or(Identifier.Any).Named("object name");
 
-        public static TokenListParser<TokenKind, Identifier[]> ClassList { get; } =
+        public static TokenListParser<TokenKind, Name[]> ClassList { get; } =
             ClassReference.AtLeastOnceDelimitedBy(Token.EqualTo(TokenKind.Period));
 
-        public static TokenListParser<TokenKind, Identifier[]> BaseClasses { get; } =
+        public static TokenListParser<TokenKind, Name[]> BaseClasses { get; } =
             Token.EqualTo(TokenKind.Colon)
                  .IgnoreThen(ClassList)
-                 .OptionalOrDefault(Array.Empty<Identifier>());
+                 .OptionalOrDefault(Array.Empty<Name>());
 
         /***************
          * Line parts. *
@@ -51,9 +51,9 @@ namespace Thousand.Parse
             from end in Macro.Of(Token.EqualTo(TokenKind.RightParenthesis).Value(true).OptionalOrDefault(false))
             select t(end);
 
-        public static TokenListParser<TokenKind, OneOf<Identifier, T>> SegmentTarget<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
-            Inline(pT).Select(x => (OneOf<Identifier, T>)x)
-                .Or(ObjectReference.Select(x => (OneOf<Identifier, T>)x));
+        public static TokenListParser<TokenKind, OneOf<Name, T>> SegmentTarget<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
+            Inline(pT).Select(x => (OneOf<Name, T>)x)
+                .Or(ObjectReference.Select(x => (OneOf<Name, T>)x));
 
         public static TokenListParser<TokenKind, IEnumerable<AST.LineSegment<T>>> TerminalSegment<T>(TokenListParser<TokenKind, Func<IMacro<bool>, T>> pT) =>
             from dst in SegmentTarget(pT)

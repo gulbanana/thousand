@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Thousand.API;
+using Thousand.Model;
 using static Superpower.Parse;
 
 namespace Thousand.Parse
@@ -58,18 +59,18 @@ namespace Thousand.Parse
          * Classes, the key unit of abstraction, shared by objects and lines. *
          **********************************************************************/
 
-        public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Identifier name, Identifier[] bases) =>
+        public static TokenListParser<TokenKind, AST.TypedClass> ObjectClassBody(Name name, Name[] bases) =>
             from attrs in AttributeList(ObjectAttribute).OptionalOrDefault(Array.Empty<AST.ObjectAttribute>())
             from children in DeclarationScope(Ref(() => Declaration!)).OptionalOrDefault(Array.Empty<AST.TypedDeclaration>())
             select new AST.ObjectClass(name, bases, attrs, children) as AST.TypedClass;
 
-        public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Identifier name, Identifier[] bases) =>
+        public static TokenListParser<TokenKind, AST.TypedClass> LineClassBody(Name name, Name[] bases) =>
             AttributeList(LineAttribute).OptionalOrDefault(Array.Empty<AST.LineAttribute>()).Select(attrs => new AST.LineClass(name, bases, attrs) as AST.TypedClass);
 
-        public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Identifier name, Identifier[] bases) =>
+        public static TokenListParser<TokenKind, AST.TypedClass> ObjectOrLineClassBody(Name name, Name[] bases) =>
             AttributeList(EntityAttribute).OptionalOrDefault(Array.Empty<AST.EntityAttribute>()).Select(attrs => new AST.ObjectOrLineClass(name, bases, attrs) as AST.TypedClass);
 
-        public static TokenListParser<TokenKind, AST.TypedClass> ClassBody(Identifier name, Identifier[] bases) => input =>
+        public static TokenListParser<TokenKind, AST.TypedClass> ClassBody(Name name, Name[] bases) => input =>
         {
             var beginAttrs = Token.EqualTo(TokenKind.LeftBracket)(input);
             if (!beginAttrs.HasValue)

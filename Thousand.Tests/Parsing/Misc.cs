@@ -78,8 +78,8 @@ object [shape=square]");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
-            Assert.Equal("foo", result.Value.Name?.Text);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "object");
+            Assert.Equal("foo", result.Value.Name?.AsKey);
         }
 
         [Fact]
@@ -89,8 +89,8 @@ object [shape=square]");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
-            Assert.Equal("foo", result.Value.Name?.Text);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "object");
+            Assert.Equal("foo", result.Value.Name?.AsKey);
         }
 
         [Fact]
@@ -101,8 +101,8 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
-            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Name?.Text);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "object");
+            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Name?.AsKey);
         }
 
         [Fact]
@@ -112,7 +112,7 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name?.Text);
+            Assert.Equal("foo", result.Value.Name?.AsKey);
             AssertEx.Sequence(result.Value.Attributes, new AST.EntityLabelContentAttribute("bar"));
         }
 
@@ -123,8 +123,8 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo");
-            Assert.Equal("bar", result.Value.Name?.Text);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "foo");
+            Assert.Equal("bar", result.Value.Name?.AsKey);
         }
 
         [Fact]
@@ -134,8 +134,8 @@ bar""");
             var result = Typed.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "foo", "bar");
-            Assert.Equal("baz", result.Value.Name?.Text);
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "foo", "bar");
+            Assert.Equal("baz", result.Value.Name?.AsKey);
         }
 
         [Fact]
@@ -144,7 +144,7 @@ bar""");
             var tokens = tokenizer.Tokenize(@"object");
             var result = Typed.Object(tokens);
 
-            AssertEx.Sequence(result.Value.Classes.Select(n => n.Text), "object");
+            AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "object");
             Assert.True(result.HasValue, result.ToString());
         }
 
@@ -156,7 +156,7 @@ bar""");
             var result = Untyped.Object(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Classes.First()?.Value?.Name.Text);
+            Assert.Equal("foo", result.Value.Classes.First()?.Value?.Name.AsKey);
             Assert.Equal(3, result.Value.Classes.First()?.SpanOrEmpty().Length);
         }
 
@@ -167,8 +167,8 @@ bar""");
             var result = Shared.LineSegments(Typed.ObjectFactory)(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.First().Target.AsT0.Text);
-            Assert.Equal("bar", result.Value.Last().Target.AsT0.Text);
+            Assert.Equal("foo", result.Value.First().Target.AsT0.AsKey);
+            Assert.Equal("bar", result.Value.Last().Target.AsT0.AsKey);
         }
 
         [Fact]
@@ -178,7 +178,7 @@ bar""");
             var result = Untyped.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("line", result.Value.Classes[0].Value?.Name.Text);
+            Assert.Equal("line", result.Value.Classes[0].Value?.Name.AsKey);
             Assert.Single(result.Value.Classes[0].Value?.Arguments);
         }
 
@@ -189,7 +189,7 @@ bar""");
             var result = Typed.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("line", result.Value.Classes[0].Text);
+            Assert.Equal("line", result.Value.Classes[0].AsKey);
         }
 
         [Fact]
@@ -293,7 +293,7 @@ object ""baz""");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.Text), "foo", "bar", "baz");
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.AsKey), "foo", "bar", "baz");
         }
 
         [Fact]
@@ -306,7 +306,7 @@ object ""bar""");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.Text), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.AsKey), "foo", "bar");
         }
 
         [Fact]
@@ -342,7 +342,7 @@ object ""bar""");
             var result = Typed.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.Text), "foo", "bar");
+            AssertEx.Sequence(result.Value.Declarations.OfType<AST.TypedObject>().Select(n => n.Name?.AsKey), "foo", "bar");
         }
 
         [Fact]

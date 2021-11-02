@@ -26,12 +26,8 @@ namespace Thousand.Parse
         public static TokenListParser<TokenKind, string> String { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String);
 
-        public static TokenListParser<TokenKind, Identifier> StringIdentifier { get; } =
-            Token.EqualTo(TokenKind.String).Apply(TextParsers.String.Select(s => new Identifier(s)).Located());
-
-        public static TokenListParser<TokenKind, string> IdentifierString { get; } =
-            String
-                .Or(Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Select(i => i.Text)));
+        public static TokenListParser<TokenKind, string> Identifier { get; } =
+            String.Or(Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier));
 
         public static TokenListParser<TokenKind, string?> NullableString { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String).AsNullable()
@@ -39,13 +35,13 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, Text> Text { get; } =
             NullableString
-                .Or(Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier.Select(i => i.Text)).AsNullable())
+                .Or(Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier).AsNullable())
                 .Select(t => new Text(t));
 
         public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "any").Value(new AnyAnchor() as Anchor)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corners").Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "corner")).Value(new CornerAnchor() as Anchor))
-                .Or(Identifier.Enum<CompassKind>().Select(k => new SpecificAnchor(k) as Anchor))
+                .Or(Parse.Identifier.Enum<CompassKind>().Select(k => new SpecificAnchor(k) as Anchor))
                 .OrDefault(new NoAnchor());
 
         public static TokenListParser<TokenKind, Border> Border { get; } =
@@ -58,7 +54,7 @@ namespace Thousand.Parse
 
         public static TokenListParser<TokenKind, Colour> Colour { get; } =
             Token.EqualTo(TokenKind.Colour).Apply(TextParsers.Colour)
-                .Or(Identifier.Statics<Colour>())
+                .Or(Parse.Identifier.Statics<Colour>())
                 .Named("colour");
 
         public static TokenListParser<TokenKind, Point> Point { get; } =

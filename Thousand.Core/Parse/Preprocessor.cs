@@ -187,7 +187,7 @@ namespace Thousand.Parse
             {
                 for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
                 {
-                    if (!allClasses.Add((klass.Name.Text, arity)))
+                    if (!allClasses.Add((klass.Name.AsKey, arity)))
                     {
                         state.AddErrorEx(klass.Name, ErrorKind.Reference, "class {0} has already been defined", (klass.Name, $"/{arity}"));
                         return false;
@@ -207,7 +207,7 @@ namespace Thousand.Parse
                 var hasDefault = false;
                 foreach (var v in klass.Arguments.Value)
                 {
-                    if (!names.Add(v.Name.Text))
+                    if (!names.Add(v.Name.AsKey))
                     {
                         state.AddError(v.Name, ErrorKind.Reference, "parameter {0} has already been defined", v.Name);
                         return false;
@@ -226,8 +226,8 @@ namespace Thousand.Parse
 
                 for (var arity = klass.Arguments.Value.Length; arity >= klass.Arguments.Value.Count(a => a.Default == null); arity--)
                 {
-                    templates.Add((klass.Name.Text, arity), macro);
-                    instantiations.Add((klass.Name.Text, arity), new List<Token[]>());
+                    templates.Add((klass.Name.AsKey, arity), macro);
+                    instantiations.Add((klass.Name.AsKey, arity), new List<Token[]>());
                 }
             }
 
@@ -281,9 +281,9 @@ namespace Thousand.Parse
             }
 
             var call = callMacro.Value;
-            if (templates.ContainsKey((call.Name.Text, call.Arguments.Length)))
+            if (templates.ContainsKey((call.Name.AsKey, call.Arguments.Length)))
             {
-                var klassMacro = templates[(call.Name.Text, call.Arguments.Length)];
+                var klassMacro = templates[(call.Name.AsKey, call.Arguments.Length)];
                 var klass = klassMacro.Value;
 
                 if (call.Arguments.Length < klass.Arguments.Value.Where(v => v.Default == null).Count())
@@ -303,9 +303,9 @@ namespace Thousand.Parse
                 var defaultArguments = klass.Arguments.Value.Skip(call.Arguments.Length).Select(v => Tuple.Create(v.Default!, v));
 
                 var substitutions = suppliedArguments.Concat(defaultArguments)
-                    .ToDictionary(t => t.Item2.Name.Span.ToStringValue(), t => t.Item1.Sequence().ToArray());
+                    .ToDictionary(t => t.Item2.Name.AsLoc.ToStringValue(), t => t.Item1.Sequence().ToArray());
 
-                var uniqueString = $"{klass.Name.Text}-a{call.Arguments.Length}-p{p}-{instantiations[(klass.Name.Text, call.Arguments.Length)].Count + 1}";
+                var uniqueString = $"{klass.Name.AsKey}-a{call.Arguments.Length}-p{p}-{instantiations[(klass.Name.AsKey, call.Arguments.Length)].Count + 1}";
                 var uniqueName = new[] {
                     new Token(
                         TokenKind.Identifier,
@@ -313,11 +313,11 @@ namespace Thousand.Parse
                     )
                 };
 
-                state.MapSpan(uniqueString, callMacro.Value.Name.Span);
+                state.MapSpan(uniqueString, callMacro.Value.Name.AsLoc);
                 splices.Add(new(callMacro.Range(), uniqueName));
 
                 var instantiation = Instantiate(klassMacro, uniqueName, substitutions);
-                instantiations[(klass.Name.Text, call.Arguments.Length)].Add(instantiation);
+                instantiations[(klass.Name.AsKey, call.Arguments.Length)].Add(instantiation);
             }
             else if (call.Arguments.Any())
             {

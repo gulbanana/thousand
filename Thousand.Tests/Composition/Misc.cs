@@ -20,8 +20,8 @@ namespace Thousand.Tests.Composition
         public void Layout2x1()
         {
             var root = Region(
-                Object() with { MinWidth = 10, MinHeight = 10 },
-                Object() with { MinWidth = 10, MinHeight = 10 }
+                Node() with { MinWidth = 10, MinHeight = 10 },
+                Node() with { MinWidth = 10, MinHeight = 10 }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -35,8 +35,8 @@ namespace Thousand.Tests.Composition
         public void Layout1x2()
         {
             var root = Region(
-                Object() with { MinWidth = 10, MinHeight = 10 },
-                Object() with { MinWidth = 10, MinHeight = 10, Row = 2 }
+                Node() with { MinWidth = 10, MinHeight = 10 },
+                Node() with { MinWidth = 10, MinHeight = 10, Row = 2 }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -50,9 +50,9 @@ namespace Thousand.Tests.Composition
         public void Layout3x3Sparse()
         {
             var root = Region(
-                Object() with { MinWidth = 10, MinHeight = 10, Row = 1, Column = 1 },
-                Object() with { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 },
-                Object() with { MinWidth = 10, MinHeight = 10, Row = 3, Column = 3 }
+                Node() with { MinWidth = 10, MinHeight = 10, Row = 1, Column = 1 },
+                Node() with { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 },
+                Node() with { MinWidth = 10, MinHeight = 10, Row = 3, Column = 3 }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -65,8 +65,8 @@ namespace Thousand.Tests.Composition
         [Fact]
         public void LinePosition_Horizontal()
         {
-            var left = Object() with { MinWidth = 10, MinHeight = 10 };
-            var right = Object() with { MinWidth = 10, MinHeight = 10 };
+            var left = Node() with { MinWidth = 10, MinHeight = 10 };
+            var right = Node() with { MinWidth = 10, MinHeight = 10 };
 
             var root = Region(
                 Config() with { Gutter = new(10) },
@@ -86,8 +86,8 @@ namespace Thousand.Tests.Composition
         [Fact]
         public void LinePosition_45Degree()
         {
-            var left = Object() with { MinWidth = 10, MinHeight = 10 };
-            var right = Object() with { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 };
+            var left = Node() with { MinWidth = 10, MinHeight = 10 };
+            var right = Node() with { MinWidth = 10, MinHeight = 10, Row = 2, Column = 2 };
 
             var root = Region(
                 Config() with { Gutter = new(10) },
@@ -108,10 +108,10 @@ namespace Thousand.Tests.Composition
         public void PadText()
         {
             var root = Region(
-                Object(Config() with { Padding = new(1) }) with { Label = Label(string.Empty) },
-                Object(Config() with { Padding = new(0) }) with { Label = Label("caption") },
-                Object(Config() with { Padding = new(1) }) with { Label = Label("caption") },
-                Object(Config() with { Padding = new(10) }) with { Label = Label("caption") }
+                Node(Config() with { Padding = new(1) }) with { Label = Label(string.Empty) },
+                Node(Config() with { Padding = new(0) }) with { Label = Label("caption") },
+                Node(Config() with { Padding = new(1) }) with { Label = Label("caption") },
+                Node(Config() with { Padding = new(10) }) with { Label = Label("caption") }
             );
 
             var result = Composer.TryCompose(root, state, out var layout);
@@ -129,31 +129,31 @@ namespace Thousand.Tests.Composition
         {
             var root = Region(
                 Config() with { Padding = new(0, 0, 0, 1) },
-                Object
+                Node
                 (
                     Config() with { Padding = new(1) }
                 ),
-                Object
+                Node
                 (
                     Config() with { Padding = new(0, 0, 0, 1) },
-                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
+                    Node() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 ),
-                Object
+                Node
                 (
                     Config() with { Padding = new(0) },
-                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 },
-                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
+                    Node() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 },
+                    Node() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 ),
-                Object
+                Node
                 (
                     Config() with { Padding = new(1) },
-                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
+                    Node() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 ),
-                Object
+                Node
                 (
                     Config() with { Padding = new(0, 1) },
-                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 },
-                    Object() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
+                    Node() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 },
+                    Node() with { Shape = new(ShapeKind.Circle), MinWidth = 10, MinHeight = 10 }
                 )
             );
 

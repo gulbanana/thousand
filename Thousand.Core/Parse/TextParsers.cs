@@ -15,12 +15,12 @@ namespace Thousand.Parse
             return ch >= '0' && ch <= '9';
         }
 
-        public static TextParser<Identifier> Identifier { get; } = input =>
+        public static TextParser<string> Identifier { get; } = input =>
         {
             var first = input.ConsumeChar();
             if (!first.HasValue || !char.IsLetter(first.Value))
             {
-                return Result.Empty<Identifier>(input);
+                return Result.Empty<string>(input);
             }
 
             var builder = new StringBuilder();
@@ -56,7 +56,7 @@ namespace Thousand.Parse
                 }
             }
 
-            return Result.Value(new Identifier(builder.ToString()), input, validRemainder);
+            return Result.Value(builder.ToString(), input, validRemainder);
         };
 
         public static TextParser<string> String { get; } =

@@ -112,11 +112,11 @@ foo(2) baz
 
             var klasses = ast!.Declarations.OfType<AST.ObjectClass>().ToList();
             Assert.Equal(2, klasses.Count);
-            Assert.NotEqual(klasses[0].Name.Text, klasses[1].Name.Text);
+            Assert.NotEqual(klasses[0].Name.AsKey, klasses[1].Name.AsKey);
 
             var objekts = ast!.Declarations.OfType<AST.TypedObject>().ToList();
             Assert.Equal(2, objekts.Count);
-            Assert.NotEqual(objekts[0].Classes[0].Text, objekts[1].Classes[0].Text);
+            Assert.NotEqual(objekts[0].Classes[0].AsKey, objekts[1].Classes[0].AsKey);
         }
 
         [Theory]

@@ -69,7 +69,7 @@ namespace Thousand.LSP.Handlers
                         foreach (var candidate in candidates)
                         {
                             if (syntax.Key == null || 
-                                candidate.Names.Contains(syntax.Key.Text, StringComparer.OrdinalIgnoreCase) || 
+                                candidate.Names.Contains(syntax.Key.AsKey, StringComparer.OrdinalIgnoreCase) || 
                                 !candidate.Names.Any(name => analysis.Main.Attributes[i].ParentAttributes.Contains(name)))
                             {
                                 foreach (var name in candidate.Names)
@@ -101,7 +101,7 @@ namespace Thousand.LSP.Handlers
 
                         foreach (var candidate in candidates.Where(c => scope.FindClass(c.Name) != null))
                         {
-                            var completion = candidate.Name.Text;
+                            var completion = candidate.Name.AsKey;
                             var existingStart = existing.IndexOf(completion[0]);
                             var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
                             var location = new Range(position.Delta(0, -existingLength), position);
@@ -111,7 +111,7 @@ namespace Thousand.LSP.Handlers
                             completions.Add(new CompletionItem
                             {
                                 Kind = CompletionItemKind.Class,
-                                Label = candidate.Name.Text,
+                                Label = candidate.Name.AsKey,
                                 TextEdit = new TextEdit { NewText = completion, Range = location },
                                 Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
                                 CommitCharacters = commitClass
@@ -142,7 +142,7 @@ namespace Thousand.LSP.Handlers
 
                         foreach (var candidate in candidates.Where(c => c.Name != null && scope.FindObject(c.Name) != null))
                         {
-                            var completion = candidate.Name!.Text;
+                            var completion = candidate.Name!.AsKey;
                             var existingStart = existing.IndexOf(completion[0]);
                             var existingLength = existingStart == -1 ? 0 : existing.Length - existingStart;
                             var location = new Range(position.Delta(0, -existingLength), position);
@@ -152,7 +152,7 @@ namespace Thousand.LSP.Handlers
                             completions.Add(new CompletionItem
                             {
                                 Kind = CompletionItemKind.Variable,
-                                Label = candidate.Name.Text,
+                                Label = candidate.Name.AsKey,
                                 TextEdit = new TextEdit { NewText = completion, Range = location },
                                 Documentation = Format.CodeBlock(Format.Canonicalise(candidate)),
                                 CommitCharacters = commitObject

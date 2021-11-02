@@ -21,7 +21,7 @@ namespace Thousand.Tests.Parsing
             var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
+            Assert.Equal("foo", result.Value.Name.AsKey);
             Assert.Empty(result.Value.BaseClasses);
         }
 
@@ -32,7 +32,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
+            Assert.Equal("foo", result.Value.Name.AsKey);
             Assert.Empty(result.Value.BaseClasses);
         }
 
@@ -43,8 +43,8 @@ namespace Thousand.Tests.Parsing
             var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "baz");
+            Assert.Equal("foo", result.Value.Name.AsKey);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.AsKey), "baz");
         }
 
         [Fact]
@@ -54,8 +54,8 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value?.Name.Text), "baz");
+            Assert.Equal("foo", result.Value.Name.AsKey);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value?.Name.AsKey), "baz");
         }
 
         [Fact]
@@ -65,8 +65,8 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("foo", result.Value.Name.Text);
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value?.Name.Text), "baz");
+            Assert.Equal("foo", result.Value.Name.AsKey);
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Value?.Name.AsKey), "baz");
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace Thousand.Tests.Parsing
             var result = Typed.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.Text), "bar", "baz");
+            AssertEx.Sequence(result.Value.BaseClasses.Select(n => n.AsKey), "bar", "baz");
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace Thousand.Tests.Parsing
             var result = Shared.BaseClasses(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            AssertEx.Sequence(result.Value.Select(n => n.Text), "bar");
+            AssertEx.Sequence(result.Value.Select(n => n.AsKey), "bar");
         }
 
         [Fact]
@@ -221,7 +221,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Single(result.Value.Attributes.Where(a => a.Key?.Text == "fill"));
+            Assert.Single(result.Value.Attributes.Where(a => a.Key?.AsKey == "fill"));
         }
 
         [Fact]
