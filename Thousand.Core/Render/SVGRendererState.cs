@@ -20,7 +20,7 @@ namespace Thousand.Render
 
         public XElement DefineMarker(Colour c) => new XElement(xmlns + "marker",
             new XAttribute("id", DeclareMarker(c)),
-            new XAttribute("fill", c.SVG()),
+            c.SVG("fill"),
             new XAttribute("orient", "auto-start-reverse"),
             new XAttribute("markerUnits", "userSpaceOnUse"),
             new XAttribute("markerWidth", 7), new XAttribute("markerHeight", 8),
@@ -64,7 +64,7 @@ namespace Thousand.Render
         {
             var tag = CreatePath(drawing);
 
-            tag.Add(new XAttribute("fill", drawing.Fill.SVG()));
+            tag.Add(drawing.Fill.SVG("fill"));
             tag.Add(drawing.Stroke.SVG(scale.Peek()));
 
             return tag;
@@ -102,7 +102,7 @@ namespace Thousand.Render
                 new XAttribute("y", label.Bounds.Top),
                 new XAttribute("font-family", label.Font.Family),
                 new XAttribute("font-size", label.Font.Size + "px"),
-                new XAttribute("fill", label.Font.Colour.SVG())
+                label.Font.Colour.SVG("fill")
             );
 
             foreach (var line in label.Lines)

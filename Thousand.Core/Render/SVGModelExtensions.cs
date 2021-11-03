@@ -8,15 +8,15 @@ namespace Thousand.Render
 {
     internal static class SVGModelExtensions
     {
-        public static string SVG(this Colour? self)
+        public static XAttribute SVG(this Colour? self, string tag)
         {
             if (self == null)
             {
-                return "transparent";
+                return new(tag + "-opacity", 0);
             }
             else
             {
-                return $"rgb({self.R},{self.G},{self.B})";
+                return new(tag, $"rgb({self.R},{self.G},{self.B})");
             }
         }
 
@@ -48,7 +48,7 @@ namespace Thousand.Render
         {
             var attributes = new List<XAttribute>();
 
-            attributes.Add(new("stroke", self.Colour.SVG()));
+            attributes.Add(self.Colour.SVG("stroke"));
 
             switch (self.Width)
             {

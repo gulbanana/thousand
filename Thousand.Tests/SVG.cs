@@ -3,6 +3,7 @@ using Xunit;
 using Thousand.Model;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Thousand.Tests
 {
@@ -41,6 +42,27 @@ namespace Thousand.Tests
             Assert.Equal("100", svg.Element(xmlns + "line")!.Attribute("x2")!.Value);
             Assert.Equal("0", svg.Element(xmlns + "line")!.Attribute("y1")!.Value);
             Assert.Equal("100", svg.Element(xmlns + "line")!.Attribute("y2")!.Value);
+        }
+
+        [Fact]
+        public void Transparency()
+        {
+            var diagram = new Diagram(20, 10, new List<Command>
+            {
+                new Drawing(new Shape(ShapeKind.Rect), new Rect(0, 0, 10, 10), new Stroke(new ZeroWidth()), Colour.Red),
+                new Drawing(new Shape(ShapeKind.Rect), new Rect(10, 0, 20, 10), new Stroke(new ZeroWidth()), null)
+            });
+
+            var svg = renderer.Render(diagram);
+
+            var boxes = svg.Elements(xmlns + "rect");
+            Assert.Equal(2, boxes.Count());
+
+            var left = boxes.Single(box => box.Attribute("x")!.Value == "0");
+            Assert.Equal("rgb(255,0,0)", left.Attribute("fill")!.Value);
+
+            var right = boxes.Single(box => box.Attribute("x")!.Value == "10");
+            Assert.Equal("0", right.Attribute("fill-opacity")!.Value);
         }
     }
 }

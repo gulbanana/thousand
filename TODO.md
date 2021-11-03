@@ -1,7 +1,6 @@
 TO DO
 =====
 
-* bug: use fill-opacity for SVG transparency (https://gitlab.com/inkscape/inbox/-/issues/1195)
 * bug: using diamond as a container seems to be broken somehow
 * bug: (line) anchors and offsets probably don't combine correctly
 * bug: end-padding is broken when scaling - see nested-scaling.1000

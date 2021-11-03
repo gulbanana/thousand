@@ -1,0 +1,55 @@
+<svg width="396" height="485" viewBox="0 0 396 485" text-rendering="optimizeLegibility" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow-000000" fill="rgb(0,0,0)" orient="auto-start-reverse" markerUnits="userSpaceOnUse" markerWidth="7" markerHeight="8" refX="7" refY="4">
+      <polygon points="0 8 7 4 0 0"></polygon>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="395.859400" height="484.6093600" fill="rgb(0,0,255)" stroke="rgb(0,0,0)" stroke-width="0"></rect>
+  <rect x="5" y="5.000000" width="197.53910" height="56.601560" rx="15" fill="rgb(255,136,136)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></rect>
+  <text dominant-baseline="text-before-edge" x="20.00000" y="20.000000" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="20.00000" y="20.000000">Lamp doesn't work</tspan>
+  </text>
+  <path d="M 5 163.203120 103.76955 106.601560 202.53910 163.203120 103.76955 219.804680 Z" fill-opacity="0" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+  <text dominant-baseline="text-before-edge" x="51.69925" y="137.101560" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="79.49222" y="137.101560">Lamp</tspan>
+    <tspan x="51.69925" y="163.703120">plugged in?</tspan>
+  </text>
+  <path d="M 5 321.406240 103.76955 264.804680 202.53910 321.406240 103.76955 378.007800 Z" fill-opacity="0" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+  <text dominant-baseline="text-before-edge" x="49.94145" y="295.304680" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="84.10161" y="295.304680">Bulb</tspan>
+    <tspan x="49.94145" y="321.906240">burned out?</tspan>
+  </text>
+  <rect x="5" y="423.007800" width="197.53910" height="56.601560" rx="15" fill="rgb(136,255,68)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></rect>
+  <text dominant-baseline="text-before-edge" x="49.00395" y="438.507800" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="49.00395" y="438.507800">Repair Lamp</tspan>
+  </text>
+  <line x1="103.76952217672307852633110557" y1="61.60156" x2="103.76951426879428532679927089" y2="106.7162" marker-end="url(#arrow-000000)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+  <line x1="103.76951429465757826834811643" y1="219.6901" x2="103.76951429466480677873022447" y2="264.9193" marker-end="url(#arrow-000000)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+  <line x1="103.76951426877802385650773377" y1="377.8932" x2="103.76952217671213698983524349" y2="423.0078" marker-end="url(#arrow-000000)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+  <rect x="247.53910" y="134.902340" width="143.32030" height="56.601560" rx="15" fill="rgb(136,255,68)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></rect>
+  <text dominant-baseline="text-before-edge" x="264.14065" y="150.402340" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="264.14065" y="150.402340">Plug in lamp</tspan>
+  </text>
+  <line x1="202.1901" y1="163.20310374490947400409843342" x2="247.5391" y2="163.20310480724739000992742327" marker-end="url(#arrow-000000)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+  <rect x="247.53910" y="293.105460" width="143.32030" height="56.601560" rx="15" fill="rgb(136,255,68)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></rect>
+  <text dominant-baseline="text-before-edge" x="262.53910" y="308.605460" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="262.53910" y="308.605460">Replace bulb</tspan>
+  </text>
+  <line x1="202.1901" y1="321.40624812754526299795078329" x2="247.5391" y2="321.40624759637630499503628836" marker-end="url(#arrow-000000)" stroke="rgb(0,0,0)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+  <rect x="210" y="130" width="26.679690" height="26.601560" rx="15" fill-opacity="0" stroke="rgb(0,0,0)" stroke-width="0"></rect>
+  <text dominant-baseline="text-before-edge" x="210.000000" y="130.000000" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="210.000000" y="130.000000">No</tspan>
+  </text>
+  <rect x="210" y="285" width="28.203120" height="26.601560" rx="15" fill-opacity="0" stroke="rgb(0,0,0)" stroke-width="0"></rect>
+  <text dominant-baseline="text-before-edge" x="210.000000" y="285.000000" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="210.000000" y="285.000000">Yes</tspan>
+  </text>
+  <rect x="115" y="225" width="28.203120" height="26.601560" rx="15" fill-opacity="0" stroke="rgb(0,0,0)" stroke-width="0"></rect>
+  <text dominant-baseline="text-before-edge" x="115.000000" y="225.000000" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="115.000000" y="225.000000">Yes</tspan>
+  </text>
+  <rect x="115" y="382" width="26.679690" height="26.601560" rx="15" fill-opacity="0" stroke="rgb(0,0,0)" stroke-width="0"></rect>
+  <text dominant-baseline="text-before-edge" x="115.000000" y="382.000000" font-family="Segoe UI" font-size="20px" fill="rgb(0,0,0)">
+    <tspan x="115.000000" y="382.000000">No</tspan>
+  </text>
+</svg>
