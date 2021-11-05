@@ -49,8 +49,8 @@ namespace Thousand.Tests
         {
             var diagram = new Diagram(20, 10, new List<Command>
             {
-                new Drawing(new Shape(ShapeKind.Rect), new Rect(0, 0, 10, 10), new Stroke(new ZeroWidth()), Colour.Red),
-                new Drawing(new Shape(ShapeKind.Rect), new Rect(10, 0, 20, 10), new Stroke(new ZeroWidth()), null)
+                new Drawing(new Shape(ShapeKind.Rect), new Rect(0, 0, 10, 10), new Stroke(new NoWidth()), Colour.Red),
+                new Drawing(new Shape(ShapeKind.Rect), new Rect(10, 0, 20, 10), new Stroke(new NoWidth()), null)
             });
 
             var svg = renderer.Render(diagram);

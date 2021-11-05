@@ -89,7 +89,7 @@ namespace Thousand.Compose
             // while still using the diagram entity, apply its defaults
             if (root.Config.Fill != null)
             {
-                rootCommands.Add(new Layout.Drawing(new Shape(ShapeKind.Rect, 0), new Rect(rootSize), new Stroke(new ZeroWidth()), root.Config.Fill));
+                rootCommands.Add(new Layout.Drawing(new Shape(ShapeKind.Rect, 0), new Rect(rootSize), new Stroke(new NoWidth()), root.Config.Fill));
             }
 
             // create labels and shapes, laid out according to the measurements above and each region's settings

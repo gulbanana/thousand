@@ -159,7 +159,7 @@ namespace Thousand.Evaluate
             var offset = default(Point?);
 
             var shape = new ShapeKind?(ShapeKind.Roundrect);
-            var cornerRadius = 15;
+            var cornerRadius = 15m;
 
             foreach (var attr in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Attributes).Concat(node.Attributes))
             {

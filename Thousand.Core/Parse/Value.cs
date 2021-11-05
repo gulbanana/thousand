@@ -8,20 +8,20 @@ namespace Thousand.Parse
     public static class Value
     {
         public static TokenListParser<TokenKind, int> CountingNumber { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(TextParsers.CountingNumber);
+            Token.EqualTo(TokenKind.Number).Apply(TextParsers.CountingNumber).Named("positive number");
 
         public static TokenListParser<TokenKind, int> WholeNumber { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(TextParsers.WholeNumber);
+            Token.EqualTo(TokenKind.Number).Apply(TextParsers.WholeNumber).Named("non-negative number");
 
         public static TokenListParser<TokenKind, int> Integer { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(Numerics.IntegerInt32);
+            Token.EqualTo(TokenKind.Number).Apply(Numerics.IntegerInt32).Named("number");
 
         // XXX these can produce bad errors ("unsatisfied condition") and should instead use textparsers
         public static TokenListParser<TokenKind, decimal> CountingDecimal { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d > 0);
+            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d > 0).Named("positive decimal");
 
         public static TokenListParser<TokenKind, decimal> WholeDecimal { get; } =
-            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d >= 0);
+            Token.EqualTo(TokenKind.Number).Apply(Numerics.DecimalDecimal).Where(d => d >= 0).Named("non-negative decimal");
 
         public static TokenListParser<TokenKind, string> String { get; } =
             Token.EqualTo(TokenKind.String).Apply(TextParsers.String);
@@ -37,6 +37,20 @@ namespace Thousand.Parse
             NullableString
                 .Or(Token.EqualTo(TokenKind.Identifier).Apply(TextParsers.Identifier).AsNullable())
                 .Select(t => new Text(t));
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignColumnOnly { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "left").Value(AlignmentKind.Start)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "right").Value(AlignmentKind.End));
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignColumn { get; } =
+            AlignColumnOnly.Or(Parse.Identifier.Enum<AlignmentKind>());
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignRowOnly { get; } =
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "top").Value(AlignmentKind.Start)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "bottom").Value(AlignmentKind.End));
+
+        public static TokenListParser<TokenKind, AlignmentKind> AlignRow { get; } =
+            AlignRowOnly.Or(Parse.Identifier.Enum<AlignmentKind>());
 
         public static TokenListParser<TokenKind, Anchor> Anchor { get; } =
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "any").Value(new AnyAnchor() as Anchor)
@@ -58,20 +72,21 @@ namespace Thousand.Parse
                 .Named("colour");
 
         public static TokenListParser<TokenKind, Point> Point { get; } =
-            from x in Integer
-            from y in Integer
-            select new Point(x, y);
+            (from x in Integer
+             from y in Integer
+             select new Point(x, y)).Named("point");
 
         public static TokenListParser<TokenKind, TrackSize> TrackSize { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(new PackedSize() as TrackSize)
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-area").Value(new EqualAreaSize() as TrackSize))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "area").Value(new EqualAreaSize() as TrackSize))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-content").Value(new EqualContentSize() as TrackSize))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "content").Value(new EqualContentSize() as TrackSize))
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(PackedSize.Instance)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-area").Value(EqualAreaSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "area").Value(EqualAreaSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-content").Value(EqualContentSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "content").Value(EqualContentSize.Instance))
                 .Or(WholeNumber.Select(x => new MinimumSize(x) as TrackSize));
 
         public static TokenListParser<TokenKind, Width> Width { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(new HairlineWidth() as Width)
-                .Or(WholeNumber.OrNone().Select(x => x.HasValue ? new PositiveWidth(x.Value) : new ZeroWidth() as Width));
+            WholeNumber.Select(x => new PositiveWidth(x) as Width)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(HairlineWidth.Instance))
+                .OrDefault(NoWidth.Instance);
     }
 }

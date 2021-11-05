@@ -5,6 +5,15 @@ using Thousand.Parse;
 
 namespace Thousand.API
 {
+    record AttributeGroup<T>(UseKind Use)
+    {
+        public AttributeDefinition<T> Create<V>(string name, AttributeType<V> type, Func<V, T> selector, string description)
+            => AttributeDefinition<T>.Create(new[] { name }, type, selector, description, Use);
+
+        public AttributeDefinition<T> Create<V>(string name1, string name2, AttributeType<V> type, Func<V, T> selector, string description)
+            => AttributeDefinition<T>.Create(new[] { name1, name2 }, type, selector, description, Use);
+    }
+
     public abstract class AttributeDefinition
     {
         public abstract string[] Names { get; }
@@ -43,9 +52,9 @@ namespace Thousand.API
             return Create(new[] { name1, name2 }, valueParser, selector, Format.Doc(description, type, kind, examples));
         }
 
-        internal static AttributeDefinition<T> Create<U, V>(string name1, string name2, AttributeType<U> type, Func<U, V> selector, string description, UseKind kind) where V : T
+        internal static AttributeDefinition<T> Create<U, V>(string[] names, AttributeType<U> type, Func<U, V> selector, string description, UseKind kind) where V : T
         {
-            return Create(new[] { name1, name2 }, type.Parser, selector, Format.Doc(description, type.Documentation, kind, type.Examples.Select(e => $"{name1}={e}").ToArray()));
+            return Create(names, type.Parser, selector, Format.Doc(description, type.Documentation, kind, type.Examples.Select(e => $"{names[0]}={e}").ToArray()));
         }
 
         public override string[] Names { get; }

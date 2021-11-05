@@ -161,7 +161,7 @@ namespace Thousand.Tests.Parsing
             var lsa = (AST.EntityStrokeAttribute)result.Value;
 
             Assert.NotNull(lsa.Width);
-            Assert.True(lsa.Width is ZeroWidth);
+            Assert.True(lsa.Width is NoWidth);
         }
 
         [Fact]

@@ -52,7 +52,7 @@ namespace Thousand.Render
             canvas.DrawPath(path, fill);
 
             var stroke = new SKPaint { Color = shape.Stroke.Colour.SK(), IsAntialias = true, IsStroke = true, PathEffect = StrokeEffect(shape.Stroke.Style) };
-            if (shape.Stroke.Width is not ZeroWidth)
+            if (shape.Stroke.Width is not NoWidth)
             {
                 stroke.StrokeWidth = shape.Stroke.Width switch
                 {
@@ -74,7 +74,7 @@ namespace Thousand.Render
             var fill = new SKPaint { Color = line.Stroke.Colour.SK(), IsAntialias = true };
 
             // draw the main line
-            if (line.Stroke.Width is not ZeroWidth)
+            if (line.Stroke.Width is not NoWidth)
             {
                 stroke.StrokeWidth = line.Stroke.Width switch
                 {

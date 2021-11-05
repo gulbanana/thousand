@@ -40,7 +40,7 @@ namespace Thousand.Render
             {
                 HairlineWidth => @"stroke-width=""1"" vector-effect=""non-scaling-stroke""",
                 PositiveWidth(var x) => $@"stroke-width=""{x}""",
-                ZeroWidth or _ => @"stroke-width=""0""",
+                NoWidth or _ => @"stroke-width=""0""",
             };
         }
 
@@ -52,7 +52,7 @@ namespace Thousand.Render
 
             switch (self.Width)
             {
-                case ZeroWidth:
+                case NoWidth:
                     attributes.Add(new("stroke-width", 0));
                     break;
 
