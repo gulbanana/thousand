@@ -49,7 +49,12 @@ namespace Thousand.API
         public static AttributeType<T?> EnumOptional<T>() where T : struct, System.Enum => new(Parse.Identifier.Enum<T>().OrNone(), Format.NamesOrNone<T>());
 
         public static AttributeType<TrackSize> GridSize { get; } = new(
-            Value.TrackSize,
+            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(PackedSize.Instance)
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-area").Value(EqualAreaSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "area").Value(EqualAreaSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-content").Value(EqualContentSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "content").Value(EqualContentSize.Instance))
+                .Or(Value.WholeDecimal.Select(x => new MinimumSize(x) as TrackSize)),
             $"`pack` (minimum required to fit each object), `content`/`equal-content` (maximum required to fit any object), `area`/`equal-area` (equal fractions of available space) or `X` (number)"
         );
 

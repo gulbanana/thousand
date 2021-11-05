@@ -4,5 +4,5 @@
     public sealed record PackedSize : TrackSize { public static TrackSize Instance { get; } = new PackedSize(); }
     public sealed record EqualContentSize: TrackSize { public static TrackSize Instance { get; } = new EqualContentSize(); }
     public sealed record EqualAreaSize : TrackSize { public static TrackSize Instance { get; } = new EqualAreaSize(); }
-    public sealed record MinimumSize(int Value): TrackSize;
+    public sealed record MinimumSize(decimal Value): TrackSize;
 }

@@ -1,18 +1,26 @@
 ﻿using System.Collections.Generic;
-using Thousand.Parse;
-using Definition = Thousand.API.AttributeDefinition<Thousand.AST.ArrowAttribute>;
 
 namespace Thousand.API
 {
     static class ArrowAttributes
     {
-        public static IEnumerable<Definition> All()
-        {
-            yield return Definition.Create("anchor-start", Value.Anchor, anchor => new AST.ArrowAnchorStartAttribute(anchor));
-            yield return Definition.Create("anchor-end", Value.Anchor, anchor => new AST.ArrowAnchorEndAttribute(anchor));
+        private static readonly AttributeGroup<AST.ArrowAttribute> Definition = new(UseKind.Line);
 
-            yield return Definition.Create("offset-start", Value.Point, point => new AST.ArrowOffsetStartAttribute(point));
-            yield return Definition.Create("offset-end", Value.Point, point => new AST.ArrowOffsetEndAttribute(point));
+        public static IEnumerable<AttributeDefinition<AST.ArrowAttribute>> All()
+        {
+            yield return Definition.Create("anchor-start", AttributeType.Anchor, anchor => new AST.ArrowAnchorStartAttribute(anchor),
+                "Defines the connection behaviour of the line's start point."
+            );
+            yield return Definition.Create("anchor-end", AttributeType.Anchor, anchor => new AST.ArrowAnchorEndAttribute(anchor),
+                "Defines the connection behaviour of the line's end point."
+            );
+
+            yield return Definition.Create("offset-start", AttributeType.PointRelative, point => new AST.ArrowOffsetStartAttribute(point),
+                "Adjusts the position of the of the line's start point."
+            );
+            yield return Definition.Create("offset-end", AttributeType.PointRelative, point => new AST.ArrowOffsetEndAttribute(point),
+                "Adjusts the position of the of the line's end point."
+            );
         }
     }
 }

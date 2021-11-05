@@ -76,14 +76,6 @@ namespace Thousand.Parse
              from y in Integer
              select new Point(x, y)).Named("point");
 
-        public static TokenListParser<TokenKind, TrackSize> TrackSize { get; } =
-            Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(PackedSize.Instance)
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-area").Value(EqualAreaSize.Instance))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "area").Value(EqualAreaSize.Instance))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-content").Value(EqualContentSize.Instance))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "content").Value(EqualContentSize.Instance))
-                .Or(WholeNumber.Select(x => new MinimumSize(x) as TrackSize));
-
         public static TokenListParser<TokenKind, Width> Width { get; } =
             WholeNumber.Select(x => new PositiveWidth(x) as Width)
                 .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "hairline").Value(HairlineWidth.Instance))
