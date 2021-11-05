@@ -18,24 +18,24 @@ namespace Thousand.API
 
         public static IEnumerable<Definition> All()
         {
-            yield return Definition.Create("min-width", Value.CountingDecimal.OrNone(), value => new AST.NodeMinWidthAttribute(value),
-                "Increases an object's width to at least `X` pixels. If its content is wider than `X - padding`, it will grow larger.",
+            yield return Definition.Create("width", Value.CountingDecimal.OrNone(), value => new AST.NodeMinWidthAttribute(value),
+                "Increases an object's width to a minimum of `X` pixels. (If necessary, it will grow wider.)",
                 "`X` (decimal) or `none`",
                 UseKind.Object,
-                "min-width=100", 
-                "min-width=none"
+                "width=100", 
+                "width=none"
             );
 
-            yield return Definition.Create("min-height", Value.CountingDecimal.OrNone(), value => new AST.NodeMinHeightAttribute(value),
-                "Increases an object's height to at least `Y` pixels. If its content is taller than `X - padding`, it will grow larger.",
+            yield return Definition.Create("height", Value.CountingDecimal.OrNone(), value => new AST.NodeMinHeightAttribute(value),
+                "Increases an object's height to a minimum of `Y` pixels. (If necessary, it will grow taller.)",
                 "`Y` (decimal) or `none`",
                 UseKind.Object,
-                "min-height=100",
-                "min-height=none"
+                "height=100",
+                "height=none"
             );
 
             yield return Definition.Create("shape", Identifier.Enum<ShapeKind>().OrNone(), value => new AST.NodeShapeAttribute(value),
-                "Selects the kind of shape to draw (if none, the object is just an invisible container).",
+                "Selects the kind of shape to draw. (If none, the object is just an invisible container.)",
                 Format.NamesOrNone<ShapeKind>(),
                 UseKind.Object,
                 "shape=pill",

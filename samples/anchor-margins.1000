@@ -1,6 +1,6 @@
 class box [shape=rect, stroke=2, padding=0]
-class box100 : box [shape=octagon,min-width=100, min-height=100]
-class postit : label [shape=rect,fill=#ff8,margin=5]
+class box100 : box [shape=octagon, width=100, height=100]
+class postit : label [shape=rect, fill=#ff8, margin=5]
 
 diagram [grid=3 columns] {
     // XXX implement span in order to add a title here

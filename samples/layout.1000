@@ -1,5 +1,5 @@
 class red [fill=red]; class blue [fill=blue]; class yellow [fill=yellow]
-class box($w=100,$h=100) [stroke=none, fill=green, min-width=$w, min-height=$h, corner=10, padding=0]
+class box($w=100,$h=100) [stroke=none, fill=green, width=$w, height=$h, corner=10, padding=0]
 class m3 [margin=3]
  
 class header : label [font=24]
@@ -25,12 +25,12 @@ example("layout=equal-content") {
 
 example {
 	header "layout=equal-group"
-	group.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
+	group.red [layout=equal-area, width=250, height=125, justify=center] {
 		box(50,50)
 		box(50,50)
 		box(50,50)		
 	}
-	group.red [layout=equal-area, min-width=250, min-height=125, justify=center] {
+	group.red [layout=equal-area, width=250, height=125, justify=center] {
 		box(50,50)
 		box(50,50)
 		box(50,50)
@@ -97,7 +97,7 @@ example {
 
 example [row=3] {
 	header "uniform margins"
-	group.yellow [min-height=250] {
+	group.yellow [height=250] {
 		box(44).m3
 		box(44).m3
 		box(44).m3
@@ -108,7 +108,7 @@ example [row=3] {
 
 example {
 	header "uniform padding"
-	group.yellow [min-height=250,padding=5] {
+	group.yellow [height=250,padding=5] {
 		box(48)
 		box(48)
 		box(48)
@@ -119,7 +119,7 @@ example {
 
 example [row=3] {
 	header "variable margins"
-	group.yellow [min-width=250] {
+	group.yellow [width=250] {
 		box(50,250) [margin=0 0 5 0]
 		box(50,230) [margin=0 10 10 10]
 		box(50,210) [margin=0 20 20 20]
@@ -130,7 +130,7 @@ example [row=3] {
 // XXX this one sucks
 example("justify vs align") {
 	class content-row [padding=0, gutter=10, layout=content, fill=red]
-	col.blue [min-height=250, layout-rows=equal-area] {
+	col.blue [height=250, layout-rows=equal-area] {
 		content-row [justify=center] {
 			box(20,83.3); box(83.3,83.3); box(40,83.3)
 		}

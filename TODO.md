@@ -9,7 +9,7 @@ TO DO
 * syntax: path names (perhaps use [] for anon)
 * syntax: class contents placeholder inserts - right now it's all prepended (but how would this work with a classlist?)
 * syntax: import files?
-* syntax: import templates (not the same as above! applies to the stdlib)
+* syntax: import templates (not the same as above! applies to the stdlib. i am constantly reimplementing box($x,$y))
 * syntax: templates within scopes
 * feature: line labels (composition+, align vs justify, shorthand syntax)
 * feature: object/label offset from position (parsed/styled)
@@ -33,7 +33,6 @@ TO DO
 * website: get some of the analysis features in - monaco supports a lot of it
 * triangle text placement is bad visually. special case to move either the text or the shape?
 * anchors should be close to each other instead of strictly clockwise
-* bring back width/height somehow - set intrinsic size instead of being overrides? but then you'd have padding, and clipped text... alternatively, just rename min-width to width and caveat it
 * consider line caps (butt etc) 
 * regularity control (a square is a regular rectangle) (not so sure about this, it makes the code simpler but the api more complex...). otoh autoregularising shapes confuse me (diamond vs rhombus)
 * do a defaults pass, picking values which produce a nice appearance without customisation - font-size should definitely be 16 probably
@@ -43,3 +42,5 @@ TO DO
 * reconsider name of space/gutter (css calls it gap)
 * runtime colour names
 * document all attributes
+* put back the padding
+* 'connector' stdlib line class

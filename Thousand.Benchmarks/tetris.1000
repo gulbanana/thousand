@@ -1,5 +1,5 @@
-class block [shape=square, min-width=0.96, padding=0.08, margin=0.02] {
-    group [shape=square, min-width=0.8, stroke=#444 hairline]
+class block [shape=square, width=0.96, padding=0.08, margin=0.02] {
+    group [shape=square, width=0.8, stroke=#444 hairline]
 }
 
 // tetrominoes

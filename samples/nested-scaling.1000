@@ -1,4 +1,4 @@
-class box [shape=rect, min-width=50, min-height=50,stroke=1,fill=white]
+class box [shape=rect, width=50, height=50,stroke=1,fill=white]
 class line [stroke=1]
 
 group [padding=10,fill=#ccc,layout=equal-area,scale=2] {

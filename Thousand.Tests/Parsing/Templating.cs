@@ -14,7 +14,7 @@ namespace Thousand.Tests.Parsing
         public void RemoveUnreferencedTemplate()
         {
             var source = @"
-class foo($w) [min-width=$w]
+class foo($w) [width=$w]
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
 
@@ -25,7 +25,7 @@ class foo($w) [min-width=$w]
         public void InstantiateObjectTemplate()
         {
             var source = @"
-class foo($x) [min-width=$x]
+class foo($x) [width=$x]
 foo(1) bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
@@ -54,7 +54,7 @@ foo(2) a--b
         public void InstantiateClassTemplate()
         {
             var source = @"
-class foo($x) [min-width=$x]
+class foo($x) [width=$x]
 class bar : foo(1)
 bar baz
 ";
@@ -69,8 +69,8 @@ bar baz
         public void InstantiateTemplateTemplate()
         {
             var source = @"
-class foo($x) [min-width=$x]
-class bar($y) : foo($y) [min-height=$y]
+class foo($x) [width=$x]
+class bar($y) : foo($y) [height=$y]
 bar(1) baz
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
@@ -86,8 +86,8 @@ bar(1) baz
         public void InstantiateTemplateTemplateTemplate()
         {
             var source = @"
-class foo($x) [min-width=$x]
-class bar($y) : foo($y) [min-height=$y]
+class foo($x) [width=$x]
+class bar($y) : foo($y) [height=$y]
 class baz($z) : bar($z)
 baz(1) quux
 ";
@@ -104,7 +104,7 @@ baz(1) quux
         public void InstantiateTemplateTwice()
         {
             var source = @"
-class foo($w) [min-width=$w]
+class foo($w) [width=$w]
 foo(1) bar
 foo(2) baz
 ";
@@ -140,7 +140,7 @@ foo({shape}) bar
         public void InstantiateTemplateMultipleArguments()
         {
             var source = @"
-class foo($x, $y) [min-width=$x, min-height=$y]
+class foo($x, $y) [width=$x, height=$y]
 foo(1, 2) bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
@@ -155,8 +155,8 @@ foo(1, 2) bar
         public void InstantiateMultipleTemplates()
         {
             var source = @"
-class foo($x) [min-width=$x]
-class bar($x) [min-height=$x]
+class foo($x) [width=$x]
+class bar($x) [height=$x]
 foo(1).bar(2) bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
@@ -167,7 +167,7 @@ foo(1).bar(2) bar
         public void InstantiateNestedTemplate()
         {
             var source = @"
-class foo($x) [min-width=$x]
+class foo($x) [width=$x]
 object { foo(1) }
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
@@ -181,7 +181,7 @@ object { foo(1) }
         public void InstantiateDeeplyNestedTemplate()
         {
             var source = @"
-class foo($x) [min-width=$x]
+class foo($x) [width=$x]
 object { object { foo(1) } }
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());
@@ -226,7 +226,7 @@ foo("""")
         public void InstantiateTemplateWithDefaults()
         {
             var source = @"
-class foo($x=100) [min-width=$x]
+class foo($x=100) [width=$x]
 foo bar
 ";
             Assert.True(Facade.TryParse(source, state, out var ast), state.JoinErrors());

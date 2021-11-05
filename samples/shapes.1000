@@ -1,4 +1,4 @@
-class named($x):object [min-width=150, font-size=16, margin=10, fill=#ccc, stroke=2, shape=$x, label=$x]
+class named($x):object [width=150, font-size=16, margin=10, fill=#ccc, stroke=2, shape=$x, label=$x]
 
 column [justify=center,padding=2] {
 	label "Catalogue of shapes" [font-size=32]

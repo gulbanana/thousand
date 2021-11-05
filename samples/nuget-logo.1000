@@ -1,5 +1,5 @@
 class brand [stroke=#004880 2, corner=10]
-class circle($x) [shape=circle, min-width=$x, min-height=$x]
+class circle($x) [shape=circle, width=$x, height=$x]
 class se [row=2,col=2]
 
 group [gutter=2,padding=1,scale=5] {

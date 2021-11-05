@@ -1,4 +1,4 @@
-class box($x) [min-width=$x, min-height=$x]
+class box($x) [width=$x, height=$x]
 
 // layout debugging
 class vis //[stroke=hairline]
