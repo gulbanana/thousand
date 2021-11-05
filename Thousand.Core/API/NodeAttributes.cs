@@ -52,18 +52,28 @@ namespace Thousand.API
                 "Places the object at a fixed point within the containing region."
             );
 
-            yield return Definition.Create("margin", AttributeType.Border, value => new AST.NodeMarginAttribute(value), 
+            yield return Definition.Create("margin-left", AttributeType.PixelSize("X"), (decimal? value) => new AST.NodeMarginAttribute(value, null, null, null),
+                "Adds `X` pixels of space outside the left edge of the object."
+            );
+            yield return Definition.Create("margin-top", AttributeType.PixelSize("Y"), (decimal? value) => new AST.NodeMarginAttribute(null, value, null, null),
+                "Adds `Y` pixels of space above the top edge of the object."
+            );
+            yield return Definition.Create("margin-right", AttributeType.PixelSize("X"), (decimal? value) => new AST.NodeMarginAttribute(null, null, value, null),
+                "Adds `X` pixels of space outside the right edge of the object."
+            );
+            yield return Definition.Create("margin-bottom", AttributeType.PixelSize("Y"), (decimal? value) => new AST.NodeMarginAttribute(null, null, null, value),
+                "Adds `Y` pixels of space below the bottom edge of the object."
+            );
+            yield return Definition.Create("margin", AttributeType.Border, value => new AST.NodeMarginAttribute(value.Left, value.Top, value.Right, value.Bottom), 
                 "Adds space around the object, increasing the size of its containing region or grid track."
             );
 
             yield return Definition.Create("align-horizontal", AttributeType.AlignColumnOptional, value => new AST.NodeAlignColumnAttribute(value),
                 "Places the object horizontally within its grid track or on its containing anchor."
             );
-
             yield return Definition.Create("align-vertical", AttributeType.AlignRowOptional, value => new AST.NodeAlignRowAttribute(value),
                 "Places the object vertically within its grid track or on its containing anchor."
             );
-
             yield return Definition.Create("align", AlignShorthand, values => new AST.NodeAlignAttribute(values.horizontal, values.vertical), 
                 "Shorthand for `align-horizontal` and `align-vertical alignment`."
             );

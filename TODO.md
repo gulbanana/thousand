@@ -16,7 +16,6 @@ TO DO
 * feature: drop shadows (object/line, though different)
 * feature: customisable arrowheads
 * feature: track-span (maybe)
-* feature: -bottom/-top/etc for 4-way attributes
 * feature: reverse flow - this would also start the grid at the far side of its containing box
 * feature: gradients, certainly for fills and maybe strokes
 * extension: download the language server automatically instead of requiring people to dotnet tool install --global Thousand.LSP

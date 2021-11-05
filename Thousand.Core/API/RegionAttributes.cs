@@ -38,7 +38,19 @@ namespace Thousand.API
                 "If set, gives the area a background colour. (Otherwise, it's transparent.)"
             );
 
-            yield return Definition.Create("padding", AttributeType.Border, value => new AST.RegionPaddingAttribute(value),
+            yield return Definition.Create("padding-left", AttributeType.PixelSize("X"), (decimal? value) => new AST.RegionPaddingAttribute(value, null, null, null),
+                "Adds `X` pixels of space inside the left edge of the area."
+            );
+            yield return Definition.Create("padding-top", AttributeType.PixelSize("Y"), (decimal? value) => new AST.RegionPaddingAttribute(null, value, null, null),
+                "Adds `Y` pixels of space beneath the top edge of the area."
+            );
+            yield return Definition.Create("padding-right", AttributeType.PixelSize("X"), (decimal? value) => new AST.RegionPaddingAttribute(null, null, value, null),
+                "Adds `X` pixels of space inside the right edge of the area."
+            );
+            yield return Definition.Create("padding-bottom", AttributeType.PixelSize("Y"), (decimal? value) => new AST.RegionPaddingAttribute(null, null, null, value),
+                "Adds `Y` pixels of space above the bottom edge of the area."
+            );
+            yield return Definition.Create("padding", AttributeType.Border, value => new AST.RegionPaddingAttribute(value.Left, value.Top, value.Right, value.Bottom),
                 "Adds space inside the area, making it larger than its contents."
             );
 

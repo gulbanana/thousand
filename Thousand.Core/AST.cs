@@ -46,7 +46,7 @@ namespace Thousand.AST
     public abstract record RegionAttribute;
     public record RegionScaleAttribute(decimal Value) : RegionAttribute;
     public record RegionFillAttribute(Colour? Colour) : RegionAttribute;
-    public record RegionPaddingAttribute(Border Value) : RegionAttribute;
+    public record RegionPaddingAttribute(decimal? Left, decimal? Top, decimal? Right, decimal? Bottom) : RegionAttribute;
 
     public record RegionGridFlowAttribute(FlowKind Kind) : RegionAttribute;
     public record RegionGridMaxAttribute(int Value) : RegionAttribute;
@@ -72,7 +72,7 @@ namespace Thousand.AST
     public record NodeMinHeightAttribute(decimal? Value) : NodeAttribute;
     public record NodeShapeAttribute(ShapeKind? Kind) : NodeAttribute;
     public record NodeCornerRadiusAttribute(decimal Value) : NodeAttribute;
-    public record NodeMarginAttribute(Border Value) : NodeAttribute;
+    public record NodeMarginAttribute(decimal? Left, decimal? Top, decimal? Right, decimal? Bottom) : NodeAttribute;
 
     public record NodeAlignColumnAttribute(AlignmentKind? Kind) : NodeAttribute;
     public record NodeAlignRowAttribute(AlignmentKind? Kind) : NodeAttribute;

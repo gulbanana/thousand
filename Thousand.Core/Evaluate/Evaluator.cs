@@ -234,7 +234,13 @@ namespace Thousand.Evaluate
                             break;
 
                         case AST.NodeMarginAttribute nma:
-                            margin = nma.Value;
+                            margin = margin with
+                            {
+                                Left = nma.Left ?? margin.Left,
+                                Top = nma.Top ?? margin.Top,
+                                Right = nma.Right ?? margin.Right,
+                                Bottom = nma.Bottom ?? margin.Bottom
+                            };
                             break;
 
                         case AST.NodeCornerRadiusAttribute ncra:
@@ -414,7 +420,13 @@ namespace Thousand.Evaluate
             {
                 AST.RegionScaleAttribute rsa => config with { Scale = rsa.Value },
                 AST.RegionFillAttribute rfa => config with { Fill = rfa.Colour },
-                AST.RegionPaddingAttribute rpa => config with { Padding = rpa.Value },
+                AST.RegionPaddingAttribute rpa => config with { Padding = config.Padding with
+                {
+                    Left = rpa.Left ?? config.Padding.Left,
+                    Top = rpa.Top ?? config.Padding.Top,
+                    Right = rpa.Right ?? config.Padding.Right,
+                    Bottom = rpa.Bottom ?? config.Padding.Bottom
+                } },
                 AST.RegionGridFlowAttribute rgfa => config with { GridFlow = rgfa.Kind },
                 AST.RegionGridMaxAttribute rgma => config with { GridMax = rgma.Value },
                 AST.RegionGridAttribute rga => config with { GridFlow = rga.Flow ?? config.GridFlow, GridMax = rga.Max ?? config.GridMax },
