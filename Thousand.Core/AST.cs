@@ -52,9 +52,9 @@ namespace Thousand.AST
     public record RegionGridMaxAttribute(int Value) : RegionAttribute;
     public record RegionGridAttribute(FlowKind? Flow, int? Max) : RegionAttribute;
 
-    public record RegionSpaceColumnsAttribute(int Value) : RegionAttribute;
-    public record RegionSpaceRowsAttribute(int Value) : RegionAttribute;
-    public record RegionSpaceAttribute(int Columns, int Rows) : RegionAttribute;
+    public record RegionGutterColumnsAttribute(decimal Value) : RegionAttribute;
+    public record RegionGutterRowsAttribute(decimal Value) : RegionAttribute;
+    public record RegionGutterAttribute(decimal Columns, decimal Rows) : RegionAttribute;
 
     public record RegionLayoutColumnsAttribute(TrackSize Size) : RegionAttribute;
     public record RegionLayoutRowsAttribute(TrackSize Size) : RegionAttribute;

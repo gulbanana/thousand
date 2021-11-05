@@ -11,11 +11,11 @@ class hairline [stroke=hairline]
 class thickline [stroke=1]
 class title : label [font=10, label=start, margin=10]
 
-diagram.column [scale=2,font-size=16, space=0, layout-rows=pack, justify=center] {
+diagram.column [scale=2,font-size=16, gutter=0, layout-rows=pack, justify=center] {
 	title "Line and shape strokes can be solid or styled
 with patterns of gaps and dashes."
 
-	group [space=40, grid=3] {
+	group [gutter=40, grid=3] {
 		thin a1
 		thin.dot a2
 		node.dash a3
@@ -37,7 +37,7 @@ with patterns of gaps and dashes."
 hairline width (which doesn't scale), or any fixed
 value, which increases with scaling."
 	
-	group [space=40, grid=2 rows] {
+	group [gutter=40, grid=2 rows] {
 		// no lines (still includes an arrow, because you will be able to turn that off separately!
 		box.noline b1
 		box.noline b2

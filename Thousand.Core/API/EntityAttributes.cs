@@ -4,20 +4,20 @@ using Thousand.Parse;
 
 namespace Thousand.API
 {
-    // group used by both objects and lines
+    // entities are the contents of a diagram - objects and lines
     static class EntityAttributes
     {
         private static readonly AttributeGroup<AST.EntityAttribute> Definition = new(UseKind.Entity);
 
         private static AttributeType<(Colour?, Width?, StrokeKind?)> StrokeShorthand { get; } = new(
             Attribute.ShorthandRRV(Value.Colour, Value.Width, Identifier.Enum<StrokeKind>()),
-            "any of colour, width and/or style", 
+            "any or all of: colour, width, style", 
             "hairline", "blue 3", "dashed #00f"
         );
 
         private static AttributeType<(Point?, AlignmentKind?, Text?)> LabelShorthand { get; } = new(
             Attribute.ShorthandRVV(Value.Point, Identifier.Enum<AlignmentKind>(), Value.Text),
-            "text and/or justification", 
+            "any or all of: text, justification", 
             "\"My Object\" 0 -10", "center", "boringobject end"
         );
 

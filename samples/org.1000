@@ -2,7 +2,7 @@ class job : object [shape=rect]
 class division($title) [stroke=2, padding=20 40] {
     object $title [anchor=n,fill=white,padding=15 5,shape=pill]
 }
-class execs [layout=content,justify=stretch,space=10]
+class execs [layout=content,justify=stretch, gutter=10]
 class line [stroke=2,anchor=corner s]
 
 diagram [layout=area] {
@@ -34,7 +34,7 @@ diagram [layout=area] {
         }
     }
 
-    division("Synergy") [pos=30 400,space=20] {
+    division("Synergy") [pos=30 400, gutter=20] {
         label "Value" [font=red]
         label "Paradigm" [font=blue]
     }

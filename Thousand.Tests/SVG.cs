@@ -26,7 +26,8 @@ namespace Thousand.Tests
             var diagram = new Diagram(100, 100, new List<Command>
             {
                 new Label(new Font(), textBounds, "foo", new[] { new LabelSpan(textBounds, "foo") }),
-                new Line(new Stroke(), new Point(0, 0), new Point(100, 100), false, false)
+                new Line(new Stroke(), new Point(0, 0), new Point(100, 100), false, false),
+                new Drawing(new Shape(ShapeKind.Trapezoid, 5), new Rect(0, 0, 100, 100), new Stroke(), null),
             });
 
             var svg = renderer.Render(diagram);
@@ -42,6 +43,9 @@ namespace Thousand.Tests
             Assert.Equal("100", svg.Element(xmlns + "line")!.Attribute("x2")!.Value);
             Assert.Equal("0", svg.Element(xmlns + "line")!.Attribute("y1")!.Value);
             Assert.Equal("100", svg.Element(xmlns + "line")!.Attribute("y2")!.Value);
+
+            Assert.Single(svg.Elements(xmlns + "path"));
+            Assert.Equal("M 0 100 5 0 95 0 100 100 Z", svg.Element(xmlns + "path")!.Attribute("d")!.Value);
         }
 
         [Fact]

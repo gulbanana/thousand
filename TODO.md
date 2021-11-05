@@ -1,7 +1,7 @@
 TO DO
 =====
 
-* bug: using diamond as a container seems to be broken somehow
+* bug: using diamond as a container seems to be broken somehow. possibly related: triangle text placement is bad visually. special case to move either the text or the shape?
 * bug: (line) anchors and offsets probably don't combine correctly
 * bug: end-padding is broken when scaling - see nested-scaling.1000
 * syntax: class->style maybe
@@ -20,7 +20,6 @@ TO DO
 * feature: gradients, certainly for fills and maybe strokes
 * extension: download the language server automatically instead of requiring people to dotnet tool install --global Thousand.LSP
 * extension: basic browser entry point.. maybe. it wouldn't do much without the language server
-* extension: improve previewer - easier to turn it off, close/open when parent closes/opens, etc
 * extension: preview *features* - export, zoom?
 * extension: escaped strings don't tokenize properly
 * language server: object name completions behaviour is not very good, due to syntax ambiguity
@@ -30,16 +29,14 @@ TO DO
 * website: web components lib (e.g. make it easy to do a lot of previews in the docs)
 * website: attempt wasm. this does make font support an issue, and might require the latest skia, but it seems possible
 * website: get some of the analysis features in - monaco supports a lot of it
-* triangle text placement is bad visually. special case to move either the text or the shape?
-* anchors should be close to each other instead of strictly clockwise
 * consider line caps (butt etc) 
 * regularity control (a square is a regular rectangle) (not so sure about this, it makes the code simpler but the api more complex...). otoh autoregularising shapes confuse me (diamond vs rhombus)
 * do a defaults pass, picking values which produce a nice appearance without customisation - font-size should definitely be 16 probably
 * clean up the samples, with said defaults
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
-* reconsider name of space/gutter (css calls it gap)
 * runtime colour names
 * document all attributes
 * put back the padding
+* anchors should be close to each other instead of strictly clockwise. this enables...
 * 'connector' stdlib line class

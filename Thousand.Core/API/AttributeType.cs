@@ -9,7 +9,7 @@ namespace Thousand.API
     {
         public static AttributeType<(T first, T second)> Twice<T>(this AttributeType<T> self) => new(
             self.Parser.Twice(),
-            "one or two of: " + self.Parser + ", for both axes or each axis",
+            "one or two of: " + self.Documentation + ", for both axes or each axis",
             self.Examples
         );
 
@@ -48,16 +48,21 @@ namespace Thousand.API
         public static AttributeType<T> Enum<T>() where T : struct, System.Enum => new(Parse.Identifier.Enum<T>(), Format.Names<T>());
         public static AttributeType<T?> EnumOptional<T>() where T : struct, System.Enum => new(Parse.Identifier.Enum<T>().OrNone(), Format.NamesOrNone<T>());
 
+        public static AttributeType<TrackSize> GridSize { get; } = new(
+            Value.TrackSize,
+            $"`pack` (minimum required to fit each object), `content`/`equal-content` (maximum required to fit any object), `area`/`equal-area` (equal fractions of available space) or `X` (number)"
+        );
+
         public static AttributeType<int> GridTrack(string name) => new(
             Value.CountingNumber.Named("grid track"), 
             $"`{name}` (row/column number), starting from 1", 
             "1", "2", "5"
         );
 
-        public static AttributeType<decimal?> PixelSize(string name) => new(
-            Value.CountingDecimal.OrNone(),
-            $"`{name}` (number) or `none`, in scaled pixels",
-            "1", "1.0", "none"
+        public static AttributeType<decimal> PixelSize(string name) => new(
+            Value.WholeDecimal,
+            $"`{name}` (number)",
+            "0", "0.5", "50"
         );
 
         public static AttributeType<Point> PointAbsolute { get; } = new(

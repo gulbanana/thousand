@@ -36,10 +36,10 @@ class bline : line [stroke=#f99 1, anchor=any]
 
 diagram [grid=rows, layout=pack, gutter=50] {
     org("Victus Indomitus").minor {
-        column [justify=center, space=40] {
+        column [justify=center, gutter=40] {
             vampire "Emily de la Warr" [font=#080] { t-gangrel }
 
-            column [space=40,justify=stretch] {
+            column [gutter=40,justify=stretch] {
                 row [layout=content, justify=center stretch] {    
                     vampire simpson [label="Simpson Kirkpatrick\nBaron Weaste"] { t-ventrue }
                     vampire carl [label="Carl\nBaron Eccles"] { t-nosferatu }
@@ -79,7 +79,7 @@ diagram [grid=rows, layout=pack, gutter=50] {
     org("The Wise & Solemn Court") [grid=rows] {
         row court-main [justify=center, align=stretch] {
             group [padding=0 0 20 0,grid=rows] {
-                group constabulary [align=center,margin=0 0 0 20,justify=center,space-columns=20] {
+                group constabulary [align=center,margin=0 0 0 20,justify=center,gutter=20 0] {
                     vampire damani [label="Sydney Damani\nCarthian Constable"]
                     column deputies [gutter=10,justify=stretch] {
                         vampire "Brutus Barrigan" { t-gangrel }
@@ -130,7 +130,7 @@ diagram [grid=rows, layout=pack, gutter=50] {
             }
         }
 
-        row court-extra [padding=0 20 0 0,space-columns=20] {
+        row court-extra [padding=0 20 0 0,gutter=20 0] {
             org("The Order of Dracula").minor.inverse {
                 proles [grid=3 columns] {                    
                     vampire "Sarhos Sari"

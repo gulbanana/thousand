@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using Thousand.Model;
 using Thousand.Parse;
-using _Definition = Thousand.API.AttributeDefinition<Thousand.AST.RegionAttribute>;
 
 namespace Thousand.API
 {
-    // region group, used by objects and documents
+    // an object contains a region, and the entire diagram is also a region
     public static class RegionAttributes
     {
         private static readonly AttributeGroup<AST.RegionAttribute> Definition = new(UseKind.Region);
@@ -18,7 +17,7 @@ namespace Thousand.API
 
         private static AttributeType<(FlowKind?, int?)> GridShorthand { get; } = new(
             Attribute.ShorthandVV(Identifier.Enum<FlowKind>(), Value.CountingNumber.Named("grid track")),
-            "`columns` or `rows` (flow direction) and/or `M` (max row/column number)", 
+            "any or all of: `columns` or `rows` (flow direction), `M` (max row/column number)", 
             "rows", "3 rows", "5 columns"
         );
 
@@ -30,7 +29,7 @@ namespace Thousand.API
 
         public static IEnumerable<AttributeDefinition<AST.RegionAttribute>> All()
         {
-            yield return Definition.Create("scale", AttributeType.PixelSize("S"), value => new AST.RegionScaleAttribute(value??1),
+            yield return Definition.Create("scale", AttributeType.PixelSize("S"), value => new AST.RegionScaleAttribute(value),
                 "Multiplies the size of everything inside the area by S."
             );
 
@@ -38,16 +37,16 @@ namespace Thousand.API
                 "If set, gives the area a background colour. (Otherwise, it's transparent.)"
             );
 
-            yield return Definition.Create("padding-left", AttributeType.PixelSize("X"), (decimal? value) => new AST.RegionPaddingAttribute(value, null, null, null),
+            yield return Definition.Create("padding-left", AttributeType.PixelSize("X"), value => new AST.RegionPaddingAttribute(value, null, null, null),
                 "Adds `X` pixels of space inside the left edge of the area."
             );
-            yield return Definition.Create("padding-top", AttributeType.PixelSize("Y"), (decimal? value) => new AST.RegionPaddingAttribute(null, value, null, null),
+            yield return Definition.Create("padding-top", AttributeType.PixelSize("Y"), value => new AST.RegionPaddingAttribute(null, value, null, null),
                 "Adds `Y` pixels of space beneath the top edge of the area."
             );
-            yield return Definition.Create("padding-right", AttributeType.PixelSize("X"), (decimal? value) => new AST.RegionPaddingAttribute(null, null, value, null),
+            yield return Definition.Create("padding-right", AttributeType.PixelSize("X"), value => new AST.RegionPaddingAttribute(null, null, value, null),
                 "Adds `X` pixels of space inside the right edge of the area."
             );
-            yield return Definition.Create("padding-bottom", AttributeType.PixelSize("Y"), (decimal? value) => new AST.RegionPaddingAttribute(null, null, null, value),
+            yield return Definition.Create("padding-bottom", AttributeType.PixelSize("Y"), value => new AST.RegionPaddingAttribute(null, null, null, value),
                 "Adds `Y` pixels of space above the bottom edge of the area."
             );
             yield return Definition.Create("padding", AttributeType.Border, value => new AST.RegionPaddingAttribute(value.Left, value.Top, value.Right, value.Bottom),
@@ -64,22 +63,34 @@ namespace Thousand.API
                 "Lay out up to `M` columns/rows in the specified flow direction."
             );
 
-            yield return _Definition.Create("space-columns", "gutter-columns", Value.WholeNumber, value => new AST.RegionSpaceColumnsAttribute(value));
-            yield return _Definition.Create("space-rows", "gutter-rows", Value.WholeNumber, value => new AST.RegionSpaceRowsAttribute(value));
-            yield return _Definition.Create("space", "gutter", Value.WholeNumber.Twice(), values => new AST.RegionSpaceAttribute(values.first, values.second));
+            yield return Definition.Create("gutter-horizontal", AttributeType.PixelSize("X"), value => new AST.RegionGutterColumnsAttribute(value),
+                "Leave a gap of `X` pixels between grid columns."
+            );
+            yield return Definition.Create("gutter-vertical", AttributeType.PixelSize("Y"), value => new AST.RegionGutterRowsAttribute(value),
+                "Leave a gap of `Y` pixels between grid rows."
+            );
+            yield return Definition.Create("gutter", AttributeType.PixelSize("X/Y").Twice(), values => new AST.RegionGutterAttribute(values.first, values.second),
+                "Leave a gap of `X/Y` pixels between grid tracks."
+            );
 
-            yield return _Definition.Create("layout-columns", Value.TrackSize, value => new AST.RegionLayoutColumnsAttribute(value));
-            yield return _Definition.Create("layout-rows", Value.TrackSize, value => new AST.RegionLayoutRowsAttribute(value));
-            yield return _Definition.Create("layout", Value.TrackSize.Twice(), values => new AST.RegionLayoutAttribute(values.first, values.second));
+            yield return Definition.Create("layout-columns", AttributeType.GridSize, value => new AST.RegionLayoutColumnsAttribute(value),
+                "The width of the area's grid columns."
+            );
+            yield return Definition.Create("layout-rows", AttributeType.GridSize, value => new AST.RegionLayoutRowsAttribute(value),
+                "The height of the area's grid rows."
+            );
+            yield return Definition.Create("layout", AttributeType.GridSize.Twice(), values => new AST.RegionLayoutAttribute(values.first, values.second),
+                "The width and height of the area's grid tracks."
+            );
 
             yield return Definition.Create("justify-columns", AttributeType.AlignColumn, value => new AST.RegionJustifyColumnsAttribute(value),
-                "Positions objects horizontally within the area's grid tracks."
+                "Positions objects horizontally within the area's grid columns."
             );
             yield return Definition.Create("justify-rows", AttributeType.AlignRow, value => new AST.RegionJustifyRowsAttribute(value),
-                "Positions objects vertically within the area's grid tracks."
+                "Positions objects vertically within the area's grid rows."
             );
             yield return Definition.Create("justify", JustifyShorthand, values => new AST.RegionJustifyAttribute(values.columns, values.rows),
-                "Positions objects within the area's grid tracks."
+                "Positions objects horizontally and vertically within the area's grid tracks."
             );
         }
     }

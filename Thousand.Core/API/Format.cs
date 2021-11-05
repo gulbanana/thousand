@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 namespace Thousand.API
 {
@@ -7,7 +8,8 @@ namespace Thousand.API
     {
         public static string Doc(string description, string type, UseKind kind, params string[] examples)
         {
-            return $@"{description}
+            var builder = new StringBuilder();
+            builder.Append($@"{description}
 
 _Value_: {type}
 
@@ -18,9 +20,16 @@ _Applies to:_ {kind switch
                 UseKind.Document => "the whole diagram",
                 UseKind.Region => "objects or the whole diagram",
                 UseKind.Entity => "objects or lines"
-            }}
+            }}");
 
-_Examples:_ {string.Join(", ", examples.Select(e => $"`{e}`"))}";
+            if (examples.Length > 0)
+            {
+                builder.Append($@"
+
+_Examples:_ {string.Join(", ", examples.Select(e => $"`{e}`"))}");
+            }
+
+            return builder.ToString();
         }
 
         public static string Names<T>() where T : struct, Enum

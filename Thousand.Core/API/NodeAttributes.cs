@@ -6,7 +6,6 @@ using Thousand.Parse;
 
 namespace Thousand.API
 {
-    // node group, used only by objects
     // a node is something that can be positioned within a region. it may have a drawn shape or intrinsic text content
     public static class NodeAttributes
     {
@@ -19,7 +18,7 @@ namespace Thousand.API
 
         private static AttributeType<(AlignmentKind? horizontal, AlignmentKind? vertical)> AlignShorthand { get; } = new(
             Alignment,
-            "both axes (`top`, `left`, `bottom`, `right`, `none`) or a single shared value (`stretch`, `start`, `center`, `end` or `none`)", 
+            "both axes (`top`, `left`, `bottom`, `right`, `none`) or a single shared value (`stretch`, `start`, `center`, `end`, `none`)", 
             "start", "center", "top right", "left top", "none end"
         );
 
@@ -36,7 +35,7 @@ namespace Thousand.API
                 "Selects the kind of shape to draw. (If none, the object is just an invisible container.)"
             );
 
-            yield return Definition.Create("corner-radius", "corner", AttributeType.PixelSize("R"), value => new AST.NodeCornerRadiusAttribute(value??0),
+            yield return Definition.Create("corner-radius", "corner", AttributeType.PixelSize("R"), value => new AST.NodeCornerRadiusAttribute(value),
                 "For an object with rounded corners, sets the width and height of the corners to `R`."
             );
 
@@ -52,16 +51,16 @@ namespace Thousand.API
                 "Places the object at a fixed point within the containing region."
             );
 
-            yield return Definition.Create("margin-left", AttributeType.PixelSize("X"), (decimal? value) => new AST.NodeMarginAttribute(value, null, null, null),
+            yield return Definition.Create("margin-left", AttributeType.PixelSize("X"), value => new AST.NodeMarginAttribute(value, null, null, null),
                 "Adds `X` pixels of space outside the left edge of the object."
             );
-            yield return Definition.Create("margin-top", AttributeType.PixelSize("Y"), (decimal? value) => new AST.NodeMarginAttribute(null, value, null, null),
+            yield return Definition.Create("margin-top", AttributeType.PixelSize("Y"), value => new AST.NodeMarginAttribute(null, value, null, null),
                 "Adds `Y` pixels of space above the top edge of the object."
             );
-            yield return Definition.Create("margin-right", AttributeType.PixelSize("X"), (decimal? value) => new AST.NodeMarginAttribute(null, null, value, null),
+            yield return Definition.Create("margin-right", AttributeType.PixelSize("X"), value => new AST.NodeMarginAttribute(null, null, value, null),
                 "Adds `X` pixels of space outside the right edge of the object."
             );
-            yield return Definition.Create("margin-bottom", AttributeType.PixelSize("Y"), (decimal? value) => new AST.NodeMarginAttribute(null, null, null, value),
+            yield return Definition.Create("margin-bottom", AttributeType.PixelSize("Y"), value => new AST.NodeMarginAttribute(null, null, null, value),
                 "Adds `Y` pixels of space below the bottom edge of the object."
             );
             yield return Definition.Create("margin", AttributeType.Border, value => new AST.NodeMarginAttribute(value.Left, value.Top, value.Right, value.Bottom), 

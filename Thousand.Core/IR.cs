@@ -12,7 +12,7 @@ namespace Thousand.IR
         public Axes<U> Select<U>(Func<T, U> f) => new Axes<U>(f(Columns), f(Rows));
     }
 
-    public record Config(decimal Scale, Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<int> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
+    public record Config(decimal Scale, Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<decimal> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
         public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Start)) { }
     }
