@@ -1,9 +1,8 @@
 ﻿using OmniSharp.Extensions.JsonRpc;
 using System.Threading;
 using System.Threading.Tasks;
-using Thousand.LSP.Protocol;
 
-namespace Thousand.LSP.Handlers
+namespace Thousand.LSP.Extensions
 {
     class VFSHandler : IJsonRpcRequestHandler<VFSGet, string>
     {

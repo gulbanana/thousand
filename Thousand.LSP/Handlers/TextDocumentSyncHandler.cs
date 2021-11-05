@@ -48,7 +48,6 @@ namespace Thousand.LSP.Handlers
             config.GetSection("thousand").GetSection("server").Bind(options);
 
             documentService.Add(request.TextDocument.Uri, request.TextDocument.Text);
-            if (options.PreviewDiagrams) generationService.Track(request.TextDocument.Uri);
             diagnosticService.Track(request.TextDocument.Uri);
             semanticService.Reparse(request.TextDocument.Uri, options);
 

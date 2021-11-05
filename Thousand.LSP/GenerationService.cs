@@ -9,7 +9,6 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
 using Thousand.Layout;
-using Thousand.LSP.Protocol;
 using Thousand.Render;
 
 namespace Thousand.LSP
@@ -74,7 +73,7 @@ namespace Thousand.LSP
                 }
                 logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", pngPath, stopwatch.ElapsedMilliseconds);
 
-                facade.SendNotification(new UpdatePreview { Uri = key, Filename = pngPath });
+                facade.SendNotification(new Extensions.UpdatePreview { Uri = key, Filename = pngPath });
             }
             catch (Exception e)
             {
@@ -97,7 +96,7 @@ namespace Thousand.LSP
 
                 logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", svgPath, stopwatch.ElapsedMilliseconds);
 
-                facade.SendNotification(new UpdatePreview { Uri = key, Filename = svgPath });
+                facade.SendNotification(new Extensions.UpdatePreview { Uri = key, Filename = svgPath });
             }
             catch (Exception e)
             {

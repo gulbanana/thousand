@@ -29,7 +29,6 @@ namespace Thousand.LSP
                 .WithInput(Console.OpenStandardInput())
                 .WithOutput(Console.OpenStandardOutput())
                 .ConfigureLogging(builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(LogLevel.Debug))
-                .WithHandler<VFSHandler>()
                 .WithHandler<TextDocumentSyncHandler>()
                 .WithHandler<SemanticTokensHandler>()
                 .WithHandler<DocumentSymbolHandler>()
@@ -37,6 +36,8 @@ namespace Thousand.LSP
                 .WithHandler<DefinitionHandler>()
                 .WithHandler<HoverHandler>()
                 .WithHandler<CompletionHandler>()
+                .WithHandler<Extensions.VFSHandler>()
+                .WithHandler<Extensions.PreviewHandler>()
                 .WithServices(ConfigureServices);
         }
 
