@@ -81,8 +81,7 @@ namespace Thousand.API
                 .Concat(RegionAttributes.All())
                 .Concat(EntityAttributes.All())
                 .Concat(TextAttributes.All())
-                .Where(attr => attr.Documentation != null)
-                .SelectMany(attr => attr.Names.Select(n => (name: n, doc: attr.Documentation!)))
+                .SelectMany(attr => attr.Names.Select(n => (name: n, doc: attr.Documentation)))
                 .ToDictionary(t => t.name, t => t.doc, StringComparer.OrdinalIgnoreCase);
         }
     }

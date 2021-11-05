@@ -74,13 +74,12 @@ namespace Thousand.LSP.Handlers
                             {
                                 foreach (var name in candidate.Names)
                                 {
-                                    logger.LogInformation($"{name} doc: {api.Documentation.ContainsKey(name)}");
                                     completions.Add(new CompletionItem
                                     {
                                         Kind = CompletionItemKind.Enum,
                                         Label = name,
                                         InsertText = name, // syntax.HasEqualsSign ? name : $"{name}=",
-                                        Documentation = candidate.Documentation != null ? new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation } : null,
+                                        Documentation = new MarkupContent { Kind = MarkupKind.Markdown, Value = candidate.Documentation },
                                         CommitCharacters = commitAttribute
                                     });
                                 }

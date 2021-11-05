@@ -106,7 +106,7 @@ namespace Thousand.Render
             {
                 var text = new RichString()
                     .FontFamily(block.Font.Family)
-                    .FontSize(block.Font.Size)
+                    .FontSize((float)block.Font.Size)
                     .TextColor(block.Font.Colour.SK())
                     .Add(line.Content);
 

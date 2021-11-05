@@ -21,7 +21,7 @@ namespace Thousand.Compose
             var style = new Style()
             {
                 FontFamily = text.Font.Family,
-                FontSize = text.Font.Size
+                FontSize = (float)text.Font.Size
             };
 
             var textBlock = new TextBlock()

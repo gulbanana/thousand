@@ -72,7 +72,7 @@ namespace Thousand.LSP.Handlers
                         continue;
                     }
 
-                    if (ctx.Range.Contains(request.Position) && api.Documentation.ContainsKey(key.AsKey))
+                    if (ctx.Range.Contains(request.Position))
                     {
                         return new Hover
                         {

@@ -36,7 +36,6 @@ TO DO
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
 * runtime colour names
-* document all attributes
 * put back the padding
 * anchors should be close to each other instead of strictly clockwise. this enables...
 * 'connector' stdlib line class
