@@ -31,7 +31,7 @@ namespace Thousand.Benchmarks
         public Stages()
         {
             tokenizer = new Tokenizer();
-            renderer = new SVGRenderer();
+            renderer = new SVGRenderer(false);
         }
 
         [GlobalSetup]
@@ -51,7 +51,7 @@ namespace Thousand.Benchmarks
             Preprocessor.TryPreprocess(state, end, tokens, out preprocessedAST);
             Typechecker.TryTypecheck(api, state, preprocessedAST, end, false, out typedAST);
             Evaluator.TryEvaluate(new[] { stdlibAST, typedAST }, state, out root);
-            Composer.TryCompose(root, state, out diagram);
+            Composer.TryCompose(root, state, false, out diagram);
 
             if (state.HasErrors())
             {
@@ -86,7 +86,7 @@ namespace Thousand.Benchmarks
         [Benchmark]
         public bool Compose()
         {
-            return Composer.TryCompose(root, new GenerationState(), out _);
+            return Composer.TryCompose(root, new GenerationState(), false, out _);
         }
 
         [Benchmark]

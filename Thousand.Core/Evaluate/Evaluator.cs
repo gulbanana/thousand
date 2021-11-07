@@ -280,6 +280,7 @@ namespace Thousand.Evaluate
             }
 
             var result = new IR.Node(
+                node.Classes.Select(c => state.UnmapSpan(c.AsLoc).ToStringValue()).ToArray(),
                 displayName,
                 new IR.Region(regionConfig, childEntities), 
                 shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel),
@@ -358,6 +359,7 @@ namespace Thousand.Evaluate
                 nodes.Add((seg.Direction, target, seg.Target.IsT0 ? seg.Target.AsT0 : target?.Name));
             }
 
+            var classes = line.Classes.Select(c => state.UnmapSpan(c.AsLoc).ToStringValue()).ToArray();
             var label = shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel);
             for (var i = 0; i < nodes.Count - 1; i++)
             {
@@ -370,6 +372,7 @@ namespace Thousand.Evaluate
                     {
                         case ArrowKind.Backward:
                             edges.Add(new(
+                                classes,
                                 new IR.Endpoint(to.name, to.target, null, anchorStart, offsetStart), 
                                 new IR.Endpoint(from.name, from.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd), 
                                 shared.Stroke, 
@@ -379,6 +382,7 @@ namespace Thousand.Evaluate
 
                         case ArrowKind.Forward:
                             edges.Add(new(
+                                classes,
                                 new IR.Endpoint(from.name, from.target, null, anchorStart, offsetStart),
                                 new IR.Endpoint(to.name, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
                                 shared.Stroke,
@@ -388,6 +392,7 @@ namespace Thousand.Evaluate
 
                         case ArrowKind.Neither:
                             edges.Add(new(
+                                classes,
                                 new IR.Endpoint(from.name, from.target, null, anchorStart, offsetStart),
                                 new IR.Endpoint(to.name, to.target, null, anchorEnd, offsetEnd),
                                 shared.Stroke,
@@ -397,6 +402,7 @@ namespace Thousand.Evaluate
 
                         case ArrowKind.Both:
                             edges.Add(new(
+                                classes,
                                 new IR.Endpoint(from.name, from.target, MarkerKind.Arrowhead, anchorStart, offsetStart),
                                 new IR.Endpoint(to.name, to.target, MarkerKind.Arrowhead, anchorEnd, offsetEnd),
                                 shared.Stroke,

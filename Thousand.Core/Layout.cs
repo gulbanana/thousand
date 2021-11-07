@@ -5,16 +5,16 @@ using Thousand.Model;
 namespace Thousand.Layout
 {
     /// <summary>Drawing commands, back-to-front.</summary>
-    public abstract record Command;
+    public abstract record Command(string[] Classes);
 
     public record LabelSpan(Rect Bounds, string Content);
-    public record Label(Font Font, Rect Bounds, string Content, IReadOnlyList<LabelSpan> Lines) : Command;
+    public record Label(string[] Classes, Font Font, Rect Bounds, string Content, IReadOnlyList<LabelSpan> Lines) : Command(Classes);
 
-    public record Drawing(Shape Shape, Rect Bounds, Stroke Stroke, Colour? Fill) : Command;
+    public record Line(string[] Classes, Stroke Stroke, Point Start, Point End, bool StartMarker, bool EndMarker) : Command(Classes);
 
-    public record Line(Stroke Stroke, Point Start, Point End, bool StartMarker, bool EndMarker) : Command;
+    public record Drawing(string[] Classes, Shape Shape, Rect Bounds, Stroke Stroke, Colour? Fill) : Command(Classes);
 
-    public record Transform(decimal Scale, IReadOnlyList<Command> Commands) : Command;
+    public record Transform(string[] Classes, decimal? Scale, IReadOnlyList<Command> Commands) : Command(Classes);
 
     public record Diagram(int Width, int Height, IReadOnlyList<Command> Commands);
 }

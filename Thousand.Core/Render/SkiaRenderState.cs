@@ -36,8 +36,13 @@ namespace Thousand.Render
 
                     case Layout.Transform transform:
                         var saveMatrix = canvas.TotalMatrix;
-                        canvas.Scale((float)transform.Scale);
+                        if (transform.Scale.HasValue)
+                        {
+                            canvas.Scale((float)transform.Scale.Value);
+                        }
+
                         ProcessCommandList(transform.Commands);
+
                         canvas.SetMatrix(saveMatrix);
                         break;
                 }

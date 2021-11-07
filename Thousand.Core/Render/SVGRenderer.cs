@@ -8,17 +8,19 @@ namespace Thousand.Render
     public sealed partial class SVGRenderer : IRenderer<XElement>, IDisposable
     {
         private readonly XNamespace xmlns;
+        private readonly bool includeMetadata;
 
-        public SVGRenderer()
+        public SVGRenderer(bool includeMetadata)
         {
             xmlns = "http://www.w3.org/2000/svg";
+            this.includeMetadata = includeMetadata;
         }
 
         public void Dispose() { }
 
         public XElement Render(Layout.Diagram diagram)
         {
-            var state = new SVGRendererState();
+            var state = new SVGRendererState(includeMetadata);
 
             var w = diagram.Width;
             var h = diagram.Height;            

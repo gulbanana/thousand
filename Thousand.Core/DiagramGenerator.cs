@@ -59,7 +59,7 @@ namespace Thousand
                 return state.GetErrors();
             }
 
-            if (!Compose.Composer.TryCompose(root, state, out var diagram))
+            if (!Compose.Composer.TryCompose(root, state, false, out var diagram))
             {
                 return state.GetErrors();
             }

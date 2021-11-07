@@ -24,7 +24,7 @@ namespace Thousand.Tests.Composition
                 Node() with { MinWidth = 10, MinHeight = 10 }
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Equal(20, layout!.Width);
@@ -39,7 +39,7 @@ namespace Thousand.Tests.Composition
                 Node() with { MinWidth = 10, MinHeight = 10, Row = 2 }
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Equal(10, layout!.Width);
@@ -55,7 +55,7 @@ namespace Thousand.Tests.Composition
                 Node() with { MinWidth = 10, MinHeight = 10, Row = 3, Column = 3 }
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Equal(30, layout!.Width);
@@ -75,7 +75,7 @@ namespace Thousand.Tests.Composition
                 Edge(left, right)
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Commands.OfType<Layout.Line>());
@@ -96,7 +96,7 @@ namespace Thousand.Tests.Composition
                 Edge(left, right)
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Commands.OfType<Layout.Line>());
@@ -114,7 +114,7 @@ namespace Thousand.Tests.Composition
                 Node(Config() with { Padding = new(10) }) with { Label = Label("caption") }
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var textSize = layout!.Commands.OfType<Layout.Label>().ElementAt(0).Bounds.Size;
@@ -157,7 +157,7 @@ namespace Thousand.Tests.Composition
                 )
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             Assert.Equal(new Point(64, 13), new Point(layout!.Width, layout.Height));

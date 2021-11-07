@@ -8,7 +8,7 @@ namespace Thousand.Compose
 {
     public class Composer
     {
-        public static bool TryCompose(IR.Region root, GenerationState state, [NotNullWhen(true)] out Layout.Diagram? diagram)
+        public static bool TryCompose(IR.Region root, GenerationState state, bool includeMetadata, [NotNullWhen(true)] out Layout.Diagram? diagram)
         {
             try
             {
@@ -20,7 +20,7 @@ namespace Thousand.Compose
                     textMeasures[t] = Intrinsics.TextBlock(t);
                 }
 
-                var composition = new Composer(state, root, textMeasures);
+                var composition = new Composer(state, root, textMeasures, includeMetadata);
                 diagram = composition.Diagram;
 
                 return state.ErrorCount() == errors;
@@ -57,17 +57,19 @@ namespace Thousand.Compose
         private readonly GenerationState state;
         private readonly IR.Region root;
         private readonly IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures;
+        private readonly bool includeMetadata;
         private readonly Dictionary<IR.Region, LayoutState> layouts;
         private readonly Dictionary<IR.Node, Rect> globalBounds; // XXX this sucks but it's how object scope bubbling works 
         private readonly Stack<List<Layout.Command>> outputCommands;
         private decimal outputTransform;
         public readonly Layout.Diagram Diagram;
 
-        private Composer(GenerationState state, IR.Region root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures)
+        private Composer(GenerationState state, IR.Region root, IReadOnlyDictionary<IR.StyledText, BlockMeasurements> textMeasures, bool includeMetadata)
         {
             this.state = state;
             this.root = root;
             this.textMeasures = textMeasures;
+            this.includeMetadata = includeMetadata;
 
             layouts = new(ReferenceEqualityComparer.Instance);
             globalBounds = new Dictionary<IR.Node, Rect>(ReferenceEqualityComparer.Instance);
@@ -89,11 +91,11 @@ namespace Thousand.Compose
             // while still using the diagram entity, apply its defaults
             if (root.Config.Fill != null)
             {
-                rootCommands.Add(new Layout.Drawing(new Shape(ShapeKind.Rect, 0), new Rect(rootSize), new Stroke(new NoWidth()), root.Config.Fill));
+                rootCommands.Add(new Layout.Drawing(Array.Empty<string>(), new Shape(ShapeKind.Rect, 0), new Rect(rootSize), new Stroke(new NoWidth()), root.Config.Fill));
             }
 
             // create labels and shapes, laid out according to the measurements above and each region's settings
-            Arrange(root, new Rect(rootSize));
+            Arrange(root, new Rect(rootSize), Array.Empty<string>());
 
             return new(
                 (int)Math.Ceiling(rootSize.X),
@@ -309,7 +311,7 @@ namespace Thousand.Compose
         {
             if (objekt.Shape != null)
             {
-                outputCommands.Peek().Add(new Layout.Drawing(objekt.Shape, bounds, objekt.Stroke, objekt.Region.Config.Fill));
+                outputCommands.Peek().Add(new Layout.Drawing(objekt.Classes, objekt.Shape, bounds, objekt.Stroke, objekt.Region.Config.Fill));
 
                 foreach (var kvp in Shapes.Anchors(objekt.Shape, bounds))
                 {
@@ -335,23 +337,29 @@ namespace Thousand.Compose
                     var lineBox = new Rect(blockBox.Origin + line.Position, line.Size);
                     lines.Add(new Layout.LabelSpan(lineBox, line.Run));
                 }
-                outputCommands.Peek().Add(new Layout.Label(objekt.Label.Font, blockBox, objekt.Label.Content, lines));
+                outputCommands.Peek().Add(new Layout.Label(objekt.Classes, objekt.Label.Font, blockBox, objekt.Label.Content, lines));
             }
 
-            Arrange(objekt.Region, bounds);
+            Arrange(objekt.Region, bounds, objekt.Classes);
         }
 
         // layout region context within a given box - bounds are known to parents, so it's just a matter of dividing up the space
-        private void Arrange(IR.Region region, Rect bounds)
+        private void Arrange(IR.Region region, Rect bounds, string[] classes)
         {
             if (region.Config.Scale != 1m)
             {
                 bounds /= region.Config.Scale;
 
                 var regionCommands = new List<Layout.Command>();
-                outputCommands.Peek().Add(new Layout.Transform(region.Config.Scale, regionCommands));
+                outputCommands.Peek().Add(new Layout.Transform(classes, region.Config.Scale, regionCommands));
                 outputCommands.Push(regionCommands);
                 outputTransform *= region.Config.Scale;
+            }
+            else if (includeMetadata)
+            {
+                var regionCommands = new List<Layout.Command>();
+                outputCommands.Peek().Add(new Layout.Transform(classes, null, regionCommands));
+                outputCommands.Push(regionCommands);
             }
 
             var layout = layouts[region];
@@ -405,6 +413,10 @@ namespace Thousand.Compose
             if (region.Config.Scale != 1m)
             {
                 outputTransform /= region.Config.Scale;
+                outputCommands.Pop();
+            } 
+            else if (includeMetadata)
+            {
                 outputCommands.Pop();
             }
         }
@@ -576,7 +588,7 @@ namespace Thousand.Compose
                 }
             }
 
-            outputCommands.Peek().Add(new Layout.Line(edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
+            outputCommands.Peek().Add(new Layout.Line(edge.Classes, edge.Stroke, start, end, edge.From.Marker.HasValue, edge.To.Marker.HasValue));
         }
 
         private static Border GetAnchorBorder(AnchorNodeState node, IR.Node parent, Point parentSize)

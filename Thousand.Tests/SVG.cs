@@ -4,6 +4,7 @@ using Thousand.Model;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Thousand.Tests
 {
@@ -15,7 +16,7 @@ namespace Thousand.Tests
         public SVG()
         {
             xmlns = "http://www.w3.org/2000/svg";
-            renderer = new Render.SVGRenderer();
+            renderer = new Render.SVGRenderer(false);
         }
 
         [Fact]
@@ -25,9 +26,9 @@ namespace Thousand.Tests
 
             var diagram = new Diagram(100, 100, new List<Command>
             {
-                new Label(new Font(), textBounds, "foo", new[] { new LabelSpan(textBounds, "foo") }),
-                new Line(new Stroke(), new Point(0, 0), new Point(100, 100), false, false),
-                new Drawing(new Shape(ShapeKind.Trapezoid, 5), new Rect(0, 0, 100, 100), new Stroke(), null),
+                new Label(Array.Empty<string>(), new Font(), textBounds, "foo", new[] { new LabelSpan(textBounds, "foo") }),
+                new Line(Array.Empty<string>(), new Stroke(), new Point(0, 0), new Point(100, 100), false, false),
+                new Drawing(Array.Empty<string>(), new Shape(ShapeKind.Trapezoid, 5), new Rect(0, 0, 100, 100), new Stroke(), null),
             });
 
             var svg = renderer.Render(diagram);
@@ -53,8 +54,8 @@ namespace Thousand.Tests
         {
             var diagram = new Diagram(20, 10, new List<Command>
             {
-                new Drawing(new Shape(ShapeKind.Rect), new Rect(0, 0, 10, 10), new Stroke(new NoWidth()), Colour.Red),
-                new Drawing(new Shape(ShapeKind.Rect), new Rect(10, 0, 20, 10), new Stroke(new NoWidth()), null)
+                new Drawing(Array.Empty<string>(), new Shape(ShapeKind.Rect), new Rect(0, 0, 10, 10), new Stroke(new NoWidth()), Colour.Red),
+                new Drawing(Array.Empty<string>(), new Shape(ShapeKind.Rect), new Rect(10, 0, 20, 10), new Stroke(new NoWidth()), null)
             });
 
             var svg = renderer.Render(diagram);

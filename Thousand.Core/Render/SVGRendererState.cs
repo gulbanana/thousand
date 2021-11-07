@@ -10,12 +10,14 @@ namespace Thousand.Render
     {
         private readonly XNamespace xmlns;
         private readonly Stack<decimal> scale;
+        private readonly bool includeMetadata;
 
-        public SVGRendererState()
+        public SVGRendererState(bool includeMetadata)
         {
             xmlns = "http://www.w3.org/2000/svg";
             scale = new Stack<decimal>();
             scale.Push(1m);
+            this.includeMetadata = includeMetadata;
         }
 
         public XElement DefineMarker(Colour c) => new XElement(xmlns + "marker",
@@ -47,13 +49,25 @@ namespace Thousand.Render
                         break;
 
                     case Transform transform:                        
-                        var group = new XElement(xmlns + "g", new XAttribute("transform", $"scale({transform.Scale} {transform.Scale})"));
-                        scale.Push(transform.Scale);
+                        var group = new XElement(xmlns + "g");
+                        RenderMetadata(transform, group);
+                        
+                        if (transform.Scale.HasValue)
+                        {
+                            group.Add(new XAttribute("transform", $"scale({transform.Scale} {transform.Scale})"));
+                            scale.Push(transform.Scale.Value);
+                        }
+                        
                         foreach (var tag in ProcessCommandList(transform.Commands))
                         {
                             group.Add(tag);
                         }
-                        scale.Pop();
+                        
+                        if (transform.Scale.HasValue)
+                        {
+                            scale.Pop();
+                        }
+
                         yield return group;
                         break;
                 }
@@ -63,6 +77,8 @@ namespace Thousand.Render
         public XElement RenderShape(Drawing drawing)
         {
             var tag = CreatePath(drawing);
+
+            RenderMetadata(drawing, tag);
 
             tag.Add(drawing.Fill.SVG("fill"));
             tag.Add(drawing.Stroke.SVG(scale.Peek()));
@@ -78,6 +94,8 @@ namespace Thousand.Render
                 new XAttribute("x2", line.End.X),
                 new XAttribute("y2", line.End.Y)
             );
+
+            RenderMetadata(line, tag);
 
             if (line.StartMarker)
             {
@@ -105,6 +123,8 @@ namespace Thousand.Render
                 label.Font.Colour.SVG("fill")
             );
 
+            RenderMetadata(label, tag);
+
             foreach (var line in label.Lines)
             {
                 tag.Add(new XElement(xmlns + "tspan",
@@ -115,6 +135,14 @@ namespace Thousand.Render
             }
 
             return tag;
+        }
+
+        private void RenderMetadata(Command metadata, XElement tag)
+        {
+            if (includeMetadata && metadata.Classes.Length > 0)
+            {
+                tag.Add(new XAttribute("class", string.Join(' ', metadata.Classes)));
+            }
         }
 
         private string DeclareMarker(Colour c)

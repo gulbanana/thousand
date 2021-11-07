@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Thousand.Model;
 
@@ -26,9 +27,9 @@ namespace Thousand.Tests.Composition
         public static IR.Endpoint Endpoint(string target, [CallerMemberName] string caller = null!) => Endpoint(targets[caller][target]);
         public static IR.Endpoint Endpoint(string target, CompassKind anchor, [CallerMemberName] string caller = null!) => Endpoint(targets[caller][target], anchor);
 
-        public static IR.Edge Edge(IR.Endpoint from, IR.Endpoint to) => new IR.Edge(from, to, new Stroke(), null);
-        public static IR.Edge Edge(IR.Node from, IR.Node to) => new IR.Edge(Endpoint(from), Endpoint(to), new Stroke(), null);
-        public static IR.Edge Edge(string from, string to, [CallerMemberName] string caller = null!) => new IR.Edge(Endpoint(targets[caller][from]), Endpoint(targets[caller][to]), new Stroke(), null);
+        public static IR.Edge Edge(IR.Endpoint from, IR.Endpoint to) => new IR.Edge(Array.Empty<string>(), from, to, new Stroke(), null);
+        public static IR.Edge Edge(IR.Node from, IR.Node to) => new IR.Edge(Array.Empty<string>(), Endpoint(from), Endpoint(to), new Stroke(), null);
+        public static IR.Edge Edge(string from, string to, [CallerMemberName] string caller = null!) => new IR.Edge(Array.Empty<string>(), Endpoint(targets[caller][from]), Endpoint(targets[caller][to]), new Stroke(), null);
 
         public static IR.Node Target(string name, IR.Node node, [CallerMemberName] string caller = null!)
         {

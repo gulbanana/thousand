@@ -39,7 +39,7 @@
                     { 
                         dataURL = null;
 
-                        using var renderer = new SVGRenderer();
+                        using var renderer = new SVGRenderer(false);
                         var text = renderer.Render(Diagram);
                         innerSVG = new(text.ToString());
 

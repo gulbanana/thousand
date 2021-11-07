@@ -39,7 +39,7 @@ namespace Thousand.CLI
 
             if (options.Type == OutputType.svg)
             {
-                using var generator = new DiagramGenerator<XElement>(new Render.SVGRenderer());
+                using var generator = new DiagramGenerator<XElement>(new Render.SVGRenderer(false));
                 generator.GenerateImage(source).Switch(result =>
                 {
                     foreach (var warning in result.Warnings)

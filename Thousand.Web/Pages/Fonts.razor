@@ -18,7 +18,7 @@
                 Shape = null, 
                 Label = new IR.StyledText(new Font(typeface.FamilyName, 20, Colour.Black), sample, AlignmentKind.Center) 
             }
-        }), new GenerationState(), out var diagram))
+        }), new GenerationState(), false, out var diagram))
         {
             return diagram;
         }

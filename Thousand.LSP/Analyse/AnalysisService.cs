@@ -192,7 +192,7 @@ namespace Thousand.LSP.Analyse
                 analysis.Root = rules;
                 if (ct.IsCancellationRequested) return;
 
-                if (!Compose.Composer.TryCompose(rules, state, out var diagram))
+                if (!Compose.Composer.TryCompose(rules, state, true, out var diagram))
                 {
                     return;
                 }
@@ -211,7 +211,7 @@ namespace Thousand.LSP.Analyse
                 analysis.Root = rules;
                 if (ct.IsCancellationRequested) return;
 
-                if (!Compose.Composer.TryCompose(rules, state, out var diagram))
+                if (!Compose.Composer.TryCompose(rules, state, true, out var diagram))
                 {
                     return;
                 }

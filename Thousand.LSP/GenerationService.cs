@@ -31,7 +31,7 @@ namespace Thousand.LSP
 
             current = new HashSet<DocumentUri>();
             pngRenderer = new SkiaRenderer();
-            svgRenderer = new SVGRenderer();
+            svgRenderer = new SVGRenderer(true);
 
             this.logger = logger;
             this.options = options;

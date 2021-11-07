@@ -18,7 +18,7 @@ namespace Thousand.IR
     }
 
     // the diagram root is a Region, which contains Entities - Nodes and Edges
-    public abstract record Entity;
+    public abstract record Entity(string[] Classes);
     public record Region(Config Config, IReadOnlyList<Entity> Entities)
     {
         // for tests
@@ -30,6 +30,7 @@ namespace Thousand.IR
     public record StyledText(Font Font, string Content, AlignmentKind Justification);
     public record Node
     (
+        string[] Classes,
         Name Name, // this is a display name, not a unique identifier - it may have been derived from the classlist
         Region Region,
         StyledText? Label,
@@ -39,12 +40,12 @@ namespace Thousand.IR
         Axes<AlignmentKind?> Alignment, Border Margin, decimal? MinWidth, decimal? MinHeight,
         int? Row, int? Column, Point? Position, CompassKind? Anchor, Point? Offset
         
-    ) : Entity
+    ) : Entity(Classes)
     {
-        public Node(Name name, Config config, params Entity[] children) : this(name, new Region(config, children), null, new Shape(ShapeKind.Rectangle, 0), new Stroke(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null) { }
+        public Node(Name name, Config config, params Entity[] children) : this(Array.Empty<string>(), name, new Region(config, children), null, new Shape(ShapeKind.Rectangle, 0), new Stroke(), new Axes<AlignmentKind?>(null), new(0), null, null, null, null, null, null, null) { }
     }
     
     // there may be many IR.Edge for a single AST.Line
     public record Endpoint(Name Name, Node Target, MarkerKind? Marker, Anchor Anchor, Point Offset);
-    public record Edge(Endpoint From, Endpoint To, Stroke Stroke, StyledText? Label) : Entity;
+    public record Edge(string[] Classes, Endpoint From, Endpoint To, Stroke Stroke, StyledText? Label) : Entity(Classes);
 }

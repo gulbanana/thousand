@@ -29,7 +29,7 @@ namespace Thousand.Tests.Composition
                 Edge(Endpoint("unscaled", CompassKind.SE), Endpoint("scaled", CompassKind.SE))
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var lineCommand = layout!.WalkCommands().OfType<Line>().Single();
@@ -49,7 +49,7 @@ namespace Thousand.Tests.Composition
                 ) with { Position = Point.Zero }
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var lineCommand = layout!.WalkCommands().OfType<Line>().Single();
@@ -69,7 +69,7 @@ namespace Thousand.Tests.Composition
                 )
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var lineCommand = layout!.WalkCommands().OfType<Line>().Single();
@@ -89,7 +89,7 @@ namespace Thousand.Tests.Composition
                 Edge("from", "to")
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var lineCommand = layout!.WalkCommands().OfType<Line>().Single();
@@ -109,7 +109,7 @@ namespace Thousand.Tests.Composition
                 )
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var lineCommand = layout!.WalkCommands().OfType<Line>().Single();

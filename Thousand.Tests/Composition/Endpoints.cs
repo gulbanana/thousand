@@ -30,7 +30,7 @@ namespace Thousand.Tests.Composition
                 edge
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Commands.OfType<Layout.Line>());
@@ -52,7 +52,7 @@ namespace Thousand.Tests.Composition
                 edge
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
 
             Assert.True(result, state.JoinErrors());
             Assert.Single(layout!.Commands.OfType<Layout.Line>());
@@ -74,7 +74,7 @@ namespace Thousand.Tests.Composition
                 edge
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var line = layout!.Commands.OfType<Layout.Line>().Single();
@@ -102,7 +102,7 @@ namespace Thousand.Tests.Composition
                 edge
             );
 
-            var result = Composer.TryCompose(root, state, out var layout);
+            var result = Composer.TryCompose(root, state, false, out var layout);
             Assert.True(result, state.JoinErrors());
 
             var line = layout!.Commands.OfType<Layout.Line>().Single();

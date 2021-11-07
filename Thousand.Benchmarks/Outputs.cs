@@ -27,7 +27,7 @@ namespace Thousand.Benchmarks
         public Outputs()
         {
             skia = new SkiaRenderer();
-            svg = new SVGRenderer();
+            svg = new SVGRenderer(true);
         }
 
         [GlobalSetup]
@@ -45,7 +45,7 @@ namespace Thousand.Benchmarks
             Preprocessor.TryPreprocess(state, source, out var macros);
             Typechecker.TryTypecheck(api, state, macros, Shared.GetEnd(source), false, out ast);
             Evaluator.TryEvaluate(new[] { stdlib, ast }, state, out root);
-            Composer.TryCompose(root, state, out diagram);
+            Composer.TryCompose(root, state, true, out diagram);
 
             if (state.HasErrors())
             {
