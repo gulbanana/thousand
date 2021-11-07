@@ -14,8 +14,8 @@ example("layout=pack") {
 	}
 }
 
-example("layout=equal-content") {
-	group.red [layout=equal-content] {
+example("layout=equal") {
+	group.red [layout=equal] {
 		box(50,50)
 		box(25,50) [row=3,col=2]
 		box(50,25) [row=4,col=5]
@@ -24,26 +24,11 @@ example("layout=equal-content") {
 }
 
 example {
-	header "layout=equal-group"
-	group.red [layout=equal-area, width=250, height=125, justify=center] {
-		box(50,50)
-		box(50,50)
-		box(50,50)		
-	}
-	group.red [layout=equal-area, width=250, height=125, justify=center] {
-		box(50,50)
-		box(50,50)
-		box(50,50)
-		box(50,50)		
-	}
-}
-
-example {
-	header "layout=fixed(125)"
+	header "layout=125 (fixed size)"
 	group.red [grid=2, layout=125] {
-		box
-		box
+		box [align=start]
 		box [align=end]
+		box [align=stretch]
 	}
 }
 
@@ -61,28 +46,15 @@ example [row=2] {
 }
 
 example {
-	header "align=center/end"
-	group.blue {
-		box "a=c" [align=center]
+	header "justify=stretch"
+	group.blue [justify-rows=stretch] {
+		box "a=c"
 		column.red {
 			box(50)
 			box(50,50)
 			box(50)
 		}
-		box "a=e" [align=end]
-	}
-}
-
-example {
-	header "align=stretch"
-	group.blue {
-		box "a=c" [align=stretch]
-		column.red {
-			box(50)
-			box(50,50)
-			box(50)
-		}
-		box "a=e" [align=stretch]
+		box "a=e"
 	}
 }
 
@@ -124,23 +96,5 @@ example [row=3] {
 		box(50,230) [margin=0 10 10 10]
 		box(50,210) [margin=0 20 20 20]
 		box(50,190) [margin=0 30]
-	}
-}
-
-// XXX this one sucks
-example("justify vs align") {
-	class content-row [padding=0, gutter=10, layout=content, fill=red]
-	col.blue [height=250, layout-rows=equal-area] {
-		content-row [justify=center] {
-			box(20,83.3); box(83.3,83.3); box(40,83.3)
-		}
-
-		content-row [justify=stretch] {
-			box(20,83.3); box(83.3,83.3); box(40,83.3)
-		}
-
-		content-row [justify=stretch] {
-			box(20,83.3) [align=right]; box(83.3,83.3); box(40,83.3)
-		}
 	}
 }

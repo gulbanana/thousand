@@ -26,8 +26,8 @@ namespace Thousand.Tests.Evaluation
                 OClass("group",                
                     new AST.NodeShapeAttribute(null), 
                     new AST.EntityLabelAttribute(null, null, null), 
-                    new AST.RegionLayoutColumnsAttribute(new EqualContentSize()),
-                    new AST.RegionLayoutRowsAttribute(new EqualContentSize())
+                    new AST.RegionLayoutColumnsAttribute(new EqualSize()),
+                    new AST.RegionLayoutRowsAttribute(new EqualSize())
                 ),
 
                 Object(new[]{"big", "group"}, //uses larger font                
@@ -52,7 +52,7 @@ namespace Thousand.Tests.Evaluation
 
             AssertEx.Sequence(root.WalkNodes().Select(o => o.Label).WhereNotNull().Select(l => l.Font.Size), 50, 40, 50, 20);
 
-            AssertEx.Sequence(root.Nodes.Select(o => o.Region.Config.Layout.Columns), new EqualContentSize(), new PackedSize(), new PackedSize());
+            AssertEx.Sequence(root.Nodes.Select(o => o.Region.Config.Layout.Columns), new EqualSize(), new PackedSize(), new PackedSize());
         }
 
         [Fact]

@@ -20,7 +20,7 @@ class org($title) [padding=10 40 10 10, fill=#ccc, stroke=long-dash 3] {
 } 
 class minor [font-size=24, stroke=short-dash 2]
 class inverse [fill=#333, stroke-color=white, font-color=white]
-class proles : group [layout=content pack, justify=stretch center, gutter=10]
+class proles : group [layout=equal pack, justify=stretch center, gutter=10]
 
 //////////////
 // VAMPIRES //
@@ -40,13 +40,13 @@ diagram [grid=rows, layout=pack, gutter=50] {
             vampire "Emily de la Warr" [font=#080] { t-gangrel }
 
             column [gutter=40,justify=stretch] {
-                row [layout=content, justify=center stretch] {    
+                row [layout=equal, justify=center stretch] {    
                     vampire simpson [label="Simpson Kirkpatrick\nBaron Weaste"] { t-ventrue }
                     vampire carl [label="Carl\nBaron Eccles"] { t-nosferatu }
                     vampire fortunato [label="Fortunato\nBaron Agecroft"] { t-daeva }            
                     vampire ruth [label="Ruth Gardener?"] { t-mekhet }
                 }
-                row [layout=area,justify=center] {
+                row [layout=equal,justify=center] {
                     point vi1; point vi2; point vi3; point vi4; point vi5; point vi6; point; point
                 }
             }
@@ -83,7 +83,7 @@ diagram [grid=rows, layout=pack, gutter=50] {
                     vampire damani [label="Sydney Damani\nCarthian Constable"]
                     column deputies [gutter=10,justify=stretch] {
                         vampire "Brutus Barrigan" { t-gangrel }
-                        row [layout=area] { vampire.u deputy1 [align=start]; vampire.u deputy2; vampire.u deputy3 [align=end] }
+                        row [layout=equal] { vampire.u deputy1 [align=start]; vampire.u deputy2; vampire.u deputy3 [align=end] }
                     }
                     lh damani -> "Brutus Barrigan"
                     lh damani -> deputy1

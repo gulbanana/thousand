@@ -1,7 +1,7 @@
 class box [shape=rect, width=50, height=50,stroke=1,fill=white]
 class line [stroke=1]
 
-group [padding=10,fill=#ccc,layout=equal-area,scale=2] {
+group [padding=10 10 10 0,fill=#ccc,layout=equal,scale=2] {
     row [gutter=10,scale=2,fill=white,align-horizontal=center] {
         box a
         box b
@@ -10,9 +10,11 @@ group [padding=10,fill=#ccc,layout=equal-area,scale=2] {
     line a--b [anchor=se sw] //unscaled thickness
 
     // line positions adjusted for scaling, overlaid in order
-    box x [pos=00 120]
-    box z [pos=160 120]
-    line x--z [anchor=ne none]
-    box y [pos=80 120]
-    line x--z [anchor=none sw]
+    row {
+        box x [pos=0 0]
+        box z [pos=160 0]
+        line x--z [anchor=ne none]
+        box y [pos=80 0]
+        line x--z [anchor=none sw]
+    }
 }

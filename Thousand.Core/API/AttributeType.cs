@@ -50,12 +50,9 @@ namespace Thousand.API
 
         public static AttributeType<TrackSize> GridSize { get; } = new(
             Token.EqualToValueIgnoreCase(TokenKind.Identifier, "pack").Value(PackedSize.Instance)
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-area").Value(EqualAreaSize.Instance))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "area").Value(EqualAreaSize.Instance))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal-content").Value(EqualContentSize.Instance))
-                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "content").Value(EqualContentSize.Instance))
+                .Or(Token.EqualToValueIgnoreCase(TokenKind.Identifier, "equal").Value(EqualSize.Instance))
                 .Or(Value.WholeDecimal.Select(x => new MinimumSize(x) as TrackSize)),
-            $"`pack` (minimum required to fit each object), `content`/`equal-content` (maximum required to fit any object), `area`/`equal-area` (equal fractions of available space) or `X` (number)"
+            $"`pack`, `equal` or `X` (number)"
         );
 
         public static AttributeType<int> GridTrack(string name) => new(

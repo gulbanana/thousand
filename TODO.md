@@ -3,7 +3,6 @@ TO DO
 
 * bug: using diamond as a container seems to be broken somehow. possibly related: triangle text placement is bad visually. special case to move either the text or the shape?
 * bug: (line) anchors and offsets probably don't combine correctly
-* bug: end-padding is broken when scaling - see nested-scaling.1000
 * syntax: class->style maybe
 * syntax: should alists use lineseps instead of commas? should they use : instead of =?
 * syntax: path names (perhaps use [] for anon)
@@ -35,7 +34,7 @@ TO DO
 * clean up the samples, with said defaults
 * image embedding!
 * in theory, GenerationService needs queueing or other concurrency control mechanisms. now that it uses svg it's fast, but surely there are some race conditions
-* runtime colour names
-* put back the padding
+* runtime colour names (obviously don't try to parse them all)
+* put back the padding?!
 * anchors should be close to each other instead of strictly clockwise. this enables...
 * 'connector' stdlib line class

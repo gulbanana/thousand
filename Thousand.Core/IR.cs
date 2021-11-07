@@ -14,7 +14,7 @@ namespace Thousand.IR
 
     public record Config(decimal Scale, Colour? Fill, FlowKind GridFlow, int GridMax /* 0 = no max :/ */, Border Padding, Axes<decimal> Gutter, Axes<TrackSize> Layout, Axes<AlignmentKind> Alignment)
     {
-        public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Start)) { }
+        public Config() : this(1.0m, null, FlowKind.Auto, 0, new(0), new(0), new(new PackedSize()), new(AlignmentKind.Center)) { }
     }
 
     // the diagram root is a Region, which contains Entities - Nodes and Edges

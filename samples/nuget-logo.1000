@@ -4,7 +4,7 @@ class se [row=2,col=2]
 
 group [gutter=2,padding=1,scale=5] {
     brand.circle(6.65)
-    se.brand [gutter=2, padding=6, layout=content] {
+    se.brand [gutter=2, padding=6, layout=equal, justify=start] {
         brand.circle(7.61)
         se.brand.circle(13.38)
     }

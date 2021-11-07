@@ -9,4 +9,4 @@ class row : group [grid-flow=columns]
 class column : group [grid-flow=rows]; class col : column
 
 // some useful defaults for a top-level group
-class diagram : group [fill=white, grid=auto, padding=5, gutter=10, layout=equal-content, justify=center]
+class diagram : group [fill=white, grid=auto, padding=5, gutter=10, layout=equal]

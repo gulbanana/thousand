@@ -2,10 +2,10 @@ class job : object [shape=rect]
 class division($title) [stroke=2, padding=20 40] {
     object $title [anchor=n,fill=white,padding=15 5,shape=pill]
 }
-class execs [layout=content,justify=stretch, gutter=10]
+class execs [layout=equal,justify=stretch, gutter=10]
 class line [stroke=2,anchor=corner s]
 
-diagram [layout=area] {
+diagram [layout=equal] {
     label "Some sort of org chart" [font="Castellar" 32, align=top center]
 
     division("Operations") [pos=0 100] {
