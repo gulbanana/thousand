@@ -7,24 +7,30 @@ namespace Thousand.Evaluate
 {
     internal sealed class TypedScope
     {
+        private readonly int index;
         private readonly string name;
         private readonly GenerationState state;
         public TypedScope? Parent { get; private init; }
+        private int children;
 
         private readonly Dictionary<string, IR.Node> canonicalObjects = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IR.Node> bubbledObjects = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ObjectContent> objectClasses = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, LineContent> lineClasses = new(StringComparer.OrdinalIgnoreCase);
 
-        public TypedScope(string name, GenerationState state)
+        private TypedScope(int index, string name, GenerationState state)
         {
+            this.index = index;
             this.name = name;
             this.state = state;
+            children = 0;
         }
 
-        public TypedScope Chain(string name)
+        public TypedScope(string name, GenerationState state) : this(-1, name, state) { }
+
+        public TypedScope Chain(string name, bool local)
         {
-            return new TypedScope(name, state) { Parent = this };
+            return new TypedScope(local ? children++ : -1, name, state) { Parent = this };
         }
 
         public bool HasRequiredClass(Name b)
@@ -163,9 +169,32 @@ namespace Thousand.Evaluate
             return builder.ToString();
         }
 
+        private string RecursiveObjectName()
+        {
+            var builder = new StringBuilder();
+
+            if (Parent != null)
+            {
+                builder.Append(Parent.RecursiveObjectName());
+            }
+
+            if (index != -1)
+            {
+                builder.Append('_');
+                builder.Append(index);
+            }
+
+            return builder.ToString();
+        }
+
         public override string ToString()
         {
             return $"Scope {RecursiveName()}: {canonicalObjects.Count} objects";
+        }
+
+        public string UniqueName()
+        {
+            return $"O{RecursiveObjectName()}";
         }
     }
 }

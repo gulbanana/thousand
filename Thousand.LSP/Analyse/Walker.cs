@@ -51,7 +51,7 @@ namespace Thousand.LSP.Analyse
                 Kind = SymbolKind.Class,
                 Range = declaration.AsRange(doc.EndSpan),
                 SelectionRange = syntax.Name.AsLoc.AsRange(),
-                Name = "class " + syntax.Name.AsKey,
+                Name = syntax.Name.AsKey,
                 Children = WalkClass(scope, syntax).ToArray()
             };
 
@@ -127,7 +127,8 @@ namespace Thousand.LSP.Analyse
                 Kind = SymbolKind.Variable,
                 Range = declaration.AsRange(doc.EndSpan),
                 SelectionRange = (syntax.Name?.AsLoc ?? syntax.TypeSpan).AsRange(),
-                Name = syntax.TypeName + (syntax.Name == null ? "" : $" {syntax.Name.AsKey}"),
+                Name = syntax.Name == null ? syntax.TypeName : $" {syntax.Name.AsKey}",
+                Detail = syntax.Name == null ? null : syntax.TypeName,
                 Children = WalkObject(scope, syntax).ToArray()
             };
 

@@ -61,11 +61,11 @@ namespace Thousand.Evaluate
                         break;
 
                     case AST.TypedObject o:
-                        rootEntities.Add(AddObject(o, rootFont, rootScope));
+                        rootEntities.Add(AddObject(o, rootFont, rootScope, true));
                         break;
 
                     case AST.TypedLine l:
-                        var (objects, edges) = AddLine(l, rootFont, rootScope);
+                        var (objects, edges) = AddLine(l, rootFont, rootScope, true);
                         rootEntities.AddRange(objects);
                         rootEntities.AddRange(edges);
                         break;
@@ -129,7 +129,7 @@ namespace Thousand.Evaluate
             }
         }
 
-        private IR.Node AddObject(AST.TypedObject node, Font cascadeFont, TypedScope scope)
+        private IR.Node AddObject(AST.TypedObject node, Font cascadeFont, TypedScope scope, bool local)
         {
             var className = state.UnmapSpan(node.Classes[0].AsLoc);
             if (node.Classes.Length > 1 && className.Source != null && className.Source.Length > className.Length)
@@ -252,35 +252,51 @@ namespace Thousand.Evaluate
                 t => font = ApplyFontAttributes(font, t));
             }
 
+            var objectScope = scope.Chain(node.Name?.AsKey ?? node.Classes.First().AsKey, local);
             var childEntities = new List<IR.Entity>();
-            var childContent = node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children).Concat(node.Declarations).ToList();            
-            if (childContent.Any())
+            
+            foreach (var declaration in node.Classes.SelectMany(c => scope.FindObjectClass(c, true).Children))
             {
-                var objectScope = scope.Chain(node.Name?.AsKey ?? node.Classes.First().AsKey);
-
-                foreach (var declaration in childContent)
+                switch (declaration)
                 {
-                    switch (declaration)
-                    {
-                        case AST.TypedClass c:
-                            AddClass(c, objectScope);
-                            break;
+                    case AST.TypedClass c:
+                        AddClass(c, objectScope);
+                        break;
 
-                        case AST.TypedObject o:
-                            childEntities.Add(AddObject(o, font, objectScope));
-                            break;
+                    case AST.TypedObject o:
+                        childEntities.Add(AddObject(o, font, objectScope, false));
+                        break;
 
-                        case AST.TypedLine l:
-                            var (objects, edges) = AddLine(l, font, objectScope);
-                            childEntities.AddRange(objects);
-                            childEntities.AddRange(edges);
-                            break;
-                    }
+                    case AST.TypedLine l:
+                        var (objects, edges) = AddLine(l, font, objectScope, false);
+                        childEntities.AddRange(objects);
+                        childEntities.AddRange(edges);
+                        break;
+                }
+            }
+
+            foreach (var declaration in node.Declarations)
+            {
+                switch (declaration)
+                {
+                    case AST.TypedClass c:
+                        AddClass(c, objectScope);
+                        break;
+
+                    case AST.TypedObject o:
+                        childEntities.Add(AddObject(o, font, objectScope, true));
+                        break;
+
+                    case AST.TypedLine l:
+                        var (objects, edges) = AddLine(l, font, objectScope, true);
+                        childEntities.AddRange(objects);
+                        childEntities.AddRange(edges);
+                        break;
                 }
             }
 
             var result = new IR.Node(
-                node.Classes.Select(c => state.UnmapSpan(c.AsLoc).ToStringValue()).ToArray(),
+                node.Classes.Select(c => "C_" + state.UnmapSpan(c.AsLoc).ToStringValue()).Append(objectScope.UniqueName()).ToArray(),
                 displayName,
                 new IR.Region(regionConfig, childEntities), 
                 shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel),
@@ -295,7 +311,7 @@ namespace Thousand.Evaluate
             return result;
         }
 
-        private (IEnumerable<IR.Node>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, TypedScope scope)
+        private (IEnumerable<IR.Node>, IEnumerable<IR.Edge>) AddLine(AST.TypedLine line, Font cascadeFont, TypedScope scope, bool local)
         {
             var objects = new List<IR.Node>();
             var edges = new List<IR.Edge>();
@@ -351,7 +367,7 @@ namespace Thousand.Evaluate
             var nodes = new List<(ArrowKind? direction, IR.Node? target, Name? name)>();
             foreach (var seg in line.Segments)
             {
-                var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope);
+                var target = seg.Target.IsT0 ? scope.FindObject(seg.Target.AsT0) : AddObject(seg.Target.AsT1, cascadeFont, scope, local);
                 if (seg.Target.IsT1)
                 {
                     objects.Add(target!);
@@ -359,7 +375,7 @@ namespace Thousand.Evaluate
                 nodes.Add((seg.Direction, target, seg.Target.IsT0 ? seg.Target.AsT0 : target?.Name));
             }
 
-            var classes = line.Classes.Select(c => state.UnmapSpan(c.AsLoc).ToStringValue()).ToArray();
+            var classes = line.Classes.Select(c => "C_" + state.UnmapSpan(c.AsLoc).ToStringValue()).ToArray();
             var label = shared.Label == null ? null : new IR.StyledText(font, shared.Label, shared.JustifyLabel);
             for (var i = 0; i < nodes.Count - 1; i++)
             {
