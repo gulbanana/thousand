@@ -1,5 +1,6 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol;
 using Thousand.Layout;
+using Thousand.LSP.Analyse;
 
 namespace Thousand.LSP
 {
@@ -8,5 +9,6 @@ namespace Thousand.LSP
         void Update(DocumentUri key, Diagram diagram);
         void Track(DocumentUri uri);
         void Untrack(DocumentUri uri);
+        string? Export(DocumentUri uri, Analysis analysis, bool png);
     }
 }

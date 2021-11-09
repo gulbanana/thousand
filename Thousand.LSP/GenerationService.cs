@@ -9,6 +9,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
 using Thousand.Layout;
+using Thousand.LSP.Analyse;
 using Thousand.Render;
 
 namespace Thousand.LSP
@@ -18,7 +19,8 @@ namespace Thousand.LSP
         private readonly string tempDir;
         private readonly HashSet<DocumentUri> current;
         private readonly SkiaRenderer pngRenderer;
-        private readonly SVGRenderer svgRenderer;
+        private readonly SVGRenderer previewSvgRenderer;
+        private readonly SVGRenderer finalSvgRenderer;
         private readonly ILogger<GenerationService> logger;
         private readonly IOptionsMonitor<ServerOptions> options;
         private readonly ILanguageServerFacade facade;
@@ -31,7 +33,8 @@ namespace Thousand.LSP
 
             current = new HashSet<DocumentUri>();
             pngRenderer = new SkiaRenderer();
-            svgRenderer = new SVGRenderer(true);
+            previewSvgRenderer = new SVGRenderer(true);
+            finalSvgRenderer = new SVGRenderer(false);
 
             this.logger = logger;
             this.options = options;
@@ -55,53 +58,77 @@ namespace Thousand.LSP
                 return;
             }
 
-            _ = options.CurrentValue.GeneratePNG ? Task.Run(() => GenPNG(key, diagram)) : Task.Run(() => GenSVG(key, diagram));
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    var path = options.CurrentValue.GeneratePNG ? GenPNG(key, diagram) : GenSVG(key, diagram, true);
+                    facade.SendNotification(new Extensions.UpdatePreview { Uri = key, Filename = path });
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "SVG generation failed for {Uri}", key);
+                }
+            });
         }
 
-        private void GenPNG(DocumentUri key, Diagram diagram)
+        public string? Export(DocumentUri key, Analysis analysis, bool png)
         {
-            try
+            if (analysis.Diagram == null)
             {
-                var stopwatch = Stopwatch.StartNew();
-                var image = pngRenderer.Render(diagram);
-                var png = image.Encode();
-
-                var pngPath = Path.Combine(tempDir, Path.ChangeExtension(Path.GetFileName(key.Path), "png"));
-                using (var pngFile = File.OpenWrite(pngPath))
-                {
-                    png.SaveTo(pngFile);
-                }
-                logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", pngPath, stopwatch.ElapsedMilliseconds);
-
-                facade.SendNotification(new Extensions.UpdatePreview { Uri = key, Filename = pngPath });
+                return null;
             }
-            catch (Exception e)
+
+            if (png)
             {
-                logger.LogError(e, "PNG generation failed for {Uri}", key);
+                return GenPNG(key, analysis.Diagram);
+            }
+
+            // for final SVG output, re-run generation from the intermediate representation forward, *without* the grouping and class names
+            else
+            {
+                var state = new GenerationState();
+                if (Compose.Composer.TryCompose(analysis.Root!, state, false, out var diagram))
+                {
+                    return GenSVG(key, diagram, false);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
-        private void GenSVG(DocumentUri key, Diagram diagram)
+        private string GenPNG(DocumentUri key, Diagram diagram)
         {
-            try
+            var stopwatch = Stopwatch.StartNew();
+            var image = pngRenderer.Render(diagram);
+            var png = image.Encode();
+
+            var pngPath = Path.Combine(tempDir, Path.ChangeExtension(Path.GetFileName(key.Path), "png"));
+            using (var pngFile = File.OpenWrite(pngPath))
             {
-                var stopwatch = Stopwatch.StartNew();
-                var xml = svgRenderer.Render(diagram);
-
-                var svgPath = Path.Combine(tempDir, Path.ChangeExtension(Path.GetFileName(key.Path), "svg"));
-                using (var writer = XmlWriter.Create(svgPath))
-                {
-                    xml.WriteTo(writer);
-                }
-
-                logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", svgPath, stopwatch.ElapsedMilliseconds);
-
-                facade.SendNotification(new Extensions.UpdatePreview { Uri = key, Filename = svgPath });
+                png.SaveTo(pngFile);
             }
-            catch (Exception e)
+            logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", pngPath, stopwatch.ElapsedMilliseconds);
+
+            return pngPath;
+        }
+
+        private string GenSVG(DocumentUri key, Diagram diagram, bool includeMetadata)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var xml = (includeMetadata ? previewSvgRenderer : finalSvgRenderer).Render(diagram);
+
+            var svgPath = Path.Combine(tempDir, Path.ChangeExtension(Path.GetFileName(key.Path), "svg"));
+            using (var writer = XmlWriter.Create(svgPath))
             {
-                logger.LogError(e, "SVG generation failed for {Uri}", key);
+                xml.WriteTo(writer);
             }
+
+            logger.LogInformation("Generated {OutputFile} in {ElapsedMilliseconds}ms", svgPath, stopwatch.ElapsedMilliseconds);
+
+            return svgPath;
         }
     }
 }

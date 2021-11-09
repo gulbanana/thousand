@@ -8,7 +8,7 @@ using Thousand.LSP.Analyse;
 
 namespace Thousand.LSP.Extensions
 {
-    class PreviewHandler : IJsonRpcNotificationHandler<BeginPreview>, IJsonRpcNotificationHandler<EndPreview>
+    class PreviewHandler : IJsonRpcNotificationHandler<BeginPreview>, IJsonRpcNotificationHandler<EndPreview>, IJsonRpcRequestHandler<ExportImageRequest, ExportImageResult>
     {
         private readonly ILanguageServerConfiguration configuration;
         private readonly IGenerationService generationService;
@@ -38,6 +38,12 @@ namespace Thousand.LSP.Extensions
             generationService.Untrack(request.Uri);
 
             return Task.FromResult(Unit.Value);
+        }
+
+        public async Task<ExportImageResult> Handle(ExportImageRequest request, CancellationToken cancellationToken)
+        {
+            var analysis = await analysisService.GetAnalysisAsync(request.Uri);
+            return new ExportImageResult { Filename = await Task.Run(() => generationService.Export(request.Uri, analysis, request.Format == "png")) };
         }
     }
 }
