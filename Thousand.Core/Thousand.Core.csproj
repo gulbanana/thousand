@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Thousand</RootNamespace>
   </PropertyGroup>
   
@@ -8,8 +8,9 @@
     <PackageReference Include="OneOf" Version="3.0.190" />
     <PackageReference Include="OneOf.SourceGenerator" Version="3.0.190" PrivateAssets="all" />
     <PackageReference Include="Superpower" Version="3.0.0" />
-    <PackageReference Include="SkiaSharp" Version="2.80.3" />
-    <PackageReference Include="Topten.RichTextKit" Version="0.4.145" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.4.167" />
   </ItemGroup>
 
   <ItemGroup>
