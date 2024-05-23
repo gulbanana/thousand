@@ -1,7 +1,7 @@
 ﻿@using System.IO
 @using Thousand.Render
 @code {
-    [Parameter] public RenderMode Mode { get; set; }
+    [Parameter] public OutputMode Mode { get; set; }
     [Parameter] public Layout.Diagram Diagram { get; set; }
     [Parameter] public GenerationError[] Errors { get; set; }
     string dataURL;
@@ -18,7 +18,7 @@
             {
                 switch (Mode)
                 {
-                    case RenderMode.SkiaSharp:
+                    case OutputMode.SkiaSharp:
                     { 
                         innerSVG = null;
 
@@ -35,7 +35,7 @@
                         break;
                     }
 
-                    case RenderMode.SVG:
+                    case OutputMode.SVG:
                     { 
                         dataURL = null;
 

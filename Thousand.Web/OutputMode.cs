@@ -1,6 +1,6 @@
 ﻿namespace Thousand.Web
 {
-    public enum RenderMode
+    public enum OutputMode
     {
         SkiaSharp,
         SVG

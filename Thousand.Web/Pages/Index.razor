@@ -13,7 +13,7 @@
     string sample;
     Layout.Diagram doc;
     GenerationError[] err;
-    RenderMode mode;
+    OutputMode mode;
 
     string Source
     {
@@ -38,7 +38,9 @@
     string Renderer
     {
         get => mode.ToString();
-        set => mode = Enum.Parse<RenderMode>(value);
+
+        set => mode = Enum.Parse<OutputMode>(value);
+
     }
 
     protected override void OnInitialized()
