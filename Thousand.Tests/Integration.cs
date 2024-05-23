@@ -46,7 +46,7 @@ namespace Thousand.Tests
         [Theory, MemberData(nameof(Samples))]
         public void RenderSample(string filename)
         {
-            var graph = File.ReadAllText(@"samples\" + filename);
+            var graph = File.ReadAllText(Path.Combine("samples", filename));
 
             using var generator = new DiagramGenerator<SkiaSharp.SKImage>(new Render.SkiaRenderer());
 
@@ -58,7 +58,7 @@ namespace Thousand.Tests
         [Theory, MemberData(nameof(Benchmarks))]
         public void RenderBenchmark(string filename)
         {
-            var graph = File.ReadAllText(@"benchmarks\" + filename);
+            var graph = File.ReadAllText(Path.Combine("benchmarks", filename));
 
             using var generator = new DiagramGenerator<SkiaSharp.SKImage>(new Render.SkiaRenderer());
 

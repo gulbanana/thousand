@@ -11,7 +11,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
 
     steps:
     - uses: actions/checkout@v4
@@ -28,9 +31,11 @@ jobs:
       run: dotnet test -c Release --no-build --verbosity normal Thousand.Tests
 
     - name: dotnet publish
-      run: dotnet publish Thousand.Web -c Release --no-build -o ${{env.DOTNET_ROOT}}\thousand
+      if: matrix.platform == 'windows-latest'
+      run: dotnet publish Thousand.Web -c Release --no-build -o "${{env.DOTNET_ROOT}}\thousand"
 
     - name: Upload artifact for deployment job
+      if: matrix.platform == 'windows-latest'
       uses: actions/upload-artifact@v2
       with:
         name: .net-app

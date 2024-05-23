@@ -102,7 +102,8 @@ bar""");
 
             Assert.True(result.HasValue, result.ToString());
             AssertEx.Sequence(result.Value.Classes.Select(n => n.AsKey), "object");
-            Assert.Equal("foo" + Environment.NewLine + "bar", result.Value.Name?.AsKey);
+            Assert.Equal(@"foo
+bar", result.Value.Name?.AsKey);
         }
 
         [Fact]
