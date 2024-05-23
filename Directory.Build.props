@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.5.7</Version>
+    <Version>0.5.8</Version>
     <Authors>Thomas Castiglione</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://thousandwords.azurewebsites.net</PackageProjectUrl>
-    <!-- <PackageReadmeFile>README.md</PackageReadmeFile> (broken until .NET 6) -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/gulbanana/thousand.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>thousand</PackageTags>
