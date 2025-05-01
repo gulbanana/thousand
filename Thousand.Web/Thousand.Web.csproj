@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorMonaco" Version="2.1.0" />
+    <PackageReference Include="BlazorMonaco" Version="3.3.0" />
     <ProjectReference Include="..\Thousand.Core\Thousand.Core.csproj" />
   </ItemGroup>
 

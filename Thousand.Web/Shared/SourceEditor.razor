@@ -1,15 +1,17 @@
 ﻿@using BlazorMonaco
+@using BlazorMonaco.Editor
+@rendermode InteractiveServer
 @inject IJSRuntime JS
 @code {
     [Parameter] public string Source { get; set; }
     [Parameter] public EventCallback<string> SourceChanged { get; set; }
     [Parameter] public GenerationError[] Errors { get; set; }
 
-    private MonacoEditor editor;
+    private StandaloneCodeEditor editor;
     private string source;
     private string[] decorations = Array.Empty<string>();
 
-    private StandaloneEditorConstructionOptions CreateOptions(MonacoEditor editor)
+    private StandaloneEditorConstructionOptions CreateOptions(StandaloneCodeEditor editor)
     {
         this.editor = editor;
         this.source = Source;
@@ -71,4 +73,4 @@
     }
 }
 
-<MonacoEditor ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />
+<StandaloneCodeEditor ConstructionOptions="CreateOptions" OnDidChangeModelContent="ModelContentChanged" />
