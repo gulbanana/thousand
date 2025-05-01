@@ -76,7 +76,7 @@ namespace Thousand.CLI
                                 break;
 
                             case OutputType.webp:
-                                result.Diagram.PeekPixels().Encode(new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossless, 100)).SaveTo(outputFile);
+                                result.Diagram.PeekPixels().Encode(new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossless, 100))?.SaveTo(outputFile);
                                 break;
                         }
                     }
