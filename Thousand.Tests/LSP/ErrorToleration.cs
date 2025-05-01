@@ -101,7 +101,7 @@ object a
             Assert.NotNull(document.Root);
             Assert.NotNull(document.Diagram);
 
-            Assert.Single(document.Main!.Syntax.Declarations.Where(d => d.Value is not AST.EmptyDeclaration));
+            Assert.Single(document.Main!.Syntax.Declarations, d => d.Value is not AST.EmptyDeclaration);
         }
 
         [Fact(Skip = "not yet implemented")]

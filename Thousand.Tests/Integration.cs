@@ -18,7 +18,7 @@ namespace Thousand.Tests
             Assert.False(state.HasWarnings(), state.JoinWarnings());
         }
 
-        private static IEnumerable<object[]> Samples()
+        public static IEnumerable<object[]> Samples()
         {
             foreach (var filename in Directory.GetFiles("samples"))
             {
@@ -26,7 +26,7 @@ namespace Thousand.Tests
             }
         }
 
-        private static IEnumerable<object[]> Benchmarks()
+        public static IEnumerable<object[]> Benchmarks()
         {
             foreach (var filename in Directory.GetFiles("benchmarks"))
             {

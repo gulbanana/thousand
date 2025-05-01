@@ -179,8 +179,9 @@ bar", result.Value.Name?.AsKey);
             var result = Untyped.Line(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Equal("line", result.Value.Classes[0].Value?.Name.AsKey);
-            Assert.Single(result.Value.Classes[0].Value?.Arguments);
+            Assert.NotNull(result.Value.Classes[0].Value);
+            Assert.Equal("line", result.Value.Classes[0].Value!.Name.AsKey);
+            Assert.Single(result.Value.Classes[0].Value!.Arguments);
         }
 
         [Fact]

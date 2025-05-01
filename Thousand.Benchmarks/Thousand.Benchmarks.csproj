@@ -6,8 +6,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-    <PackageReference Include="CsvHelper" Version="27.1.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
     <ProjectReference Include="../Thousand.Core/Thousand.Core.csproj" />
     <ProjectReference Include="../Thousand.LSP/Thousand.LSP.csproj" />
   </ItemGroup>

@@ -211,7 +211,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Document(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Single(result.Value.Declarations.Where(d => d.Value is AST.UntypedClass));
+            Assert.Single(result.Value.Declarations, d => d.Value is AST.UntypedClass);
         }
 
         [Fact]
@@ -221,7 +221,7 @@ namespace Thousand.Tests.Parsing
             var result = Untyped.Class(tokens);
 
             Assert.True(result.HasValue, result.ToString());
-            Assert.Single(result.Value.Attributes.Where(a => a.Key?.AsKey == "fill"));
+            Assert.Single(result.Value.Attributes, a => a.Key?.AsKey == "fill");
         }
 
         [Fact]
