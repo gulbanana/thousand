@@ -5,8 +5,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="OneOf" Version="3.0.190" />
-    <PackageReference Include="OneOf.SourceGenerator" Version="3.0.190" PrivateAssets="all" />
+    <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" PrivateAssets="all" />
     <PackageReference Include="Superpower" Version="3.0.0" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
