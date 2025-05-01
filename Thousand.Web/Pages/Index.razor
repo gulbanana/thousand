@@ -1,8 +1,10 @@
 ﻿@page "/"
-@page "/foo"
 @page "/samples/{name}"
+
 @using System.IO
 @using Microsoft.Extensions.FileProviders
+
+@rendermode InteractiveServer
 @inject NavigationManager Navigation
 @code {
     [Parameter] public string Name { get; set; }
@@ -31,7 +33,7 @@
         set
         {
             sample = value;
-            Navigation.NavigateTo("samples/" + sample[8..^5]);
+            Navigation.NavigateTo("samples/" + sample[8..^5], true);
         }
     }
 
