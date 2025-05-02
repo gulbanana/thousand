@@ -9,7 +9,6 @@
     <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" PrivateAssets="all" />
     <PackageReference Include="Superpower" Version="3.0.0" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
     <PackageReference Include="Topten.RichTextKit" Version="0.4.167" />
   </ItemGroup>
 
